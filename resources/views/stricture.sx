@@ -1,0 +1,316 @@
+├── auth/                    # Pages d'authentification
+│   ├── login.blade.php
+│   ├── register.blade.php
+│   ├── forgot-password.blade.php
+│   └── reset-password.blade.php
+
+├── layouts/                 # Layouts généraux
+│   ├── app.blade.php        # Layout principal
+│   ├── navbar.blade.php
+│   └── footer.blade.php
+
+├── admin/                  # Pages réservées aux admins
+│   ├── dashboard.blade.php
+│   └── settings.blade.php
+
+├── superadmin/             # Pages pour le super admin
+│   ├── dashboard.blade.php
+│   └── users.blade.php
+
+├── user/                   # Pages accessibles par les utilisateurs normaux
+│   ├── dashboard.blade.php
+│   └── profile.blade.php
+
+└── home.blade.php          # Page d'accueil
+
+
+
+
+Voici la structure propre que tu peux viser :
+
+resources/views/
+│
+├── layouts/
+│   ├── app.blade.php         ← Layout principal (nav + footer)
+│   ├── navbar.blade.php      ← Barre de navigation
+│   └── footer.blade.php      ← Pied de page
+│
+├── auth/
+│   ├── login.blade.php       ← Page de connexion
+│   ├── register.blade.php    ← Page d’inscription (si tu en veux une)
+│   └── forgot-password.blade.php
+│
+├── dashboard/
+│   ├── superadmin/index.blade.php
+│   ├── admin/index.blade.php
+│   └── user/index.blade.php
+│
+└── components/
+    └── alert.blade.php       ← Par exemple un composant d'alerte réutilisable
+
+
+| Type d’utilisateur | Inscription libre ?      | Rôle initial  | Approbateur      | Rôle final    | Redirection          |
+| ------------------ | ------------------------ | ------------- | ---------------- | ------------- | -------------------- |
+| **Patient**        | ✅ Oui                    | `user`        | Admin/Superadmin | `patient`     | dashboard.patient    |
+| **Médecin**        | ✅ Oui                    | `user`        | Admin/Superadmin | `doctor`      | dashboard.doctor     |
+| **Administrateur** | ❌ Non (formulaire privé) | `user`        | Superadmin       | `admin`       | dashboard.admin      |
+| **Superadmin**     | ❌ Créé manuellement      | `super_admin` | Personne         | `super_admin` | dashboard.superadmin |
+
+
+
+@extends('layouts.app')
+
+@section('content')
+<div class="flex justify-center items-center min-h-[70vh]">
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-6 text-center">Créer un compte</h2>
+
+        <form method="POST" action="{{ route('register') }}">
+            @csrf
+
+            <div class="mb-4">
+                <label for="name" class="block text-sm font-medium">Nom complet</label>
+                <input type="text" name="name" id="name" placeholder="Nom et Prénom" required
+                    class="w-full mt-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+            <div class="mb-4">
+                <label for="email" class="block text-sm font-medium">Email</label>
+                <input type="email" name="email" id="email" placeholder="exemple@mail.com" required
+                    class="w-full mt-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="block text-sm font-medium">Mot de passe</label>
+                <input type="password" name="password" id="password" required
+                    class="w-full mt-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+            <div class="mb-6">
+                <label for="password_confirmation" class="block text-sm font-medium">Confirmer le mot de passe</label>
+                <input type="password" name="password_confirmation" id="password_confirmation" required
+                    class="w-full mt-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+            <button type="submit"
+                class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-150">
+                Créer mon compte
+            </button>
+        </form>
+
+        <p class="mt-6 text-sm text-center">
+            Déjà inscrit ?
+            <a href="{{ route('login') }}" class="text-blue-500 hover:underline">Se connecter</a>
+        </p>
+    </div>
+</div>
+@endsection
+
+
+
+
+etat caisse
+
+@extends('layouts.app')
+
+@section('content')
+
+<!-- Titre + Boutons -->
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
+    <h1 class="text-xl md:text-2xl font-bold">Liste des États de caisse</h1>
+
+    <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0 w-full lg:w-auto">
+<form method="GET" action="{{ route('etatcaisse.index') }}">
+            <input type="date" name="date" value="{{ request('date') }}" class="rounded border px-2 py-1" />
+            <button type="submit" class="btn btn-sm btn-outline">Filtrer</button>
+        </form>
+        <!-- Boutons Export/Print -->
+        <a href="{{ route('etatcaisse.exportPdf') }}"
+            class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition">PDF</a>
+        <a href="{{ route('etatcaisse.print') }}" target="_blank"
+            class="bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded transition">Imprimer</a>
+
+        <!-- Formulaire de recherche -->
+     <div class="flex space-x-2 mb-4">
+            <!-- Générer état général -->
+            <form action="{{ route('etatcaisse.generer.general') }}" method="POST">
+                @csrf
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    Générer État Général
+                </button>
+            </form>
+
+            <!-- Générer états pour chaque personnel -->
+            @foreach($personnels as $personnel)
+            <form action="{{ route('etatcaisse.generer.personnel', $personnel->id) }}" method="POST">
+                @csrf
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
+                    État : {{ $personnel->nom }}
+                </button>
+            </form>
+
+            @endforeach
+            <form action="{{ route('etatcaisse.generer.personnels') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-primary">Générer tous les crédits du personnel</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau -->
+<div class="overflow-x-auto bg-white rounded shadow">
+    <table class="min-w-full text-sm text-left">
+        <thead class="bg-gray-200 text-gray-700">
+            <tr>
+                <th class="py-2 px-4">ID</th>
+                <th class="py-2 px-4">Désignation</th>
+                <th class="py-2 px-4">Recette Caisse</th>
+                <th class="py-2 px-4">Part Médecin</th>
+                <th class="py-2 px-4">Part Clinique</th>
+                <th class="py-2 px-4">Dépense</th>
+                <th class="py-2 px-4">Personnel</th>
+                <th class="py-2 px-4">Assurance</th>
+                <th class="py-2 px-4">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($etatcaisses as $etat)
+            <tr class="border-t">
+                <td class="py-2 px-4">{{ $etat->id }}</td>
+                <td class="py-2 px-4">{{ $etat->designation }}</td>
+                <td class="py-2 px-4">{{ number_format($etat->recette, 0, ',', ' ') }} MRU</td>
+                <td class="py-2 px-4">{{ number_format($etat->part_medecin, 0, ',', ' ') }} MRU</td>
+                <td class="py-2 px-4">{{ number_format($etat->part_clinique, 0, ',', ' ') }} MRU</td>
+                <td class="py-2 px-4">{{ number_format($etat->depense, 0, ',', ' ') }} MRU</td>
+                <td>{{ number_format($etat->personnel_credit, 0, ',', ' ') }} MRU</td>
+                <td class="py-2 px-4">{{ $etat->assurance?->nom ?? '—' }}</td>
+                <td class="py-2 px-4">
+                    <div class="flex space-x-2">
+                        <!-- Voir -->
+                        <a href="{{ route('etatcaisse.show', $etat->id) }}" class="text-gray-500 hover:text-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.522 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S3.732 16.057 2.458 12z" />
+                            </svg>
+                        </a>
+                        <!-- Modifier -->
+                        <a href="{{ route('etatcaisse.edit', $etat->id) }}"
+                            class="text-indigo-500 hover:text-indigo-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.232 5.232l3.536 3.536M16.768 4.768a2 2 0 112.828 2.828l-9.192 9.192H7v-3.192l9.768-9.828z" />
+                            </svg>
+                        </a>
+                        <!-- Supprimer -->
+                        <form action="{{ route('etatcaisse.destroy', $etat->id) }}" method="POST"
+                            onsubmit="return confirm('Supprimer cet enregistrement ?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-500 hover:text-red-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            @empty
+            <tr class="border-t">
+                <td colspan="9" class="py-2 px-4 text-center text-gray-500">Aucun enregistrement trouvé.</td>
+            </tr>
+            @endforelse
+            {{-- {{ $personnel->total_dette }} MRU --}}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div class="py-4">
+    {{ $etatcaisses->links() }}
+</div>
+
+@endsection
+
+
+
+
+  <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-blue-800">
+            <li>Recette Caisse : <strong>{{ number_format($resumeFiltre['recette'], 0, ',', ' ') }} MRU</strong></li>
+            <li>Part Médecin : <strong>{{ number_format($resumeFiltre['part_medecin'], 0, ',', ' ') }} MRU</strong></li>
+            <li>Part Clinique : <strong>{{ number_format($resumeFiltre['part_cabinet'], 0, ',', ' ') }} MRU</strong>
+            </li>
+            <li>Dépenses : <strong>{{ number_format($resumeFiltre['depense'], 0, ',', ' ') }} MRU</strong></li>
+            <li>Crédit Personnel : <strong>{{ number_format($resumeFiltre['credit_personnel'], 0, ',', ' ') }}
+                    MRU</strong>
+            </li>
+            <li>Crédit Assurance : <strong>{{ number_format($resumeFiltre['credit_assurance'], 0, ',', ' ') }}
+                    MRU</strong>
+            </li>
+        </ul>
+
+//caisse controller
+  public function store(Request $request)
+    {
+        // 1. Validation
+        $request->validate([
+            'numero_entre' => 'required|unique:caisses',
+            'gestion_patient_id' => 'required|exists:gestion_patients,id',
+            'medecin_id' => 'required|exists:medecins,id',
+            'prescripteur_id' => 'nullable|exists:prescripteurs,id',
+            'examen_id' => 'required|exists:examens,id',
+            'service_id' => 'required|exists:services,id',
+            'date_examen' => 'required|date',
+            'total' => 'required|numeric',
+        ]);
+
+        // 2. Création de la caisse
+        $data = $request->all();
+        $data['nom_caissier'] = Auth::user()->name;
+
+        $caisse = Caisse::create($data);
+
+        // 3. Récupération des parts depuis le modèle Examen
+        $examen = \App\Models\Examen::find($request->examen_id);
+        $part_cabinet = $examen->part_cabinet ?? 0;
+        $part_medecin = $examen->part_medecin ?? ($caisse->total - $part_cabinet);
+
+        // 4. Création de l'état de caisse lié
+        \App\Models\EtatCaisse::create([
+            'designation' => 'Facture caisse n°' . $caisse->id,
+            'recette' => $caisse->total,
+            'part_medecin' => $part_medecin,
+            'part_clinique' => $part_cabinet,
+            'depense' => 0,
+            'credit_personnel' => 0,
+            'assurance_id' => null,
+            'personnel_id' => null,
+            'caisse_id' => $caisse->id, // si tu as la colonne
+        ]);
+
+        // 5. Redirection
+        $role = Auth::user()->role->name;
+        return redirect()->route($role . '.caisses.show', $caisse->id)
+            ->with('success', 'Facture et état de caisse créés avec succès.');
+    }
+
+
+     @if($etat->caisse)
+    <a href="{{ route(auth()->user()->role->name . '.caisses.show', $etat->caisse->id) }}"
+        class="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50" title="Voir détails">
+        {{ $etat->designation }}
+    </a>
+    @else
+     {{ $etat->designation }}
+    @endif
+
+
+
+        <p class="text-blue-800 font-bold">{{ $paiement->type }}</p>
