@@ -75,8 +75,7 @@ class CaisseController extends Controller
         $data['nom_caissier'] = Auth::user()->name;
         $data['numero_facture'] = $prochainNumero;
         $data['couverture'] = $request->couverture ?? 0;
-        $data['assurance_id'] = $request->input('assurance_id') ?? null;
-
+        $data['assurance_id'] = $request->assurance_id ?? null;
 
         $caisse = Caisse::create($data);
 
@@ -118,7 +117,7 @@ class CaisseController extends Controller
             'depense' => 0,
             'credit_personnel' => null,
             'personnel_id' => null,
-            'assurance_id' => $caisse->assurance_id, // ✅ fiable même si couverture = 100
+            'assurance_id' => $caisse->assurance_id, // ✅ fonctionne enfin
             'caisse_id' => $caisse->id,
             'medecin_id' => $caisse->medecin_id,
         ]);

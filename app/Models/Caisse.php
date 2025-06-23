@@ -21,6 +21,7 @@ class Caisse extends Model
         'prescripteur_id',
         'examen_id',
         'service_id',
+        'assurance_id',
         'date_examen',
         'total',
         'nom_caissier',
@@ -49,6 +50,10 @@ class Caisse extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function assurance()
+    {
+        return $this->belongsTo(Assurance::class);
+    }
 
     public function patient()
     {

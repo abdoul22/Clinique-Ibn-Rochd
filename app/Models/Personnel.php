@@ -22,4 +22,8 @@ class Personnel extends Model
     {
         return $this->hasMany(EtatCaisse::class, 'credit_personnel');
     }
+    public function credits()
+    {
+        return $this->morphMany(Credit::class, 'source');
+    }
 }

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CaisseController;
+use App\Http\Controllers\CreditController;
 use App\Http\Controllers\ExamenController;
 use App\Http\Controllers\GestionPatientController;
 use App\Http\Controllers\PersonnelController;
@@ -15,7 +16,6 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\EtatCaisseController;
 use App\Http\Controllers\ModePaiementController;
-use App\Http\Controllers\PartCabinetController;
 use App\Http\Controllers\RecapitulatifOperateurController;
 use App\Http\Controllers\RecapitulatifServiceJournalierController;
 use App\Http\Controllers\SuperAdmin\UserManagementController;
@@ -166,6 +166,11 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::get('recap-operateurs-export-pdf', [RecapitulatifOperateurController::class, 'exportPdf'])->name('recap-operateurs.exportPdf');
     Route::get('recap-operateurs-print', [RecapitulatifOperateurController::class, 'print'])->name('recap-operateurs.print');
 
+    // Credits
+    Route::get('/credits', [CreditController::class, 'index'])->name('credits.index');
+    Route::post('/credits/{id}/statut/{statut}', [CreditController::class, 'marquerComme'])->name('credits.marquer');
+    Route::get('credits/{credit}/payer', [CreditController::class, 'payer'])->name('credits.payer');
+    Route::post('credits/{credit}/payer', [CreditController::class, 'payerStore'])->name('credits.payer.store');
 });
 
 
@@ -183,3 +188,5 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 });
 Route::resource('modepaiements', ModePaiementController::class);
+
+Route::resource('credits', CreditController::class);

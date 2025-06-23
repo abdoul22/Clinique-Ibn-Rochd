@@ -19,4 +19,12 @@ class Assurance extends Model
     {
         return number_format($this->credit, 0, ',', ' ') . ' MRU';
     }
+    public function caisse()
+    {
+        return $this->hasMany(Caisse::class);
+    }
+    public function credits()
+    {
+        return $this->morphMany(Credit::class, 'source');
+    }
 }

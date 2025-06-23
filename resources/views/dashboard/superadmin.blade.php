@@ -128,9 +128,9 @@
         </a>
 
         {{-- 11) Part du Cabinet --}}
-        <a href=""
+        <a href="{{ route('credits.index') }}"
             class="bg-purple-800 text-white rounded-2xl p-6 shadow hover:bg-purple-700 transition">
-            <h2 class="text-xl font-semibold mb-2">Part du Cabinet</h2>
+            <h2 class="text-xl font-semibold mb-2">Suivi du Crédit</h2>
             <p class="text-sm text-purple-100">Gérer les recettes destinées au cabinet.</p>
         </a>
 

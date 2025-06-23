@@ -24,6 +24,8 @@ return new class extends Migration
             $table->date('date_examen');
             $table->decimal('total', 10, 2);
             $table->string('nom_caissier');
+           // $table->unsignedBigInteger('assurance_id')->nullable();
+            $table->unsignedBigInteger('assurance_id')->nullable();
             $table->integer('couverture')->nullable(); // Exemple : 70, 100
             $table->timestamps();
         });

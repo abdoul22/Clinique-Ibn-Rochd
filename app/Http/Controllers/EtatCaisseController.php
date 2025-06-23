@@ -128,10 +128,8 @@ class EtatCaisseController extends Controller
             'part_clinique'  => $validated['part_clinique'] ?? 0,
             'depense'        => $validated['depense'] ?? 0,
             'personnel_id'   => $validated['personnel_id'] ?? null,
-
             // ✅ Enregistre toujours l'assurance si présente
             'assurance_id'   => $validated['assurance_id'] ?? $caisse?->assurance_id,
-
             'caisse_id'      => $validated['caisse_id'] ?? null,
 
             // ✅ Corrige le medecin_id en s'assurant qu'il existe dans la caisse
