@@ -5,13 +5,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Credit extends Model
 {
+
+    protected $table = 'credits'; // 🔁 Assure que le nom de la table est correct
+    protected $primaryKey = 'id'; // ✅ Clé primaire utilisée pour route binding
+
     protected $fillable = [
-        'type',
+        'source_type',
         'source_id',
         'montant',
         'montant_paye',
         'status',
+        'statut', // <- tu l'as oublié ici alors qu’il est utilisé dans marquerComme()
     ];
+
     public function getStatusColorAttribute()
     {
         return match ($this->status) {
@@ -23,7 +29,7 @@ class Credit extends Model
 
     public function source()
     {
-        return $this->morphTo(null, 'type', 'source_id');
+        return $this->morphTo();
     }
 
     public function getNomSourceAttribute()
@@ -33,11 +39,21 @@ class Credit extends Model
 
     public function deduireCredit()
     {
-        if ($this->type === 'App\Models\Personnel') {
-            $this->source->decrement('credit', $this->montant);
-        } elseif ($this->type === 'App\Models\Assurance') {
-            $this->source->decrement('credit', $this->montant);
+        if (method_exists($this->source, 'updateCredit')) {
+            $this->source->updateCredit();
         }
+    }
+    public static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($credit) {
+            $credit->statut = match ($credit->status) {
+                'payé' => 'Payé',
+                'partiellement payé' => 'Partiellement payé',
+                default => 'Non payé',
+            };
+        });
     }
 }
 

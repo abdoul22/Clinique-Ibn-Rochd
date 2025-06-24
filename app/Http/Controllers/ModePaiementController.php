@@ -14,7 +14,7 @@ class ModePaiementController extends Controller
     public function index()
     {
         $paiements = ModePaiement::with('caisse')->latest()->paginate(10);
-        return view('modepaiement.index', compact('paiements'));
+        return view('modepaiements.index', compact('paiements'));
     }
 
 
@@ -24,7 +24,7 @@ class ModePaiementController extends Controller
     public function create()
     {
         $caisses = Caisse::latest()->get(); // Pour afficher dans la liste déroulante
-        return view('modepaiement.create', compact('caisses'));
+        return view('modepaiements.create', compact('caisses'));
     }
 
 

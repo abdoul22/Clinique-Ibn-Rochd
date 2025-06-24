@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('nom');
             $table->string('fonction');
-            $table->decimal('credit', 10, 2)->default(0);
             $table->decimal('salaire', 10, 2)->default(0);
             $table->string('telephone')->nullable(); // Pas de after ici
+            $table->decimal('credit', 10, 2)->default(0);
             $table->string('adresse')->nullable();
             $table->timestamps();
         });

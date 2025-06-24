@@ -13,16 +13,16 @@ return new class extends Migration
     {
         Schema::create('credits', function (Blueprint $table) {
             $table->id();
-            $table->string('type'); // 'personnel' ou 'assurance'
-            $table->unsignedBigInteger('source_id'); // ID du personnel ou de l'assurance
-            $table->decimal('montant', 10, 2);
-            $table->enum('statut', ['non payé', 'partiellement payé', 'payé'])->default('non payé');
-            $table->integer('montant_paye')->default(0);
-            $table->string('status')->default('non payé');
+            // Morphs : crée automatiquement source_type et source_id
             $table->morphs('source');
+            $table->decimal('montant', 10, 2);
+            $table->decimal('montant_paye', 10, 2)->default(0);
+            $table->string('status')->default('non payé'); // unique champ de statut
+            $table->string('statut')->default('non payé');
             $table->timestamps();
         });
     }
+
 
 
 

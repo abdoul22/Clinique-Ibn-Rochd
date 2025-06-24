@@ -36,7 +36,7 @@
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-700">
                         @if ($paiement->caisse)
-                        <a href="{{ route(auth()->user()->role->name . '.caisses.show', $paiement->caisse_id) }}"
+                        <a href="{{ route('caisses.show', $paiement->caisse_id) }}"
                             class="text-blue-600 hover:underline">
                             Facture n°{{ $paiement->caisse->id }}
                         </a>

@@ -26,11 +26,6 @@
                 class="w-full border rounded px-3 py-2" required>
         </div>
         <div>
-            <label class="block font-semibold">Credit :</label>
-            <input type="text" name="credit" value="{{ old('credit', $personnel->credit) }}"
-                class="w-full border rounded px-3 py-2" required>
-        </div>
-        <div>
             <label class="block font-semibold">Téléphone :</label>
             <input type="text" name="telephone" value="{{ old('telephone', $personnel->telephone) }}"
                 class="w-full border rounded px-3 py-2">

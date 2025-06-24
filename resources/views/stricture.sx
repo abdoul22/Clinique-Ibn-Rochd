@@ -314,3 +314,10 @@ etat caisse
 
 
         <p class="text-blue-800 font-bold">{{ $paiement->type }}</p>
+
+
+
+
+
+
+

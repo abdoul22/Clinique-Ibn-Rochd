@@ -167,10 +167,12 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::get('recap-operateurs-print', [RecapitulatifOperateurController::class, 'print'])->name('recap-operateurs.print');
 
     // Credits
-    Route::get('/credits', [CreditController::class, 'index'])->name('credits.index');
-    Route::post('/credits/{id}/statut/{statut}', [CreditController::class, 'marquerComme'])->name('credits.marquer');
     Route::get('credits/{credit}/payer', [CreditController::class, 'payer'])->name('credits.payer');
     Route::post('credits/{credit}/payer', [CreditController::class, 'payerStore'])->name('credits.payer.store');
+    Route::get('/credits/create', [CreditController::class, 'create'])->name('credits.create');
+    Route::post('/credits', [CreditController::class, 'store'])->name('credits.store');
+    Route::post('/credits/{id}/statut/{statut}', [CreditController::class, 'marquerComme'])->name('credits.marquer');
+    Route::get('/credits', [CreditController::class, 'index'])->name('credits.index');
 });
 
 

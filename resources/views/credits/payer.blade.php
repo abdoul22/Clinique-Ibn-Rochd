@@ -1,25 +1,40 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-lg mx-auto bg-white p-6 rounded shadow">
-    <h1 class="text-xl font-bold mb-4">Paiement du Crédit</h1>
+<div class="container mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Payer un Crédit</h1>
 
-    <p><strong>Type :</strong> {{ class_basename($credit->source_type) === 'Personnel' ? 'Personnel' : 'Assurance' }}
-    </p>
-    <p><strong>Nom :</strong> {{ $credit->source?->nom }}</p>
-    <p><strong>Montant total :</strong> {{ number_format($credit->montant, 0, ',', ' ') }} MRU</p>
-    <p><strong>Restant à payer :</strong> {{ number_format($credit->montant - $credit->montant_paye, 0, ',', ' ') }} MRU
-    </p>
+    <div class="mb-4">
+        <a href="{{ route('credits.index') }}" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">←
+            Retour à la liste des crédits</a>
+    </div>
 
-    <form action="{{ route('credits.payer.store', $credit->id) }}" method="POST" class="mt-4">
-        @csrf
-        <label class="block mb-2 font-semibold">Montant à payer :</label>
-        <input type="number" name="montant" step="100" max="{{ $credit->montant - $credit->montant_paye }}" required
-            class="w-full border rounded px-3 py-2 mb-4" />
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 max-w-lg mx-auto">
+        <form method="POST" action="{{ route('credits.payer.store', ['credit' => $credit->id]) }}">
+            @csrf
 
-        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            Confirmer le paiement
-        </button>
-    </form>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-bold mb-2">Nom de la source :</label>
+                <p class="text-lg">{{ $credit->source?->nom ?? '---' }}</p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 font-bold mb-2">Type :</label>
+                <p>{{ class_basename($credit->source_type) === 'Personnel' ? 'Personnel' : 'Assurance' }}</p>
+            </div>
+
+            <div class="mb-4">
+                <label for="montant" class="block text-gray-700 font-bold mb-2">Montant à payer :</label>
+                <input type="number" id="montant" name="montant" step="0.01" min="1"
+                    max="{{ $credit->montant - $credit->montant_paye }}"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required>
+            </div>
+
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                Enregistrer le paiement
+            </button>
+        </form>
+    </div>
 </div>
 @endsection

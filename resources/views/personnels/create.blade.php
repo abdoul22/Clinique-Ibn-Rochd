@@ -22,10 +22,6 @@
             <input type="text" name="salaire" value="{{ old('salaire') }}" class="w-full border rounded px-3 py-2" required>
         </div>
         <div>
-            <label class="block font-semibold">Crédit :</label>
-            <input type="text" name="credit" value="{{ old('credit') }}" class="w-full border rounded px-3 py-2" required>
-        </div>
-        <div>
             <label class="block font-semibold">Téléphone :</label>
             <input type="text" name="telephone" value="{{ old('telephone') }}" class="w-full border rounded px-3 py-2">
         </div>

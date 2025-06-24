@@ -24,10 +24,10 @@ class PersonnelController extends Controller
             'nom' => 'required',
             'fonction' => 'required',
             'salaire' => 'required|numeric',
-            'credit' => 'required|numeric',
-            'telephone' => 'required',
-            'adresse' => 'required',
+            'telephone' => 'nullable',
+            'adresse' => 'nullable',
         ]);
+
 
         Personnel::create($request->all());
         return redirect()->route('personnels.index')->with('success', 'Personnel ajouté.');
@@ -53,10 +53,10 @@ class PersonnelController extends Controller
             'nom' => 'required',
             'fonction' => 'required',
             'salaire' => 'required|numeric',
-            'credit' => 'required|numeric',
-            'telephone' => 'required',
-            'adresse' => 'required',
+            'telephone' => 'nullable',
+            'adresse' => 'nullable',
         ]);
+
 
         $personnel->update($request->all());
         return redirect()->route('personnels.index')->with('success', 'Personnel mis à jour.');

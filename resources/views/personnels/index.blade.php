@@ -34,7 +34,15 @@
                     <td class="px-4 py-2">{{ $personnel->nom }}</td>
                     <td class="px-4 py-2">{{ $personnel->fonction }}</td>
                     <td class="px-4 py-2">{{ $personnel->salaire }}</td>
-                    <td class="px-4 py-2">{{ $personnel->credit }}</td>
+                    <td class="px-4 py-2">
+                        @if ($personnel->statut_credit)
+                        <span class="{{ $personnel->statut_color }}">
+                            {{ ucfirst($personnel->statut_credit) }}
+                        </span>
+                        @else
+                        <span class="text-gray-400">Aucun crédit</span>
+                        @endif
+                    </td>
                     <td class="px-4 py-2">{{ $personnel->telephone }}</td>
                     <td class="px-4 py-2">{{ $personnel->adresse }}</td>
                     <td class="px-4 py-2 space-x-2">

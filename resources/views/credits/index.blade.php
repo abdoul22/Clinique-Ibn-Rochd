@@ -2,9 +2,12 @@
 
 @section('content')
 <div class="container mx-auto">
-    <h1 class="text-2xl font-bold mb-4">Liste des Crédits</h1>
-
-    <table class="min-w-full bg-white border">
+    <div class="flex items-center justify-between mb-4">
+<h1 class="text-2xl font-bold mb-4">Liste des Crédits</h1>
+        <a href="{{ route('credits.create') }}"
+            class=" mr-3 bg-purple-800 hover:bg-purple-600 text-white text-sm px-4 py-2 rounded transition">Donner Un Crédit</a>
+    </div>
+ <table class="min-w-full bg-white border">
         <thead>
             <tr>
                 <th class="px-4 py-2 border">#</th>
