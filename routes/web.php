@@ -189,6 +189,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 
 });
+Route::post('/etatcaisse/{id}/valider', [EtatCaisseController::class, 'valider'])
+    ->middleware(['auth', 'role:superadmin'])
+    ->name('etatcaisse.valider');
+Route::post('/etatcaisse/{id}/unvalider', [EtatCaisseController::class, 'unvalider'])->name('etatcaisse.unvalider');
+
 Route::resource('modepaiements', ModePaiementController::class);
 
 Route::resource('credits', CreditController::class);
+Route::get('medecins/{id}/stats', [MedecinController::class, 'statistiques'])->name('medecins.stats');
+Route::get('medecins/{id}/stats', [MedecinController::class, 'stats'])->name('medecins.stats');

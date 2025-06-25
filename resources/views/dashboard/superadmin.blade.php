@@ -7,7 +7,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         {{-- A) Gérer les utilisateurs (admins) --}}
-         <a href="{{ route('superadmin.admins.index') }}"
+        <a href="{{ route('superadmin.admins.index') }}"
             class="bg-blue-600 text-white rounded-2xl p-6 shadow hover:bg-blue-700 transition">
             <h2 class="text-xl font-semibold mb-2">Gérer les utilisateurs</h2>
             <p class="text-sm text-blue-100">Approuver, supprimer ou consulter les comptes administrateurs.</p>
@@ -41,12 +41,12 @@
             <p class="text-sm text-red-100">Consulter et modifier les dossiers médicaux des patients.</p>
         </a>
 
-     {{-- G) Services hospitaliers --}}
-    <a href="{{ route('services.index') }}"
-        class="bg-cyan-600 text-white rounded-2xl p-6 shadow hover:bg-cyan-700 transition">
-        <h2 class="text-xl font-semibold mb-2">Services hospitaliers</h2>
-        <p class="text-sm text-cyan-100">Configurer et surveiller les services offerts par la clinique.</p>
-    </a>
+        {{-- G) Services hospitaliers --}}
+        <a href="{{ route('services.index') }}"
+            class="bg-cyan-600 text-white rounded-2xl p-6 shadow hover:bg-cyan-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Services hospitaliers</h2>
+            <p class="text-sm text-cyan-100">Configurer et surveiller les services offerts par la clinique.</p>
+        </a>
 
         {{-- H) Hospitalisations --}}
         <a href="{{ url('/hospitalisations') }}"
@@ -131,9 +131,14 @@
         <a href="{{ route('credits.index') }}"
             class="bg-purple-800 text-white rounded-2xl p-6 shadow hover:bg-purple-700 transition">
             <h2 class="text-xl font-semibold mb-2">Suivi du Crédit</h2>
-            <p class="text-sm text-purple-100">Gérer les recettes destinées au cabinet.</p>
+            <p class="text-sm text-purple-100">Gérer les Credits liés au personnels et assurances.</p>
         </a>
-
+        {{-- 11) Mode de Paiement --}}
+        <a href="{{ route('modepaiements.index') }}"
+            class="bg-emerald-800 text-white rounded-2xl p-6 shadow hover:bg-emerald-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Mode de Paiement</h2>
+            <p class="text-sm text-purple-100">Gérer la trésorie liés au Paiements Bankily, Masrivi, et autres.</p>
+        </a>
     </div>
 </div>
 @endsection

@@ -29,6 +29,12 @@
             </button>
         </form>
     </div>
+    <select name="source"
+        class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="">Toutes les sources</option>
+        <option value="manuelle" {{ request('source')==='manuelle' ? 'selected' : '' }}>Manuelle</option>
+        <option value="automatique" {{ request('source')==='automatique' ? 'selected' : '' }}>Automatique</option>
+    </select>
 </div>
 
 <!-- Tableau -->

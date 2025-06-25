@@ -23,6 +23,7 @@ return new class extends Migration
             $table->foreignId('assurance_id')->nullable()->constrained('assurances')->onDelete('set null');
             $table->foreignId('caisse_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('medecin_id')->nullable()->constrained()->onDelete('set null');
+            $table->boolean('validated')->default(false);
             $table->timestamps();
         });
     }

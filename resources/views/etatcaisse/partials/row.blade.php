@@ -103,9 +103,22 @@
         </div>
     </td>
 
-    <td class="py-2 px-4">
-        {{ $etat->personnel?->nom ?? '—' }}<br>
-        <small>{{ number_format($etat->personnel_credit, 0, ',', ' ') }} MRU</small>
+<td class="py-2 px-4">
+@if(!$etat->validated)
+    <form method="POST" action="{{ route('etatcaisse.valider', $etat->id) }}">
+        @csrf
+        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded shadow">
+            Valider
+        </button>
+    </form>
+    @else
+    <form method="POST" action="{{ route('etatcaisse.unvalider', $etat->id) }}">
+        @csrf
+        <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-1 rounded shadow">
+            Annuler
+        </button>
+    </form>
+    @endif
     </td>
     {{-- Assurance --}}
     @php

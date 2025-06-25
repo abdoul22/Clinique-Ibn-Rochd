@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EtatCaisse;
 use Illuminate\Http\Request;
 use App\Models\Medecin;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Carbon\CarbonPeriod;
+
+
 
 class MedecinController extends Controller
 {
@@ -65,7 +71,115 @@ class MedecinController extends Controller
 
         return back()->with('error', 'Erreur lors de la sauvegarde.');
     }
+    public function stats($id, Request $request)
+    {
+        $medecin = Medecin::with('caisses.examen')->findOrFail($id);
 
+        $startDate = $request->input('start_date') ?? now()->subMonth()->toDateString();
+        $endDate = $request->input('end_date') ?? now()->toDateString();
+
+        // Récupérer les examens par jour
+        $examensParJour = \App\Models\Caisse::where('medecin_id', $id)
+            ->whereBetween('date_examen', [$startDate, $endDate])
+            ->selectRaw('DATE(date_examen) as jour, COUNT(*) as total')
+            ->groupBy('jour')
+            ->orderBy('jour')
+            ->pluck('total', 'jour');
+
+        // Récupérer les parts validées dans EtatCaisse
+        $partsParJour = \App\Models\EtatCaisse::where('medecin_id', $id)
+            ->where('validated', true)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('DATE(created_at) as jour, SUM(part_medecin) as total')
+            ->groupBy('jour')
+            ->orderBy('jour')
+            ->pluck('total', 'jour');
+
+        $examensHebdo = \App\Models\Caisse::where('medecin_id', $id)
+            ->whereBetween('date_examen', [$startDate, $endDate])
+            ->selectRaw('YEARWEEK(date_examen, 1) as semaine, COUNT(*) as total')
+            ->groupBy('semaine')
+            ->orderBy('semaine')
+            ->pluck('total', 'semaine');
+
+        $examensMensuels = \App\Models\Caisse::where('medecin_id', $id)
+            ->whereBetween('date_examen', [$startDate, $endDate])
+            ->selectRaw('DATE_FORMAT(date_examen, "%Y-%m") as mois, COUNT(*) as total')
+            ->groupBy('mois')
+            ->orderBy('mois')
+            ->pluck('total', 'mois');
+
+        $examensAnnuels = \App\Models\Caisse::where('medecin_id', $id)
+            ->whereBetween('date_examen', [$startDate, $endDate])
+            ->selectRaw('YEAR(date_examen) as annee, COUNT(*) as total')
+            ->groupBy('annee')
+            ->orderBy('annee')
+            ->pluck('total', 'annee');
+
+        $totalJour = $examensParJour->sum();
+        $totalSemaine = $examensHebdo->sum();
+        $totalMois = $examensMensuels->sum();
+        $totalAnnee = $examensAnnuels->sum();
+
+        $partsParJour = EtatCaisse::where('medecin_id', $medecin->id)
+            ->where('validated', true)
+            ->whereNotNull('part_medecin')
+            ->selectRaw('DATE(created_at) as date, SUM(part_medecin) as total')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->pluck('total', 'date');
+
+        return view('medecins.stats', compact(
+            'medecin',
+            'examensParJour',
+            'partsParJour',
+            'examensHebdo',
+            'examensMensuels',
+            'examensAnnuels',
+            'startDate',
+            'endDate',
+            'totalJour',
+            'totalSemaine',
+            'totalMois',
+            'totalAnnee'
+        ));
+    }
+
+    public function statistiques($id)
+    {
+        $medecin = Medecin::with('caisses', 'etatsCaisse')->findOrFail($id);
+
+        $caisses = $medecin->caisses;
+
+        // Filtrage par période
+        $today = Carbon::today();
+        $weekStart = Carbon::now()->startOfWeek();
+        $monthStart = Carbon::now()->startOfMonth();
+        $yearStart = Carbon::now()->startOfYear();
+
+        $stats = [
+            'jour' => $caisses->where('created_at', '>=', $today),
+            'semaine' => $caisses->where('created_at', '>=', $weekStart),
+            'mois' => $caisses->where('created_at', '>=', $monthStart),
+            'annee' => $caisses->where('created_at', '>=', $yearStart),
+        ];
+
+        $examens = [];
+
+        foreach ($stats as $periode => $liste) {
+            $examens[$periode] = [
+                'nombre_examens' => $liste->count(),
+                'total_recette' => $liste->sum('total'),
+                'part_medecin_validee' => $medecin->etatsCaisse
+                    ->where('validated', true)
+                    ->where('created_at', '>=', ${$periode . 'Start'})
+                    ->sum('part_medecin'),
+            ];
+        }
+
+        return view('medecins.stats', compact('medecin', 'examens'));
+    }
 
     public function edit($id)
     {

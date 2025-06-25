@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nom');
             $table->integer('montant')->nullable();
+            $table->string('source')->default('manuelle'); // ou null si tu préfères
             $table->timestamps();
         });
     }

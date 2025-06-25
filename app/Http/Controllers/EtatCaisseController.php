@@ -146,6 +146,42 @@ class EtatCaisseController extends Controller
         ]);
     }
 
+    public function valider($id)
+    {
+        $etat = EtatCaisse::findOrFail($id);
+
+        if ($etat->validated) {
+            return back()->with('error', 'Part déjà validée.');
+        }
+
+        Depense::create([
+            'nom' => 'Part médecin - ' . $etat->medecin?->nom,
+            'montant' => $etat->part_medecin,
+            'source' => 'automatique',
+        ]);
+
+        $etat->validated = true;
+        $etat->save();
+
+        return back()->with('success', 'Part médecin validée et dépense créée.');
+    }
+    public function unvalider($id)
+    {
+        $etat = EtatCaisse::findOrFail($id);
+
+        if (!$etat->validated) {
+            return back()->with('error', 'Part non encore validée.');
+        }
+
+        // Supprimer la dépense liée si elle existe
+        $nom = 'Part médecin - ' . $etat->medecin?->nom;
+        Depense::where('nom', $nom)->where('montant', $etat->part_medecin)->delete();
+
+        $etat->validated = false;
+        $etat->save();
+
+        return back()->with('success', 'Validation annulée avec succès.');
+    }
 
 
     public function generateForPersonnel($id)

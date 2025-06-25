@@ -10,14 +10,18 @@ class DepenseController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->input('search');
         $query = Depense::query();
 
-        if ($search) {
-            $query->where('nom', 'like', "%{$search}%");
+        if ($request->has('search')) {
+            $query->where('nom', 'like', '%' . $request->search . '%');
         }
 
-        $depenses = $query->orderBy('created_at', 'desc')->paginate(10);
+        if ($request->has('source') && in_array($request->source, ['manuelle', 'automatique'])) {
+            $query->where('source', $request->source);
+        }
+
+        $depenses = $query->latest()->paginate(10);
+
         return view('depenses.index', compact('depenses'));
     }
 
@@ -32,6 +36,10 @@ class DepenseController extends Controller
             'nom' => 'required|string|max:255',
             'montant' => 'required|string|max:255',
         ]);
+
+        if (str_contains(request('nom'), 'Part médecin')) {
+            abort(403, 'Création manuelle des parts médecin interdite.');
+        }
 
         Depense::create($request->all());
         return redirect()->route('depenses.index')->with('success', 'Dépense ajoutée avec succès.');

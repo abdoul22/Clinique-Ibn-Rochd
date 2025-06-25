@@ -37,4 +37,10 @@ class Medecin extends Model
     {
         return $this->hasMany(Examen::class);
     }
+    // Medecin.php
+
+    public function etatsCaisse()
+    {
+        return $this->hasMany(EtatCaisse::class);
+    }
 }
