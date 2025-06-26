@@ -11,13 +11,13 @@
         @endif
     </td>
 
-<td class="py-3 px-4 group">
+<td class="py-3 px-2 group">
         <div
             class="flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-3 transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
             <div class="flex items-center space-x-2">
                 <!-- Icône -->
                 <div class="bg-emerald-500/10 p-2 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600" viewBox="0 0 20 20"
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-4 text-emerald-600" viewBox="0 0 20 20"
                         fill="currentColor">
                         <path fill-rule="evenodd"
                             d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"

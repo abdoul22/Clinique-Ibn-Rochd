@@ -38,6 +38,7 @@ class Personnel extends Model
     {
         return $this->credits()->sum('montant') - $this->credits()->sum('montant_paye');
     }
+    
     public function getStatutCreditAttribute()
     {
         $credits = $this->credits;

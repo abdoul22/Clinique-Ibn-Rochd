@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Statistiques du médecin</h1>
-            <p class="text-xl text-indigo-600 font-medium mt-1">{{ $medecin->prenom }} {{ $medecin->nom }}</p>
+            <p class="text-xl font-extrabold text-indigo-600  mt-2">{{ $medecin->prenom }} {{ $medecin->nom }}</p>
         </div>
 
         <!-- Filtre Date -->
@@ -42,7 +42,7 @@
                     <div class="flex justify-between items-center pb-3 border-b border-gray-100">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Aujourd'hui</p>
-                            <p class="text-2xl font-semibold text-gray-900 mt-1">{{ $examensParJour->last() ?? 0 }}</p>
+                            <p class="text-2xl font-semibold text-gray-900 mt-1">{{ $examensAujourdhui }}</p>
                         </div>
                         <div class="bg-indigo-50 rounded-lg p-3">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none"
@@ -54,6 +54,10 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <p class="text-sm font-medium text-gray-500">Hier</p>
+                            <p class="text-xl font-semibold text-gray-900 mt-1">{{ $examensHier }}</p>
+                        </div>
                         <div class="bg-gray-50 rounded-xl p-4">
                             <p class="text-sm font-medium text-gray-500">Cette semaine</p>
                             <p class="text-xl font-semibold text-gray-900 mt-1">{{ $examensHebdo->sum('total') }}</p>
@@ -68,10 +72,7 @@
                         </div>
                         <div class="bg-gray-50 rounded-xl p-4">
                             <p class="text-sm font-medium text-gray-500">Total</p>
-                            <p class="text-xl font-semibold text-gray-900 mt-1">
-                                {{ $examensParJour->last() + $examensHebdo->sum('total') +
-                                $examensMensuels->sum('total') + $examensAnnuels->sum('total') }}
-                            </p>
+                            <p class="text-xl font-semibold text-gray-900 mt-1">{{ $totalExamens }}</p>
                         </div>
                     </div>
                 </div>

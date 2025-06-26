@@ -108,6 +108,22 @@ class CaisseController extends Controller
                 ]);
             }
         }
+        if ($caisse->assurance_id && $montantAssurance > 0) {
+            $assurance = \App\Models\Assurance::find($request->assurance_id);
+            $assurance->increment('credit', $montantAssurance);
+
+            // Vérifie si un crédit existe déjà pour cette caisse précise (en liant via caisse_id si tu veux)
+            \App\Models\Credit::create([
+                'source_type'   => \App\Models\Assurance::class,
+                'source_id'     => $caisse->assurance_id,
+                'montant'       => $montantAssurance,
+                'montant_paye'  => 0,
+                'status'        => 'non payé',
+                'statut'        => 'non payé',
+                'caisse_id'     => $caisse->id,
+            ]);
+        }
+
 
         EtatCaisse::create([
             'designation' => 'Facture caisse n°' . $caisse->id,

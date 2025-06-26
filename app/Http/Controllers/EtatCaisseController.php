@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\EtatCaisse;
 use App\Models\Caisse;
+use App\Models\Credit;
 use App\Models\Depense;
 use App\Models\Examen;
 
@@ -138,8 +139,19 @@ class EtatCaisseController extends Controller
             'examen_id'      => $caisse?->examen_id ?? null,
         ]);
 
-        $etat->load('personnel', 'assurance', 'medecin', 'caisse.paiements');
 
+        $etat->load('personnel', 'assurance', 'medecin', 'caisse.paiements');
+        // Création automatique du crédit assurance si une assurance est liée
+        if ($etat->assurance_id) {
+            Credit::create([
+                'source_type' => \App\Models\Assurance::class,
+                'source_id' => $etat->assurance_id,
+                'montant' => $etat->recette,
+                'montant_paye' => 0,
+                'status' => 'non payé',
+                'statut' => 'non payé',
+            ]);
+        }
         return response()->json([
             'etat' => $etat,
             'view' => view('etatcaisse.partials.row', compact('etat'))->render()
@@ -154,10 +166,11 @@ class EtatCaisseController extends Controller
             return back()->with('error', 'Part déjà validée.');
         }
 
-        Depense::create([
+        $depense = Depense::create([
             'nom' => 'Part médecin - ' . $etat->medecin?->nom,
             'montant' => $etat->part_medecin,
-            'source' => 'automatique',
+            'etat_caisse_id' => $etat->id, // Lien direct
+            'source' => 'générée', // pour le filtre
         ]);
 
         $etat->validated = true;
@@ -165,6 +178,25 @@ class EtatCaisseController extends Controller
 
         return back()->with('success', 'Part médecin validée et dépense créée.');
     }
+    public function annulerValidation($id)
+    {
+        $etat = EtatCaisse::findOrFail($id);
+
+        if (!$etat->validated) {
+            return back()->with('error', 'Cette part n’est pas validée.');
+        }
+
+        // Supprimer uniquement la dépense liée à cette validation
+        if ($etat->depense) {
+            $etat->depense->delete();
+        }
+
+        $etat->validated = false;
+        $etat->save();
+
+        return back()->with('success', 'Validation annulée et dépense supprimée.');
+    }
+
     public function unvalider($id)
     {
         $etat = EtatCaisse::findOrFail($id);

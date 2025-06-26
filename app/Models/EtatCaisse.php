@@ -47,6 +47,10 @@ class EtatCaisse extends Model
     {
         return $query->whereNull('personnel_id')->whereNull('assurance_id');
     }
+    public function depense()
+    {
+        return $this->hasOne(Depense::class);
+    }
 
     public function assurance()
     {

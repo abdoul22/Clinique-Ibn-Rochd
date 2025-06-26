@@ -10,4 +10,9 @@ class Depense extends Model
     use HasFactory;
 
     protected $fillable = ['nom', 'montant'];
+
+    public function etatCaisse()
+    {
+        return $this->belongsTo(EtatCaisse::class);
+    }
 }

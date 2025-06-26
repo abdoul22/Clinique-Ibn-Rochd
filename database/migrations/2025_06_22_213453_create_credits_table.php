@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('montant', 10, 2);
             $table->decimal('montant_paye', 10, 2)->default(0);
             $table->string('status')->default('non payé'); // unique champ de statut
+            $table->foreignId('caisse_id')->constrained()->onDelete('cascade');
             $table->string('statut')->default('non payé');
             $table->timestamps();
         });

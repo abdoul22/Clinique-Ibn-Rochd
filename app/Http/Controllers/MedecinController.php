@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Caisse;
 use App\Models\EtatCaisse;
 use Illuminate\Http\Request;
 use App\Models\Medecin;
@@ -77,40 +78,69 @@ class MedecinController extends Controller
 
         $startDate = $request->input('start_date') ?? now()->subMonth()->toDateString();
         $endDate = $request->input('end_date') ?? now()->toDateString();
+        $today = now()->startOfDay(); // 00h GMT
 
-        // Récupérer les examens par jour
-        $examensParJour = \App\Models\Caisse::where('medecin_id', $id)
-            ->whereBetween('date_examen', [$startDate, $endDate])
-            ->selectRaw('DATE(date_examen) as jour, COUNT(*) as total')
+        // Forcer la fin de journée jusqu'à 23:59:59 pour bien inclure aujourd’hui
+        $endDate = Carbon::parse($endDate)->endOfDay()->toDateTimeString();
+        $startDate = Carbon::parse($startDate)->startOfDay()->toDateTimeString();
+
+        $examensHier = Caisse::where('medecin_id', $id)
+            ->whereDate('date_examen', now()->subDay())
+            ->count();
+
+        $whereBetween = [$startDate, $endDate];
+
+        $examensParJour = Caisse::where('medecin_id', $id)
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->selectRaw('DATE(created_at) as jour, COUNT(*) as total')
             ->groupBy('jour')
             ->orderBy('jour')
             ->pluck('total', 'jour');
 
-        // Récupérer les parts validées dans EtatCaisse
-        $partsParJour = \App\Models\EtatCaisse::where('medecin_id', $id)
+        $examensAujourdhui = $examensParJour[now()->toDateString()] ?? 0;
+
+        // Étendre les dates manquantes dans la période
+        $period = CarbonPeriod::create($startDate, $endDate);
+        $examensParJourComplet = collect();
+        foreach ($period as $date) {
+            $jour = $date->toDateString();
+            $examensParJourComplet[$jour] = $examensParJour[$jour] ?? 0;
+        }
+        $examensParJour = $examensParJourComplet;
+
+        $partsParJour = EtatCaisse::where('medecin_id', $id)
             ->where('validated', true)
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', $whereBetween)
             ->selectRaw('DATE(created_at) as jour, SUM(part_medecin) as total')
             ->groupBy('jour')
             ->orderBy('jour')
             ->pluck('total', 'jour');
 
-        $examensHebdo = \App\Models\Caisse::where('medecin_id', $id)
-            ->whereBetween('date_examen', [$startDate, $endDate])
+        $examensHebdo = Caisse::where('medecin_id', $id)
+            ->whereBetween('date_examen', $whereBetween)
             ->selectRaw('YEARWEEK(date_examen, 1) as semaine, COUNT(*) as total')
             ->groupBy('semaine')
             ->orderBy('semaine')
             ->pluck('total', 'semaine');
 
-        $examensMensuels = \App\Models\Caisse::where('medecin_id', $id)
-            ->whereBetween('date_examen', [$startDate, $endDate])
+        $partsParJourComplet = collect();
+        foreach ($period as $date) {
+            $jour = $date->toDateString();
+            $partsParJourComplet[$jour] = $partsParJour[$jour] ?? 0;
+        }
+        $totalExamens = $examensParJour->sum(); // ← au lieu de combiner plusieurs sources
+
+        $partsParJour = $partsParJourComplet;
+
+        $examensMensuels = Caisse::where('medecin_id', $id)
+            ->whereBetween('date_examen', $whereBetween)
             ->selectRaw('DATE_FORMAT(date_examen, "%Y-%m") as mois, COUNT(*) as total')
             ->groupBy('mois')
             ->orderBy('mois')
             ->pluck('total', 'mois');
 
-        $examensAnnuels = \App\Models\Caisse::where('medecin_id', $id)
-            ->whereBetween('date_examen', [$startDate, $endDate])
+        $examensAnnuels = Caisse::where('medecin_id', $id)
+            ->whereBetween('date_examen', $whereBetween)
             ->selectRaw('YEAR(date_examen) as annee, COUNT(*) as total')
             ->groupBy('annee')
             ->orderBy('annee')
@@ -120,15 +150,6 @@ class MedecinController extends Controller
         $totalSemaine = $examensHebdo->sum();
         $totalMois = $examensMensuels->sum();
         $totalAnnee = $examensAnnuels->sum();
-
-        $partsParJour = EtatCaisse::where('medecin_id', $medecin->id)
-            ->where('validated', true)
-            ->whereNotNull('part_medecin')
-            ->selectRaw('DATE(created_at) as date, SUM(part_medecin) as total')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->pluck('total', 'date');
 
         return view('medecins.stats', compact(
             'medecin',
@@ -142,9 +163,14 @@ class MedecinController extends Controller
             'totalJour',
             'totalSemaine',
             'totalMois',
-            'totalAnnee'
+            'totalAnnee',
+            'examensHier',
+            'examensAujourdhui',
+            'examensHier',
+            'totalExamens'
         ));
     }
+
 
     public function statistiques($id)
     {
