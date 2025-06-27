@@ -6,8 +6,9 @@
     <h1 class="text-xl md:text-2xl font-bold">Liste des États de caisse</h1>
 
     <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0 w-full lg:w-auto">
-        <a href="{{ route('etatcaisse.create') }}"
-            class="bg-purple-800 hover:bg-purple-600 text-white text-sm px-4 py-2 rounded transition">Voir Un Etat</a>
+     <a href="{{ route('modepaiements.dashboard') }}"
+            class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">
+            Voir la trésorerie globale </a>
         <!-- Boutons Export -->
         <a href="{{ route('etatcaisse.exportPdf') }}"
             class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition">PDF</a>

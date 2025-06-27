@@ -8,14 +8,13 @@
             class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
             + Nouveau Paiement
         </a>
-    </div>
+        </div>
 
     @if (session('success'))
     <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4">
         {{ session('success') }}
     </div>
     @endif
-
     <div class="bg-white shadow rounded-lg overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">

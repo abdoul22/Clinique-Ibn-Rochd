@@ -15,4 +15,8 @@ class Depense extends Model
     {
         return $this->belongsTo(EtatCaisse::class);
     }
+    public function modePaiement()
+    {
+        return $this->belongsTo(ModePaiement::class, 'mode_paiement_id');
+    }
 }

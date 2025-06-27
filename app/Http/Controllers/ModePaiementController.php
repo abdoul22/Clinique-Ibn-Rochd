@@ -14,9 +14,47 @@ class ModePaiementController extends Controller
     public function index()
     {
         $paiements = ModePaiement::with('caisse')->latest()->paginate(10);
+
         return view('modepaiements.index', compact('paiements'));
     }
 
+    public function dashboard()
+    {
+        $paiements = \App\Models\ModePaiement::all();
+
+        // Entrées : groupées par type
+        $entrees = $paiements->groupBy('type')->map(function ($rows) {
+            return $rows->sum('montant');
+        });
+
+        // Sorties : dépenses validées
+        $depenses = \App\Models\EtatCaisse::whereNotNull('depense')->get();
+        $sorties = [
+            'espèces' => $depenses->sum('depense'), // on suppose qu'elles sont toujours en espèces
+            // si tu veux affecter à d'autres types, il faut ajouter un champ "type" dans EtatCaisse
+        ];
+
+        // Total par type
+        $modes = ['espèces', 'bankily', 'masrivi', 'sedad'];
+        $data = [];
+        $totalGlobal = 0;
+
+        foreach ($modes as $mode) {
+            $entree = $entrees[$mode] ?? 0;
+            $sortie = $sorties[$mode] ?? 0;
+            $net = $entree - $sortie;
+            $totalGlobal += $net;
+
+            $data[] = [
+                'mode' => ucfirst($mode),
+                'entree' => $entree,
+                'sortie' => $sortie,
+                'solde' => $net,
+            ];
+        }
+
+        return view('modepaiements.dashboard', compact('data', 'totalGlobal'));
+    }
 
     /**
      * Show the form for creating a new resource.

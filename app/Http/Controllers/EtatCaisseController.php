@@ -17,7 +17,6 @@ class EtatCaisseController extends Controller
 {
     public function index(Request $request)
     {
-
         $etatcaisses = EtatCaisse::with(['caisse', 'caisse.paiements', 'personnel', 'assurance', 'medecin'])
             ->when($request->date, fn($q) => $q->whereDate('created_at', $request->date))
             ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
@@ -27,48 +26,75 @@ class EtatCaisseController extends Controller
         $personnels = Personnel::all();
         $caisse = Caisse::all();
 
-        // Date filtrée
         $date = $request->date;
 
-        // Filtres dynamiques sur les modules liés
-        $recetteCaisse = Caisse::when($date, fn($q) => $q->whereDate('created_at', $date))->sum('total');
-        $partMedecin = Examen::when($date, fn($q) => $q->whereDate('created_at', $date))->sum('part_medecin');
-        $partCabinet = Examen::when($date, fn($q) => $q->whereDate('created_at', $date))->sum('part_cabinet');
-        $depense = Depense::when($date, fn($q) => $q->whereDate('created_at', $date))->sum('montant');
-        $creditPersonnel = Personnel::when($date, fn($q) => $q->whereDate('created_at', $date))->sum('credit');
-        $assurances = Assurance::all(); // tu peux aussi filtrer si tu as une table pivot ou des paiements liés à des dates
+        // ➕ Totaux filtrés si une date est présente
+        $recetteCaisse = $date ? Caisse::whereDate('created_at', $date)->sum('total') : 0;
+        $partMedecin = $date ? EtatCaisse::whereDate('created_at', $date)->where('validated', true)->sum('part_medecin') : 0;
+        $partCabinet = $recetteCaisse - $partMedecin;
+        $depense = $date ? Depense::whereDate('created_at', $date)->sum('montant') : 0;
 
-        // ⚪ Résumé global (sans date)
+        // Crédits filtrés
+        $creditPersonnel = $date
+            ? max(
+                \App\Models\Credit::where('source_type', \App\Models\Personnel::class)->whereDate('created_at', $date)->sum('montant') -
+                    \App\Models\Credit::where('source_type', \App\Models\Personnel::class)->whereDate('created_at', $date)->sum('montant_paye'),
+                0
+            ) : 0;
+
+        $creditAssurance = $date
+            ? max(
+                \App\Models\Credit::where('source_type', \App\Models\Assurance::class)->whereDate('created_at', $date)->sum('montant') -
+                    \App\Models\Credit::where('source_type', \App\Models\Assurance::class)->whereDate('created_at', $date)->sum('montant_paye'),
+                0
+            ) : 0;
+
+        // 📊 Résumé filtré
         $resumeFiltre = [
             'recette' => $recetteCaisse,
             'part_medecin' => $partMedecin,
             'part_cabinet' => $partCabinet,
             'depense' => $depense,
-            'personnel_id' => $request->personnel_id,
-            'credit_assurance' => Assurance::when($date, fn($q) => $q->whereDate('created_at', $date))->sum('credit'),
+            'credit_personnel' => $creditPersonnel,
+            'credit_assurance' => $creditAssurance,
         ];
-        // Résumé global
+
+        // 📊 Résumé global
         $resumeGlobal = [
             'recette' => Caisse::sum('total'),
-            'part_medecin' => Examen::sum('part_medecin'),
-            'part_cabinet' => Examen::sum('part_cabinet'),
+            'part_medecin' => EtatCaisse::where('validated', true)->sum('part_medecin'),
             'depense' => Depense::sum('montant'),
-            'credit_assurance' => Assurance::sum('credit'),
+            'credit_personnel' => max(
+                \App\Models\Credit::where('source_type', \App\Models\Personnel::class)->sum('montant') -
+                    \App\Models\Credit::where('source_type', \App\Models\Personnel::class)->sum('montant_paye'),
+                0
+            ),
+            'credit_assurance' => max(
+                \App\Models\Credit::where('source_type', \App\Models\Assurance::class)->sum('montant') -
+                    \App\Models\Credit::where('source_type', \App\Models\Assurance::class)->sum('montant_paye'),
+                0
+            ),
         ];
-        $chartFiltreData = request('date') ? [
+        $resumeGlobal['part_cabinet'] = $resumeGlobal['recette'] - $resumeGlobal['part_medecin'];
+
+        // 📈 Graphique filtré (par date)
+        $chartFiltreData = $date ? [
             $resumeFiltre['recette'],
             $resumeFiltre['part_medecin'],
             $resumeFiltre['part_cabinet'],
             $resumeFiltre['depense'],
-            $creditPersonnel,
+            $resumeFiltre['credit_personnel'],
+            $resumeFiltre['credit_assurance'],
         ] : [];
 
+        // 📈 Graphique global (toutes les dates)
         $chartGlobalData = [
             $resumeGlobal['recette'],
             $resumeGlobal['part_medecin'],
             $resumeGlobal['part_cabinet'],
             $resumeGlobal['depense'],
-            $creditPersonnel,
+            $resumeGlobal['credit_personnel'],
+            $resumeGlobal['credit_assurance'],
         ];
 
         return view('etatcaisse.index', compact(
@@ -81,11 +107,11 @@ class EtatCaisseController extends Controller
             'partCabinet',
             'depense',
             'caisse',
-            'assurances',
             'chartFiltreData',
             'chartGlobalData'
         ));
     }
+
 
     public function create()
     {

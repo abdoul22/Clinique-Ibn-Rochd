@@ -19,6 +19,15 @@
             <p class="text-red-500 text-sm">{{ $message }}</p>
             @enderror
         </div>
+     <div class="my-4">
+            <label for="mode_paiement_id" class="block text-bold font-medium">Mode de paiement</label>
+            <select name="mode_paiement_id" id="mode_paiement_id" required class="w-full border rounded p-2">
+                <option value="">-- Sélectionner --</option>
+                @foreach($modes as $mode)
+                <option value="{{ $mode }}">{{ ucfirst($mode) }}</option>
+                @endforeach
+            </select>
+        </div>
         <div class="grid gap-4 my-3 ">
             <input type="text" name="montant" placeholder="Montant de la dépense"
                 class="border border-gray-300 rounded px-3 py-2 w-full" value="{{ old('montant') }}" required>

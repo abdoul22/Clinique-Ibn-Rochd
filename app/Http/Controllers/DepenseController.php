@@ -27,21 +27,29 @@ class DepenseController extends Controller
 
     public function create()
     {
-        return view('depenses.create');
+        $modes = ['espèces', 'bankily', 'masrivi', 'sedad'];
+        return view('depenses.create', compact('modes')); 
     }
+
 
     public function store(Request $request)
     {
         $request->validate([
             'nom' => 'required|string|max:255',
             'montant' => 'required|string|max:255',
+            'mode_paiement_id' => 'required|exists:mode_paiements,id',
         ]);
 
         if (str_contains(request('nom'), 'Part médecin')) {
             abort(403, 'Création manuelle des parts médecin interdite.');
         }
 
-        Depense::create($request->all());
+        Depense::create([
+            'nom' => $request->nom,
+            'montant' => $request->montant,
+            'mode_paiement_id' => $request->mode_paiement_id,
+            'source' => 'manuelle', // ou autre
+        ]);
         return redirect()->route('depenses.index')->with('success', 'Dépense ajoutée avec succès.');
     }
 

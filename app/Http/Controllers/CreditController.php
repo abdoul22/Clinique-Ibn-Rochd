@@ -10,17 +10,22 @@ use Illuminate\Support\Facades\Log;
 
 class CreditController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $credits = Credit::with('source')->latest()->get();
+        $status = $request->input('status'); // 'payé', 'partiellement payé', 'non payé' ou null
 
-        $creditsPersonnel = $credits->filter(fn($credit) => $credit->source_type === Personnel::class);
-        $creditsAssurance = $credits->filter(fn($credit) => $credit->source_type === Assurance::class);
+        $creditsPersonnel = Credit::where('source_type', \App\Models\Personnel::class)
+            ->with('source')
+            ->latest()
+            ->paginate(10, ['*'], 'personnels');
 
-        return view('credits.index', compact('credits', 'creditsPersonnel', 'creditsAssurance'));
+        $creditsAssurance = Credit::where('source_type', \App\Models\Assurance::class)
+            ->with('source')
+            ->latest()
+            ->paginate(10, ['*'], 'assurances');
+
+        return view('credits.index', compact('creditsPersonnel', 'creditsAssurance'));
     }
-
-
 
     public function marquerComme($id, $statut)
     {
@@ -60,6 +65,9 @@ class CreditController extends Controller
         $credit = Credit::findOrFail($id);
         // Validation du montant
         $maxAmount = $credit->montant - $credit->montant_paye;
+        if ($maxAmount <= 0) {
+            return back()->with('error', 'Ce crédit est déjà entièrement remboursé.');
+        }
         $request->validate([
             'montant' => "required|numeric|min:0.01|max:$maxAmount",
         ]);
@@ -73,7 +81,7 @@ class CreditController extends Controller
         } else {
             $credit->status = 'partiellement payé';
         }
-
+        $credit->mode_paiement_id = $request->mode_paiement_id;
         $credit->save();
 
         // Déduction dans la source (personnel ou assurance)
@@ -92,7 +100,12 @@ class CreditController extends Controller
     public function create()
     {
         $personnels = Personnel::all();
-        return view('credits.create', compact('personnels'));
+        foreach ($personnels as $personnel) {
+            $personnel->updateCredit(); // si tu as cette méthode
+        }
+
+        $modes = ['espèces', 'bankily', 'masrivi','sedad']; // ← Liste fixe
+        return view('credits.create', compact('personnels', 'modes'));
     }
 
     public function store(Request $request)
@@ -100,20 +113,24 @@ class CreditController extends Controller
         $request->validate([
             'source_id' => 'required|exists:personnels,id',
             'montant' => 'required|numeric|min:1',
+            'mode_paiement_id' => 'required|exists:mode_paiements,id',
         ]);
         $personnel = Personnel::findOrFail($request->source_id);
 
         if ($request->montant > $personnel->salaire) {
             return back()->withErrors(['montant' => 'Le crédit dépasse le salaire du personnel.']);
         }
-        $creditActuel = $personnel->credits()->sum('montant') - $personnel->credits()->sum('montant_paye');
-        $soldeDispo = $personnel->salaire - $creditActuel;
+        $totalCredits = $personnel->credits()->sum('montant');
+        $totalPayes   = $personnel->credits()->sum('montant_paye');
+        $creditActuel = $totalCredits - $totalPayes;
+        $creditEligible = $personnel->salaire - $creditActuel;
 
-        if ($request->montant > $soldeDispo) {
+        if ($request->montant > $creditEligible) {
             return back()->withErrors([
-                'montant' => "Ce crédit dépasse le solde disponible de {$soldeDispo} MRU sur le salaire de {$personnel->nom}."
+                'montant' => "Ce crédit dépasse le crédit éligible : {$creditEligible} MRU. Veuillez rembourser avant de demander plus."
             ]);
         }
+
         // $personnel->save();
         Log::info('Création crédit', [
             'montant' => $request->montant,
@@ -127,6 +144,7 @@ class CreditController extends Controller
             'status' => 'non payé',
             'statut' => 'non payé',
             'montant_paye' => 0,
+            'mode_paiement_id' => $request->mode_paiement_id
         ]);
         $personnel->updateCredit();
 

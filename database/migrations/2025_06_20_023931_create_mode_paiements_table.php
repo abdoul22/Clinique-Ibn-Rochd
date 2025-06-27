@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('mode_paiements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('caisse_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['espèces', 'bankily', 'masrivi']);
+            $table->enum('type', ['espèces', 'bankily', 'masrivi','sedad']);
             $table->decimal('montant', 10, 2);
             $table->timestamps();
         });

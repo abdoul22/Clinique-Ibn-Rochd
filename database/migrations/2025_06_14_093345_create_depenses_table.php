@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nom');
             $table->integer('montant')->nullable();
             $table->string('source')->default('manuelle'); // ou null si tu préfères
+            $table->foreignId('mode_paiement_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
         });
     }

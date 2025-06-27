@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('status')->default('non payé'); // unique champ de statut
             $table->foreignId('caisse_id')->constrained()->onDelete('cascade');
             $table->string('statut')->default('non payé');
+            $table->foreignId('mode_paiement_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
         });
     }

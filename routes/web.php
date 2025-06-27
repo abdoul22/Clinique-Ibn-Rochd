@@ -199,3 +199,7 @@ Route::resource('modepaiements', ModePaiementController::class);
 Route::resource('credits', CreditController::class);
 Route::get('medecins/{id}/stats', [MedecinController::class, 'statistiques'])->name('medecins.stats');
 Route::get('medecins/{id}/stats', [MedecinController::class, 'stats'])->name('medecins.stats');
+
+Route::get('mode-paiements/dashboard', [App\Http\Controllers\ModePaiementController::class, 'dashboard'])
+    ->name('modepaiements.dashboard')
+    ->middleware('auth');

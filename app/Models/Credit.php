@@ -31,6 +31,10 @@ class Credit extends Model
     {
         return $this->morphTo();
     }
+    public function modePaiement()
+    {
+        return $this->belongsTo(ModePaiement::class, 'mode_paiement_id');
+    }
 
     public function getNomSourceAttribute()
     {
