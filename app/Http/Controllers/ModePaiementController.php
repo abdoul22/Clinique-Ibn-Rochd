@@ -22,19 +22,39 @@ class ModePaiementController extends Controller
     {
         $paiements = \App\Models\ModePaiement::all();
 
-        // Entrées : groupées par type
+        // Entrées : groupées par type (recettes)
         $entrees = $paiements->groupBy('type')->map(function ($rows) {
             return $rows->sum('montant');
         });
 
-        // Sorties : dépenses validées
-        $depenses = \App\Models\EtatCaisse::whereNotNull('depense')->get();
+        // 🔽 Sorties réelles par mode
         $sorties = [
-            'espèces' => $depenses->sum('depense'), // on suppose qu'elles sont toujours en espèces
-            // si tu veux affecter à d'autres types, il faut ajouter un champ "type" dans EtatCaisse
+            'espèces' => 0,
+            'bankily' => 0,
+            'masrivi' => 0,
+            'sedad' => 0,
         ];
 
-        // Total par type
+        // ➤ Dépenses avec mode de paiement
+        foreach (\App\Models\Depense::with('mode_paiement')->get() as $depense) {
+            if ($depense->mode_paiement) {
+                $type = $depense->mode_paiement->type;
+                $sorties[$type] += $depense->montant;
+            }
+        }
+
+        // ➤ Crédits payés avec mode de paiement
+        foreach (\App\Models\Credit::with('mode_paiement')->get() as $credit) {
+            if ($credit->mode_paiement) {
+                $type = $credit->mode_paiement->type;
+                $sorties[$type] += $credit->montant_paye;
+            }
+        }
+
+        // ➤ Parts médecin validées (via EtatCaisse) → ajouter uniquement si tu veux les considérer comme dépenses manuelles
+        // ➤ Si tu ne passes PAS par Depense, ignore cette section (elle serait alors redondante)
+
+        // Total net par mode
         $modes = ['espèces', 'bankily', 'masrivi', 'sedad'];
         $data = [];
         $totalGlobal = 0;
@@ -42,14 +62,14 @@ class ModePaiementController extends Controller
         foreach ($modes as $mode) {
             $entree = $entrees[$mode] ?? 0;
             $sortie = $sorties[$mode] ?? 0;
-            $net = $entree - $sortie;
-            $totalGlobal += $net;
+            $solde = $entree - $sortie;
+            $totalGlobal += $solde;
 
             $data[] = [
                 'mode' => ucfirst($mode),
                 'entree' => $entree,
                 'sortie' => $sortie,
-                'solde' => $net,
+                'solde' => $solde,
             ];
         }
 

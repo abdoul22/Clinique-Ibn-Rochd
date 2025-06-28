@@ -247,19 +247,16 @@
     {{ $etatcaisses->links() }}
 </div>
     <!-- Résumé global -->
-    <div class="bg-gray-50 border border-gray-300 rounded p-4 mt-4">
+<div class="bg-gray-50 border border-gray-300 rounded p-4 mt-4">
         <h2 class="text-gray-800 font-semibold mb-2">Résumé global (toutes dates)</h2>
         <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-gray-700">
             <li>Recette Caisse : <strong>{{ number_format($resumeGlobal['recette'], 0, ',', ' ') }} MRU</strong></li>
             <li>Part Médecin : <strong>{{ number_format($resumeGlobal['part_medecin'], 0, ',', ' ') }} MRU</strong></li>
-            <li>Part Clinique : <strong>{{ number_format($resumeGlobal['part_cabinet'], 0, ',', ' ') }} MRU</strong>
-            </li>
+            <li>Part Clinique : <strong>{{ number_format($resumeGlobal['part_cabinet'], 0, ',', ' ') }} MRU</strong></li>
             <li>Dépenses : <strong>{{ number_format($resumeGlobal['depense'], 0, ',', ' ') }} MRU</strong></li>
-            <li>Crédit Personnel : <strong>0
-                    MRU</strong>
+            <li>Crédit Personnel : <strong>{{ number_format($resumeGlobal['credit_personnel'], 0, ',', ' ') }} MRU</strong>
             </li>
-            <li>Crédit Assurance : <strong>{{ number_format($resumeGlobal['credit_assurance'], 0, ',', ' ') }}
-                    MRU</strong>
+            <li>Crédit Assurance : <strong>{{ number_format($resumeGlobal['credit_assurance'], 0, ',', ' ') }} MRU</strong>
             </li>
         </ul>
     </div>

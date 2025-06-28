@@ -51,8 +51,6 @@
                     <th class="py-3 px-4">Nom</th>
                     <th class="py-3 px-4">Prénom</th>
                     <th class="py-3 px-4">Spécialité</th>
-                    <th class="py-3 px-4 text-center">Part</th>
-                    <th class="py-3 px-4 text-center">Tarif</th>
                     <th class="py-3 px-4">Téléphone</th>
                     <th class="py-3 px-4 text-center">Status</th>
                     <th class="py-3 px-4 text-center">Actions</th>
@@ -65,8 +63,6 @@
                     <td class="py-4 px-4 font-medium">{{ $medecin->nom }}</td>
                     <td class="py-4 px-4">{{ $medecin->prenom }}</td>
                     <td class="py-4 px-4">{{ $medecin->specialite }}</td>
-                    <td class="py-4 px-4 text-center">{{ $medecin->part_medecin }}</td>
-                    <td class="py-4 px-4 text-center">{{ $medecin->tarif_consultation }}</td>
                     <td class="py-4 px-4">{{ $medecin->telephone }}</td>
                     <td class="py-4 px-4 text-center">
                         <a href="{{ route('medecins.stats', $medecin->id) }}"

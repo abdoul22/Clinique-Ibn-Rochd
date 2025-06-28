@@ -31,7 +31,7 @@ class Credit extends Model
     {
         return $this->morphTo();
     }
-    public function modePaiement()
+    public function mode_paiement()
     {
         return $this->belongsTo(ModePaiement::class, 'mode_paiement_id');
     }

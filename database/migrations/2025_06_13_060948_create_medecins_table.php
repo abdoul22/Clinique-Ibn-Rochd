@@ -19,9 +19,6 @@ return new class extends Migration
             $table->string('telephone')->nullable();
             $table->string('email')->nullable();
             $table->string('adresse')->nullable();
-            $table->date('date_embauche')->nullable();
-            $table->decimal('tarif_consultation', 10, 2)->nullable();
-            $table->decimal('part_medecin', 10, 2)->nullable();
             $table->string('statut')->default('actif'); // actif / suspendu / retraité...
             $table->timestamps();
         });

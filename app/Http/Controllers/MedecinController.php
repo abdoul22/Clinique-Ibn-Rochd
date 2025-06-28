@@ -55,12 +55,8 @@ class MedecinController extends Controller
             'prenom',
             'specialite',
             'telephone',
-            'tarif_consultation',
-            'part_medecin',
             'email',
             'adresse',
-            'date_embauche',
-            'experience',
             'statut',
         ]));
 
@@ -232,11 +228,7 @@ class MedecinController extends Controller
             'telephone',
             'email',
             'adresse',
-            'date_embauche',
-            'experience',
             'statut',
-            'tarif_consultation',
-            'part_medecin',
         ]));
 
         return redirect()->route(Auth::user()->role->name . '.medecins.index')->with('success', 'Médecin mis à jour avec succès.');

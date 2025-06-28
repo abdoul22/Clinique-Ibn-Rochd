@@ -21,11 +21,6 @@
             <input type="text" name="specialite" placeholder="Spécialité"
                 class="border border-gray-300 rounded px-3 py-2 w-full" required>
 
-            <input type="text" name="tarif_consultation" placeholder="Tarif de la consultation"
-                class="border border-gray-300 rounded px-3 py-2 w-full" required>
-
-                <input type="text" name="part_medecin"
-                placeholder="Part du medecin" class="border border-gray-300 rounded px-3 py-2 w-full" required>
 
             <input type="text" name="telephone" placeholder="Téléphone"
                 class="border border-gray-300 rounded px-3 py-2 w-full">

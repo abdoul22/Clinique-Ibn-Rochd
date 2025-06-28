@@ -9,13 +9,14 @@ class Depense extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'montant'];
+    protected $fillable = ['nom', 'montant', 'etat_caisse_id', 'mode_paiement_id', 'source'];
+
 
     public function etatCaisse()
     {
         return $this->belongsTo(EtatCaisse::class);
     }
-    public function modePaiement()
+    public function mode_paiement()
     {
         return $this->belongsTo(ModePaiement::class, 'mode_paiement_id');
     }

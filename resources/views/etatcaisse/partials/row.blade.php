@@ -160,7 +160,7 @@
     {{-- Médecin cliquable --}}
     <td class="py-2 px-4">
         @if($etat->medecin)
-        <a href="{{ route('superadmin.medecins.show', $etat->medecin_id) }}" class="text-blue-600 hover:underline">
+        <a href="{{ route('medecins.stats', $etat->medecin->id) }}" class="text-blue-600 hover:underline">
             {{ $etat->medecin->nom }}
         </a>
         @else

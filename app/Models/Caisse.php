@@ -28,6 +28,10 @@ class Caisse extends Model
         'couverture',
         'numero_facture',
     ];
+    public function mode_paiements()
+    {
+        return $this->hasMany(ModePaiement::class);
+    }
 
 
     public function medecin()

@@ -73,10 +73,10 @@
         </div>
     </form>
     <p class="text-sm text-gray-500">
-        💡 Remplissez soit la <strong>part médecin</strong> soit la <strong>part cabinet</strong>, l'autre sera calculée
+         Remplissez soit la <strong>part médecin</strong> soit la <strong>part cabinet</strong>, l'autre sera calculée
         automatiquement selon le tarif.
     </p>
-  
+
 </div>
 @push('scripts')
 <script>

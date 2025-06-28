@@ -19,9 +19,6 @@ class Medecin extends Model
         'specialite',
         'telephone',
         'email',
-        'tarif_consultation',
-        'part_medecin',
-        'date_embauche',
         'statut',
     ];
 

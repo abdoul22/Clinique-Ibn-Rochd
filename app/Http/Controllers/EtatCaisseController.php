@@ -26,89 +26,92 @@ class EtatCaisseController extends Controller
         $personnels = Personnel::all();
         $caisse = Caisse::all();
 
-        $date = $request->date;
+        // 🔹 Résumé GLOBAL (toutes dates)
+        $totalRecette = Caisse::sum('total');
+        $totalPartMedecin = EtatCaisse::where('validated', true)->sum('part_medecin');
+        $totalPartCabinet = $totalRecette - $totalPartMedecin;
+        $totalDepense = Depense::sum('montant');
 
-        // ➕ Totaux filtrés si une date est présente
-        $recetteCaisse = $date ? Caisse::whereDate('created_at', $date)->sum('total') : 0;
-        $partMedecin = $date ? EtatCaisse::whereDate('created_at', $date)->where('validated', true)->sum('part_medecin') : 0;
-        $partCabinet = $recetteCaisse - $partMedecin;
-        $depense = $date ? Depense::whereDate('created_at', $date)->sum('montant') : 0;
+        $totalCreditPersonnel = max(
+            Credit::where('source_type', \App\Models\Personnel::class)->sum('montant') -
+                Credit::where('source_type', \App\Models\Personnel::class)->sum('montant_paye'),
+            0
+        );
 
-        // Crédits filtrés
-        $creditPersonnel = $date
-            ? max(
-                \App\Models\Credit::where('source_type', \App\Models\Personnel::class)->whereDate('created_at', $date)->sum('montant') -
-                    \App\Models\Credit::where('source_type', \App\Models\Personnel::class)->whereDate('created_at', $date)->sum('montant_paye'),
-                0
-            ) : 0;
+        $totalCreditAssurance = max(
+            Credit::where('source_type', \App\Models\Assurance::class)->sum('montant') -
+                Credit::where('source_type', \App\Models\Assurance::class)->sum('montant_paye'),
+            0
+        );
 
-        $creditAssurance = $date
-            ? max(
-                \App\Models\Credit::where('source_type', \App\Models\Assurance::class)->whereDate('created_at', $date)->sum('montant') -
-                    \App\Models\Credit::where('source_type', \App\Models\Assurance::class)->whereDate('created_at', $date)->sum('montant_paye'),
-                0
-            ) : 0;
-
-        // 📊 Résumé filtré
-        $resumeFiltre = [
-            'recette' => $recetteCaisse,
-            'part_medecin' => $partMedecin,
-            'part_cabinet' => $partCabinet,
-            'depense' => $depense,
-            'credit_personnel' => $creditPersonnel,
-            'credit_assurance' => $creditAssurance,
-        ];
-
-        // 📊 Résumé global
         $resumeGlobal = [
-            'recette' => Caisse::sum('total'),
-            'part_medecin' => EtatCaisse::where('validated', true)->sum('part_medecin'),
-            'depense' => Depense::sum('montant'),
-            'credit_personnel' => max(
-                \App\Models\Credit::where('source_type', \App\Models\Personnel::class)->sum('montant') -
-                    \App\Models\Credit::where('source_type', \App\Models\Personnel::class)->sum('montant_paye'),
-                0
-            ),
-            'credit_assurance' => max(
-                \App\Models\Credit::where('source_type', \App\Models\Assurance::class)->sum('montant') -
-                    \App\Models\Credit::where('source_type', \App\Models\Assurance::class)->sum('montant_paye'),
-                0
-            ),
+            'recette' => $totalRecette,
+            'part_medecin' => $totalPartMedecin,
+            'part_cabinet' => $totalPartCabinet,
+            'depense' => $totalDepense,
+            'credit_personnel' => $totalCreditPersonnel,
+            'credit_assurance' => $totalCreditAssurance,
         ];
-        $resumeGlobal['part_cabinet'] = $resumeGlobal['recette'] - $resumeGlobal['part_medecin'];
 
-        // 📈 Graphique filtré (par date)
-        $chartFiltreData = $date ? [
-            $resumeFiltre['recette'],
-            $resumeFiltre['part_medecin'],
-            $resumeFiltre['part_cabinet'],
-            $resumeFiltre['depense'],
-            $resumeFiltre['credit_personnel'],
-            $resumeFiltre['credit_assurance'],
-        ] : [];
-
-        // 📈 Graphique global (toutes les dates)
         $chartGlobalData = [
-            $resumeGlobal['recette'],
-            $resumeGlobal['part_medecin'],
-            $resumeGlobal['part_cabinet'],
-            $resumeGlobal['depense'],
-            $resumeGlobal['credit_personnel'],
-            $resumeGlobal['credit_assurance'],
+            $totalRecette,
+            $totalPartMedecin,
+            $totalPartCabinet,
+            $totalDepense,
+            $totalCreditPersonnel,
+            $totalCreditAssurance,
         ];
+
+        // 🔹 Résumé FILTRÉ (si une date est fournie)
+        $date = $request->date;
+        if ($date) {
+            $recetteCaisse = Caisse::whereDate('created_at', $date)->sum('total');
+            $partMedecin = EtatCaisse::whereDate('created_at', $date)->where('validated', true)->sum('part_medecin');
+            $partCabinet = $recetteCaisse - $partMedecin;
+            $depense = Depense::whereDate('created_at', $date)->sum('montant');
+
+            $creditPersonnel = max(
+                Credit::where('source_type', \App\Models\Personnel::class)->whereDate('created_at', $date)->sum('montant') -
+                    Credit::where('source_type', \App\Models\Personnel::class)->whereDate('created_at', $date)->sum('montant_paye'),
+                0
+            );
+
+            $creditAssurance = max(
+                Credit::where('source_type', \App\Models\Assurance::class)->whereDate('created_at', $date)->sum('montant') -
+                    Credit::where('source_type', \App\Models\Assurance::class)->whereDate('created_at', $date)->sum('montant_paye'),
+                0
+            );
+
+            $resumeFiltre = [
+                'recette' => $recetteCaisse,
+                'part_medecin' => $partMedecin,
+                'part_cabinet' => $partCabinet,
+                'depense' => $depense,
+                'credit_personnel' => $creditPersonnel,
+                'credit_assurance' => $creditAssurance,
+            ];
+
+            $chartFiltreData = [
+                $recetteCaisse,
+                $partMedecin,
+                $partCabinet,
+                $depense,
+                $creditPersonnel,
+                $creditAssurance,
+            ];
+        } else {
+            $resumeFiltre = null;
+            $chartFiltreData = [];
+        }
 
         return view('etatcaisse.index', compact(
             'etatcaisses',
             'personnels',
-            'resumeFiltre',
-            'resumeGlobal',
-            'recetteCaisse',
-            'partMedecin',
-            'partCabinet',
-            'depense',
             'caisse',
-            'chartFiltreData',
-            'chartGlobalData'
+            'resumeGlobal',
+            'resumeFiltre',
+            'chartGlobalData',
+            'chartFiltreData'
         ));
     }
 
@@ -155,13 +158,9 @@ class EtatCaisseController extends Controller
             'part_clinique'  => $validated['part_clinique'] ?? 0,
             'depense'        => $validated['depense'] ?? 0,
             'personnel_id'   => $validated['personnel_id'] ?? null,
-            // ✅ Enregistre toujours l'assurance si présente
             'assurance_id'   => $validated['assurance_id'] ?? $caisse?->assurance_id,
             'caisse_id'      => $validated['caisse_id'] ?? null,
-
-            // ✅ Corrige le medecin_id en s'assurant qu'il existe dans la caisse
             'medecin_id'     => $caisse?->medecin_id ?? null,
-
             'examen_id'      => $caisse?->examen_id ?? null,
         ]);
 
@@ -176,12 +175,38 @@ class EtatCaisseController extends Controller
                 'montant_paye' => 0,
                 'status' => 'non payé',
                 'statut' => 'non payé',
+                'caisse_id' => $etat->caisse_id,
             ]);
         }
         return response()->json([
             'etat' => $etat,
             'view' => view('etatcaisse.partials.row', compact('etat'))->render()
         ]);
+    }
+    public function validerPartMedecin($id)
+    {
+        $etat = EtatCaisse::findOrFail($id);
+
+        // Vérifie si déjà validé
+        if ($etat->validated) {
+            return back()->with('info', 'Part déjà validée.');
+        }
+
+        $etat->validated = true;
+        $etat->depense = $etat->part_medecin;
+        $etat->save();
+        $modePaiement = $etat->caisse?->mode_paiements()->latest()->first();
+
+        \App\Models\Depense::create([
+            'nom' => 'Part médecin - ' . ($etat->medecin?->nom ?? 'N/A'),
+            'montant' => $etat->part_medecin,
+            'source' => 'automatique',
+            'etat_caisse_id' => $etat->id,
+            'mode_paiement_id' => $modePaiement?->id,
+        ]);
+
+
+        return back()->with('success', 'Part validée avec succès.');
     }
 
     public function valider($id)
