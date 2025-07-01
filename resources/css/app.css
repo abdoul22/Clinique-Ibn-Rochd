@@ -1,5 +1,7 @@
-@import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -58,9 +60,178 @@
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-800;
 }
 
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Styles pour les tableaux en mode dark */
+@layer components {
+    /* Tableau principal avec dark mode */
+    .table-container {
+        @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700;
+    }
+
+    .table-main {
+        @apply w-full text-sm text-left text-gray-900 dark:text-gray-100;
+    }
+
+    .table-header {
+        @apply bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300;
+    }
+
+    .table-header th {
+        @apply py-3 px-4 font-medium;
+    }
+
+    .table-body {
+        @apply divide-y divide-gray-100 dark:divide-gray-600;
+    }
+
+    .table-row {
+        @apply hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200;
+    }
+
+    .table-cell {
+        @apply py-4 px-4 text-gray-900 dark:text-gray-100;
+    }
+
+    .table-cell-medium {
+        @apply py-4 px-4 font-medium text-gray-900 dark:text-gray-100;
+    }
+
+    /* Actions dans les tableaux */
+    .table-actions {
+        @apply flex justify-center space-x-3;
+    }
+
+    .action-btn {
+        @apply p-1.5 rounded-full transition-colors duration-200;
+    }
+
+    .action-btn-view {
+        @apply text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600;
+    }
+
+    .action-btn-edit {
+        @apply text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20;
+    }
+
+    .action-btn-delete {
+        @apply text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20;
+    }
+
+    /* Badges et statuts */
+    .status-badge {
+        @apply inline-block text-xs px-3 py-1 rounded-full transition-colors duration-200;
+    }
+
+    .status-badge-primary {
+        @apply bg-indigo-600 hover:bg-indigo-700 text-white;
+    }
+
+    .status-badge-success {
+        @apply bg-green-600 hover:bg-green-700 text-white;
+    }
+
+    .status-badge-warning {
+        @apply bg-yellow-600 hover:bg-yellow-700 text-white;
+    }
+
+    .status-badge-danger {
+        @apply bg-red-600 hover:bg-red-700 text-white;
+    }
+}
+
+/* Styles pour les formulaires en mode dark */
+@layer components {
+    .form-input {
+        @apply w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400;
+    }
+
+    .form-select {
+        @apply w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100;
+    }
+
+    .form-button {
+        @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors duration-200;
+    }
+
+    .form-button-secondary {
+        @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg shadow-sm transition-colors duration-200;
+    }
+}
+
+/* Styles pour les titres et textes en mode dark */
+@layer components {
+    .page-title {
+        @apply text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100;
+    }
+
+    .page-subtitle {
+        @apply text-gray-600 dark:text-gray-400 mt-1;
+    }
+
+    .section-title {
+        @apply text-xl font-bold text-gray-800 dark:text-gray-100;
+    }
+
+    .text-muted {
+        @apply text-gray-600 dark:text-gray-400;
+    }
+}
+
+/* Styles pour les cartes et conteneurs en mode dark */
+@layer components {
+    .card {
+        @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6;
+    }
+
+    .card-header {
+        @apply border-b border-gray-200 dark:border-gray-700 pb-4 mb-4;
+    }
+
+    .card-title {
+        @apply text-lg font-semibold text-gray-900 dark:text-gray-100;
+    }
+}
+
+/* Styles pour la pagination en mode dark */
+@layer components {
+    .pagination-container {
+        @apply mt-6;
+    }
+
+    .pagination-link {
+        @apply px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700;
+    }
+
+    .pagination-active {
+        @apply z-10 bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-900/20 dark:border-blue-400 dark:text-blue-400;
+    }
+}
+
+/* Styles pour les messages flash en mode dark */
+@layer components {
+    .alert {
+        @apply p-4 rounded-lg border mb-4;
+    }
+
+    .alert-success {
+        @apply bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200;
+    }
+
+    .alert-error {
+        @apply bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200;
+    }
+
+    .alert-warning {
+        @apply bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200;
+    }
+
+    .alert-info {
+        @apply bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200;
+    }
+}

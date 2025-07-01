@@ -16,8 +16,11 @@ class Depense extends Model
     {
         return $this->belongsTo(EtatCaisse::class);
     }
-    public function mode_paiement()
+
+    // Note: mode_paiement_id est maintenant une chaîne, pas une relation
+    // Si vous voulez une relation, vous devrez créer une méthode personnalisée
+    public function getModePaiementAttribute()
     {
-        return $this->belongsTo(ModePaiement::class, 'mode_paiement_id');
+        return $this->mode_paiement_id;
     }
 }

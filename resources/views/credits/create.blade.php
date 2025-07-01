@@ -3,9 +3,9 @@
 @section('content')
 <div class="container mx-auto max-w-lg">
 
-    <h1 class="text-2xl font-bold mb-4">Ajouter un Crédit Personnel</h1>
+    <h1 class="page-title mb-4">Ajouter un Crédit</h1>
     @if($errors->any())
-    <div class="bg-red-100 text-red-700 border border-red-400 p-3 rounded mb-4">
+    <div class="alert alert-error mb-4">
         <ul class="list-disc list-inside text-sm">
             @foreach($errors->all() as $error)
             <li>{{ $error }}</li>
@@ -17,46 +17,79 @@
         @csrf
 
         <div>
-            <label class="block text-bold font-medium text-gray-700">Personnel</label>
-            <select name="source_id" id="personnel-select" class="w-full border rounded px-3 py-2">
+            <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Type de source</label>
+            <select name="source_type" id="source-type" class="form-select" required>
+                <option value="">-- Sélectionner --</option>
+                <option value="personnel">Personnel</option>
+                <option value="assurance">Assurance</option>
+            </select>
+        </div>
+
+        <div id="personnel-section" class="hidden">
+            <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Personnel</label>
+            <select name="source_id" id="personnel-select" class="form-select">
                 @foreach($personnels as $personnel)
                 @php
-                $totalCredits = $personnel->credits->sum('montant');
-                $totalPayes = $personnel->credits->sum('montant_paye');
-                $creditActuel = $totalCredits - $totalPayes;
-                $creditEligible = $personnel->salaire - $creditActuel;
+                $personnel->updateCredit(); // Mettre à jour le crédit actuel
+                $montantMaxCredit = $personnel->montant_max_credit;
                 @endphp
                 <option value="{{ $personnel->id }}" data-salaire="{{ $personnel->salaire }}"
-                    data-credit-actuel="{{ $creditActuel }}" data-credit-eligible="{{ $creditEligible }}">
-                    {{ $personnel->nom }}
+                    data-credit-actuel="{{ $personnel->credit }}" data-credit-max="{{ $montantMaxCredit }}">
+                    {{ $personnel->nom }} (Salaire: {{ number_format($personnel->salaire, 0, ',', ' ') }} MRU)
                 </option>
                 @endforeach
             </select>
+            <div
+                class="text-sm text-gray-700 dark:text-gray-300 space-y-1 mt-2 p-3 bg-gray-50 dark:bg-gray-700 rounded">
+                <p><strong class="font-bold text-green-500 dark:text-green-400">💰 Salaire :</strong> <span
+                        id="salaire">--</span> MRU</p>
+                <p><strong class="font-bold text-orange-500 dark:text-orange-400">💳 Crédit actuel :</strong> <span
+                        id="credit-actuel">--</span> MRU</p>
+                <p><strong class="font-bold text-blue-500 dark:text-blue-400">📊 Crédit maximum possible :</strong>
+                    <span id="credit-max">--</span> MRU</p>
+                <p><strong class="font-bold text-purple-500 dark:text-purple-400">💵 Salaire net après déduction
+                        :</strong> <span id="salaire-net">--</span> MRU</p>
+            </div>
         </div>
-<div class="mb-4">
-            <label for="mode_paiement_id" class="block text-bold font-medium">Mode de paiement</label>
-            <select name="mode_paiement_id" id="mode_paiement_id" required class="w-full border rounded p-2">
+
+        <div id="assurance-section" class="hidden">
+            <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Assurance</label>
+            <select name="source_id" id="assurance-select" class="form-select">
+                @foreach($assurances as $assurance)
+                @php
+                $totalCredits = $assurance->credits->sum('montant');
+                $totalPayes = $assurance->credits->sum('montant_paye');
+                $creditActuel = $totalCredits - $totalPayes;
+                @endphp
+                <option value="{{ $assurance->id }}" data-credit-actuel="{{ $creditActuel }}">
+                    {{ $assurance->nom }}
+                </option>
+                @endforeach
+            </select>
+            <div class="text-sm text-gray-700 dark:text-gray-300 space-y-1 mt-2">
+                <p><strong class="font-bold text-orange-500 dark:text-orange-400">Crédit actuel :</strong> <span
+                        id="assurance-credit-actuel">--</span> MRU</p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label for="mode_paiement_id" class="block text-bold font-medium text-gray-700 dark:text-gray-300">Mode de
+                paiement</label>
+            <select name="mode_paiement_id" id="mode_paiement_id" required class="form-select">
                 <option value="">-- Sélectionner --</option>
-               @foreach($modes as $mode)
+                @foreach($modes as $mode)
                 <option value="{{ $mode }}">{{ ucfirst($mode) }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="text-sm text-gray-700 space-y-1">
-            <p><strong class="font-bold text-green-500">Salaire :</strong> <span id="salaire">--</span> MRU</p>
-            <p><strong class="font-bold text-orange-500">Crédit actuel :</strong> <span id="credit-actuel">--</span> MRU
-            </p>
-            <p><strong class="font-bold text-indigo-500">Crédit éligible :</strong> <span id="credit-eligible">--</span>
-                MRU</p>
+
+        <div>
+            <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Montant</label>
+            <input type="number" name="montant" class="form-input" required>
         </div>
 
         <div>
-            <label class="block text-bold font-medium text-gray-700">Montant</label>
-            <input type="number" name="montant" class="w-full border rounded px-3 py-2" required>
-        </div>
-
-        <div>
-            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+            <button type="submit" class="form-button">
                 Enregistrer
             </button>
         </div>
@@ -67,58 +100,63 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const select = document.getElementById('personnel-select');
+        const sourceTypeSelect = document.getElementById('source-type');
+        const personnelSection = document.getElementById('personnel-section');
+        const assuranceSection = document.getElementById('assurance-section');
+        const personnelSelect = document.getElementById('personnel-select');
+        const assuranceSelect = document.getElementById('assurance-select');
         const salaireEl = document.getElementById('salaire');
         const creditActuelEl = document.getElementById('credit-actuel');
-        const creditEligibleEl = document.getElementById('credit-eligible');
+        const creditMaxEl = document.getElementById('credit-max');
+        const salaireNetEl = document.getElementById('salaire-net');
+        const assuranceCreditActuelEl = document.getElementById('assurance-credit-actuel');
         const montantInput = document.querySelector('input[name="montant"]');
         const form = document.querySelector('form');
 
-        let creditEligible = 0;
-
-        function updateInfos() {
-            const selected = select.options[select.selectedIndex];
+        function updatePersonnelInfos() {
+            const selected = personnelSelect.options[personnelSelect.selectedIndex];
             const salaire = parseFloat(selected.dataset.salaire) || 0;
             const creditActuel = parseFloat(selected.dataset.creditActuel) || 0;
-            creditEligible = parseFloat(selected.dataset.creditEligible) || 0;
+            const creditMax = parseFloat(selected.dataset.creditMax) || 0;
+            const salaireNet = salaire - creditActuel;
 
             salaireEl.textContent = salaire.toLocaleString();
             creditActuelEl.textContent = creditActuel.toLocaleString();
-            creditEligibleEl.textContent = creditEligible.toLocaleString();
+            creditMaxEl.textContent = creditMax.toLocaleString();
+            salaireNetEl.textContent = salaireNet.toLocaleString();
         }
 
-        select.addEventListener('change', updateInfos);
-        updateInfos(); // Initial
+        function updateAssuranceInfos() {
+            const selected = assuranceSelect.options[assuranceSelect.selectedIndex];
+            const creditActuel = parseFloat(selected.dataset.creditActuel) || 0;
+            assuranceCreditActuelEl.textContent = creditActuel.toLocaleString();
+        }
 
-        form.addEventListener('submit', (e) => {
-            const montant = parseFloat(montantInput.value);
-            if (montant > creditEligible) {
-                e.preventDefault();
-                alert("Montant supérieur au crédit éligible !");
+        sourceTypeSelect.addEventListener('change', () => {
+            const selectedType = sourceTypeSelect.value;
+
+            personnelSection.classList.add('hidden');
+            assuranceSection.classList.add('hidden');
+
+            if (selectedType === 'personnel') {
+                personnelSection.classList.remove('hidden');
+            } else if (selectedType === 'assurance') {
+                assuranceSection.classList.remove('hidden');
             }
         });
-    });
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const select = document.getElementById('personnel-select');
-        const salaireEl = document.getElementById('salaire');
-        const creditActuelEl = document.getElementById('credit-actuel');
-        const creditEligibleEl = document.getElementById('credit-eligible');
 
-        function updateInfos() {
-            const selected = select.options[select.selectedIndex];
-            const salaire = parseFloat(selected.dataset.salaire) || 0;
-            const creditActuel = parseFloat(selected.dataset.creditActuel) || 0;
-            const creditEligible = parseFloat(selected.dataset.creditEligible) || 0;
+        personnelSelect.addEventListener('change', updatePersonnelInfos);
+        assuranceSelect.addEventListener('change', updateAssuranceInfos);
 
-            salaireEl.textContent = salaire.toLocaleString();
-            creditActuelEl.textContent = creditActuel.toLocaleString();
-            creditEligibleEl.textContent = creditEligible.toLocaleString();
-        }
+        form.addEventListener('submit', (e) => {
+            const sourceType = sourceTypeSelect.value;
+            const montant = parseFloat(montantInput.value);
 
-        select.addEventListener('change', updateInfos);
-        updateInfos(); // Initial load
+            if (sourceType === 'personnel' && montant > creditMaxEl.textContent) {
+                e.preventDefault();
+                alert("Montant supérieur au crédit maximum !");
+            }
+        });
     });
 </script>
 @endpush

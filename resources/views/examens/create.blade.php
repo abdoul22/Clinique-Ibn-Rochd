@@ -1,10 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-xl mx-auto bg-white p-6 rounded shadow">
+<div class="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded shadow dark:shadow-lg">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-bold">Ajouter un examen</h2>
-        <a href="{{ route('examens.index') }}" class="text-sm text-blue-600 hover:underline">← Retour à la liste</a>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Ajouter un examen</h2>
+        <a href="{{ route('examens.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">← Retour
+            à la liste</a>
     </div>
 
     <form method="POST" action="{{ route('examens.store') }}">
@@ -13,18 +14,22 @@
         <div class="grid gap-4">
             <!-- Nom -->
             <div>
-                <label for="nom" class="block text-sm font-medium text-gray-700">Nom de l'examen</label>
+                <label for="nom" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Nom de
+                    l'examen</label>
                 <input type="text" name="nom" id="nom" value="{{ old('nom') }}"
-                    class="mt-1 block w-full border border-gray-300 rounded px-3 py-2" required>
+                    class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    required>
                 @error('nom')
-                <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+                <p class="text-sm text-red-500 dark:text-red-300 mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Service -->
             <div>
-                <label for="idsvc" class="block text-sm font-medium text-gray-700">Service associé</label>
-                <select name="idsvc" id="idsvc" class="mt-1 block w-full border border-gray-300 rounded px-3 py-2"
+                <label for="idsvc" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Service
+                    associé</label>
+                <select name="idsvc" id="idsvc"
+                    class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                     required>
                     <option value="">-- Sélectionner un service --</option>
                     @foreach($services as $service)
@@ -34,46 +39,52 @@
                     @endforeach
                 </select>
                 @error('idsvc')
-                <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+                <p class="text-sm text-red-500 dark:text-red-300 mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Tarif -->
             <div>
-                <label for="tarif" class="block text-sm font-medium text-gray-700">Tarif (en MRU)</label>
+                <label for="tarif" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Tarif (en
+                    MRU)</label>
                 <input type="number" name="tarif" id="tarif" value="{{ old('tarif') }}"
-                    class="mt-1 block w-full border border-gray-300 rounded px-3 py-2" required>
+                    class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    required>
                 @error('tarif')
-                <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+                <p class="text-sm text-red-500 dark:text-red-300 mt-1">{{ $message }}</p>
                 @enderror
             </div>
             <!-- Part Medcin -->
             <div>
-                <label for="tarif" class="block text-sm font-medium text-gray-700">Part Medecin (en MRU)</label>
+                <label for="tarif" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Part Medecin (en
+                    MRU)</label>
                 <input type="number" name="part_medecin" id="part_medecin" value="{{ old('part_medecin') }}"
-                    class="mt-1 block w-full border border-gray-300 rounded px-3 py-2" required>
+                    class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    required>
                 @error('part_medecin')
-                <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+                <p class="text-sm text-red-500 dark:text-red-300 mt-1">{{ $message }}</p>
                 @enderror
             </div>
             <!-- Part Cabinet -->
             <div>
-                <label for="part_cabinet" class="block text-sm font-medium text-gray-700">Part Cabinet (en MRU)</label>
+                <label for="part_cabinet" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Part
+                    Cabinet (en MRU)</label>
                 <input type="number" name="part_cabinet" id="part_cabinet" value="{{ old('part_cabinet') }}"
-                    class="mt-1 block w-full border border-gray-300 rounded px-3 py-2" required>
+                    class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    required>
                 @error('part_cabinet')
-                <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+                <p class="text-sm text-red-500 dark:text-red-300 mt-1">{{ $message }}</p>
                 @enderror
             </div>
         </div>
 
         <div class="mt-6 flex justify-end">
             <button type="submit"
-                class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">Ajouter</button>
+                class="bg-blue-600 dark:bg-blue-700 text-white px-6 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-800 transition font-semibold shadow">Ajouter</button>
         </div>
     </form>
-    <p class="text-sm text-gray-500">
-         Remplissez soit la <strong>part médecin</strong> soit la <strong>part cabinet</strong>, l'autre sera calculée
+    <p class="text-sm text-gray-500 dark:text-gray-300 mt-4">
+        Remplissez soit la <strong>part médecin</strong> soit la <strong>part cabinet</strong>, l'autre sera calculée
         automatiquement selon le tarif.
     </p>
 

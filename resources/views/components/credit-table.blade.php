@@ -1,32 +1,33 @@
-<table class="min-w-full bg-white border mb-6">
-    <thead>
+<table class="table-main border mb-6">
+    <thead class="bg-gray-100 dark:bg-gray-700">
         <tr>
-            <th class="px-4 py-2 border">#</th>
-            <th class="px-4 py-2 border">Nom</th>
-            <th class="px-4 py-2 border">Montant</th>
-            <th class="px-4 py-2 border">Statut</th>
-            <th class="px-4 py-2 border">Action</th>
+            <th class="table-header">#</th>
+            <th class="table-header">Nom</th>
+            <th class="table-header">Montant</th>
+            <th class="table-header">Mode de paiement</th>
+            <th class="table-header">Statut</th>
+            <th class="table-header">Action</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody class="table-body">
         @forelse($credits as $credit)
-        <tr class="border-t">
-            <td class="px-4 py-2 border">{{ $credit->id }}</td>
-            <td class="px-4 py-2 border">{{ $credit->source?->nom ?? '---' }}</td>
-            <td class="px-4 py-2 border">{{ number_format($credit->montant, 0, ',', ' ') }} MRU</td>
-            <td class="px-4 py-2 border">
+        <tr class="table-row odd:bg-gray-50 dark:odd:bg-gray-800">
+            <td class="table-cell">{{ $credit->id }}</td>
+            <td class="table-cell">{{ $credit->source?->nom ?? '---' }}</td>
+            <td class="table-cell">{{ number_format($credit->montant, 0, ',', ' ') }} MRU</td>
+            <td class="table-cell">{{ ucfirst($credit->mode_paiement_id) }}</td>
+            <td class="table-cell">
                 @if($credit->status === 'non payé')
-                <span class="text-red-500 font-semibold">Non payé</span>
+                <span class="text-red-500 dark:text-red-400 font-semibold">Non payé</span>
                 @elseif($credit->status === 'partiellement payé')
-                <span class="text-yellow-500 font-semibold">Partiellement payé</span>
+                <span class="text-yellow-500 dark:text-yellow-400 font-semibold">Partiellement payé</span>
                 @else
-                <span class="text-green-600 font-semibold">Payé</span>
+                <span class="text-green-600 dark:text-green-400 font-semibold">Payé</span>
                 @endif
             </td>
-            <td class="px-4 py-2 border">
+            <td class="table-cell">
                 @if($credit->status !== 'payé')
-                <a href="{{ route('credits.payer', $credit->id) }}"
-                    class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Payer</a>
+                <a href="{{ route('credits.payer', $credit->id) }}" class="form-button text-sm">Payer</a>
                 @else
                 ---
                 @endif
@@ -34,7 +35,8 @@
         </tr>
         @empty
         <tr>
-            <td colspan="5" class="text-center text-gray-500 py-4">Aucun crédit trouvé.</td>
+            <td colspan="6" class="table-cell text-center text-gray-500 dark:text-gray-400 py-4">Aucun crédit trouvé.
+            </td>
         </tr>
         @endforelse
     </tbody>

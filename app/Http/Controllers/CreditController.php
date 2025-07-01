@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Credit;
 use App\Models\Personnel;
 use App\Models\Assurance;
+use App\Models\PaymentMode;
+use App\Models\ModePaiement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -53,23 +55,27 @@ class CreditController extends Controller
     public function payer($id)
     {
         $credit = Credit::findOrFail($id);
-        return view('credits.payer', compact('credit'));
+        $modes = \App\Models\ModePaiement::getTypes();
+        return view('credits.payer', compact('credit', 'modes'));
     }
 
 
     public function payerStore(Request $request, $id)
     {
-        // On récupère manuellement le crédit avec findOrFail
-        // $credit = Credit::findOrFail($id);
-
         $credit = Credit::findOrFail($id);
+
         // Validation du montant
         $maxAmount = $credit->montant - $credit->montant_paye;
         if ($maxAmount <= 0) {
             return back()->with('error', 'Ce crédit est déjà entièrement remboursé.');
         }
+
+        $modesDisponibles = \App\Models\ModePaiement::getTypes();
+        $modesString = implode(',', $modesDisponibles);
+
         $request->validate([
             'montant' => "required|numeric|min:0.01|max:$maxAmount",
+            'mode_paiement_id' => "required|string|in:$modesString",
         ]);
 
         $montant = $request->montant;
@@ -83,6 +89,12 @@ class CreditController extends Controller
         }
         $credit->mode_paiement_id = $request->mode_paiement_id;
         $credit->save();
+
+        // Incrémenter le montant du mode de paiement choisi
+        $modePaiement = \App\Models\ModePaiement::where('type', $request->mode_paiement_id)->latest()->first();
+        if ($modePaiement) {
+            $modePaiement->increment('montant', $montant);
+        }
 
         // Déduction dans la source (personnel ou assurance)
         if ($credit->source_type === 'App\\Models\\Personnel') {
@@ -101,54 +113,85 @@ class CreditController extends Controller
     {
         $personnels = Personnel::all();
         foreach ($personnels as $personnel) {
-            $personnel->updateCredit(); // si tu as cette méthode
+            $personnel->updateCredit();
         }
-
-        $modes = ['espèces', 'bankily', 'masrivi','sedad']; // ← Liste fixe
-        return view('credits.create', compact('personnels', 'modes'));
+        $assurances = \App\Models\Assurance::all();
+        foreach ($assurances as $assurance) {
+            $assurance->updateCredit();
+        }
+        $modes = \App\Models\ModePaiement::getTypes();
+        return view('credits.create', compact('personnels', 'assurances', 'modes'));
     }
 
     public function store(Request $request)
     {
+        $modesDisponibles = \App\Models\ModePaiement::getTypes();
+        $modesString = implode(',', $modesDisponibles);
+
         $request->validate([
-            'source_id' => 'required|exists:personnels,id',
+            'source_type' => 'required|in:personnel,assurance',
+            'source_id' => 'required',
             'montant' => 'required|numeric|min:1',
-            'mode_paiement_id' => 'required|exists:mode_paiements,id',
+            'mode_paiement_id' => "required|string|in:$modesString",
         ]);
-        $personnel = Personnel::findOrFail($request->source_id);
 
-        if ($request->montant > $personnel->salaire) {
-            return back()->withErrors(['montant' => 'Le crédit dépasse le salaire du personnel.']);
-        }
-        $totalCredits = $personnel->credits()->sum('montant');
-        $totalPayes   = $personnel->credits()->sum('montant_paye');
-        $creditActuel = $totalCredits - $totalPayes;
-        $creditEligible = $personnel->salaire - $creditActuel;
-
-        if ($request->montant > $creditEligible) {
+        // Trouver le ModePaiement correspondant au type choisi
+        $modePaiement = \App\Models\ModePaiement::where('type', $request->mode_paiement_id)->latest()->first();
+        if ($modePaiement && $modePaiement->montant < $request->montant) {
             return back()->withErrors([
-                'montant' => "Ce crédit dépasse le crédit éligible : {$creditEligible} MRU. Veuillez rembourser avant de demander plus."
+                'mode_paiement_id' => "Fonds insuffisants dans le mode de paiement {$request->mode_paiement_id}. Solde disponible : {$modePaiement->montant} MRU"
             ]);
         }
+        if ($modePaiement) {
+            $modePaiement->decrement('montant', $request->montant);
+        }
 
-        // $personnel->save();
+        if ($request->source_type === 'personnel') {
+            $personnel = Personnel::findOrFail($request->source_id);
+
+            // Utiliser la nouvelle méthode de validation
+            if (!$personnel->peutPrendreCredit($request->montant)) {
+                $montantMax = $personnel->montant_max_credit;
+                return back()->withErrors([
+                    'montant' => "Ce crédit dépasse le montant maximum autorisé. Montant maximum : {$montantMax} MRU (Salaire: {$personnel->salaire} MRU - Crédit actuel: {$personnel->credit} MRU)"
+                ]);
+            }
+
+            $sourceType = \App\Models\Personnel::class;
+            $sourceId = $personnel->id;
+            $sourceNom = $personnel->nom;
+        } else {
+            $assurance = \App\Models\Assurance::findOrFail($request->source_id);
+            $sourceType = \App\Models\Assurance::class;
+            $sourceId = $assurance->id;
+            $sourceNom = $assurance->nom;
+        }
+
         Log::info('Création crédit', [
             'montant' => $request->montant,
-            'personnel' => $personnel->id,
+            'source_type' => $sourceType,
+            'source_id' => $sourceId,
+            'source_nom' => $sourceNom,
+            'mode_paiement' => $request->mode_paiement_id,
         ]);
 
         Credit::create([
-            'source_type' => \App\Models\Personnel::class,
-            'source_id' => $request->source_id,
+            'source_type' => $sourceType,
+            'source_id' => $sourceId,
             'montant' => $request->montant,
             'status' => 'non payé',
             'statut' => 'non payé',
             'montant_paye' => 0,
             'mode_paiement_id' => $request->mode_paiement_id
         ]);
-        $personnel->updateCredit();
 
-        $personnel->updateCredit(); // met à jour le champ credit réel
-        return redirect()->route('credits.index')->with('success', 'Crédit personnel ajouté avec succès.');
+        // Mettre à jour le crédit de la source
+        if ($sourceType === \App\Models\Personnel::class) {
+            $personnel->updateCredit();
+        } elseif ($sourceType === \App\Models\Assurance::class) {
+            $assurance->updateCredit();
+        }
+
+        return redirect()->route('credits.index')->with('success', 'Crédit ajouté avec succès.');
     }
 }

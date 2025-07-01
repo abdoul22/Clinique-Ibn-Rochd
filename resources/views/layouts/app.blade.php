@@ -5,32 +5,26 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'Gestion des Patients')</title>
 
-    {{-- Tailwind CSS CDN --}}
-    <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {{-- Script pour initialiser le dark mode immédiatement --}}
     <script>
-        tailwind.config = {
-                theme: {
-                    extend: {
-                        colors: {
-                            primary: {
-                                600: '#4f46e5',
-                                700: '#4338ca'
-                            },
-                            secondary: {
-                                200: '#fed7aa',
-                                500: '#f97316'
-                            }
-                        },
-                        fontFamily: {
-                            'sans': ['Poppins', 'sans-serif']
-                        }
-                    }
-                }
+        // Initialiser le dark mode avant le chargement du DOM
+        (function() {
+            const isDark = localStorage.getItem('theme') === 'dark';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
             }
+        })();
     </script>
+
+    {{-- Vite CSS/JS --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         .hero-section {
             background-image: linear-gradient(rgba(79, 70, 229, 0.85), rgba(67, 56, 202, 0.9)), url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80');
@@ -94,18 +88,19 @@
     </style>
 </head>
 
-<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+<body class="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100 flex flex-col min-h-screen">
 
     {{-- ✅ Navbar --}}
     @include('layouts.navbar')
 
     {{-- ✅ Contenu principal --}}
-    <main class="container mx-auto px-4 py-6 flex-grow fade-in">
+    <main class="container mx-auto px-4 py-6 flex-grow fade-in dark:bg-gray-900 dark:text-gray-100">
 
         {{-- ✅ Messages flash --}}
         @foreach (['success' => 'green', 'update' => 'blue', 'delete' => 'red'] as $key => $color)
         @if(session($key))
-        <div class="bg-{{ $color }}-100 text-{{ $color }}-800 border border-{{ $color }}-200 rounded p-3 mb-4">
+        <div
+            class="bg-{{ $color }}-100 text-{{ $color }}-800 border border-{{ $color }}-200 rounded p-3 mb-4 dark:bg-{{ $color }}-900/20 dark:text-{{ $color }}-200 dark:border-{{ $color }}-800">
             {{ session($key) }}
         </div>
         @endif
@@ -125,8 +120,11 @@
             input.type = input.type === 'password' ? 'text' : 'password';
         }
     </script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-@stack('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @stack('scripts')
+    @push('scripts')
+
+    @endpush
 </body>
 
 </html>

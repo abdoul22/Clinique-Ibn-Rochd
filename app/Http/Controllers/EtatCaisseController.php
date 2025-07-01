@@ -192,19 +192,32 @@ class EtatCaisseController extends Controller
             return back()->with('info', 'Part déjà validée.');
         }
 
+        // Récupérer le mode de paiement de la caisse
+        $modePaiement = $etat->caisse?->mode_paiements()->latest()->first();
+        $modePaiementType = $modePaiement?->type ?? 'espèces';
+
+        // Vérifier si le mode de paiement a suffisamment de fonds
+        if ($modePaiement && $modePaiement->montant < $etat->part_medecin) {
+            return back()->with('error', "Fonds insuffisants dans le mode de paiement {$modePaiementType}. Solde disponible : {$modePaiement->montant} MRU");
+        }
+
+        // Déduire le montant du mode de paiement
+        if ($modePaiement) {
+            $modePaiement->decrement('montant', $etat->part_medecin);
+        }
+
         $etat->validated = true;
         $etat->depense = $etat->part_medecin;
         $etat->save();
-        $modePaiement = $etat->caisse?->mode_paiements()->latest()->first();
 
+        // Créer la dépense avec le bon mode de paiement
         \App\Models\Depense::create([
             'nom' => 'Part médecin - ' . ($etat->medecin?->nom ?? 'N/A'),
             'montant' => $etat->part_medecin,
             'source' => 'automatique',
             'etat_caisse_id' => $etat->id,
-            'mode_paiement_id' => $modePaiement?->id,
+            'mode_paiement_id' => $modePaiementType, // Utiliser le type, pas l'ID
         ]);
-
 
         return back()->with('success', 'Part validée avec succès.');
     }
@@ -217,11 +230,16 @@ class EtatCaisseController extends Controller
             return back()->with('error', 'Part déjà validée.');
         }
 
+        // Chercher le mode de paiement utilisé par le patient à la caisse
+        $modePaiement = $etat->caisse?->mode_paiements()->latest()->first();
+        $modePaiementType = $modePaiement?->type ?? 'espèces';
+
         $depense = Depense::create([
             'nom' => 'Part médecin - ' . $etat->medecin?->nom,
             'montant' => $etat->part_medecin,
             'etat_caisse_id' => $etat->id, // Lien direct
             'source' => 'générée', // pour le filtre
+            'mode_paiement_id' => $modePaiementType,
         ]);
 
         $etat->validated = true;
@@ -234,7 +252,7 @@ class EtatCaisseController extends Controller
         $etat = EtatCaisse::findOrFail($id);
 
         if (!$etat->validated) {
-            return back()->with('error', 'Cette part n’est pas validée.');
+            return back()->with('error', 'Cette part n\'est pas validée.');
         }
 
         // Supprimer uniquement la dépense liée à cette validation
@@ -318,7 +336,7 @@ class EtatCaisseController extends Controller
             'assurance_id'      => $assurance->id,
         ]);
 
-        return redirect()->route('etatcaisse.index')->with('success', 'État de l’assurance généré.');
+        return redirect()->route('etatcaisse.index')->with('success', 'État de l\'assurance généré.');
     }
 
     public function generateAllAssuranceEtats()
@@ -352,7 +370,7 @@ class EtatCaisseController extends Controller
             'personnel_id' => null,
         ]);
 
-        return redirect()->route('etatcaisse.index')->with('success', 'État généré avec succès');
+        return redirect()->route('etatcaisse.index')->with('success', 'État général généré avec succès.');
     }
 
 
@@ -378,7 +396,7 @@ class EtatCaisseController extends Controller
             'part_cabinet_total' => Examen::sum('part_cabinet'),
             'part_medecin_total' => Examen::sum('part_medecin'),
         ];
-        // Création d’un nouvel état de caisse
+        // Création d'un nouvel état de caisse
         $etat = EtatCaisse::create([
             'designation'       => 'État général',
             'recette'           => $recette,

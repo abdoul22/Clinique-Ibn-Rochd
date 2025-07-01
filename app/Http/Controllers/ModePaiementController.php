@@ -18,46 +18,49 @@ class ModePaiementController extends Controller
         return view('modepaiements.index', compact('paiements'));
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $paiements = \App\Models\ModePaiement::all();
+        $date = $request->input('date');
+        $paiementsQuery = \App\Models\ModePaiement::query();
+        $depensesQuery = \App\Models\Depense::query();
+        $creditsQuery = \App\Models\Credit::query();
 
-        // Entrées : groupées par type (recettes)
-        $entrees = $paiements->groupBy('type')->map(function ($rows) {
-            return $rows->sum('montant');
-        });
-
-        // 🔽 Sorties réelles par mode
-        $sorties = [
-            'espèces' => 0,
-            'bankily' => 0,
-            'masrivi' => 0,
-            'sedad' => 0,
-        ];
-
-        // ➤ Dépenses avec mode de paiement
-        foreach (\App\Models\Depense::with('mode_paiement')->get() as $depense) {
-            if ($depense->mode_paiement) {
-                $type = $depense->mode_paiement->type;
-                $sorties[$type] += $depense->montant;
-            }
+        if ($date) {
+            $paiementsQuery->whereDate('created_at', $date);
+            $depensesQuery->whereDate('created_at', $date);
+            $creditsQuery->whereDate('created_at', $date);
         }
 
-        // ➤ Crédits payés avec mode de paiement
-        foreach (\App\Models\Credit::with('mode_paiement')->get() as $credit) {
-            if ($credit->mode_paiement) {
-                $type = $credit->mode_paiement->type;
-                $sorties[$type] += $credit->montant_paye;
-            }
-        }
+        $paiements = $paiementsQuery->get();
+        $depenses = $depensesQuery->get();
+        $credits = $creditsQuery->get();
 
-        // ➤ Parts médecin validées (via EtatCaisse) → ajouter uniquement si tu veux les considérer comme dépenses manuelles
-        // ➤ Si tu ne passes PAS par Depense, ignore cette section (elle serait alors redondante)
-
-        // Total net par mode
         $modes = ['espèces', 'bankily', 'masrivi', 'sedad'];
+        $entrees = array_fill_keys($modes, 0);
+        $sorties = array_fill_keys($modes, 0);
+
+        foreach ($paiements as $paiement) {
+            if (in_array($paiement->type, $modes)) {
+                $entrees[$paiement->type] += $paiement->montant;
+            }
+        }
+        foreach ($depenses as $depense) {
+            if ($depense->mode_paiement_id && in_array($depense->mode_paiement_id, $modes)) {
+                $sorties[$depense->mode_paiement_id] += $depense->montant;
+            }
+        }
+        foreach ($credits as $credit) {
+            if ($credit->mode_paiement_id && in_array($credit->mode_paiement_id, $modes)) {
+                $sorties[$credit->mode_paiement_id] += $credit->montant;
+            }
+        }
+
         $data = [];
         $totalGlobal = 0;
+        $chartLabels = [];
+        $chartEntrees = [];
+        $chartSorties = [];
+        $chartSoldes = [];
 
         foreach ($modes as $mode) {
             $entree = $entrees[$mode] ?? 0;
@@ -71,9 +74,91 @@ class ModePaiementController extends Controller
                 'sortie' => $sortie,
                 'solde' => $solde,
             ];
+            $chartLabels[] = ucfirst($mode);
+            $chartEntrees[] = $entree;
+            $chartSorties[] = $sortie;
+            $chartSoldes[] = $solde;
         }
 
-        return view('modepaiements.dashboard', compact('data', 'totalGlobal'));
+        return view('modepaiements.dashboard', compact('data', 'totalGlobal', 'date', 'chartLabels', 'chartEntrees', 'chartSorties', 'chartSoldes'));
+    }
+
+    public function historique()
+    {
+        $historique = collect();
+
+        // 🔼 ENTREES RÉELLES
+
+        // ➤ 1. Recettes des caisses (ModePaiement) - SEULES ENTREES RÉELLES
+        $recettesCaisses = \App\Models\ModePaiement::with('caisse.patient')->get()->map(function ($paiement) {
+            $patientNom = $paiement->caisse && $paiement->caisse->patient ? $paiement->caisse->patient->nom : 'N/A';
+            return [
+                'date' => $paiement->created_at,
+                'type_operation' => 'Recette Caisse',
+                'description' => "Paiement patient: {$patientNom} - Facture #{$paiement->caisse->numero_facture}",
+                'montant' => $paiement->montant,
+                'mode_paiement' => $paiement->type,
+                'source' => 'Caisse',
+                'operation' => 'entree'
+            ];
+        });
+
+        // ➤ 2. Remboursements de crédits (entrées)
+        $remboursements = \App\Models\Credit::where('montant_paye', '>', 0)->get()->map(function ($credit) {
+            $sourceType = class_basename($credit->source_type);
+            $sourceNom = $credit->source ? $credit->source->nom : 'N/A';
+
+            return [
+                'date' => $credit->updated_at,
+                'type_operation' => "Remboursement {$sourceType}",
+                'description' => "Remboursement de {$sourceNom}",
+                'montant' => $credit->montant_paye,
+                'mode_paiement' => $credit->mode_paiement_id,
+                'source' => $sourceNom,
+                'operation' => 'entree'
+            ];
+        });
+
+        // 🔽 SORTIES
+
+        // ➤ 3. Dépenses
+        $depenses = \App\Models\Depense::all()->map(function ($depense) {
+            return [
+                'date' => $depense->created_at,
+                'type_operation' => 'Dépense',
+                'description' => $depense->nom,
+                'montant' => $depense->montant,
+                'mode_paiement' => $depense->mode_paiement_id,
+                'source' => $depense->source,
+                'operation' => 'sortie'
+            ];
+        });
+
+        // ➤ 4. Crédits accordés (personnel et assurance)
+        $creditsAccordes = \App\Models\Credit::all()->map(function ($credit) {
+            $sourceType = class_basename($credit->source_type);
+            $sourceNom = $credit->source ? $credit->source->nom : 'N/A';
+
+            return [
+                'date' => $credit->created_at,
+                'type_operation' => "Crédit {$sourceType}",
+                'description' => "Crédit accordé à {$sourceNom}",
+                'montant' => $credit->montant,
+                'mode_paiement' => $credit->mode_paiement_id,
+                'source' => $sourceNom,
+                'operation' => 'sortie'
+            ];
+        });
+
+        // Combiner et trier par date
+        $historique = $recettesCaisses
+            ->concat($remboursements)
+            ->concat($depenses)
+            ->concat($creditsAccordes)
+            ->sortByDesc('date')
+            ->values();
+
+        return view('modepaiements.historique', compact('historique'));
     }
 
     /**

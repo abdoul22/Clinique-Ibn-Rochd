@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Depense;
+use App\Models\PaymentMode;
+use App\Models\ModePaiement;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -20,6 +22,10 @@ class DepenseController extends Controller
             $query->where('source', $request->source);
         }
 
+        if ($request->has('mode_paiement') && in_array($request->mode_paiement, ['espèces', 'bankily', 'masrivi', 'sedad'])) {
+            $query->where('mode_paiement_id', $request->mode_paiement);
+        }
+
         $depenses = $query->latest()->paginate(10);
 
         return view('depenses.index', compact('depenses'));
@@ -27,28 +33,42 @@ class DepenseController extends Controller
 
     public function create()
     {
-        $modes = ['espèces', 'bankily', 'masrivi', 'sedad'];
-        return view('depenses.create', compact('modes')); 
+        $modes = \App\Models\ModePaiement::getTypes();
+        return view('depenses.create', compact('modes'));
     }
 
 
     public function store(Request $request)
     {
+        $modesDisponibles = \App\Models\ModePaiement::getTypes();
+        $modesString = implode(',', $modesDisponibles);
+
         $request->validate([
             'nom' => 'required|string|max:255',
             'montant' => 'required|string|max:255',
-            'mode_paiement_id' => 'required|exists:mode_paiements,id',
+            'mode_paiement_id' => "required|string|in:$modesString",
         ]);
 
         if (str_contains(request('nom'), 'Part médecin')) {
             abort(403, 'Création manuelle des parts médecin interdite.');
         }
 
+        // Trouver le ModePaiement correspondant au type choisi
+        $modePaiement = \App\Models\ModePaiement::where('type', $request->mode_paiement_id)->latest()->first();
+        if ($modePaiement && $modePaiement->montant < $request->montant) {
+            return back()->withErrors([
+                'mode_paiement_id' => "Fonds insuffisants dans le mode de paiement {$request->mode_paiement_id}. Solde disponible : {$modePaiement->montant} MRU"
+            ]);
+        }
+        if ($modePaiement) {
+            $modePaiement->decrement('montant', $request->montant);
+        }
+
         Depense::create([
             'nom' => $request->nom,
             'montant' => $request->montant,
             'mode_paiement_id' => $request->mode_paiement_id,
-            'source' => 'manuelle', // ou autre
+            'source' => 'manuelle',
         ]);
         return redirect()->route('depenses.index')->with('success', 'Dépense ajoutée avec succès.');
     }

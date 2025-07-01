@@ -1,4 +1,4 @@
-<footer class="bg-gray-900 text-gray-300 py-8 mt-12">
+<footer class="bg-white border-t py-4 text-center text-gray-600 dark:bg-gray-800 dark:text-gray-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {{-- Section principale --}}

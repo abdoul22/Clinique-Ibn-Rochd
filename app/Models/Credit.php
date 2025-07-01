@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,8 @@ class Credit extends Model
         'montant',
         'montant_paye',
         'status',
-        'statut', // <- tu l'as oublié ici alors qu’il est utilisé dans marquerComme()
+        'statut', // <- tu l'as oublié ici alors qu'il est utilisé dans marquerComme()
+        'mode_paiement_id',
     ];
 
     public function getStatusColorAttribute()
@@ -31,9 +33,11 @@ class Credit extends Model
     {
         return $this->morphTo();
     }
-    public function mode_paiement()
+
+    // Note: mode_paiement_id est maintenant une chaîne, pas une relation
+    public function getModePaiementAttribute()
     {
-        return $this->belongsTo(ModePaiement::class, 'mode_paiement_id');
+        return $this->mode_paiement_id;
     }
 
     public function getNomSourceAttribute()
@@ -60,5 +64,3 @@ class Credit extends Model
         });
     }
 }
-
-

@@ -3,12 +3,12 @@
 @section('content')
 <!-- Titre + Boutons -->
 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
-    <h1 class="text-xl md:text-2xl font-bold">Gestion des Factures</h1>
+    <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Gestion des Factures</h1>
 
     <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0 w-full lg:w-auto">
         <!-- Bouton Ajouter -->
         <a href="{{ route('caisses.create') }}"
-            class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded transition flex items-center">
+            class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded transition flex items-center dark:bg-blue-700 dark:hover:bg-blue-800">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -19,9 +19,10 @@
         <!-- Formulaire de recherche -->
         <form method="GET" action="{{ route('caisses.index') }}" class="flex flex-wrap gap-2 items-center">
             <input type="text" name="search" placeholder="Rechercher..." value="{{ request('search') }}"
-                class="w-full md:w-auto border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                class="w-full md:w-auto border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
 
-            <button type="submit" class="bg-blue-500 text-white px-4 py-1 text-sm rounded hover:bg-blue-600 transition">
+            <button type="submit"
+                class="bg-blue-500 text-white px-4 py-1 text-sm rounded hover:bg-blue-600 transition dark:bg-blue-700 dark:hover:bg-blue-800">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -33,9 +34,9 @@
 </div>
 
 <!-- Tableau -->
-<div class="overflow-x-auto bg-white rounded shadow">
+<div class="overflow-x-auto bg-white dark:bg-gray-800 rounded shadow dark:shadow-lg">
     <table class="min-w-full text-sm text-left">
-        <thead class="bg-gray-100 text-gray-700">
+        <thead class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
             <tr>
                 <th class="py-3 px-4">N° Entrée</th>
                 <th class="py-3 px-4">Patient</th>
@@ -48,7 +49,7 @@
         </thead>
         <tbody>
             @foreach($caisses as $caisse)
-            <tr class="border-t hover:bg-gray-50">
+            <tr class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900">
                 <td class="py-3 px-4 font-medium">{{ $caisse->numero_entre }}</td>
                 <td class="py-3 px-4">{{ $caisse->patient->first_name ?? 'N/A' }} {{ $caisse->patient->last_name ?? ''
                     }}</td>
@@ -60,8 +61,7 @@
                     <div class="flex space-x-2">
                         <!-- Voir -->
                         <a href="{{ route(auth()->user()->role->name . '.caisses.show', $caisse->id) }}"
-                        {{ route(auth()->user()->role->name . '.caisses.edit', $caisse->id) }}
-                            class="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
+                            class="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/40"
                             title="Voir détails">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
@@ -74,7 +74,7 @@
 
                         <!-- Modifier -->
                         <a href="{{ route(auth()->user()->role->name . '.caisses.edit', $caisse->id) }}"
-                            class="text-yellow-500 hover:text-yellow-700 p-1 rounded-full hover:bg-yellow-50"
+                            class="text-yellow-500 hover:text-yellow-700 p-1 rounded-full hover:bg-yellow-50 dark:hover:bg-yellow-900/40"
                             title="Modifier">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
@@ -84,12 +84,12 @@
                         </a>
 
                         <!-- Supprimer -->
-                        <form action="{{ route(auth()->user()->role->name . '.caisses.destroy', $caisse->id) }}" method="POST"
-                            onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet examen ?')">
+                        <form action="{{ route(auth()->user()->role->name . '.caisses.destroy', $caisse->id) }}"
+                            method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet examen ?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit"
-                                class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50"
+                                class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/40"
                                 title="Supprimer">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor">

@@ -20,6 +20,7 @@ use App\Http\Controllers\RecapitulatifOperateurController;
 use App\Http\Controllers\RecapitulatifServiceJournalierController;
 use App\Http\Controllers\SuperAdmin\UserManagementController;
 
+require __DIR__ . '/auth.php';
 // Page d'accueil
 Route::get('/', fn() => view('home'))->name('home');
 
@@ -151,7 +152,7 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::post('/etatcaisse/generer/assurance/{id}', [EtatCaisseController::class, 'generateForAssurance'])->name('etatcaisse.generer.assurance');
     // Générer pour toutes les assurances
     Route::post('/etatcaisse/generer/assurances', [EtatCaisseController::class, 'generateAllAssuranceEtats'])->name('etatcaisse.generer.assurances');
-    // Générer un état journalier (avec filtres date d’aujourd’hui)
+    // Générer un état journalier (avec filtres date d'aujourd'hui)
     Route::post('/etatcaisse/generer/journalier', [EtatCaisseController::class, 'generateDailyEtat'])->name('etatcaisse.generer.journalier');
 
 
@@ -180,14 +181,11 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
     Route::resource('caisses', CaisseController::class)->parameters(['caisses' => 'caisse']);
     Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
-
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('caisses', CaisseController::class)->parameters(['caisses' => 'caisse']);
     Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
-
-
 });
 Route::post('/etatcaisse/{id}/valider', [EtatCaisseController::class, 'valider'])
     ->middleware(['auth', 'role:superadmin'])
@@ -202,4 +200,8 @@ Route::get('medecins/{id}/stats', [MedecinController::class, 'stats'])->name('me
 
 Route::get('mode-paiements/dashboard', [App\Http\Controllers\ModePaiementController::class, 'dashboard'])
     ->name('modepaiements.dashboard')
+    ->middleware('auth');
+
+Route::get('mode-paiements/historique', [App\Http\Controllers\ModePaiementController::class, 'historique'])
+    ->name('modepaiements.historique')
     ->middleware('auth');
