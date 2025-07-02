@@ -69,6 +69,8 @@ class CreditController extends Controller
         if ($maxAmount <= 0) {
             return back()->with('error', 'Ce crédit est déjà entièrement remboursé.');
         }
+        // Récupérer la caisse courante (à adapter selon ta logique)
+        $caisse = \App\Models\Caisse::latest()->first(); // ou la caisse de l'utilisateur connecté, etc.
 
         $modesDisponibles = \App\Models\ModePaiement::getTypes();
         $modesString = implode(',', $modesDisponibles);
@@ -90,11 +92,20 @@ class CreditController extends Controller
         $credit->mode_paiement_id = $request->mode_paiement_id;
         $credit->save();
 
-        // Incrémenter le montant du mode de paiement choisi
-        $modePaiement = \App\Models\ModePaiement::where('type', $request->mode_paiement_id)->latest()->first();
-        if ($modePaiement) {
-            $modePaiement->increment('montant', $montant);
-        }
+        // AJOUT : Créer une nouvelle entrée ModePaiement (entrée réelle)
+        \App\Models\ModePaiement::create([
+            'type' => $request->mode_paiement_id,
+            'montant' => $montant,
+            'caisse_id' => $caisse ? $caisse->id : 1,
+            // 'caisse_id' => null, // ou une référence si besoin
+        ]);
+        // FIN AJOUT
+
+        // SUPPRIMER l'ancien increment (sinon double comptage)
+        // $modePaiement = \App\Models\ModePaiement::where('type', $request->mode_paiement_id)->latest()->first();
+        // if ($modePaiement) {
+        //     $modePaiement->increment('montant', $montant);
+        // }
 
         // Déduction dans la source (personnel ou assurance)
         if ($credit->source_type === 'App\\Models\\Personnel') {

@@ -251,7 +251,13 @@
             <div class="font-bold text-gray-700 dark:text-gray-300">Assurances</div>
             <ul class="list-disc list-inside text-gray-700 dark:text-gray-300">
                 @foreach($assurances as $assurance)
-                <li>{{ $assurance->nom }}</li>
+                <li>
+                    @if($assurance)
+                    {{ $assurance->nom }}
+                    @else
+                    <span class="text-gray-400 dark:text-gray-500 italic">0 %</span>
+                    @endif
+                </li>
                 @endforeach
             </ul>
         </div>

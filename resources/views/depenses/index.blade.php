@@ -111,7 +111,7 @@
                     @endif
                 </td>
                 <td class="table-cell text-gray-600 dark:text-gray-400">
-                    {{ $depense->created_at->format('d/m/Y H:i') }}
+                    {{ $depense->created_at->diffForHumans() }}
                 </td>
                 <td class="table-cell">
                     <div class="table-actions">

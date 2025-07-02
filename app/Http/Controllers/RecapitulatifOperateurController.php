@@ -3,17 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\RecapitulatifOperateur;
+use App\Models\Caisse;
 use App\Models\Medecin;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 class RecapitulatifOperateurController extends Controller
 {
     public function index()
     {
-        $recapOperateurs = RecapitulatifOperateur::with(['medecin', 'service'])
-            ->orderBy('created_at', 'desc')
+        $recapOperateurs = \App\Models\Caisse::with(['medecin', 'service', 'examen'])
+            ->select([
+                'medecin_id',
+                'service_id',
+                'examen_id',
+                DB::raw('COUNT(*) as nombre'),
+                DB::raw('SUM(total) as recettes'),
+                DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00")) as jour'),
+                DB::raw('MAX(examens.tarif) as tarif'),
+                DB::raw('SUM(examens.part_medecin) as part_medecin'),
+                DB::raw('SUM(examens.part_cabinet) as part_clinique')
+            ])
+            ->join('examens', 'caisses.examen_id', '=', 'examens.id')
+            ->groupBy('medecin_id', 'service_id', 'examen_id', 'jour')
+            ->orderBy('jour', 'desc')
             ->paginate(10);
 
         return view('recapitulatif_operateurs.index', compact('recapOperateurs'));
@@ -88,14 +103,46 @@ class RecapitulatifOperateurController extends Controller
 
     public function exportPdf()
     {
-        $recaps = RecapitulatifOperateur::with(['medecin', 'service'])->get();
+        $recaps = Caisse::with(['medecin', 'service', 'examen'])
+            ->select([
+                'medecin_id',
+                'service_id',
+                'examen_id',
+                DB::raw('COUNT(*) as nombre'),
+                DB::raw('SUM(total) as recettes'),
+                DB::raw('MAX(date_examen) as date'),
+                DB::raw('MAX(examens.tarif) as tarif'),
+                DB::raw('SUM(examens.part_medecin) as part_medecin'),
+                DB::raw('SUM(examens.part_cabinet) as part_clinique')
+            ])
+            ->join('examens', 'caisses.examen_id', '=', 'examens.id')
+            ->groupBy('medecin_id', 'service_id', 'examen_id')
+            ->orderBy('date', 'desc')
+            ->get();
+
         $pdf = PDF::loadView('recapitulatif_operateurs.export_pdf', compact('recaps'));
         return $pdf->download('recapitulatif_operateurs.pdf');
     }
 
     public function print()
     {
-        $recaps = RecapitulatifOperateur::with(['medecin', 'service'])->get();
+        $recaps = Caisse::with(['medecin', 'service', 'examen'])
+            ->select([
+                'medecin_id',
+                'service_id',
+                'examen_id',
+                DB::raw('COUNT(*) as nombre'),
+                DB::raw('SUM(total) as recettes'),
+                DB::raw('MAX(date_examen) as date'),
+                DB::raw('MAX(examens.tarif) as tarif'),
+                DB::raw('SUM(examens.part_medecin) as part_medecin'),
+                DB::raw('SUM(examens.part_cabinet) as part_clinique')
+            ])
+            ->join('examens', 'caisses.examen_id', '=', 'examens.id')
+            ->groupBy('medecin_id', 'service_id', 'examen_id')
+            ->orderBy('date', 'desc')
+            ->get();
+
         return view('recapitulatif_operateurs.print', compact('recaps'));
     }
 }

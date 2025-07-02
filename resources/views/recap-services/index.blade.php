@@ -1,4 +1,4 @@
-{{-- resources/views/recapitulatif_service_journiers/index.blade.php --}}
+{{-- resources/views/recap-services/index.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -25,8 +25,8 @@
     <table class="min-w-full text-sm text-left">
         <thead class="bg-gray-200 text-gray-700">
             <tr>
-                <th class="py-2 px-4">ID</th>
                 <th class="py-2 px-4">Service</th>
+                <th class="py-2 px-4">Nombre d'actes</th>
                 <th class="py-2 px-4">Total</th>
                 <th class="py-2 px-4">Date</th>
             </tr>
@@ -34,10 +34,10 @@
         <tbody>
             @forelse($recaps as $recap)
             <tr class="border-t">
-                <td class="py-2 px-4">{{ $recap->id }}</td>
                 <td class="py-2 px-4">{{ $recap->service->nom ?? '—' }}</td>
+                <td class="py-2 px-4">{{ $recap->nombre }}</td>
                 <td class="py-2 px-4">{{ number_format($recap->total, 0, ',', ' ') }} MRU</td>
-                <td class="py-2 px-4">{{ $recap->date }}</td>
+                <td class="py-2 px-4">{{ \Carbon\Carbon::parse($recap->jour)->format('d/m/Y') }}</td>
             </tr>
             @empty
             <tr class="border-t">

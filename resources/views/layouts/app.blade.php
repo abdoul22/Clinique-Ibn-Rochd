@@ -5,17 +5,16 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'Gestion des Patients')</title>
 
-    {{-- Script pour initialiser le dark mode immédiatement --}}
+    {{-- Script pour initialiser le dark mode immédiatement (anti-FOUC) --}}
     <script>
-        // Initialiser le dark mode avant le chargement du DOM
-        (function() {
-            const isDark = localStorage.getItem('theme') === 'dark';
-            if (isDark) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        })();
+        if (
+            localStorage.getItem('theme') === 'dark' ||
+            (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
     </script>
 
     {{-- Vite CSS/JS --}}

@@ -4,10 +4,6 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="flex justify-between items-center mb-4">
         <h2 class="page-title">Liste des Paiements</h2>
-        <a href="{{ route('modepaiements.create') }}"
-            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            + Nouveau Paiement
-        </a>
     </div>
 
     @if (session('success'))
@@ -23,7 +19,7 @@
                     <th class="table-header">Type</th>
                     <th class="table-header">Montant</th>
                     <th class="table-header">Facture Caisse</th>
-                    <th class="table-header">Actions</th>
+
                 </tr>
             </thead>
             <tbody class="table-body">
@@ -42,19 +38,6 @@
                         @else
                         <span class="text-gray-400 dark:text-gray-500 italic">Aucune</span>
                         @endif
-                    </td>
-                    <td class="table-cell space-x-2">
-                        <a href="{{ route('modepaiements.show', $paiement->id) }}"
-                            class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">Voir</a>
-                        <a href="{{ route('modepaiements.edit', $paiement->id) }}"
-                            class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300">Modifier</a>
-                        <form action="{{ route('modepaiements.destroy', $paiement->id) }}" method="POST"
-                            class="inline-block" onsubmit="return confirm('Supprimer ce paiement ?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">Supprimer</button>
-                        </form>
                     </td>
                 </tr>
                 @empty

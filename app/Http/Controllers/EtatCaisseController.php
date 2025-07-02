@@ -104,6 +104,30 @@ class EtatCaisseController extends Controller
             $chartFiltreData = [];
         }
 
+        // Assurances utilisées dans les etatcaisses (filtrées par date si besoin)
+        if ($date) {
+            $assurances = EtatCaisse::whereDate('created_at', $date)
+                ->with('assurance')
+                ->get()
+                ->map(function ($etat) {
+                    return $etat->assurance;
+                })
+                ->unique(function ($item) {
+                    return $item ? $item->id : null;
+                })
+                ->values();
+        } else {
+            $assurances = EtatCaisse::with('assurance')
+                ->get()
+                ->map(function ($etat) {
+                    return $etat->assurance;
+                })
+                ->unique(function ($item) {
+                    return $item ? $item->id : null;
+                })
+                ->values();
+        }
+
         return view('etatcaisse.index', compact(
             'etatcaisses',
             'personnels',
@@ -111,7 +135,8 @@ class EtatCaisseController extends Controller
             'resumeGlobal',
             'resumeFiltre',
             'chartGlobalData',
-            'chartFiltreData'
+            'chartFiltreData',
+            'assurances'
         ));
     }
 

@@ -155,8 +155,7 @@
         </div>
         @else
         <div class="flex justify-center">
-            <span
-                class="font-bolder bg-clip-text text-transparent bg-gray-100/80 dark:bg-gray-700/80 rounded-lg animate-pulse">
+            <span class="inline-block px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-400 dark:text-gray-500 italic font-bold">
                 0 %
             </span>
         </div>

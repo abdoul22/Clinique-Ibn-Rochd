@@ -43,8 +43,7 @@
                     @forelse($historique as $operation)
                     <tr class="table-row hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="table-cell">
-                            {{ $operation['date']->format('d/m/Y H:i') }}
-                        </td>
+                       {{ $operation['date']->diffForHumans() }} </td>
                         <td class="table-cell">
                             {{ $operation['type_operation'] }}
                         </td>
