@@ -5,9 +5,8 @@
             <!-- Logo -->
             <div class="flex-shrink-0">
                 <a href="{{ route('dashboard.superadmin') }}" class="flex items-center space-x-2 group">
-                    <div
-                        class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-105">
-                        <i class="fas fa-hospital text-white text-lg"></i>
+                    <div class="my-2" >
+                       <img src="{{ asset('images/logo.png') }}" alt="Logo Clinique" class="h-20 w-20 p-2">
                     </div>
                     <div class="hidden sm:block">
                         <h1
@@ -59,14 +58,14 @@
                     </div>
                 </a>
                 @elseif(Auth::user()->role?->name === 'admin')
-                <a href="{{ route('dashboard.superadmin') }}"
+                <a href="{{ route('dashboard.admin') }}"
                     class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
                     <i class="fas fa-home mr-2"></i>Dashboard
                     <div
                         class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
                     </div>
                 </a>
-                <a href="{{ route('superadmin.patients.index') }}"
+                <a href="{{ route('patients.index') }}"
                     class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
                     <i class="fas fa-users mr-2"></i>Patients
                     <div

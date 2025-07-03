@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Accueil - Clinique Ibn Rochd')
 @section('content')
 <!-- Hero Section -->
 <section

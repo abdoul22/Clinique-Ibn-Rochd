@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Liste des Caisses')
 
 @section('content')
 <!-- Titre + Boutons -->

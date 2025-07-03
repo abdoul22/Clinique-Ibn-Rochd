@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Dashboard Superadmin')
 
 @section('content')
 <div class="p-6 max-w-7xl mx-auto">

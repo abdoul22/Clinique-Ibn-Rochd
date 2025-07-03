@@ -1,10 +1,16 @@
 @extends('layouts.app')
+@section('title', 'État de Caisse')
 
 @section('content')
 <!-- Titre + Boutons -->
 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
     <h1 class="page-title">Liste des États de caisse</h1>
 
+
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
     <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0 w-full lg:w-auto">
         <a href="{{ route('modepaiements.dashboard') }}" class="form-button">
             Voir la trésorerie globale </a>
@@ -16,57 +22,14 @@
     </div>
 </div>
 
-<!-- Filtres -->
-<div class="card mb-4">
-    <form action="{{ route('etatcaisse.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-            <input type="date" name="date" value="{{ request('date') }}" class="form-input text-sm">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Désignation</label>
-            <input type="text" name="designation" value="{{ request('designation') }}" class="form-input text-sm"
-                placeholder="Ex: Général, crédit...">
-        </div>
-        <div>
-            <button type="submit" class="form-button text-sm">Filtrer</button>
-        </div>
-    </form>
-</div>
-
 <div class="flex-1/6 items-center">
     <!-- Boutons de génération -->
     <div class="flex flex-wrap gap-2 mb-4">
-        <form action="{{ route('etatcaisse.generer.general') }}" method="POST">
-            @csrf
-            <button type="submit" class="form-button text-sm">Générer État Général</button>
-        </form>
 
-        <form action="{{ route('etatcaisse.generer.personnels') }}" method="POST">
-            @csrf
-            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm">Générer
-                tous les crédits du personnel</button>
-        </form>
+
+
         <div class="flex items-center">
-            <!-- Select pour générer un personnel -->
-            <form method="GET" class="mb-4 flex gap-4 items-end">
-                <!-- Employé -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Employé</label>
-                    <select name="personnel_id" class="form-select w-60">
-                        <option value="">Tous</option>
-                        @foreach($personnels as $perso)
-                        <option value="{{ $perso->id }}" {{ request('personnel_id')==$perso->id ? 'selected' : '' }}>
-                            {{ $perso->nom }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
 
-                <div>
-                    <button type="submit" class="form-button">Filtrer</button>
-                </div>
-            </form>
             <div class="display block">
                 @if(request('personnel_id'))
                 @php

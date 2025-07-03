@@ -6,7 +6,9 @@
     <div
         class="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-blue-950 text-white p-6 text-center">
         <div class="flex justify-center mb-4">
-            <div class="bg-gray-200 dark:bg-gray-700 border-2 border-dashed rounded-xl w-16 h-16"></div>
+            <div class=" rounded-xl w-20 h-20">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo Clinique">
+            </div>
         </div>
         <h1 class="text-2xl font-bold">{{ config('app.name', 'Clinique Médicale') }}</h1>
         <p class="mt-1">Reçu d'examen médical</p>

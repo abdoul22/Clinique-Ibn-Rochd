@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Liste des Crédits')
 
 @section('content')
 <div class="container mx-auto">
@@ -13,8 +14,7 @@
     <!-- Filtre -->
     <form method="GET" action="{{ route('credits.index') }}" class="flex items-center space-x-2 mb-6">
         <label for="status" class="text-sm font-medium text-gray-700 dark:text-gray-300">Filtrer par statut :</label>
-        <select name="status" id="status" onchange="this.form.submit()"
-            class="form-select text-sm">
+        <select name="status" id="status" onchange="this.form.submit()" class="form-select text-sm">
             <option value="">-- Tous --</option>
             <option value="non payé" {{ request('status')=='non payé' ? 'selected' : '' }}>Non payé</option>
             <option value="partiellement payé" {{ request('status')=='partiellement payé' ? 'selected' : '' }}>

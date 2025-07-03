@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>@yield('title', 'Gestion des Patients')</title>
-
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     {{-- Script pour initialiser le dark mode immédiatement (anti-FOUC) --}}
     <script>
         if (
