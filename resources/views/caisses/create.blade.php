@@ -36,12 +36,20 @@
                         class="w-full font-bold bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-500 dark:text-gray-400">
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Numéro de téléphone
+                        *</label>
+                    <input type="text" id="patient_phone" name="patient_phone"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        placeholder="Saisir le numéro de téléphone du patient">
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Patient *</label>
-                    <select name="gestion_patient_id" required
+                    <select name="gestion_patient_id" id="patient_select" required
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                         <option value="">Sélectionner un patient</option>
                         @foreach($patients as $patient)
-                        <option value="{{ $patient->id }}">{{ $patient->first_name }} {{ $patient->last_name }}</option>
+                        <option value="{{ $patient->id }}" data-phone="{{ $patient->phone }}">{{ $patient->first_name }}
+                            {{ $patient->last_name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -71,29 +79,6 @@
 
             <!-- Colonne de droite -->
             <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Type d'examen
-                        *</label>
-                    <select name="examen_id" required
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                        <option value="">Sélectionner un type d'examen</option>
-                        @foreach($exam_types as $type)
-                        <option value="{{ $type->id }}">{{ $type->nom }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Service *</label>
-                    <select name="service_id" required
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                        <option value="">Sélectionner un service</option>
-                        @foreach($services as $service)
-                        <option value="{{ $service->id }}">{{ $service->nom }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Date de l'examen
                         *</label>
@@ -202,6 +187,24 @@
                 modePaiementField.style.display = 'none';
             } else {
                 modePaiementField.style.display = 'block';
+            }
+        });
+
+        // Synchronisation patient <-> téléphone
+        const patientSelect = document.getElementById('patient_select');
+        const phoneInput = document.getElementById('patient_phone');
+        const patientOptions = Array.from(patientSelect.options);
+        // Quand on choisit un patient, remplir le téléphone
+        patientSelect.addEventListener('change', function() {
+            const selected = patientSelect.options[patientSelect.selectedIndex];
+            phoneInput.value = selected.getAttribute('data-phone') || '';
+        });
+        // Quand on tape un numéro, sélectionner le patient correspondant
+        phoneInput.addEventListener('input', function() {
+            const val = phoneInput.value.trim();
+            const found = patientOptions.find(opt => opt.getAttribute('data-phone') === val);
+            if (found) {
+                patientSelect.value = found.value;
             }
         });
     });

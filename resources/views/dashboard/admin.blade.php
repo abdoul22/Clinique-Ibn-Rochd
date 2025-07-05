@@ -32,7 +32,7 @@
         {{-- Caisse --}}
         <a href="{{ route('caisses.index') }}"
             class="bg-gray-700 dark:bg-gray-600 text-white rounded-2xl p-6 shadow hover:bg-gray-800 dark:hover:bg-gray-950 transition">
-            <h2 class="text-xl font-semibold mb-2">Caisse</h2>
+            <h2 class="text-xl font-semibold mb-2">Gestion des Factures</h2>
             <p class="text-sm text-gray-300">Gérer les flux de trésorerie de la clinique.</p>
         </a>
 

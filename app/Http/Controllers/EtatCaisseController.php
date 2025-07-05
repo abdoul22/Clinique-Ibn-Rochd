@@ -17,8 +17,36 @@ class EtatCaisseController extends Controller
 {
     public function index(Request $request)
     {
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
         $etatcaisses = EtatCaisse::with(['caisse', 'caisse.paiements', 'personnel', 'assurance', 'medecin'])
-            ->when($request->date, fn($q) => $q->whereDate('created_at', $request->date))
+            ->when($period === 'day' && $date, fn($q) => $q->whereDate('created_at', $date))
+            ->when($period === 'week' && $week, function ($q) use ($week) {
+                $parts = explode('-W', $week);
+                if (count($parts) === 2) {
+                    $yearW = (int)$parts[0];
+                    $weekW = (int)$parts[1];
+                    $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
+                    $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+                    $q->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+                }
+            })
+            ->when($period === 'month' && $month, function ($q) use ($month) {
+                $parts = explode('-', $month);
+                if (count($parts) === 2) {
+                    $yearM = (int)$parts[0];
+                    $monthM = (int)$parts[1];
+                    $q->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+                }
+            })
+            ->when($period === 'year' && $year, fn($q) => $q->whereYear('created_at', $year))
+            ->when($period === 'range' && $dateStart && $dateEnd, fn($q) => $q->whereBetween('created_at', [$dateStart, $dateEnd]))
             ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
             ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
             ->latest()->paginate(10);
@@ -101,7 +129,7 @@ class EtatCaisseController extends Controller
             ];
         } else {
             $resumeFiltre = null;
-            $chartFiltreData = [];
+            $chartFiltreData = $chartGlobalData;
         }
 
         // Assurances utilisées dans les etatcaisses (filtrées par date si besoin)

@@ -13,6 +13,13 @@
         </ul>
     </div>
     @endif
+    @if(session('error'))
+    <div class="alert alert-error mb-4">
+        <ul class="list-disc list-inside text-sm">
+            <li>{{ session('error') }}</li>
+        </ul>
+    </div>
+    @endif
     <form action="{{ route('credits.store') }}" method="POST" class="space-y-4">
         @csrf
 
@@ -46,7 +53,8 @@
                 <p><strong class="font-bold text-orange-500 dark:text-orange-400">💳 Crédit actuel :</strong> <span
                         id="credit-actuel">--</span> MRU</p>
                 <p><strong class="font-bold text-blue-500 dark:text-blue-400">📊 Crédit maximum possible :</strong>
-                    <span id="credit-max">--</span> MRU</p>
+                    <span id="credit-max">--</span> MRU
+                </p>
                 <p><strong class="font-bold text-purple-500 dark:text-purple-400">💵 Salaire net après déduction
                         :</strong> <span id="salaire-net">--</span> MRU</p>
             </div>
@@ -110,8 +118,6 @@
         const creditMaxEl = document.getElementById('credit-max');
         const salaireNetEl = document.getElementById('salaire-net');
         const assuranceCreditActuelEl = document.getElementById('assurance-credit-actuel');
-        const montantInput = document.querySelector('input[name="montant"]');
-        const form = document.querySelector('form');
 
         function updatePersonnelInfos() {
             const selected = personnelSelect.options[personnelSelect.selectedIndex];
@@ -147,16 +153,6 @@
 
         personnelSelect.addEventListener('change', updatePersonnelInfos);
         assuranceSelect.addEventListener('change', updateAssuranceInfos);
-
-        form.addEventListener('submit', (e) => {
-            const sourceType = sourceTypeSelect.value;
-            const montant = parseFloat(montantInput.value);
-
-            if (sourceType === 'personnel' && montant > creditMaxEl.textContent) {
-                e.preventDefault();
-                alert("Montant supérieur au crédit maximum !");
-            }
-        });
     });
 </script>
 @endpush

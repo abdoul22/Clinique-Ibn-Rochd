@@ -14,7 +14,6 @@
         <p><strong>Date de naissance :</strong> {{ $patient->date_of_birth }}</p>
         <p><strong>Téléphone :</strong> {{ $patient->phone }}</p>
         <p><strong>Adresse :</strong> {{ $patient->address }}</p>
-        <p><strong>Type de patient :</strong> {{ $patient->type_patient }}</p>
     </div>
 </div>
 @endsection

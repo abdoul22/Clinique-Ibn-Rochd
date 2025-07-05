@@ -39,14 +39,6 @@
             <input type="text" name="address" placeholder="Adresse"
                 class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500"
                 required>
-
-            <select name="type_patient"
-                class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500"
-                required>
-                <option value="">Type de patient</option>
-                <option value="Interne">Interne</option>
-                <option value="Externe">Externe</option>
-            </select>
         </div>
 
         <div class="mt-6 flex justify-end">

@@ -12,6 +12,14 @@ class CaisseController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
         $query = Caisse::with(['patient', 'medecin', 'prescripteur', 'examen', 'service']);
 
         if ($search) {
@@ -25,6 +33,31 @@ class CaisseController extends Controller
                         $q->where('nom', 'like', "%{$search}%");
                     });
             });
+        }
+
+        // Filtrage par période
+        if ($period === 'day' && $date) {
+            $query->whereDate('date_examen', $date);
+        } elseif ($period === 'week' && $week) {
+            $parts = explode('-W', $week);
+            if (count($parts) === 2) {
+                $yearW = (int)$parts[0];
+                $weekW = (int)$parts[1];
+                $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
+                $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+                $query->whereBetween('date_examen', [$startOfWeek, $endOfWeek]);
+            }
+        } elseif ($period === 'month' && $month) {
+            $parts = explode('-', $month);
+            if (count($parts) === 2) {
+                $yearM = (int)$parts[0];
+                $monthM = (int)$parts[1];
+                $query->whereYear('date_examen', $yearM)->whereMonth('date_examen', $monthM);
+            }
+        } elseif ($period === 'year' && $year) {
+            $query->whereYear('date_examen', $year);
+        } elseif ($period === 'range' && $dateStart && $dateEnd) {
+            $query->whereBetween('date_examen', [$dateStart, $dateEnd]);
         }
 
         $caisses = $query->orderBy('date_examen', 'desc')->paginate(10);
@@ -60,7 +93,6 @@ class CaisseController extends Controller
             'medecin_id' => 'required|exists:medecins,id',
             'prescripteur_id' => 'nullable|exists:prescripteurs,id',
             'examen_id' => 'required|exists:examens,id',
-            'service_id' => 'required|exists:services,id',
             'date_examen' => 'required|date',
             'total' => 'required|numeric',
             'type' => 'nullable|string|in:bankily,masrivi,especes',
@@ -188,12 +220,11 @@ class CaisseController extends Controller
             'medecin_id' => 'required|exists:medecins,id',
             'prescripteur_id' => 'nullable|exists:prescripteurs,id',
             'examen_id' => 'required|exists:examens,id',
-            'service_id' => 'required|exists:services,id',
             'date_examen' => 'required|date',
         ]);
 
         $examenType = Examen::findOrFail($request->examen_id);
-        $data = $request->all();
+        $data = $request->except(['service_id']);
         $data['total'] = $examenType->tarif;
 
         $caisse->update($data);

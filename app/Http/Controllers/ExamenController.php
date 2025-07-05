@@ -12,13 +12,46 @@ class ExamenController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
         $query = Examen::with('service');
 
         if ($search) {
             $query->where('nom', 'like', "%{$search}%")
-                  ->orWhereHas('service', function ($q) use ($search) {
-                      $q->where('nom', 'like', "%{$search}%");
-                  });
+                ->orWhereHas('service', function ($q) use ($search) {
+                    $q->where('nom', 'like', "%{$search}%");
+                });
+        }
+
+        // Filtrage par période sur created_at
+        if ($period === 'day' && $date) {
+            $query->whereDate('created_at', $date);
+        } elseif ($period === 'week' && $week) {
+            $parts = explode('-W', $week);
+            if (count($parts) === 2) {
+                $yearW = (int)$parts[0];
+                $weekW = (int)$parts[1];
+                $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
+                $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+                $query->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+            }
+        } elseif ($period === 'month' && $month) {
+            $parts = explode('-', $month);
+            if (count($parts) === 2) {
+                $yearM = (int)$parts[0];
+                $monthM = (int)$parts[1];
+                $query->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+            }
+        } elseif ($period === 'year' && $year) {
+            $query->whereYear('created_at', $year);
+        } elseif ($period === 'range' && $dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
         }
 
         $examens = $query->orderBy('created_at', 'desc')->paginate(10);
@@ -29,7 +62,7 @@ class ExamenController extends Controller
     {
         $services = Service::all();
         $totaux = \App\Models\Examen::getTotaux();
-        return view('examens.create', compact('services','totaux'));
+        return view('examens.create', compact('services', 'totaux'));
     }
 
     public function store(Request $request)
@@ -127,4 +160,3 @@ class ExamenController extends Controller
         return view('examens.print', compact('examens'));
     }
 }
-

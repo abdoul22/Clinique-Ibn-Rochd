@@ -67,7 +67,7 @@
         {{-- L) Caisse --}}
         <a href="{{ route('caisses.index') }}"
             class="bg-gray-700 text-white rounded-2xl p-6 shadow hover:bg-gray-800 transition">
-            <h2 class="text-xl font-semibold mb-2">Gestion de la Caisse</h2>
+            <h2 class="text-xl font-semibold mb-2">Gestion des Factures</h2>
             <p class="text-sm text-gray-300">Suivi des entrées/sorties d'argent et clôtures de caisse.</p>
         </a>
 

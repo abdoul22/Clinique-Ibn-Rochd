@@ -83,7 +83,7 @@ select:focus[data-flux-control] {
     }
 
     .table-header th {
-        @apply py-3 px-4 font-medium;
+        @apply py-2 px-2 font-medium;
     }
 
     .table-body {
@@ -95,7 +95,7 @@ select:focus[data-flux-control] {
     }
 
     .table-cell {
-        @apply py-4 px-4 text-gray-900 dark:text-gray-100;
+        @apply py-2 px-2 text-gray-900 dark:text-gray-100;
     }
 
     .table-cell-medium {

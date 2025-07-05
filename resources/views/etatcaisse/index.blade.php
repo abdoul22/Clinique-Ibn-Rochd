@@ -9,6 +9,77 @@
 
 </div>
 
+<!-- Résumé de la période sélectionnée -->
+@php
+$period = request('period', 'day');
+$summary = '';
+if ($period === 'day' && request('date')) {
+$summary = 'Filtré sur le jour du ' . \Carbon\Carbon::parse(request('date'))->translatedFormat('d F Y');
+} elseif ($period === 'week' && request('week')) {
+$parts = explode('-W', request('week'));
+if (count($parts) === 2) {
+$start = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
+$end = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
+$summary = 'Filtré sur la semaine du ' . $start->translatedFormat('d F Y') . ' au ' . $end->translatedFormat('d F Y');
+}
+} elseif ($period === 'month' && request('month')) {
+$parts = explode('-', request('month'));
+if (count($parts) === 2) {
+$summary = 'Filtré sur le mois de ' . \Carbon\Carbon::create($parts[0], $parts[1])->translatedFormat('F Y');
+}
+} elseif ($period === 'year' && request('year')) {
+$summary = 'Filtré sur l\'année ' . request('year');
+} elseif ($period === 'range' && request('date_start') && request('date_end')) {
+$summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->translatedFormat('d F Y') . ' au ' .
+\Carbon\Carbon::parse(request('date_end'))->translatedFormat('d F Y');
+}
+@endphp
+@if($summary)
+<div class="mb-4 flex items-center gap-3">
+    <span
+        class="inline-block bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium transition">{{
+        $summary }}</span>
+    <a href="{{ route('etatcaisse.index') }}" class="form-button form-button-secondary text-xs">Réinitialiser</a>
+</div>
+@endif
+<!-- Filtre avancé par période -->
+<form method="GET" action="" class="mb-6 flex flex-wrap gap-2 items-center" id="periode-filter-form" autocomplete="off">
+    <label for="period" class="text-sm font-medium text-gray-700 dark:text-gray-300">Période :</label>
+    <select name="period" id="period" class="form-select text-sm" aria-label="Choisir la période">
+        <option value="day" {{ request('period', 'day' )=='day' ? 'selected' : '' }}>Jour</option>
+        <option value="week" {{ request('period')=='week' ? 'selected' : '' }}>Semaine</option>
+        <option value="month" {{ request('period')=='month' ? 'selected' : '' }}>Mois</option>
+        <option value="year" {{ request('period')=='year' ? 'selected' : '' }}>Année</option>
+        <option value="range" {{ request('period')=='range' ? 'selected' : '' }}>Plage personnalisée</option>
+    </select>
+    <div id="input-day" class="period-input transition-all duration-300">
+        <input type="date" name="date" value="{{ request('date') }}" class="form-input text-sm"
+            placeholder="Choisir une date" aria-label="Date du jour">
+    </div>
+    <div id="input-week" class="period-input hidden transition-all duration-300">
+        <input type="week" name="week" value="{{ request('week') }}" class="form-input text-sm"
+            placeholder="Choisir une semaine" aria-label="Semaine">
+    </div>
+    <div id="input-month" class="period-input hidden transition-all duration-300">
+        <input type="month" name="month" value="{{ request('month') }}" class="form-input text-sm"
+            placeholder="Choisir un mois" aria-label="Mois">
+    </div>
+    <div id="input-year" class="period-input hidden transition-all duration-300">
+        <input type="number" name="year" min="1900" max="2100" step="1" value="{{ request('year', date('Y')) }}"
+            class="form-input text-sm w-24" placeholder="Année" aria-label="Année">
+    </div>
+    <div id="input-range" class="period-input hidden flex gap-2 items-center transition-all duration-300">
+        <input type="date" name="date_start" value="{{ request('date_start') }}" class="form-input text-sm"
+            placeholder="Début" aria-label="Date de début">
+        <span class="text-gray-500 dark:text-gray-400">à</span>
+        <input type="date" name="date_end" value="{{ request('date_end') }}" class="form-input text-sm"
+            placeholder="Fin" aria-label="Date de fin">
+    </div>
+    <button type="submit" class="form-button text-sm" id="btn-filtrer">Filtrer</button>
+    <a href="{{ route('etatcaisse.index') }}" class="ml-2 text-sm text-gray-600 dark:text-gray-400 underline">Afficher
+        tous</a>
+</form>
+
 <!-- Filtres -->
 <div class="card mb-4">
     <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0 w-full lg:w-auto">
@@ -53,116 +124,16 @@
     <table class="table-main border border-gray-200 dark:border-gray-700">
         <thead class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
             <tr>
-                <th class="py-4 px-4 text-left font-semibold text-xs uppercase tracking-wider">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        ID
-                    </div>
-                </th>
-                <th class="py-4 px-4 text-left font-semibold text-xs uppercase tracking-wider">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        Désignation
-                    </div>
-                </th>
-                <th class="py-4 px-4 text-left font-semibold text-xs uppercase tracking-wider">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path
-                                d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        Recette
-                    </div>
-                </th>
-                <th class="py-4 px-4 text-left font-semibold text-xs uppercase tracking-wider">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        Part Médecin
-                    </div>
-                </th>
-                <th class="py-4 px-4 text-left font-semibold text-xs uppercase tracking-wider">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path
-                                d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-                        </svg>
-                        Part Clinique
-                    </div>
-                </th>
-                <th class="py-4 px-4 text-left font-semibold text-xs uppercase tracking-wider">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                            <path fill-rule="evenodd"
-                                d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        Paiement
-                    </div>
-                </th>
-                <th class="py-4 px-4 text-left font-semibold text-xs uppercase tracking-wider">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        Validation
-                    </div>
-                </th>
-                <th class="py-4 px-4 text-left font-semibold text-xs uppercase tracking-wider">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17C5.06 5.687 5 5.35 5 5zm4 1V5a1 1 0 10-1 1h1zm3 0a1 1 0 10-1-1v1h1z"
-                                clip-rule="evenodd" />
-                            <path d="M9 11H5v6a2 2 0 002 2h9a2 2 0 002-2v-6h-4z" />
-                        </svg>
-                        Assurance
-                    </div>
-                </th>
-                <th class="py-4 px-4 text-left font-semibold text-xs uppercase tracking-wider">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path
-                                d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                        </svg>
-                        Médecin
-                    </div>
-                </th>
-                <th class="py-4 px-4 text-left font-semibold text-xs uppercase tracking-wider">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path
-                                d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                        </svg>
-                        Actions
-                    </div>
-                </th>
+                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">ID</th>
+                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Désignation</th>
+                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Recette</th>
+                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Part Médecin</th>
+                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Part Clinique</th>
+                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Paiement</th>
+                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Validation</th>
+                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Assurance</th>
+                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Médecin</th>
+                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Actions</th>
             </tr>
         </thead>
         <tbody id="etatCaisseTableBody" class="table-body">
@@ -180,50 +151,58 @@
     </table>
 </div>
 
-<!-- Résumé filtré -->
-@if(request('date'))
-<div class="alert alert-info my-6">
-    <h2 class="text-blue-700 dark:text-blue-300 font-semibold mb-2">Résumé pour la date : {{ request('date') }}</h2>
-    <!-- Résumé des opérations financières -->
-    <div class="grid md:grid-cols-3 gap-4 my-6 bg-gray-100 dark:bg-gray-700 p-4 rounded">
-        <div class="card text-sm">
-            <div class="font-bold text-gray-700 dark:text-gray-300">Recette Caisse</div>
-            <div class="text-blue-700 dark:text-blue-400 text-lg">{{ number_format($recetteCaisse, 0, ',', ' ') }} MRU
-            </div>
+<!-- Résumé filtré moderne (toujours affiché, même sans filtre) -->
+@php
+$isFiltre = (
+request('date') || request('week') || request('month') || request('year') || (request('date_start') &&
+request('date_end'))
+);
+$resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
+@endphp
+@if($resume)
+<div
+    class="alert alert-info my-6 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/10">
+    <h2 class="text-blue-700 dark:text-blue-300 font-semibold mb-4 text-lg flex items-center gap-2">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
+        </svg>
+        Résumé de la période sélectionnée
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
+        <div class="card text-sm flex flex-col items-center">
+            <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Recette Caisse</span>
+            <span class="text-blue-700 dark:text-blue-400 text-xl font-bold">{{ number_format($resume['recette'], 0,
+                ',', ' ') }} MRU</span>
         </div>
-        <div class="card text-sm">
-            <div class="font-bold text-gray-700 dark:text-gray-300">Part Médecin</div>
-            <div class="text-purple-700 dark:text-purple-400 text-lg">{{ number_format($partMedecin, 0, ',', ' ') }} MRU
-            </div>
+        <div class="card text-sm flex flex-col items-center">
+            <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Part Médecin</span>
+            <span class="text-purple-700 dark:text-purple-400 text-xl font-bold">{{
+                number_format($resume['part_medecin'], 0, ',', ' ') }} MRU</span>
         </div>
-        <div class="card text-sm">
-            <div class="font-bold text-gray-700 dark:text-gray-300">Part Clinique</div>
-            <div class="text-green-700 dark:text-green-400 text-lg">{{ number_format($partCabinet, 0, ',', ' ') }} MRU
-            </div>
+        <div class="card text-sm flex flex-col items-center">
+            <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Part Clinique</span>
+            <span class="text-green-700 dark:text-green-400 text-xl font-bold">{{ number_format($resume['part_cabinet'],
+                0, ',', ' ') }} MRU</span>
         </div>
-        <div class="card text-sm">
-            <div class="font-bold text-gray-700 dark:text-gray-300">Dépense</div>
-            <div class="text-red-700 dark:text-red-400 text-lg">{{ number_format($depense, 0, ',', ' ') }} MRU</div>
+        <div class="card text-sm flex flex-col items-center">
+            <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Dépense</span>
+            <span class="text-red-700 dark:text-red-400 text-xl font-bold">{{ number_format($resume['depense'], 0, ',',
+                ' ') }} MRU</span>
         </div>
-        <div class="card text-sm">
-            <div class="font-bold text-gray-700 dark:text-gray-300">Crédit Personnel</div>
-            <div class="text-indigo-700 dark:text-indigo-400 text-lg">{{ number_format($creditPersonnel, 0, ',', ' ') }}
-                MRU</div>
+        <div class="card text-sm flex flex-col items-center">
+            <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Crédit Personnel</span>
+            <span class="text-indigo-700 dark:text-indigo-400 text-xl font-bold">{{
+                number_format($resume['credit_personnel'], 0, ',', ' ') }} MRU</span>
         </div>
-        <div class="card text-sm">
-            <div class="font-bold text-gray-700 dark:text-gray-300">Assurances</div>
-            <ul class="list-disc list-inside text-gray-700 dark:text-gray-300">
-                @foreach($assurances as $assurance)
-                <li>
-                    @if($assurance)
-                    {{ $assurance->nom }}
-                    @else
-                    <span class="text-gray-400 dark:text-gray-500 italic">0 %</span>
-                    @endif
-                </li>
-                @endforeach
-            </ul>
+        <div class="card text-sm flex flex-col items-center">
+            <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Crédit Assurance</span>
+            <span class="text-cyan-700 dark:text-cyan-400 text-xl font-bold">{{
+                number_format($resume['credit_assurance'], 0, ',', ' ') }} MRU</span>
         </div>
+    </div>
+    <div class="mt-4">
+        <canvas id="chartFiltre" height="100"></canvas>
     </div>
 </div>
 @endif
@@ -232,91 +211,6 @@
 <div class="pagination-container">
     {{ $etatcaisses->links() }}
 </div>
-
-<!-- Résumé global -->
-<div class="card mt-4">
-    <h2 class="card-title mb-2">Résumé global (toutes dates)</h2>
-    <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-gray-700 dark:text-gray-300">
-        <li>Recette Caisse : <strong class="text-blue-600 dark:text-blue-400">{{ number_format($resumeGlobal['recette'],
-                0, ',', ' ') }} MRU</strong></li>
-        <li>Part Médecin : <strong class="text-purple-600 dark:text-purple-400">{{
-                number_format($resumeGlobal['part_medecin'], 0, ',', ' ') }} MRU</strong></li>
-        <li>Part Clinique : <strong class="text-green-600 dark:text-green-400">{{
-                number_format($resumeGlobal['part_cabinet'], 0, ',', ' ') }} MRU</strong></li>
-        <li>Dépenses : <strong class="text-red-600 dark:text-red-400">{{ number_format($resumeGlobal['depense'], 0, ',',
-                ' ') }} MRU</strong></li>
-        <li>Crédit Personnel : <strong class="text-indigo-600 dark:text-indigo-400">{{
-                number_format($resumeGlobal['credit_personnel'], 0, ',', ' ') }} MRU</strong></li>
-        <li>Crédit Assurance : <strong class="text-cyan-600 dark:text-cyan-400">{{
-                number_format($resumeGlobal['credit_assurance'], 0, ',', ' ') }} MRU</strong></li>
-    </ul>
-</div>
-
-<div class="px-3 py-2">
-    <!-- 📊 Graphique filtré -->
-    @if(request('date'))
-    <div class="mt-6">
-        <h2 class="text-blue-700 dark:text-blue-300 font-semibold mb-2">Graphique - Résumé du {{ request('date') }}</h2>
-        <canvas id="chartFiltre" height="100"></canvas>
-    </div>
-    @endif
-
-    <!-- 📊 Graphique global -->
-    <div class="mt-6">
-        <h2 class="text-gray-800 dark:text-gray-200 font-semibold mb-2">Graphique - Résumé global (toutes dates)</h2>
-        <canvas id="chartGlobal" height="100"></canvas>
-    </div>
-</div>
-
-<script>
-    window.onload = function () {
-    const chartFiltreData = @json($chartFiltreData);
-    const chartGlobalData = @json($chartGlobalData);
-
-        const labels = ['Recette', 'Part Médecin', 'Part Clinique', 'Dépense', 'Crédit Personnel', 'Crédit Assurance'];
-        const backgroundColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6'];
-
-        if (chartFiltreData.length) {
-            new Chart(document.getElementById('chartFiltre'), {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Montant (MRU)',
-                        data: chartFiltreData,
-                        backgroundColor: backgroundColors,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, title: { display: true, text: 'Montant (MRU)' } }
-                    }
-                }
-            });
-        }
-
-       new Chart(document.getElementById('chartGlobal'), {
-        type: 'bar',
-        data: {
-        labels: labels,
-        datasets: [{
-        label: 'Montant (MRU)',
-        data: chartGlobalData,
-        backgroundColor: backgroundColors,
-        }]
-        },
-        options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-        y: { beginAtZero: true, title: { display: true, text: 'Montant (MRU)' } }
-        }
-        }
-        });
-    };
-</script>
 
 <script>
     function ajouterEtatCaisse(data) {
@@ -341,5 +235,158 @@
         }
     });
 </script>
+
+@push('scripts')
+<script>
+    // Affichage dynamique des inputs selon la période + accessibilité + transitions
+    function updatePeriodInputs() {
+        const period = document.getElementById('period').value;
+        document.querySelectorAll('.period-input').forEach(div => div.classList.add('hidden'));
+        if (period === 'day') document.getElementById('input-day').classList.remove('hidden');
+        if (period === 'week') document.getElementById('input-week').classList.remove('hidden');
+        if (period === 'month') document.getElementById('input-month').classList.remove('hidden');
+        if (period === 'year') document.getElementById('input-year').classList.remove('hidden');
+        if (period === 'range') document.getElementById('input-range').classList.remove('hidden');
+        updateFiltrerButtonState();
+        updateFiltrerButtonLabel();
+    }
+    function updateFiltrerButtonState() {
+        const period = document.getElementById('period').value;
+        let valid = false;
+        if (period === 'day') {
+            valid = !!document.querySelector('input[name="date"]').value;
+        } else if (period === 'week') {
+            valid = !!document.querySelector('input[name="week"]').value;
+        } else if (period === 'month') {
+            valid = !!document.querySelector('input[name="month"]').value;
+        } else if (period === 'year') {
+            valid = !!document.querySelector('input[name="year"]').value;
+        } else if (period === 'range') {
+            const start = document.querySelector('input[name="date_start"]').value;
+            const end = document.querySelector('input[name="date_end"]').value;
+            valid = !!start && !!end && start <= end;
+        }
+        document.getElementById('btn-filtrer').disabled = !valid;
+        document.getElementById('btn-filtrer').classList.toggle('opacity-50', !valid);
+        document.getElementById('btn-filtrer').classList.toggle('cursor-not-allowed', !valid);
+    }
+    function updateFiltrerButtonLabel() {
+        const period = document.getElementById('period').value;
+        let label = 'Filtrer';
+        if (period === 'day') label = 'Filtrer par jour';
+        else if (period === 'week') label = 'Filtrer par semaine';
+        else if (period === 'month') label = 'Filtrer par mois';
+        else if (period === 'year') label = 'Filtrer par année';
+        else if (period === 'range') label = 'Filtrer par plage';
+        document.getElementById('btn-filtrer').textContent = label;
+    }
+    document.getElementById('period').addEventListener('change', updatePeriodInputs);
+    document.querySelectorAll('.period-input input').forEach(input => {
+        input.addEventListener('input', function() {
+            updateFiltrerButtonState();
+        });
+    });
+    window.addEventListener('DOMContentLoaded', function() {
+        updatePeriodInputs();
+        updateFiltrerButtonState();
+        updateFiltrerButtonLabel();
+    });
+</script>
+
+<script>
+    // Chart.js dynamique pour le résumé filtré
+    function renderChartFiltre() {
+        const ctx = document.getElementById('chartFiltre');
+        if (!ctx) return;
+        // Détruire l'ancien graphique si existant
+        if (window.chartFiltreInstance) {
+            window.chartFiltreInstance.destroy();
+        }
+        const data = @json($chartFiltreData);
+        if (!data.length) return;
+        window.chartFiltreInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Recette', 'Part Médecin', 'Part Clinique', 'Dépense', 'Crédit Personnel', 'Crédit Assurance'],
+                datasets: [{
+                    label: 'Montant (MRU)',
+                    data: data,
+                    backgroundColor: ['#3b82f6', '#a78bfa', '#10b981', '#ef4444', '#8b5cf6', '#14b8a6'],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151',
+                            callback: function(value) { return value.toLocaleString() + ' MRU'; }
+                        },
+                        grid: { color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb' }
+                    },
+                    x: {
+                        ticks: { color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151' },
+                        grid: { color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb' }
+                    }
+                }
+            }
+        });
+    }
+    document.addEventListener('DOMContentLoaded', renderChartFiltre);
+    document.addEventListener('turbo:load', renderChartFiltre); // Pour Turbo/Hotwire éventuel
+</script>
+
+<script>
+    // Chart.js dynamique pour le graphique global
+    function renderChartGlobal() {
+        const ctx = document.getElementById('chartGlobal');
+        if (!ctx) return;
+        if (window.chartGlobalInstance) {
+            window.chartGlobalInstance.destroy();
+        }
+        const data = @json($chartGlobalData);
+        if (!data.length) return;
+        window.chartGlobalInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Recette', 'Part Médecin', 'Part Clinique', 'Dépense', 'Crédit Personnel', 'Crédit Assurance'],
+                datasets: [{
+                    label: 'Montant (MRU)',
+                    data: data,
+                    backgroundColor: ['#3b82f6', '#a78bfa', '#10b981', '#ef4444', '#8b5cf6', '#14b8a6'],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151',
+                            callback: function(value) { return value.toLocaleString() + ' MRU'; }
+                        },
+                        grid: { color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb' }
+                    },
+                    x: {
+                        ticks: { color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151' },
+                        grid: { color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb' }
+                    }
+                }
+            }
+        });
+    }
+    document.addEventListener('DOMContentLoaded', renderChartGlobal);
+    document.addEventListener('turbo:load', renderChartGlobal);
+</script>
+@endpush
 
 @endsection

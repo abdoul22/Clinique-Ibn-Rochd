@@ -12,7 +12,40 @@ class DepenseController extends Controller
 {
     public function index(Request $request)
     {
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
         $query = Depense::query();
+
+        // Filtrage par période
+        if ($period === 'day' && $date) {
+            $query->whereDate('created_at', $date);
+        } elseif ($period === 'week' && $week) {
+            $parts = explode('-W', $week);
+            if (count($parts) === 2) {
+                $yearW = (int)$parts[0];
+                $weekW = (int)$parts[1];
+                $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
+                $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+                $query->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+            }
+        } elseif ($period === 'month' && $month) {
+            $parts = explode('-', $month);
+            if (count($parts) === 2) {
+                $yearM = (int)$parts[0];
+                $monthM = (int)$parts[1];
+                $query->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+            }
+        } elseif ($period === 'year' && $year) {
+            $query->whereYear('created_at', $year);
+        } elseif ($period === 'range' && $dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
 
         if ($request->has('search')) {
             $query->where('nom', 'like', '%' . $request->search . '%');
@@ -28,7 +61,37 @@ class DepenseController extends Controller
 
         $depenses = $query->latest()->paginate(10);
 
-        return view('depenses.index', compact('depenses'));
+        // Ajouter les crédits personnels comme "dépenses générées"
+        $creditsPersonnels = \App\Models\Credit::where('source_type', \App\Models\Personnel::class)
+            ->with('source')
+            ->get()
+            ->map(function ($credit) {
+                return (object) [
+                    'id' => 'CREDIT-' . $credit->id,
+                    'nom' => 'Crédit personnel : ' . ($credit->source->nom ?? 'Personnel'),
+                    'montant' => $credit->montant,
+                    'mode_paiement_id' => $credit->mode_paiement_id,
+                    'source' => 'crédit personnel',
+                    'created_at' => $credit->created_at,
+                    'etat_caisse_id' => null,
+                    'is_credit_personnel' => true,
+                ];
+            });
+
+        // Fusionner et trier par date (dépenses + crédits personnels)
+        $allDepenses = $depenses->getCollection()->concat($creditsPersonnels)->sortByDesc('created_at');
+        // Paginer manuellement
+        $perPage = $depenses->perPage();
+        $page = $depenses->currentPage();
+        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allDepenses->forPage($page, $perPage),
+            $allDepenses->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return view('depenses.index', ['depenses' => $paginated]);
     }
 
     public function create()
@@ -53,13 +116,24 @@ class DepenseController extends Controller
             abort(403, 'Création manuelle des parts médecin interdite.');
         }
 
-        // Trouver le ModePaiement correspondant au type choisi
+        // Vérification du solde du mode de paiement
         $modePaiement = \App\Models\ModePaiement::where('type', $request->mode_paiement_id)->latest()->first();
         if ($modePaiement && $modePaiement->montant < $request->montant) {
             return back()->withErrors([
                 'mode_paiement_id' => "Fonds insuffisants dans le mode de paiement {$request->mode_paiement_id}. Solde disponible : {$modePaiement->montant} MRU"
             ]);
         }
+
+        // Vérification du solde global de la caisse
+        $soldeCaisse = \App\Models\Caisse::sum('total');
+        $totalDepenses = \App\Models\Depense::sum('montant');
+        $soldeDisponible = $soldeCaisse - $totalDepenses;
+        if ($request->montant > $soldeDisponible) {
+            return back()->withErrors([
+                'montant' => "Le montant de la dépense ({$request->montant} MRU) dépasse le solde disponible de la caisse ({$soldeDisponible} MRU). Dépense refusée."
+            ]);
+        }
+
         if ($modePaiement) {
             $modePaiement->decrement('montant', $request->montant);
         }
