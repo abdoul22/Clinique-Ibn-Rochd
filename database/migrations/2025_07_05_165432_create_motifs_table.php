@@ -11,21 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mode_paiements', function (Blueprint $table) {
+        Schema::create('motifs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('caisse_id')->nullable()->constrained()->onDelete('cascade');
-            $table->enum('type', ['espèces', 'bankily', 'masrivi', 'sedad']);
-            $table->decimal('montant', 10, 2);
+            $table->string('nom')->unique();
+            $table->text('description')->nullable();
+            $table->boolean('actif')->default(true);
             $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('mode_paiements');
+        Schema::dropIfExists('motifs');
     }
 };

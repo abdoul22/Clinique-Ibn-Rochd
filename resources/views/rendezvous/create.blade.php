@@ -1,0 +1,336 @@
+@extends('layouts.app')
+
+@section('title', 'Nouveau Rendez-vous')
+
+@section('content')
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Nouveau Rendez-vous</h1>
+            <a href="{{ route('rendezvous.index') }}"
+                class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                <i class="fas fa-arrow-left mr-2"></i>Retour
+            </a>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <form action="{{ route('rendezvous.store') }}" method="POST">
+                @csrf
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Patient -->
+                    <div>
+                        <label for="patient_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Patient <span class="text-red-500">*</span>
+                        </label>
+                        <select name="patient_id" id="patient_id"
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('patient_id') border-red-500 @enderror"
+                            required>
+                            <option value="">Sélectionner un patient</option>
+                            @foreach($patients as $patient)
+                            <option value="{{ $patient->id }}" data-phone="{{ $patient->phone }}" {{
+                                old('patient_id')==$patient->id ? 'selected' : '' }}>
+                                {{ $patient->first_name }} {{ $patient->last_name }} - {{ $patient->phone }}
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('patient_id')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Numéro de téléphone -->
+                    <div class="relative">
+                        <label for="patient_phone"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Numéro de téléphone <span class="text-gray-500">(auto-rempli)</span>
+                        </label>
+                        <input type="tel" name="patient_phone" id="patient_phone" value="{{ old('patient_phone') }}"
+                            placeholder="Saisir le numéro pour rechercher le patient..."
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('patient_phone') border-red-500 @enderror"
+                            autocomplete="off">
+                        <div id="phone_suggestions"
+                            class="hidden absolute z-50 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
+                        </div>
+                        @error('patient_phone')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Médecin -->
+                    <div>
+                        <label for="medecin_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Médecin <span class="text-red-500">*</span>
+                        </label>
+                        <select name="medecin_id" id="medecin_id"
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('medecin_id') border-red-500 @enderror"
+                            required>
+                            <option value="">Sélectionner un médecin</option>
+                            @foreach($medecins as $medecin)
+                            <option value="{{ $medecin->id }}" {{ old('medecin_id')==$medecin->id ? 'selected' : '' }}>
+                                {{ $medecin->nom }} {{ $medecin->prenom }} - {{ $medecin->specialite }}
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('medecin_id')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Date du rendez-vous -->
+                    <div>
+                        <label for="date_rdv" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Date du rendez-vous <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="date_rdv" id="date_rdv" value="{{ old('date_rdv', date('Y-m-d')) }}"
+                            min="{{ date('Y-m-d') }}"
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('date_rdv') border-red-500 @enderror"
+                            required>
+                        @error('date_rdv')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Heure du rendez-vous -->
+                    <div>
+                        <label for="heure_rdv" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Heure du rendez-vous <span class="text-red-500">*</span>
+                        </label>
+                        <input type="time" name="heure_rdv" id="heure_rdv" value="{{ old('heure_rdv', '09:00') }}"
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('heure_rdv') border-red-500 @enderror"
+                            required>
+                        @error('heure_rdv')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Durée de consultation -->
+                    <div>
+                        <label for="duree_consultation"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Durée de consultation (minutes)
+                        </label>
+                        <select name="duree_consultation" id="duree_consultation"
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2">
+                            <option value="15" {{ old('duree_consultation', 30)==15 ? 'selected' : '' }}>15 minutes
+                            </option>
+                            <option value="30" {{ old('duree_consultation', 30)==30 ? 'selected' : '' }}>30 minutes
+                            </option>
+                            <option value="45" {{ old('duree_consultation', 30)==45 ? 'selected' : '' }}>45 minutes
+                            </option>
+                            <option value="60" {{ old('duree_consultation', 30)==60 ? 'selected' : '' }}>1 heure
+                            </option>
+                            <option value="90" {{ old('duree_consultation', 30)==90 ? 'selected' : '' }}>1h30</option>
+                            <option value="120" {{ old('duree_consultation', 30)==120 ? 'selected' : '' }}>2 heures
+                            </option>
+                        </select>
+                        @error('duree_consultation')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Motif -->
+                    <div class="md:col-span-2">
+                        <label for="motif" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Motif de consultation <span class="text-red-500">*</span>
+                        </label>
+                        <div class="flex space-x-2">
+                            <select name="motif" id="motif"
+                                class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('motif') border-red-500 @enderror"
+                                required>
+                                <option value="">Sélectionner un motif</option>
+                                @foreach($motifs as $motif)
+                                <option value="{{ $motif->nom }}" {{ old('motif')==$motif->nom ? 'selected' : '' }}>
+                                    {{ $motif->nom }}
+                                </option>
+                                @endforeach
+                                <option value="autre">Autre (saisir manuellement)</option>
+                            </select>
+                            <a href="{{ route('motifs.create') }}" target="_blank"
+                                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center"
+                                title="Ajouter un nouveau motif">
+                                <i class="fas fa-plus"></i>
+                            </a>
+                        </div>
+                        <input type="text" name="motif_custom" id="motif_custom" value="{{ old('motif_custom') }}"
+                            placeholder="Saisir un motif personnalisé..."
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 mt-2 hidden"
+                            style="display: none;">
+                        @error('motif')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="md:col-span-2">
+                        <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Notes supplémentaires
+                        </label>
+                        <textarea name="notes" id="notes" rows="4" placeholder="Informations complémentaires..."
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('notes') border-red-500 @enderror">{{ old('notes') }}</textarea>
+                        @error('notes')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 mt-6">
+                    <a href="{{ route('rendezvous.index') }}"
+                        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                        Annuler
+                    </a>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        <i class="fas fa-save mr-2"></i>Créer le rendez-vous
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Validation côté client
+        const form = document.querySelector('form');
+        const medecinSelect = document.getElementById('medecin_id');
+        const dateInput = document.getElementById('date_rdv');
+        const heureInput = document.getElementById('heure_rdv');
+        const motifSelect = document.getElementById('motif');
+        const motifCustom = document.getElementById('motif_custom');
+        const patientSelect = document.getElementById('patient_id');
+        const patientPhone = document.getElementById('patient_phone');
+        const phoneSuggestions = document.getElementById('phone_suggestions');
+
+        // Données des patients pour la recherche
+        const patientsData = [
+            @foreach($patients as $patient)
+            {
+                id: {{ $patient->id }},
+                name: '{{ $patient->first_name }} {{ $patient->last_name }}',
+                phone: '{{ $patient->phone }}'
+            },
+            @endforeach
+        ];
+
+        // Auto-remplir le téléphone quand on sélectionne un patient
+        patientSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                const phone = selectedOption.getAttribute('data-phone');
+                patientPhone.value = phone;
+            } else {
+                patientPhone.value = '';
+            }
+        });
+
+        // Recherche de patient par numéro de téléphone
+        patientPhone.addEventListener('input', function() {
+            const phone = this.value.trim();
+
+            if (phone.length < 3) {
+                phoneSuggestions.classList.add('hidden');
+                return;
+            }
+
+            // Filtrer les patients par numéro de téléphone
+            const filteredPatients = patientsData.filter(patient =>
+                patient.phone.includes(phone)
+            );
+
+            if (filteredPatients.length > 0) {
+                displayPhoneSuggestions(filteredPatients);
+            } else {
+                phoneSuggestions.classList.add('hidden');
+            }
+        });
+
+        // Afficher les suggestions
+        function displayPhoneSuggestions(patients) {
+            phoneSuggestions.innerHTML = '';
+
+            patients.forEach(patient => {
+                const div = document.createElement('div');
+                div.className = 'px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0';
+                div.innerHTML = `
+                    <div class="font-medium text-gray-900 dark:text-gray-200">${patient.name}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">${patient.phone}</div>
+                `;
+
+                div.addEventListener('click', function() {
+                    patientPhone.value = patient.phone;
+                    patientSelect.value = patient.id;
+                    phoneSuggestions.classList.add('hidden');
+                });
+
+                phoneSuggestions.appendChild(div);
+            });
+
+            phoneSuggestions.classList.remove('hidden');
+        }
+
+        // Masquer les suggestions quand on clique ailleurs
+        document.addEventListener('click', function(e) {
+            if (!patientPhone.contains(e.target) && !phoneSuggestions.contains(e.target)) {
+                phoneSuggestions.classList.add('hidden');
+            }
+        });
+
+        // Gestion du champ motif personnalisé
+        motifSelect.addEventListener('change', function() {
+            if (this.value === 'autre') {
+                motifCustom.style.display = 'block';
+                motifCustom.required = true;
+                motifCustom.focus();
+            } else {
+                motifCustom.style.display = 'none';
+                motifCustom.required = false;
+                motifCustom.value = '';
+            }
+        });
+
+        // Vérifier la disponibilité du créneau
+        async function checkAvailability() {
+            const medecinId = medecinSelect.value;
+            const date = dateInput.value;
+            const heure = heureInput.value;
+
+            if (medecinId && date && heure) {
+                try {
+                    const response = await fetch(`/rendezvous/check-availability?medecin_id=${medecinId}&date=${date}&heure=${heure}`);
+                    const data = await response.json();
+
+                    if (!data.available) {
+                        alert('Ce créneau n\'est pas disponible pour ce médecin.');
+                        heureInput.focus();
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la vérification:', error);
+                }
+            }
+        }
+
+        // Écouter les changements
+        medecinSelect.addEventListener('change', checkAvailability);
+        dateInput.addEventListener('change', checkAvailability);
+        heureInput.addEventListener('change', checkAvailability);
+
+        // Initialiser l'état du champ personnalisé
+        if (motifSelect.value === 'autre') {
+            motifCustom.style.display = 'block';
+            motifCustom.required = true;
+        }
+
+        // Initialiser le téléphone si un patient est déjà sélectionné
+        if (patientSelect.value) {
+            const selectedOption = patientSelect.options[patientSelect.selectedIndex];
+            const phone = selectedOption.getAttribute('data-phone');
+            if (phone) {
+                patientPhone.value = phone;
+            }
+        }
+    });
+</script>
+@endpush

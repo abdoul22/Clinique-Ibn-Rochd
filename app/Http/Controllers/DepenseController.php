@@ -20,7 +20,16 @@ class DepenseController extends Controller
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
 
-        $query = Depense::query();
+        $query = Depense::with(['modePaiement', 'credit']);
+
+        // Exclure les crédits personnel et assurance des dépenses
+        $query->where(function ($q) {
+            $q->whereNull('credit_id')
+                ->orWhereHas('credit', function ($creditQuery) {
+                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class)
+                        ->where('source_type', '!=', \App\Models\Assurance::class);
+                });
+        });
 
         // Filtrage par période
         if ($period === 'day' && $date) {
@@ -51,47 +60,26 @@ class DepenseController extends Controller
             $query->where('nom', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->has('source') && in_array($request->source, ['manuelle', 'automatique'])) {
-            $query->where('source', $request->source);
+        if ($request->has('source') && in_array($request->source, ['manuelle', 'automatique', 'part_medecin', 'deduction_salaire'])) {
+            if ($request->source === 'part_medecin') {
+                $query->where('nom', 'like', '%Part médecin%');
+            } elseif ($request->source === 'deduction_salaire') {
+                $query->where('mode_paiement_id', 'salaire');
+            } else {
+                $query->where('source', $request->source);
+            }
         }
 
-        if ($request->has('mode_paiement') && in_array($request->mode_paiement, ['espèces', 'bankily', 'masrivi', 'sedad'])) {
+        if ($request->has('mode_paiement') && in_array($request->mode_paiement, ['espèces', 'bankily', 'masrivi', 'sedad', 'salaire'])) {
             $query->where('mode_paiement_id', $request->mode_paiement);
         }
 
         $depenses = $query->latest()->paginate(10);
 
-        // Ajouter les crédits personnels comme "dépenses générées"
-        $creditsPersonnels = \App\Models\Credit::where('source_type', \App\Models\Personnel::class)
-            ->with('source')
-            ->get()
-            ->map(function ($credit) {
-                return (object) [
-                    'id' => 'CREDIT-' . $credit->id,
-                    'nom' => 'Crédit personnel : ' . ($credit->source->nom ?? 'Personnel'),
-                    'montant' => $credit->montant,
-                    'mode_paiement_id' => $credit->mode_paiement_id,
-                    'source' => 'crédit personnel',
-                    'created_at' => $credit->created_at,
-                    'etat_caisse_id' => null,
-                    'is_credit_personnel' => true,
-                ];
-            });
+        // Calculer le total des dépenses (excluant les crédits personnel et assurance)
+        $totalDepenses = $query->sum('montant');
 
-        // Fusionner et trier par date (dépenses + crédits personnels)
-        $allDepenses = $depenses->getCollection()->concat($creditsPersonnels)->sortByDesc('created_at');
-        // Paginer manuellement
-        $perPage = $depenses->perPage();
-        $page = $depenses->currentPage();
-        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
-            $allDepenses->forPage($page, $perPage),
-            $allDepenses->count(),
-            $perPage,
-            $page,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
-
-        return view('depenses.index', ['depenses' => $paginated]);
+        return view('depenses.index', ['depenses' => $depenses]);
     }
 
     public function create()

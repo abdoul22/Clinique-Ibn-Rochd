@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
             CaisseSeeder::class,
             EtatCaisseSeeder::class,
             ModePaiementSeeder::class,
+            MotifSeeder::class,
+            RendezVousSeeder::class,
 
         ]);
 

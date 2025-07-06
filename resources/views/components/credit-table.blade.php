@@ -13,9 +13,24 @@
         @forelse($credits as $credit)
         <tr class="table-row odd:bg-gray-50 dark:odd:bg-gray-800">
             <td class="table-cell">{{ $credit->id }}</td>
-            <td class="table-cell">{{ $credit->source?->nom ?? '---' }}</td>
+            <td class="table-cell">
+                {{ $credit->source?->nom ?? '---' }}
+                @if($credit->source_type === 'App\\Models\\Personnel')
+                <span
+                    class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded ml-2">Personnel</span>
+                @elseif($credit->source_type === 'App\\Models\\Assurance')
+                <span
+                    class="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded ml-2">Assurance</span>
+                @endif
+            </td>
             <td class="table-cell">{{ number_format($credit->montant, 0, ',', ' ') }} MRU</td>
-            <td class="table-cell">{{ ucfirst($credit->mode_paiement_id) }}</td>
+            <td class="table-cell">
+                @if($credit->source_type === 'App\\Models\\Personnel')
+                <span class="text-blue-600 dark:text-blue-400 font-medium">Déduction salariale</span>
+                @else
+                {{ ucfirst($credit->mode_paiement_id ?? '---') }}
+                @endif
+            </td>
             <td class="table-cell">
                 @if($credit->status === 'non payé')
                 <span class="text-red-500 dark:text-red-400 font-semibold">Non payé</span>
@@ -27,7 +42,12 @@
             </td>
             <td class="table-cell">
                 @if($credit->status !== 'payé')
+                @if($credit->source_type === 'App\\Models\\Personnel')
+                <a href="{{ route('credits.payer', $credit->id) }}"
+                    class="form-button text-sm bg-blue-600 hover:bg-blue-700">Payer par salaire</a>
+                @else
                 <a href="{{ route('credits.payer', $credit->id) }}" class="form-button text-sm">Payer</a>
+                @endif
                 @else
                 ---
                 @endif

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Caisse;
 use App\Models\ModePaiement;
+use App\Models\Depense;
 use Illuminate\Http\Request;
 
 class ModePaiementController extends Controller
@@ -20,233 +21,245 @@ class ModePaiementController extends Controller
 
     public function dashboard(Request $request)
     {
-        $period = $request->input('period', 'day');
-        $date = $request->input('date');
-        $week = $request->input('week');
-        $month = $request->input('month');
-        $year = $request->input('year');
-        $dateStart = $request->input('date_start');
-        $dateEnd = $request->input('date_end');
+        // Récupérer les types de modes de paiement uniques
+        $typesModes = ModePaiement::distinct()->pluck('type')->toArray();
 
-        $paiementsQuery = \App\Models\ModePaiement::query();
-        $depensesQuery = \App\Models\Depense::query();
-        $creditsQuery = \App\Models\Credit::query();
+        $totalCaisse = Caisse::sum('total');
 
-        if ($period === 'day' && $date) {
-            $paiementsQuery->whereDate('created_at', $date);
-            $depensesQuery->whereDate('created_at', $date);
-            $creditsQuery->whereDate('created_at', $date);
-        } elseif ($period === 'week' && $week) {
-            // $week format: 2023-W23
-            $parts = explode('-W', $week);
-            if (count($parts) === 2) {
-                $yearW = (int)$parts[0];
-                $weekW = (int)$parts[1];
-                $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
-                $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
-                $paiementsQuery->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
-                $depensesQuery->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
-                $creditsQuery->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
-            }
-        } elseif ($period === 'month' && $month) {
-            // $month format: 2023-06
-            $parts = explode('-', $month);
-            if (count($parts) === 2) {
-                $yearM = (int)$parts[0];
-                $monthM = (int)$parts[1];
-                $paiementsQuery->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
-                $depensesQuery->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
-                $creditsQuery->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
-            }
-        } elseif ($period === 'year' && $year) {
-            $paiementsQuery->whereYear('created_at', $year);
-            $depensesQuery->whereYear('created_at', $year);
-            $creditsQuery->whereYear('created_at', $year);
-        } elseif ($period === 'range' && $dateStart && $dateEnd) {
-            $paiementsQuery->whereBetween('created_at', [$dateStart, $dateEnd]);
-            $depensesQuery->whereBetween('created_at', [$dateStart, $dateEnd]);
-            $creditsQuery->whereBetween('created_at', [$dateStart, $dateEnd]);
-        }
+        // Calculer les dépenses (exclure seulement les crédits personnel)
+        $totalDepenses = Depense::where(function ($q) {
+            $q->whereNull('credit_id')
+                ->orWhereHas('credit', function ($creditQuery) {
+                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
+                });
+        })->sum('montant');
 
-        $paiements = $paiementsQuery->get();
-        $depenses = $depensesQuery->get();
-        $credits = $creditsQuery->get();
+        // Ajouter les paiements de crédits d'assurance comme entrées de trésorerie
+        $paiementsCreditsAssurance = ModePaiement::whereNull('caisse_id')->sum('montant');
+        $totalCaisse += $paiementsCreditsAssurance;
 
-        $modes = ['espèces', 'bankily', 'masrivi', 'sedad'];
-        $entrees = array_fill_keys($modes, 0);
-        $sorties = array_fill_keys($modes, 0);
+        $soldeDisponible = $totalCaisse - $totalDepenses;
 
-        foreach ($paiements as $paiement) {
-            if (in_array($paiement->type, $modes)) {
-                $entrees[$paiement->type] += $paiement->montant;
-            }
-        }
-        foreach ($depenses as $depense) {
-            if ($depense->mode_paiement_id && in_array($depense->mode_paiement_id, $modes)) {
-                $sorties[$depense->mode_paiement_id] += $depense->montant;
-            }
-        }
-        foreach ($credits as $credit) {
-            if ($credit->mode_paiement_id && in_array($credit->mode_paiement_id, $modes)) {
-                $sorties[$credit->mode_paiement_id] += $credit->montant;
-            }
-        }
-
+        // Préparer les données pour la vue
         $data = [];
-        $totalGlobal = 0;
         $chartLabels = [];
         $chartEntrees = [];
         $chartSorties = [];
         $chartSoldes = [];
 
-        foreach ($modes as $mode) {
-            $entree = $entrees[$mode] ?? 0;
-            $sortie = $sorties[$mode] ?? 0;
+        foreach ($typesModes as $type) {
+            // Récupérer le montant total pour ce type de mode de paiement
+            $montantTotal = ModePaiement::where('type', $type)->sum('montant');
+
+            // Calculer les entrées (recettes) pour ce mode de paiement
+            $entree = Caisse::whereHas('mode_paiements', function ($query) use ($type) {
+                $query->where('type', $type);
+            })->sum('total');
+
+            // Ajouter les paiements de crédits d'assurance pour ce mode de paiement
+            $entree += ModePaiement::where('type', $type)
+                ->whereNull('caisse_id')
+                ->sum('montant');
+
+            // Calculer les sorties (dépenses) pour ce mode de paiement
+            $sortie = Depense::where('mode_paiement_id', $type)
+                ->where(function ($q) {
+                    $q->whereNull('credit_id')
+                        ->orWhereHas('credit', function ($creditQuery) {
+                            $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
+                        });
+                })
+                ->sum('montant');
+
             $solde = $entree - $sortie;
-            $totalGlobal += $solde;
 
             $data[] = [
-                'mode' => ucfirst($mode),
+                'mode' => ucfirst($type),
                 'entree' => $entree,
                 'sortie' => $sortie,
-                'solde' => $solde,
+                'solde' => $solde
             ];
-            $chartLabels[] = ucfirst($mode);
+
+            $chartLabels[] = ucfirst($type);
             $chartEntrees[] = $entree;
             $chartSorties[] = $sortie;
             $chartSoldes[] = $solde;
         }
 
-        return view('modepaiements.dashboard', compact('data', 'totalGlobal', 'date', 'chartLabels', 'chartEntrees', 'chartSorties', 'chartSoldes'));
+        $totalGlobal = $soldeDisponible;
+
+        return view('modepaiements.dashboard', compact(
+            'data',
+            'totalGlobal',
+            'chartLabels',
+            'chartEntrees',
+            'chartSorties',
+            'chartSoldes'
+        ));
     }
 
     public function historique(Request $request)
     {
-        // Récupérer les paramètres de période
-        $period = $request->input('period', 'day');
-        $date = $request->input('date');
-        $week = $request->input('week');
-        $month = $request->input('month');
-        $year = $request->input('year');
-        $dateStart = $request->input('date_start');
-        $dateEnd = $request->input('date_end');
+        // Récupérer les dépenses
+        $queryDepenses = Depense::with(['modePaiement', 'credit']);
 
-        // Fonctions de filtrage par période
-        $filterByPeriod = function ($query) use ($period, $date, $week, $month, $year, $dateStart, $dateEnd) {
-            if ($period === 'day' && $date) {
-                $query->whereDate('created_at', $date);
-            } elseif ($period === 'week' && $week) {
-                $parts = explode('-W', $week);
-                if (count($parts) === 2) {
-                    $yearW = (int)$parts[0];
-                    $weekW = (int)$parts[1];
-                    $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
-                    $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
-                    $query->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
-                }
-            } elseif ($period === 'month' && $month) {
-                $parts = explode('-', $month);
-                if (count($parts) === 2) {
-                    $yearM = (int)$parts[0];
-                    $monthM = (int)$parts[1];
-                    $query->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
-                }
-            } elseif ($period === 'year' && $year) {
-                $query->whereYear('created_at', $year);
-            } elseif ($period === 'range' && $dateStart && $dateEnd) {
-                $query->whereBetween('created_at', [$dateStart, $dateEnd]);
-            }
-        };
+        // Exclure seulement les crédits personnel
+        $queryDepenses->where(function ($q) {
+            $q->whereNull('credit_id')
+                ->orWhereHas('credit', function ($creditQuery) {
+                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
+                });
+        });
 
-        // 🔼 ENTREES RÉELLES
-        $recettesCaisses = \App\Models\ModePaiement::with('caisse.patient')
-            ->when(true, $filterByPeriod)
-            ->get()
-            ->map(function ($paiement) {
-                $patientNom = $paiement->caisse && $paiement->caisse->patient ? $paiement->caisse->patient->nom : 'N/A';
-                return [
-                    'date' => $paiement->created_at,
-                    'type_operation' => 'Recette Caisse',
-                    'description' => "Paiement patient: {$patientNom} - Facture #{$paiement->caisse->numero_facture}",
-                    'montant' => $paiement->montant,
-                    'mode_paiement' => $paiement->type,
-                    'source' => 'Caisse',
-                    'operation' => 'entree'
-                ];
+        // Filtres pour les dépenses
+        if ($request->filled('date_debut')) {
+            $queryDepenses->whereDate('created_at', '>=', $request->date_debut);
+        }
+        if ($request->filled('date_fin')) {
+            $queryDepenses->whereDate('created_at', '<=', $request->date_fin);
+        }
+        if ($request->filled('mode_paiement')) {
+            $queryDepenses->where('mode_paiement_id', $request->mode_paiement);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $queryDepenses->where(function ($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                    ->orWhere('montant', 'like', "%{$search}%");
             });
+        }
 
-        $remboursements = \App\Models\Credit::where('montant_paye', '>', 0)
-            ->when(true, $filterByPeriod)
-            ->get()
-            ->map(function ($credit) {
-                $sourceType = class_basename($credit->source_type);
-                $sourceNom = $credit->source ? $credit->source->nom : 'N/A';
+        $depenses = $queryDepenses->orderBy('created_at', 'desc')->get();
 
-                return [
-                    'date' => $credit->updated_at,
-                    'type_operation' => "Remboursement {$sourceType}",
-                    'description' => "Remboursement de {$sourceNom}",
-                    'montant' => $credit->montant_paye,
-                    'mode_paiement' => $credit->mode_paiement_id,
-                    'source' => $sourceNom,
-                    'operation' => 'entree'
-                ];
+        // Récupérer les recettes (entrées) de la caisse
+        $queryRecettes = Caisse::with(['mode_paiements', 'patient', 'medecin', 'examen']);
+
+        // Filtres pour les recettes
+        if ($request->filled('date_debut')) {
+            $queryRecettes->whereDate('created_at', '>=', $request->date_debut);
+        }
+        if ($request->filled('date_fin')) {
+            $queryRecettes->whereDate('created_at', '<=', $request->date_fin);
+        }
+        if ($request->filled('mode_paiement')) {
+            $queryRecettes->whereHas('mode_paiements', function ($query) use ($request) {
+                $query->where('type', $request->mode_paiement);
             });
-
-        // 🔽 SORTIES
-        $depenses = \App\Models\Depense::query()
-            ->when(true, $filterByPeriod)
-            ->get()
-            ->map(function ($depense) {
-                return [
-                    'date' => $depense->created_at,
-                    'type_operation' => 'Dépense',
-                    'description' => $depense->nom,
-                    'montant' => $depense->montant,
-                    'mode_paiement' => $depense->mode_paiement_id,
-                    'source' => $depense->source,
-                    'operation' => 'sortie'
-                ];
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $queryRecettes->where(function ($q) use ($search) {
+                $q->where('numero_facture', 'like', "%{$search}%")
+                    ->orWhere('total', 'like', "%{$search}%")
+                    ->orWhereHas('patient', function ($patientQuery) use ($search) {
+                        $patientQuery->where('nom', 'like', "%{$search}%");
+                    });
             });
+        }
 
-        $creditsAccordes = \App\Models\Credit::query()
-            ->when(true, $filterByPeriod)
-            ->get()
-            ->map(function ($credit) {
-                $sourceType = class_basename($credit->source_type);
-                $sourceNom = $credit->source ? $credit->source->nom : 'N/A';
+        $recettes = $queryRecettes->orderBy('created_at', 'desc')->get();
 
-                return [
-                    'date' => $credit->created_at,
-                    'type_operation' => "Crédit {$sourceType}",
-                    'description' => "Crédit accordé à {$sourceNom}",
-                    'montant' => $credit->montant,
-                    'mode_paiement' => $credit->mode_paiement_id,
-                    'source' => $sourceNom,
-                    'operation' => 'sortie'
-                ];
+        // Récupérer les paiements de crédits d'assurance
+        $queryPaiementsCredits = ModePaiement::whereNull('caisse_id');
+
+        // Filtres pour les paiements de crédits
+        if ($request->filled('date_debut')) {
+            $queryPaiementsCredits->whereDate('created_at', '>=', $request->date_debut);
+        }
+        if ($request->filled('date_fin')) {
+            $queryPaiementsCredits->whereDate('created_at', '<=', $request->date_fin);
+        }
+        if ($request->filled('mode_paiement')) {
+            $queryPaiementsCredits->where('type', $request->mode_paiement);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $queryPaiementsCredits->where(function ($q) use ($search) {
+                $q->where('type', 'like', "%{$search}%")
+                    ->orWhere('montant', 'like', "%{$search}%");
             });
+        }
 
-        // Combiner et trier par date
-        $historique = $recettesCaisses
-            ->concat($remboursements)
-            ->concat($depenses)
-            ->concat($creditsAccordes)
-            ->sortByDesc('date')
-            ->values();
+        $paiementsCredits = $queryPaiementsCredits->orderBy('created_at', 'desc')->get();
 
-        // Pagination manuelle sur la collection (15 par page)
+        // Combiner et trier les opérations
+        $operations = collect();
+
+        // Ajouter les dépenses comme sorties
+        foreach ($depenses as $depense) {
+            $operations->push([
+                'type' => 'depense',
+                'date' => $depense->created_at,
+                'description' => $depense->nom,
+                'montant' => $depense->montant,
+                'mode_paiement' => $depense->mode_paiement_id,
+                'source' => $depense->source,
+                'operation' => 'sortie',
+                'data' => $depense
+            ]);
+        }
+
+        // Ajouter les recettes comme entrées
+        foreach ($recettes as $recette) {
+            $modePaiement = $recette->mode_paiements->first();
+            $operations->push([
+                'type' => 'recette',
+                'date' => $recette->created_at,
+                'description' => "Facture #{$recette->numero_facture} - " . ($recette->patient ? $recette->patient->nom : 'Patient inconnu'),
+                'montant' => $recette->total,
+                'mode_paiement' => $modePaiement ? $modePaiement->type : 'N/A',
+                'source' => 'caisse',
+                'operation' => 'entree',
+                'data' => $recette
+            ]);
+        }
+
+        // Ajouter les paiements de crédits d'assurance comme entrées
+        foreach ($paiementsCredits as $paiement) {
+            $operations->push([
+                'type' => 'paiement_credit_assurance',
+                'date' => $paiement->created_at,
+                'description' => "Paiement crédit assurance - {$paiement->type}",
+                'montant' => $paiement->montant,
+                'mode_paiement' => $paiement->type,
+                'source' => 'credit_assurance',
+                'operation' => 'entree',
+                'data' => $paiement
+            ]);
+        }
+
+        // Trier par date décroissante
+        $operations = $operations->sortByDesc('date');
+
+        // Pagination manuelle
+        $page = $request->get('page', 1);
         $perPage = 15;
-        $page = request()->input('page', 1);
+        $offset = ($page - 1) * $perPage;
         $historiquePaginated = new \Illuminate\Pagination\LengthAwarePaginator(
-            $historique->forPage($page, $perPage),
-            $historique->count(),
+            $operations->slice($offset, $perPage),
+            $operations->count(),
             $perPage,
             $page,
-            ['path' => request()->url(), 'query' => request()->query()]
+            ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        return view('modepaiements.historique', compact('historiquePaginated'));
+        // Calculer les totaux
+        $totalDepenses = $depenses->sum('montant');
+        $totalRecettes = $recettes->sum('total');
+        $totalPaiementsCredits = $paiementsCredits->sum('montant');
+        $totalRecettesAvecCredits = $totalRecettes + $totalPaiementsCredits;
+        $totalOperations = $totalRecettesAvecCredits - $totalDepenses;
+
+        $modes = ModePaiement::all();
+
+        return view('modepaiements.historique', [
+            'historiquePaginated' => $historiquePaginated,
+            'totalDepenses' => $totalDepenses,
+            'totalRecettes' => $totalRecettes,
+            'totalRecettesAvecCredits' => $totalRecettesAvecCredits,
+            'totalOperations' => $totalOperations,
+            'modes' => $modes,
+        ]);
     }
 
     /**

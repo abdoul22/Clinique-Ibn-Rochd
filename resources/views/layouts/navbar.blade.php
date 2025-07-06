@@ -5,8 +5,8 @@
             <!-- Logo -->
             <div class="flex-shrink-0">
                 <a href="{{ route('dashboard.superadmin') }}" class="flex items-center space-x-2 group">
-                    <div class="my-2" >
-                       <img src="{{ asset('images/logo.png') }}" alt="Logo Clinique" class="h-20 w-20 p-2">
+                    <div class="my-2">
+                        <img src="{{ asset('images/logo.png') }}" alt="Logo Clinique" class="h-20 w-20 p-2">
                     </div>
                     <div class="hidden sm:block">
                         <h1
@@ -57,6 +57,13 @@
                         class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
                     </div>
                 </a>
+                <a href="{{ route('rendezvous.index') }}"
+                    class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
+                    <i class="fas fa-calendar-alt mr-2"></i>Rendez-vous
+                    <div
+                        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
+                    </div>
+                </a>
                 @elseif(Auth::user()->role?->name === 'admin')
                 <a href="{{ route('dashboard.admin') }}"
                     class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
@@ -75,6 +82,13 @@
                 <a href="{{ route('caisses.index') }}"
                     class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
                     <i class="fas fa-cash-register mr-2"></i>Caisse
+                    <div
+                        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
+                    </div>
+                </a>
+                <a href="{{ route('rendezvous.index') }}"
+                    class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
+                    <i class="fas fa-calendar-alt mr-2"></i>Rendez-vous
                     <div
                         class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
                     </div>
@@ -158,10 +172,30 @@
                                 <i class="fas fa-cash-register mr-3 text-gray-400"></i>
                                 Caisse
                             </a>
+                            <a href="{{ route('rendezvous.index') }}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-calendar-alt mr-3 text-gray-400"></i>
+                                Rendez-vous
+                            </a>
+                            <a href="{{ route('motifs.index') }}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-list-alt mr-3 text-gray-400"></i>
+                                Motifs de consultation
+                            </a>
                             <a href="{{ route('services.index') }}"
                                 class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-stethoscope mr-3 text-gray-400"></i>
                                 Services
+                            </a>
+                            <a href="{{ route('rendezvous.index') }}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-calendar-alt mr-3 text-gray-400"></i>
+                                Rendez-vous
+                            </a>
+                            <a href="{{ route('motifs.index') }}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-list-alt mr-3 text-gray-400"></i>
+                                Motifs de consultation
                             </a>
                             @elseif(Auth::user()->role?->name === 'admin')
                             <a href="{{ route('dashboard.superadmin') }}"
@@ -178,6 +212,11 @@
                                 class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-cash-register mr-3 text-gray-400"></i>
                                 Caisse
+                            </a>
+                            <a href="{{ route('rendezvous.index') }}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-calendar-alt mr-3 text-gray-400"></i>
+                                Rendez-vous
                             </a>
                             @endif
                             <a href="#"

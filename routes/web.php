@@ -19,6 +19,9 @@ use App\Http\Controllers\ModePaiementController;
 use App\Http\Controllers\RecapitulatifOperateurController;
 use App\Http\Controllers\RecapitulatifServiceJournalierController;
 use App\Http\Controllers\SuperAdmin\UserManagementController;
+use App\Http\Controllers\RendezVousController;
+use App\Http\Controllers\MotifController;
+use App\Http\Controllers\DossierMedicalController;
 
 require __DIR__ . '/auth.php';
 // Page d'accueil
@@ -99,6 +102,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Patients
     Route::resource('patients', GestionPatientController::class);
 
+    // Rendez-vous pour admin
+    Route::resource('rendezvous', RendezVousController::class)->parameters(['rendezvous' => 'id']);
+    Route::post('rendezvous/{id}/change-status', [RendezVousController::class, 'changeStatus'])->name('rendezvous.change-status');
+    Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
+
     // Autres ressources pour admin
 
 
@@ -108,6 +116,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::resource('personnels', PersonnelController::class);
 
+    // Dossiers médicaux (routes communes pour admin et superadmin)
+    Route::get('dossiers/synchroniser', [DossierMedicalController::class, 'synchroniser'])->name('dossiers.synchroniser');
+    Route::resource('dossiers', DossierMedicalController::class)->parameters(['dossiers' => 'dossier']);
 
     // Services
     // Routes personnalisées pour export PDF et impression
@@ -170,6 +181,7 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     // Credits
     Route::get('credits/{credit}/payer', [CreditController::class, 'payer'])->name('credits.payer');
     Route::post('credits/{credit}/payer', [CreditController::class, 'payerStore'])->name('credits.payer.store');
+    Route::post('credits/{credit}/payer-salaire', [CreditController::class, 'payerSalaire'])->name('credits.payer.salaire');
     Route::get('/credits/create', [CreditController::class, 'create'])->name('credits.create');
     Route::post('/credits', [CreditController::class, 'store'])->name('credits.store');
     Route::post('/credits/{id}/statut/{statut}', [CreditController::class, 'marquerComme'])->name('credits.marquer');
@@ -197,6 +209,20 @@ Route::resource('modepaiements', ModePaiementController::class);
 Route::resource('credits', CreditController::class);
 Route::get('medecins/{id}/stats', [MedecinController::class, 'statistiques'])->name('medecins.stats');
 Route::get('medecins/{id}/stats', [MedecinController::class, 'stats'])->name('medecins.stats');
+
+// Routes pour les rendez-vous (accessible aux admins et superadmins)
+Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(function () {
+    Route::resource('rendezvous', RendezVousController::class)->parameters(['rendezvous' => 'id']);
+    Route::post('rendezvous/{id}/change-status', [RendezVousController::class, 'changeStatus'])->name('rendezvous.change-status');
+    Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
+});
+
+// Routes pour les motifs de consultation (accessible aux admins et superadmins)
+Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(function () {
+    Route::resource('motifs', MotifController::class);
+    Route::post('motifs/{id}/toggle-status', [MotifController::class, 'toggleStatus'])->name('motifs.toggle-status');
+    Route::get('motifs/get-actifs', [MotifController::class, 'getMotifsActifs'])->name('motifs.get-actifs');
+});
 
 Route::get('mode-paiements/dashboard', [App\Http\Controllers\ModePaiementController::class, 'dashboard'])
     ->name('modepaiements.dashboard')

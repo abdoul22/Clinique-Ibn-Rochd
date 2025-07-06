@@ -93,6 +93,32 @@
         <a href="{{ route('depenses.index') }}" class="ml-2 text-sm text-gray-600 dark:text-gray-400 underline">Afficher
             tous</a>
     </form>
+
+    <!-- Filtres supplémentaires -->
+    <form method="GET" action="" class="flex flex-wrap gap-2 items-center mt-4" autocomplete="off">
+        <label for="mode_paiement" class="text-sm font-medium text-gray-700 dark:text-gray-300">Mode de paiement
+            :</label>
+        <select name="mode_paiement" id="mode_paiement" class="form-select text-sm" onchange="this.form.submit()">
+            <option value="">-- Tous --</option>
+            <option value="espèces" {{ request('mode_paiement')=='espèces' ? 'selected' : '' }}>Espèces</option>
+            <option value="bankily" {{ request('mode_paiement')=='bankily' ? 'selected' : '' }}>Bankily</option>
+            <option value="masrivi" {{ request('mode_paiement')=='masrivi' ? 'selected' : '' }}>Masrivi</option>
+            <option value="sedad" {{ request('mode_paiement')=='sedad' ? 'selected' : '' }}>Sedad</option>
+            <option value="salaire" {{ request('mode_paiement')=='salaire' ? 'selected' : '' }}>Déduction salariale
+            </option>
+        </select>
+
+        <label for="source" class="text-sm font-medium text-gray-700 dark:text-gray-300 ml-4">Source :</label>
+        <select name="source" id="source" class="form-select text-sm" onchange="this.form.submit()">
+            <option value="">-- Toutes --</option>
+            <option value="manuelle" {{ request('source')=='manuelle' ? 'selected' : '' }}>Manuelle</option>
+            <option value="automatique" {{ request('source')=='automatique' ? 'selected' : '' }}>Automatique</option>
+            <option value="part_medecin" {{ request('source')=='part_medecin' ? 'selected' : '' }}>Part médecin</option>
+            <option value="deduction_salaire" {{ request('source')=='deduction_salaire' ? 'selected' : '' }}>Déduction
+                salariale</option>
+        </select>
+    </form>
+    </form>
     <script>
         // Affichage dynamique des inputs selon la période + accessibilité + transitions
         function updatePeriodInputs() {
@@ -182,21 +208,33 @@
                         ') }} MRU</span>
                 </td>
                 <td class="table-cell">
+                    @if($depense->mode_paiement_id === 'salaire')
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
+                        Déduction salariale
+                    </span>
+                    @else
                     <span
                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                         {{ ucfirst($depense->mode_paiement_id ?? 'Non défini') }}
                     </span>
+                    @endif
                 </td>
                 <td class="table-cell">
-                    @if(isset($depense->is_credit_personnel) && $depense->is_credit_personnel)
+                    @if($depense->mode_paiement_id === 'salaire')
                     <span
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-                        Crédit personnel
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
+                        Déduction salariale
                     </span>
-                    @elseif($depense->source === 'automatique')
+                    @elseif(str_contains($depense->nom, 'Part médecin'))
                     <span
                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                         Part médecin
+                    </span>
+                    @elseif($depense->source === 'automatique')
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                        Généré automatiquement
                     </span>
                     @else
                     <span

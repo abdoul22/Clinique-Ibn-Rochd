@@ -27,8 +27,10 @@ class RoleMiddleware
             abort(403, 'Votre compte n\'a pas encore été approuvé par un Admin.');
         }
 
-        // Vérifier le rôle
-        if ($user->role->name !== $role) {
+        // Vérifier le rôle - gérer plusieurs rôles séparés par des virgules
+        $allowedRoles = explode(',', $role);
+
+        if (!in_array($user->role->name, $allowedRoles)) {
             // Au lieu de abort(), rediriger vers le bon dashboard
             return match ($user->role->name) {
                 'superadmin' => redirect()->route('dashboard.superadmin'),

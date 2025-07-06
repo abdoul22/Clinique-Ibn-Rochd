@@ -140,6 +140,29 @@
             });
         </script>
         <!-- Fin filtre avancé -->
+
+        <!-- Résumé des totaux -->
+        <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-green-100 dark:bg-green-900/20 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-green-800 dark:text-green-200">Total Recettes</h3>
+                <p class="text-2xl font-bold text-green-600 dark:text-green-400">
+                    + {{ number_format($totalRecettesAvecCredits ?? $totalRecettes ?? 0, 0, ',', ' ') }} MRU
+                </p>
+            </div>
+            <div class="bg-red-100 dark:bg-red-900/20 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Total Dépenses</h3>
+                <p class="text-2xl font-bold text-red-600 dark:text-red-400">
+                    - {{ number_format($totalDepenses ?? 0, 0, ',', ' ') }} MRU
+                </p>
+            </div>
+            <div class="bg-blue-100 dark:bg-blue-900/20 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Solde Net</h3>
+                <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {{ number_format($totalOperations ?? 0, 0, ',', ' ') }} MRU
+                </p>
+            </div>
+        </div>
+
         <div class="table-container">
             <table class="table-main">
                 <thead class="bg-gray-50 dark:bg-gray-700">
@@ -171,9 +194,14 @@
                     @forelse($historiquePaginated as $operation)
                     <tr class="table-row hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="table-cell">
-                            {{ $operation['date']->diffForHumans() }} </td>
+                            {{ $operation['date'] ? $operation['date']->diffForHumans() : 'N/A' }}
+                        </td>
                         <td class="table-cell">
-                            {{ $operation['type_operation'] }}
+                            @if($operation['type'] === 'recette' || $operation['type'] === 'paiement_credit_assurance')
+                            Recette
+                            @else
+                            Dépense
+                            @endif
                         </td>
                         <td class="table-cell">
                             {{ $operation['description'] }}
@@ -193,8 +221,7 @@
                         </td>
                         <td class="table-cell">
                             <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                {{ $operation['operation'] === 'entree' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' }}">
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $operation['operation'] === 'entree' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' }}">
                                 {{ $operation['operation'] === 'entree' ? 'Entrée' : 'Sortie' }}
                             </span>
                         </td>

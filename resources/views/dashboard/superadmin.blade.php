@@ -36,7 +36,7 @@
         </a>
 
         {{-- E) Dossier médical électronique --}}
-        <a href="{{ url('/dossiers') }}"
+        <a href="{{ route('dossiers.index') }}"
             class="bg-red-500 text-white rounded-2xl p-6 shadow hover:bg-red-600 transition">
             <h2 class="text-xl font-semibold mb-2">Dossier Médical</h2>
             <p class="text-sm text-red-100">Consulter et modifier les dossiers médicaux des patients.</p>

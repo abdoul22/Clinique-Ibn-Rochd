@@ -19,7 +19,23 @@ class GestionPatient extends Model
         'date_of_birth',
         'gender',
         'phone',
-
-
     ];
+
+    // Relation avec les rendez-vous
+    public function rendezVous()
+    {
+        return $this->hasMany(RendezVous::class, 'patient_id');
+    }
+
+    // Relation avec les examens (caisses)
+    public function caisses()
+    {
+        return $this->hasMany(Caisse::class, 'gestion_patient_id');
+    }
+
+    // Relation avec les dossiers médicaux
+    public function dossierMedical()
+    {
+        return $this->hasOne(DossierMedical::class, 'patient_id');
+    }
 }

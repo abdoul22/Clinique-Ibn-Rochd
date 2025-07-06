@@ -40,4 +40,10 @@ class Medecin extends Model
     {
         return $this->hasMany(EtatCaisse::class);
     }
+
+    // Relation avec les rendez-vous
+    public function rendezVous()
+    {
+        return $this->hasMany(RendezVous::class);
+    }
 }

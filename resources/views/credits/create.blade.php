@@ -83,12 +83,23 @@
         <div class="mb-4">
             <label for="mode_paiement_id" class="block text-bold font-medium text-gray-700 dark:text-gray-300">Mode de
                 paiement</label>
-            <select name="mode_paiement_id" id="mode_paiement_id" required class="form-select">
+            <select name="mode_paiement_id" id="mode_paiement_id" class="form-select">
                 <option value="">-- Sélectionner --</option>
                 @foreach($modes as $mode)
                 <option value="{{ $mode }}">{{ ucfirst($mode) }}</option>
                 @endforeach
             </select>
+            <div id="mode-paiement-info" class="text-sm text-gray-600 dark:text-gray-400 mt-2 hidden">
+                <p class="text-blue-600 dark:text-blue-400">
+                    <strong>Note :</strong> Les crédits du personnel sont payés par déduction salariale, pas par mode de
+                    paiement.
+                </p>
+            </div>
+            <div id="mode-paiement-info-assurance" class="text-sm text-gray-600 dark:text-gray-400 mt-2 hidden">
+                <p class="text-green-600 dark:text-green-400">
+                    <strong>Note :</strong> Les crédits des assurances sont payés lors du remboursement par l'assurance.
+                </p>
+            </div>
         </div>
 
         <div>
@@ -138,16 +149,42 @@
             assuranceCreditActuelEl.textContent = creditActuel.toLocaleString();
         }
 
-        sourceTypeSelect.addEventListener('change', () => {
-            const selectedType = sourceTypeSelect.value;
-
-            personnelSection.classList.add('hidden');
-            assuranceSection.classList.add('hidden');
-
-            if (selectedType === 'personnel') {
+        sourceTypeSelect.addEventListener('change', function () {
+            if (this.value === 'personnel') {
                 personnelSection.classList.remove('hidden');
-            } else if (selectedType === 'assurance') {
+                assuranceSection.classList.add('hidden');
+                personnelSelect.required = true;
+                assuranceSelect.required = false;
+                updatePersonnelInfos();
+
+                // Masquer le mode de paiement pour les crédits personnel
+                document.getElementById('mode_paiement_id').parentElement.classList.add('hidden');
+                document.getElementById('mode_paiement_id').required = false;
+                document.getElementById('mode-paiement-info').classList.remove('hidden');
+                document.getElementById('mode-paiement-info-assurance').classList.add('hidden');
+            } else if (this.value === 'assurance') {
+                personnelSection.classList.add('hidden');
                 assuranceSection.classList.remove('hidden');
+                personnelSelect.required = false;
+                assuranceSelect.required = true;
+                updateAssuranceInfos();
+
+                // Masquer le mode de paiement pour les assurances
+                document.getElementById('mode_paiement_id').parentElement.classList.add('hidden');
+                document.getElementById('mode_paiement_id').required = false;
+                document.getElementById('mode-paiement-info').classList.add('hidden');
+                document.getElementById('mode-paiement-info-assurance').classList.remove('hidden');
+            } else {
+                personnelSection.classList.add('hidden');
+                assuranceSection.classList.add('hidden');
+                personnelSelect.required = false;
+                assuranceSelect.required = false;
+
+                // Masquer le mode de paiement
+                document.getElementById('mode_paiement_id').parentElement.classList.add('hidden');
+                document.getElementById('mode_paiement_id').required = false;
+                document.getElementById('mode-paiement-info').classList.add('hidden');
+                document.getElementById('mode-paiement-info-assurance').classList.add('hidden');
             }
         });
 

@@ -9,7 +9,7 @@ class Depense extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'montant', 'etat_caisse_id', 'mode_paiement_id', 'source'];
+    protected $fillable = ['nom', 'montant', 'etat_caisse_id', 'mode_paiement_id', 'source', 'credit_id'];
 
 
     public function etatCaisse()
@@ -17,8 +17,18 @@ class Depense extends Model
         return $this->belongsTo(EtatCaisse::class);
     }
 
-    // Note: mode_paiement_id est maintenant une chaîne, pas une relation
-    // Si vous voulez une relation, vous devrez créer une méthode personnalisée
+    public function credit()
+    {
+        return $this->belongsTo(Credit::class);
+    }
+
+    // Relation avec le mode de paiement via le type
+    public function modePaiement()
+    {
+        return $this->belongsTo(ModePaiement::class, 'mode_paiement_id', 'type');
+    }
+
+    // Accesseur pour obtenir le mode de paiement
     public function getModePaiementAttribute()
     {
         return $this->mode_paiement_id;
