@@ -67,8 +67,8 @@
             @foreach($examens as $examen)
             <tr>
                 <td>{{ $examen->id }}</td>
-                <td>{{ $examen->nom }}</td>
-                <td>{{ $examen->service->nom ?? 'N/A' }}</td>
+                <td>{{ $examen->nom_affichage }}</td>
+                <td>{{ $examen->service_affichage }}</td>
                 <td class="text-right">{{ number_format($examen->tarif, 0, ',', ' ') }}</td>
             </tr>
             @endforeach

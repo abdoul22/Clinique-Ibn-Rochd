@@ -197,22 +197,61 @@ class RecapitulatifOperateurController extends Controller
         return redirect()->route('recapitulatif-operateurs.index')->with('success', 'Récapitulatif supprimé.');
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $recaps = Caisse::with(['medecin', 'examen'])
+        // Construire la requête de base (même logique que index)
+        $query = Caisse::with(['medecin', 'examen'])
             ->select([
                 'medecin_id',
                 'examen_id',
                 DB::raw('COUNT(*) as nombre'),
                 DB::raw('SUM(total) as recettes'),
-                DB::raw('MAX(date_examen) as date'),
+                DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00")) as jour'),
                 DB::raw('MAX(examens.tarif) as tarif'),
                 DB::raw('SUM(examens.part_medecin) as part_medecin'),
                 DB::raw('SUM(examens.part_cabinet) as part_clinique')
             ])
-            ->join('examens', 'caisses.examen_id', '=', 'examens.id')
-            ->groupBy('medecin_id', 'examen_id')
-            ->orderBy('date', 'desc')
+            ->join('examens', 'caisses.examen_id', '=', 'examens.id');
+
+        // Filtrage par période
+        $period = $request->get('period', 'day');
+
+        if ($period === 'day' && $request->filled('date')) {
+            $query->whereDate('date_examen', $request->date);
+        } elseif ($period === 'week' && $request->filled('week')) {
+            $parts = explode('-W', $request->week);
+            if (count($parts) === 2) {
+                $start = Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
+                $end = Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
+                $query->whereBetween('date_examen', [$start, $end]);
+            }
+        } elseif ($period === 'month' && $request->filled('month')) {
+            $parts = explode('-', $request->month);
+            if (count($parts) === 2) {
+                $query->whereYear('date_examen', $parts[0])
+                    ->whereMonth('date_examen', $parts[1]);
+            }
+        } elseif ($period === 'year' && $request->filled('year')) {
+            $query->whereYear('date_examen', $request->year);
+        } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
+            $query->whereBetween('date_examen', [$request->date_start, $request->date_end]);
+        }
+
+        // Filtrage par médecin
+        if ($request->filled('medecin_id')) {
+            $query->where('medecin_id', $request->medecin_id);
+        }
+
+        // Filtrage par examen
+        if ($request->filled('examen_id')) {
+            $query->where('examen_id', $request->examen_id);
+        }
+
+        // Grouper par médecin, examen et jour
+        $recaps = $query->groupBy('medecin_id', 'examen_id', DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00"))'))
+            ->orderBy('jour', 'desc')
+            ->orderBy('medecin_id')
+            ->orderBy('examen_id')
             ->get();
 
         $pdf = PDF::loadView('recapitulatif_operateurs.export_pdf', compact('recaps'));

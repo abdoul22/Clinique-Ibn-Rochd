@@ -20,7 +20,7 @@ class ExamenController extends Controller
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
 
-        $query = Examen::with('service');
+        $query = Examen::with(['service.pharmacie']);
 
         if ($search) {
             $query->where('nom', 'like', "%{$search}%")
@@ -55,6 +55,20 @@ class ExamenController extends Controller
         }
 
         $examens = $query->orderBy('created_at', 'desc')->paginate(10);
+
+        // Traiter les données pour l'affichage
+        $examens->getCollection()->transform(function ($examen) {
+            // Si l'examen est lié à un service de type médicament (pharmacie)
+            if ($examen->service && $examen->service->type_service === 'medicament' && $examen->service->pharmacie) {
+                $examen->nom_affichage = $examen->service->pharmacie->nom_medicament;
+                $examen->service_affichage = 'Pharmacie';
+            } else {
+                $examen->nom_affichage = $examen->nom;
+                $examen->service_affichage = $examen->service->nom ?? '-';
+            }
+            return $examen;
+        });
+
         return view('examens.index', compact('examens'));
     }
 
@@ -149,14 +163,42 @@ class ExamenController extends Controller
 
     public function exportPdf()
     {
-        $examens = Examen::with('service')->get();
+        $examens = Examen::with(['service.pharmacie'])->get();
+
+        // Traiter les données pour l'affichage
+        $examens->transform(function ($examen) {
+            // Si l'examen est lié à un service de type médicament (pharmacie)
+            if ($examen->service && $examen->service->type_service === 'medicament' && $examen->service->pharmacie) {
+                $examen->nom_affichage = $examen->service->pharmacie->nom_medicament;
+                $examen->service_affichage = 'Pharmacie';
+            } else {
+                $examen->nom_affichage = $examen->nom;
+                $examen->service_affichage = $examen->service->nom ?? '-';
+            }
+            return $examen;
+        });
+
         $pdf = Pdf::loadView('examens.export_pdf', compact('examens'));
         return $pdf->download('examens.pdf');
     }
 
     public function print()
     {
-        $examens = Examen::with('service')->get();
+        $examens = Examen::with(['service.pharmacie'])->get();
+
+        // Traiter les données pour l'affichage
+        $examens->transform(function ($examen) {
+            // Si l'examen est lié à un service de type médicament (pharmacie)
+            if ($examen->service && $examen->service->type_service === 'medicament' && $examen->service->pharmacie) {
+                $examen->nom_affichage = $examen->service->pharmacie->nom_medicament;
+                $examen->service_affichage = 'Pharmacie';
+            } else {
+                $examen->nom_affichage = $examen->nom;
+                $examen->service_affichage = $examen->service->nom ?? '-';
+            }
+            return $examen;
+        });
+
         return view('examens.print', compact('examens'));
     }
 }

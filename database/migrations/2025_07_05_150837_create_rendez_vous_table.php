@@ -16,9 +16,11 @@ return new class extends Migration
             $table->foreignId('patient_id')->constrained('gestion_patients')->onDelete('cascade');
             $table->foreignId('medecin_id')->constrained('medecins')->onDelete('cascade');
             $table->date('date_rdv');
-            $table->time('heure_rdv');
+            $table->time('heure_rdv')->nullable();
             $table->string('motif');
-            $table->enum('statut', ['en_attente', 'confirme', 'annule', 'termine'])->default('en_attente');
+            $table->enum('statut', ['confirme', 'annule'])->default('confirme');
+            $table->integer('numero_entree');
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->text('notes')->nullable();
             $table->integer('duree_consultation')->default(30); // en minutes
             $table->timestamps();

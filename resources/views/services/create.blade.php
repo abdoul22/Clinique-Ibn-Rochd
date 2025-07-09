@@ -24,6 +24,26 @@
             </div>
 
             <div>
+                <label for="type_service" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Type de
+                    service <span class="text-red-500">*</span></label>
+                <select name="type_service" id="type_service" required
+                    class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                    <option value="">-- Sélectionner --</option>
+                    <option value="examen" {{ old('type_service')=='examen' ? 'selected' : '' }}>Examen</option>
+                    <option value="medicament" {{ old('type_service')=='medicament' ? 'selected' : '' }}>Médicament
+                    </option>
+                    <option value="consultation" {{ old('type_service')=='consultation' ? 'selected' : '' }}>
+                        Consultation</option>
+                    <option value="pharmacie" {{ old('type_service')=='pharmacie' ? 'selected' : '' }}>Pharmacie
+                    </option>
+                    <option value="medecins" {{ old('type_service')=='medecins' ? 'selected' : '' }}>Medecins</option>
+                </select>
+                @error('type_service')
+                <p class="text-sm text-red-500 dark:text-red-300 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
                 <label for="observation" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Observation
                     (facultatif)</label>
                 <textarea name="observation" id="observation" rows="4"

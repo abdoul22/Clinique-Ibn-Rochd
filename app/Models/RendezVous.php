@@ -19,7 +19,8 @@ class RendezVous extends Model
         'motif',
         'statut',
         'notes',
-        'duree_consultation',
+        'numero_entree',
+        'created_by',
     ];
 
     protected $casts = [
@@ -39,25 +40,10 @@ class RendezVous extends Model
         return $this->belongsTo(Medecin::class, 'medecin_id');
     }
 
-    // Scopes pour filtrer les rendez-vous
-    public function scopeEnAttente($query)
+    // Relation avec l'utilisateur qui a créé le rendez-vous
+    public function createdBy()
     {
-        return $query->where('statut', 'en_attente');
-    }
-
-    public function scopeConfirme($query)
-    {
-        return $query->where('statut', 'confirme');
-    }
-
-    public function scopeAnnule($query)
-    {
-        return $query->where('statut', 'annule');
-    }
-
-    public function scopeTermine($query)
-    {
-        return $query->where('statut', 'termine');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     // Accesseur pour le nom complet du patient

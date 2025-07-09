@@ -8,10 +8,22 @@
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Détails du Rendez-vous</h1>
             <div class="flex space-x-2">
-                <a href="{{ route('rendezvous.edit', $rendezVous->id) }}" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                @if(Auth::user() && Auth::user()->role?->name === 'superadmin')
+                <a href="{{ route('rendezvous.edit', $rendezVous->id) }}"
+                    class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
                     <i class="fas fa-edit mr-2"></i>Modifier
                 </a>
-                <a href="{{ route('rendezvous.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                <form action="{{ route('rendezvous.destroy', $rendezVous->id) }}" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')">
+                        <i class="fas fa-trash mr-2"></i>Supprimer
+                    </button>
+                </form>
+                @endif
+                <a href="{{ request()->routeIs('admin.*') ? route('admin.rendezvous.index') : route('rendezvous.index') }}"
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                     <i class="fas fa-arrow-left mr-2"></i>Retour
                 </a>
             </div>
@@ -21,7 +33,8 @@
             <!-- Informations principales -->
             <div class="lg:col-span-2">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Informations du Rendez-vous</h2>
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Informations du Rendez-vous
+                    </h2>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -29,15 +42,13 @@
                             <div class="space-y-2">
                                 <div class="flex items-center">
                                     <i class="fas fa-calendar text-blue-500 mr-3 w-5"></i>
-                                    <span class="text-gray-900 dark:text-gray-200">{{ $rendezVous->date_rdv->format('d/m/Y') }}</span>
+                                    <span class="text-gray-900 dark:text-gray-200">{{
+                                        $rendezVous->date_rdv->format('d/m/Y') }}</span>
                                 </div>
                                 <div class="flex items-center">
-                                    <i class="fas fa-clock text-blue-500 mr-3 w-5"></i>
-                                    <span class="text-gray-900 dark:text-gray-200">{{ \Carbon\Carbon::parse($rendezVous->heure_rdv)->format('H:i') }}</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <i class="fas fa-hourglass-half text-blue-500 mr-3 w-5"></i>
-                                    <span class="text-gray-900 dark:text-gray-200">{{ $rendezVous->duree_consultation }} minutes</span>
+                                    <i class="fas fa-hashtag text-blue-500 mr-3 w-5"></i>
+                                    <span class="text-gray-900 dark:text-gray-200">Numéro d'entrée : {{
+                                        $rendezVous->numero_entree }}</span>
                                 </div>
                             </div>
                         </div>
@@ -45,73 +56,53 @@
                         <div>
                             <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Statut</h3>
                             <div class="mb-3">
-                                @switch($rendezVous->statut)
-                                    @case('en_attente')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
-                                            <i class="fas fa-clock mr-2"></i>En attente
-                                        </span>
-                                        @break
-                                    @case('confirme')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                                            <i class="fas fa-check mr-2"></i>Confirmé
-                                        </span>
-                                        @break
-                                    @case('annule')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
-                                            <i class="fas fa-times mr-2"></i>Annulé
-                                        </span>
-                                        @break
-                                    @case('termine')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                                            <i class="fas fa-check-double mr-2"></i>Terminé
-                                        </span>
-                                        @break
-                                @endswitch
+                                @if($rendezVous->statut === 'annule')
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+                                    <i class="fas fa-times mr-2"></i>Annulé
+                                </span>
+                                @elseif($rendezVous->statut === 'confirme')
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                    <i class="fas fa-check mr-2"></i>Confirmé
+                                </span>
+                                <form action="{{ route('rendezvous.change-status', $rendezVous->id) }}" method="POST"
+                                    class="inline-block mt-2">
+                                    @csrf
+                                    <input type="hidden" name="statut" value="annule">
+                                    <button type="submit"
+                                        class="bg-red-500 hover:bg-red-700 text-white text-xs px-2 py-1 rounded"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ?')">
+                                        Annuler
+                                    </button>
+                                </form>
+                                @endif
                             </div>
-
-                            <!-- Actions rapides pour changer le statut -->
-                            @if($rendezVous->statut != 'annule')
-                                <div class="space-y-2">
-                                    <form action="{{ route('rendezvous.change-status', $rendezVous->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <input type="hidden" name="statut" value="confirme">
-                                        <button type="submit" class="bg-green-500 hover:bg-green-700 text-white text-xs px-2 py-1 rounded mr-1">
-                                            Confirmer
-                                        </button>
-                                    </form>
-
-                                    <form action="{{ route('rendezvous.change-status', $rendezVous->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <input type="hidden" name="statut" value="termine">
-                                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded mr-1">
-                                            Terminer
-                                        </button>
-                                    </form>
-
-                                    <form action="{{ route('rendezvous.change-status', $rendezVous->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <input type="hidden" name="statut" value="annule">
-                                        <button type="submit" class="bg-red-500 hover:bg-red-700 text-white text-xs px-2 py-1 rounded"
-                                                onclick="return confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ?')">
-                                            Annuler
-                                        </button>
-                                    </form>
-                                </div>
-                            @endif
                         </div>
                     </div>
 
                     <div class="mt-6">
                         <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Motif de consultation</h3>
-                        <p class="text-gray-900 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 p-3 rounded">{{ $rendezVous->motif }}</p>
+                        <p class="text-gray-900 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 p-3 rounded">{{
+                            $rendezVous->motif }}</p>
                     </div>
 
                     @if($rendezVous->notes)
-                        <div class="mt-6">
-                            <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Notes</h3>
-                            <p class="text-gray-900 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 p-3 rounded">{{ $rendezVous->notes }}</p>
-                        </div>
+                    <div class="mt-6">
+                        <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Notes</h3>
+                        <p class="text-gray-900 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 p-3 rounded">{{
+                            $rendezVous->notes }}</p>
+                    </div>
                     @endif
+
+                    <div class="mt-6">
+                        <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Pris par</h3>
+                        <div class="flex items-center">
+                            <i class="fas fa-user text-green-500 mr-3 w-5"></i>
+                            <span class="text-gray-900 dark:text-gray-200">Pris par : {{ $rendezVous->createdBy ?
+                                $rendezVous->createdBy->name : 'Utilisateur inconnu' }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -125,8 +116,10 @@
 
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Nom complet</label>
-                            <p class="text-gray-900 dark:text-gray-200 font-medium">{{ $rendezVous->patient->first_name }} {{ $rendezVous->patient->last_name }}</p>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Nom
+                                complet</label>
+                            <p class="text-gray-900 dark:text-gray-200 font-medium">{{ $rendezVous->patient->first_name
+                                }} {{ $rendezVous->patient->last_name }}</p>
                         </div>
 
                         <div>
@@ -135,13 +128,16 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Date de naissance</label>
-                            <p class="text-gray-900 dark:text-gray-200">{{ $rendezVous->patient->date_of_birth ? $rendezVous->patient->date_of_birth->format('d/m/Y') : 'Non renseignée' }}</p>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Date de
+                                naissance</label>
+                            <p class="text-gray-900 dark:text-gray-200">{{ $rendezVous->patient->date_of_birth ?
+                                $rendezVous->patient->date_of_birth->format('d/m/Y') : 'Non renseignée' }}</p>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Genre</label>
-                            <p class="text-gray-900 dark:text-gray-200">{{ $rendezVous->patient->gender ?? 'Non renseigné' }}</p>
+                            <p class="text-gray-900 dark:text-gray-200">{{ $rendezVous->patient->gender ?? 'Non
+                                renseigné' }}</p>
                         </div>
                     </div>
                 </div>
@@ -154,8 +150,10 @@
 
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Nom complet</label>
-                            <p class="text-gray-900 dark:text-gray-200 font-medium">{{ $rendezVous->medecin->nom }} {{ $rendezVous->medecin->prenom }}</p>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Nom
+                                complet</label>
+                            <p class="text-gray-900 dark:text-gray-200 font-medium">{{ $rendezVous->medecin->nom }} {{
+                                $rendezVous->medecin->prenom }}</p>
                         </div>
 
                         <div>
@@ -180,20 +178,23 @@
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Actions</h3>
 
                     <div class="space-y-3">
-                        <a href="{{ route('rendezvous.edit', $rendezVous->id) }}" class="w-full bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center">
+                        @if(Auth::user() && Auth::user()->role?->name === 'superadmin')
+                        <a href="{{ route('rendezvous.edit', $rendezVous->id) }}"
+                            class="w-full bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center">
                             <i class="fas fa-edit mr-2"></i>Modifier
                         </a>
-
                         <form action="{{ route('rendezvous.destroy', $rendezVous->id) }}" method="POST" class="w-full">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center"
-                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')">
+                            <button type="submit"
+                                class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center"
+                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')">
                                 <i class="fas fa-trash mr-2"></i>Supprimer
                             </button>
                         </form>
-
-                        <a href="{{ route('rendezvous.index') }}" class="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center">
+                        @endif
+                        <a href="{{ request()->routeIs('admin.*') ? route('admin.rendezvous.index') : route('rendezvous.index') }}"
+                            class="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center">
                             <i class="fas fa-list mr-2"></i>Liste des rendez-vous
                         </a>
                     </div>

@@ -95,42 +95,17 @@
                         @enderror
                     </div>
 
-                    <!-- Heure du rendez-vous -->
+                    <!-- Numéro d'entrée -->
                     <div>
-                        <label for="heure_rdv" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Heure du rendez-vous <span class="text-red-500">*</span>
-                        </label>
-                        <input type="time" name="heure_rdv" id="heure_rdv"
-                            value="{{ old('heure_rdv', \Carbon\Carbon::parse($rendezVous->heure_rdv)->format('H:i')) }}"
-                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('heure_rdv') border-red-500 @enderror"
-                            required>
-                        @error('heure_rdv')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Durée de consultation -->
-                    <div>
-                        <label for="duree_consultation"
+                        <label for="numero_entree"
                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Durée de consultation (minutes)
+                            Numéro d'entrée <span class="text-red-500">*</span>
                         </label>
-                        <select name="duree_consultation" id="duree_consultation"
-                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2">
-                            <option value="15" {{ old('duree_consultation', $rendezVous->duree_consultation) == 15 ?
-                                'selected' : '' }}>15 minutes</option>
-                            <option value="30" {{ old('duree_consultation', $rendezVous->duree_consultation) == 30 ?
-                                'selected' : '' }}>30 minutes</option>
-                            <option value="45" {{ old('duree_consultation', $rendezVous->duree_consultation) == 45 ?
-                                'selected' : '' }}>45 minutes</option>
-                            <option value="60" {{ old('duree_consultation', $rendezVous->duree_consultation) == 60 ?
-                                'selected' : '' }}>1 heure</option>
-                            <option value="90" {{ old('duree_consultation', $rendezVous->duree_consultation) == 90 ?
-                                'selected' : '' }}>1h30</option>
-                            <option value="120" {{ old('duree_consultation', $rendezVous->duree_consultation) == 120 ?
-                                'selected' : '' }}>2 heures</option>
-                        </select>
-                        @error('duree_consultation')
+                        <input type="text" name="numero_entree" id="numero_entree"
+                            value="{{ old('numero_entree', $rendezVous->numero_entree) }}"
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('numero_entree') border-red-500 @enderror"
+                            readonly required>
+                        @error('numero_entree')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -143,14 +118,10 @@
                         <select name="statut" id="statut"
                             class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('statut') border-red-500 @enderror"
                             required>
-                            <option value="en_attente" {{ old('statut', $rendezVous->statut) == 'en_attente' ?
-                                'selected' : '' }}>En attente</option>
                             <option value="confirme" {{ old('statut', $rendezVous->statut) == 'confirme' ? 'selected' :
                                 '' }}>Confirmé</option>
                             <option value="annule" {{ old('statut', $rendezVous->statut) == 'annule' ? 'selected' : ''
                                 }}>Annulé</option>
-                            <option value="termine" {{ old('statut', $rendezVous->statut) == 'termine' ? 'selected' : ''
-                                }}>Terminé</option>
                         </select>
                         @error('statut')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -166,7 +137,7 @@
                             <select name="motif" id="motif"
                                 class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('motif') border-red-500 @enderror"
                                 required>
-                                <option value="">Sélectionner un motif</option>
+                                <option value="premier visite" selected>premier visite</option>
                                 @foreach($motifs as $motif)
                                 <option value="{{ $motif->nom }}" {{ old('motif', $rendezVous->motif)==$motif->nom ?
                                     'selected' : '' }}>

@@ -70,7 +70,7 @@ class CaisseController extends Controller
         $medecins = Medecin::all();
         $prescripteurs = Prescripteur::all();
         $services = Service::all();
-        $exam_types = Examen::all();
+        $exam_types = Examen::with('service.pharmacie')->get();
         $assurances = \App\Models\Assurance::all();
         $todayCount = \App\Models\Caisse::whereDate('created_at', now())->count();
         $numero_prevu = $todayCount + 1;
@@ -98,6 +98,7 @@ class CaisseController extends Controller
             'type' => 'nullable|string|in:bankily,masrivi,especes',
             'assurance_id' => 'nullable|exists:assurances,id',
             'couverture' => 'nullable|numeric|min:0|max:100',
+            'quantite_medicament' => 'nullable|integer|min:1',
         ]);
 
         $dernierNumero = Caisse::max('numero_facture') ?? 0;
@@ -109,7 +110,29 @@ class CaisseController extends Controller
         $data['couverture'] = $request->couverture ?? 0;
         $data['assurance_id'] = $request->assurance_id ?? null;
 
+        // Correction : renseigner le service_id à partir de l'examen sélectionné
+        $examen = Examen::findOrFail($request->examen_id);
+        $data['service_id'] = $examen->idsvc ?? $examen->service_id ?? null;
+
         $caisse = Caisse::create($data);
+
+        // Gestion de la déduction du stock de pharmacie
+        if ($request->filled('quantite_medicament') && $request->quantite_medicament > 0) {
+            $examen = Examen::findOrFail($request->examen_id);
+            $service = Service::find($examen->idsvc);
+
+            if ($service && $service->type_service === 'medicament' && $service->pharmacie_id) {
+                $medicament = \App\Models\Pharmacie::find($service->pharmacie_id);
+
+                if ($medicament && $medicament->stockSuffisant($request->quantite_medicament)) {
+                    $medicament->deduireStock($request->quantite_medicament);
+                } else {
+                    // Si le stock est insuffisant, supprimer la caisse et retourner une erreur
+                    $caisse->delete();
+                    return back()->withErrors(['quantite_medicament' => 'Stock insuffisant pour ce médicament. Stock disponible: ' . ($medicament ? $medicament->stock : 0)]);
+                }
+            }
+        }
 
         $examen = Examen::findOrFail($request->examen_id);
         $part_cabinet = $examen->part_cabinet ?? 0;
@@ -262,5 +285,11 @@ class CaisseController extends Controller
     {
         $caisses = Caisse::with(['patient', 'medecin', 'prescripteur', 'examen', 'service'])->get();
         return view('caisses.print', compact('caisses'));
+    }
+
+    public function printSingle($id)
+    {
+        $caisse = Caisse::with(['patient', 'medecin', 'prescripteur', 'examen.service.pharmacie'])->findOrFail($id);
+        return view('caisses.print', compact('caisse'));
     }
 }

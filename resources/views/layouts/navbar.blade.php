@@ -57,6 +57,13 @@
                         class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
                     </div>
                 </a>
+                <a href="{{ route('pharmacie.index') }}"
+                    class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
+                    <i class="fas fa-pills mr-2"></i>Pharmacie
+                    <div
+                        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
+                    </div>
+                </a>
                 <a href="{{ route('rendezvous.index') }}"
                     class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
                     <i class="fas fa-calendar-alt mr-2"></i>Rendez-vous
@@ -187,15 +194,10 @@
                                 <i class="fas fa-stethoscope mr-3 text-gray-400"></i>
                                 Services
                             </a>
-                            <a href="{{ route('rendezvous.index') }}"
+                            <a href="{{ route('pharmacie.index') }}"
                                 class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-calendar-alt mr-3 text-gray-400"></i>
-                                Rendez-vous
-                            </a>
-                            <a href="{{ route('motifs.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-list-alt mr-3 text-gray-400"></i>
-                                Motifs de consultation
+                                <i class="fas fa-pills mr-3 text-gray-400"></i>
+                                Pharmacie
                             </a>
                             @elseif(Auth::user()->role?->name === 'admin')
                             <a href="{{ route('dashboard.superadmin') }}"
@@ -217,6 +219,7 @@
                                 class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-calendar-alt mr-3 text-gray-400"></i>
                                 Rendez-vous
+
                             </a>
                             @endif
                             <a href="#"

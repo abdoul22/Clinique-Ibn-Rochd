@@ -117,8 +117,23 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
             @foreach($examens as $examen)
             <tr class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900">
                 <td class="py-2 px-4 text-gray-900 dark:text-gray-100">{{ $examen->id }}</td>
-                <td class="py-2 px-4 text-gray-900 dark:text-gray-100">{{ $examen->nom }}</td>
-                <td class="py-2 px-4 text-gray-900 dark:text-gray-100">{{ $examen->service->nom ?? '-' }}</td>
+                <td class="py-2 px-4 text-gray-900 dark:text-gray-100">
+                    @if($examen->service && $examen->service->type_service === 'medicament' &&
+                    $examen->service->pharmacie)
+                    <span class="font-semibold text-blue-600 dark:text-blue-400">{{ $examen->nom_affichage }}</span>
+                    @else
+                    {{ $examen->nom_affichage }}
+                    @endif
+                </td>
+                <td class="py-2 px-4 text-gray-900 dark:text-gray-100">
+                    @if($examen->service && $examen->service->type_service === 'medicament' &&
+                    $examen->service->pharmacie)
+                    <span class="font-semibold text-green-600 dark:text-green-400">{{ $examen->service_affichage
+                        }}</span>
+                    @else
+                    {{ $examen->service_affichage }}
+                    @endif
+                </td>
                 <td class="py-2 px-4 text-gray-900 dark:text-gray-100">{{ number_format($examen->tarif, 0, ',', ' ') }}
                     MRU</td>
                 <td class="py-2 px-4 text-gray-900 dark:text-gray-100">{{ number_format($examen->part_medecin, 0, ',', '

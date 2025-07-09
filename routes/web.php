@@ -22,6 +22,8 @@ use App\Http\Controllers\SuperAdmin\UserManagementController;
 use App\Http\Controllers\RendezVousController;
 use App\Http\Controllers\MotifController;
 use App\Http\Controllers\DossierMedicalController;
+use App\Http\Controllers\PharmacieController;
+use App\Http\Controllers\HospitalisationController;
 
 require __DIR__ . '/auth.php';
 // Page d'accueil
@@ -89,6 +91,7 @@ Route::middleware(['auth', 'is.approved'])->group(function () {
     Route::resource('caisses', CaisseController::class);
     Route::get('caisses-export-pdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
     Route::get('caisses-print', [CaisseController::class, 'print'])->name('caisses.print');
+    Route::get('caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
 });
 
 // Routes pour ADMIN
@@ -108,8 +111,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
 
     // Autres ressources pour admin
-
-
+    Route::resource('caisses', CaisseController::class);
+    Route::resource('dossiers', DossierMedicalController::class)->parameters(['dossiers' => 'dossier']);
 });
 
 
@@ -169,9 +172,9 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
 
 
     //Recap services
-    Route::resource('recap-services', RecapitulatifServiceJournalierController::class);
     Route::get('recap-services/print', [RecapitulatifServiceJournalierController::class, 'print'])->name('recap-services.print');
     Route::get('recap-services/export-pdf', [RecapitulatifServiceJournalierController::class, 'exportPdf'])->name('recap-services.exportPdf');
+    Route::resource('recap-services', RecapitulatifServiceJournalierController::class);
 
     // recapitulatif des opérateurs
     Route::resource('recap-operateurs', RecapitulatifOperateurController::class);
@@ -186,6 +189,12 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::post('/credits', [CreditController::class, 'store'])->name('credits.store');
     Route::post('/credits/{id}/statut/{statut}', [CreditController::class, 'marquerComme'])->name('credits.marquer');
     Route::get('/credits', [CreditController::class, 'index'])->name('credits.index');
+
+    // Pharmacie
+    Route::resource('pharmacie', PharmacieController::class);
+    Route::get('/pharmacie-api/medicaments', [PharmacieController::class, 'getMedicaments'])->name('pharmacie.api.medicaments');
+    Route::get('/pharmacie-api/medicament/{id}', [PharmacieController::class, 'getMedicament'])->name('pharmacie.api.medicament');
+    Route::post('/pharmacie-api/medicament/{id}/deduire-stock', [PharmacieController::class, 'deduireStock'])->name('pharmacie.api.deduire-stock');
 });
 
 
@@ -193,11 +202,13 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
     Route::resource('caisses', CaisseController::class)->parameters(['caisses' => 'caisse']);
     Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
+    Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('caisses', CaisseController::class)->parameters(['caisses' => 'caisse']);
     Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
+    Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
 });
 Route::post('/etatcaisse/{id}/valider', [EtatCaisseController::class, 'valider'])
     ->middleware(['auth', 'role:superadmin'])
@@ -231,3 +242,5 @@ Route::get('mode-paiements/dashboard', [App\Http\Controllers\ModePaiementControl
 Route::get('mode-paiements/historique', [App\Http\Controllers\ModePaiementController::class, 'historique'])
     ->name('modepaiements.historique')
     ->middleware('auth');
+
+Route::resource('hospitalisations', HospitalisationController::class);

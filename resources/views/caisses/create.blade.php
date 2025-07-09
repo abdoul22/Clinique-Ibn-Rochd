@@ -94,11 +94,32 @@
                         onchange="updateTotal()">
                         <option value="">Sélectionner un type d'examen</option>
                         @foreach($exam_types as $type)
-                        <option value="{{ $type->id }}" data-tarif="{{ $type->tarif }}">
+                        @php
+                        $service = $type->service;
+                        $isPharmacie = $service && $service->type_service === 'medicament' && $service->pharmacie;
+                        $stockInfo = $isPharmacie ? "Stock: {$service->pharmacie->stock}" : '';
+                        @endphp
+                        <option value="{{ $type->id }}" data-tarif="{{ $type->tarif }}"
+                            data-service-type="{{ $service ? $service->type_service : '' }}"
+                            data-is-pharmacie="{{ $isPharmacie ? 'true' : 'false' }}"
+                            data-stock="{{ $isPharmacie ? $service->pharmacie->stock : '' }}">
                             {{ $type->nom }} - {{ number_format($type->tarif, 2) }} MRU
+                            @if($isPharmacie)
+                            ({{ $service->pharmacie->nom_medicament }})
+                            @endif
                         </option>
                         @endforeach
                     </select>
+                </div>
+
+                <!-- Champ quantité pour médicament (caché par défaut) -->
+                <div id="quantite_medicament_div" style="display: none;">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Quantité du
+                        médicament *</label>
+                    <input type="number" name="quantite_medicament" id="quantite_medicament" min="1" value="1"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        onchange="updateTotal()">
+                    <small class="text-gray-500 dark:text-gray-400" id="stock_info"></small>
                 </div>
                 {{-- Checkbox : le patient a-t-il une assurance ? --}}
                 <div>
@@ -213,15 +234,62 @@
     function updateTotal() {
         const select = document.getElementById('examen_id');
         const selectedOption = select.options[select.selectedIndex];
-        const tarif = selectedOption.getAttribute('data-tarif');
-        if (tarif) {
-            document.getElementById('display_total').value = tarif;
-            document.getElementById('total').value = tarif;
+        const quantiteDiv = document.getElementById('quantite_medicament_div');
+        const stockInfo = document.getElementById('stock_info');
+        const quantiteInput = document.getElementById('quantite_medicament');
+
+        if (select.value) {
+            const tarif = parseFloat(selectedOption.getAttribute('data-tarif'));
+            const isPharmacie = selectedOption.getAttribute('data-is-pharmacie') === 'true';
+            const stock = selectedOption.getAttribute('data-stock');
+
+            if (isPharmacie) {
+                // Afficher le champ quantité pour les médicaments
+                quantiteDiv.style.display = 'block';
+
+                // Afficher les informations de stock
+                if (stock) {
+                    stockInfo.textContent = `Stock disponible: ${stock} unités`;
+                    stockInfo.className = parseInt(stock) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                }
+
+                // Calculer le total avec la quantité
+                const quantite = parseInt(quantiteInput.value) || 1;
+                const total = tarif * quantite;
+
+                // Vérifier le stock
+                if (stock && quantite > parseInt(stock)) {
+                    stockInfo.textContent = `Stock insuffisant! Disponible: ${stock} unités`;
+                    stockInfo.className = 'text-red-600 dark:text-red-400';
+                }
+
+                document.getElementById('display_total').value = total.toFixed(2);
+                document.getElementById('total').value = total.toFixed(2);
+            } else {
+                // Cacher le champ quantité pour les autres types de services
+                quantiteDiv.style.display = 'none';
+                stockInfo.textContent = '';
+
+                // Total simple pour les services non-médicament
+                document.getElementById('display_total').value = tarif.toFixed(2);
+                document.getElementById('total').value = tarif.toFixed(2);
+            }
         } else {
+            // Aucun examen sélectionné
+            quantiteDiv.style.display = 'none';
+            stockInfo.textContent = '';
             document.getElementById('display_total').value = '';
             document.getElementById('total').value = '';
         }
     }
+
+    // Mettre à jour le total quand la quantité change
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantiteInput = document.getElementById('quantite_medicament');
+        if (quantiteInput) {
+            quantiteInput.addEventListener('input', updateTotal);
+        }
+    });
 </script>
 <script>
     document.addEventListener('click', function (event) {

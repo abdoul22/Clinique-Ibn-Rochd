@@ -133,9 +133,9 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
         </div>
 
         <!-- Boutons Export -->
-        <a href="{{ route('recap-operateurs.exportPdf') }}"
+        <a href="{{ route('recap-operateurs.exportPdf', request()->query()) }}"
             class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition">PDF</a>
-        <a href="{{ route('recap-operateurs.print') }}" target="_blank"
+        <a href="{{ route('recap-operateurs.print', request()->query()) }}" target="_blank"
             class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded transition">Imprimer</a>
     </form>
 </div>

@@ -78,12 +78,32 @@ class GestionPatientController extends Controller
 
     public function store(Request $request)
     {
+        // Validation pour éviter les doublons
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'gender' => 'required|in:Homme,Femme',
+            'date_of_birth' => 'required|date',
+            'phone' => 'required|string|max:20|unique:gestion_patients,phone',
+        ]);
+
+        // Vérifier si le patient existe déjà (nom + prénom + téléphone)
+        $existingPatient = GestionPatient::where('first_name', $request->first_name)
+            ->where('last_name', $request->last_name)
+            ->where('phone', $request->phone)
+            ->first();
+
+        if ($existingPatient) {
+            return back()->withErrors(['phone' => 'Un patient avec ces informations existe déjà.'])->withInput();
+        }
+
         $patient = new GestionPatient();
         $patient->first_name = $request->first_name;
         $patient->last_name = $request->last_name;
         $patient->gender = $request->gender;
         $patient->date_of_birth = $request->date_of_birth;
         $patient->phone = $request->phone;
+        $patient->address = $request->address ?? '';
 
         if ($patient->save()) {
             // Rediriger dynamiquement selon le rôle

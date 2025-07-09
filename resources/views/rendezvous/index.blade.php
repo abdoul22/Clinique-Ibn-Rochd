@@ -14,7 +14,7 @@
 
     <!-- Filtres -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-        <form method="GET" action="{{ route('rendezvous.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="GET" action="{{ route('rendezvous.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Médecin</label>
                 <select name="medecin_id"
@@ -39,12 +39,16 @@
                 <select name="statut"
                     class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2">
                     <option value="">Tous les statuts</option>
-                    <option value="en_attente" {{ request('statut')=='en_attente' ? 'selected' : '' }}>En attente
-                    </option>
                     <option value="confirme" {{ request('statut')=='confirme' ? 'selected' : '' }}>Confirmé</option>
                     <option value="annule" {{ request('statut')=='annule' ? 'selected' : '' }}>Annulé</option>
-                    <option value="termine" {{ request('statut')=='termine' ? 'selected' : '' }}>Terminé</option>
                 </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Téléphone patient</label>
+                <input type="text" name="patient_phone" value="{{ request('patient_phone') }}"
+                    placeholder="Numéro du patient"
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2">
             </div>
 
             <div class="flex items-end">
@@ -116,8 +120,8 @@
                     @foreach($day['rendezVous']->take(2) as $rdv)
                     <div class="text-xs p-1 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                         onclick="showRendezVousDetails({{ $rdv->id }})"
-                        title="{{ $rdv->heure_rdv }} - {{ $rdv->patient_nom_complet }}">
-                        <div class="font-medium">{{ \Carbon\Carbon::parse($rdv->heure_rdv)->format('H:i') }}</div>
+                        title="{{ $rdv->created_at->format('H:i') }} - {{ $rdv->patient_nom_complet }}">
+                        <div class="font-medium">{{ $rdv->created_at->format('H:i') }}</div>
                         <div class="truncate">{{ $rdv->patient->first_name }}</div>
                     </div>
                     @endforeach
@@ -146,21 +150,22 @@
                     <tr>
                         <th
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Numéro d'entrée</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Patient</th>
                         <th
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Médecin</th>
                         <th
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Date
-                            & Heure</th>
-                        <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Motif
-                        </th>
+                            Motif</th>
                         <th
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Statut</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Date</th>
                         <th
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Actions</th>
@@ -169,24 +174,16 @@
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     @forelse($rendezVous as $rdv)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $rdv->numero_entree }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900 dark:text-gray-200">{{
-                                $rdv->patient->first_name }} {{
-                                $rdv->patient->last_name }}</div>
+                                $rdv->patient->first_name }} {{ $rdv->patient->last_name }}</div>
                             <div class="text-sm text-gray-500 dark:text-gray-400">{{ $rdv->patient->phone }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900 dark:text-gray-200">{{ $rdv->medecin->nom }}
-                                {{
-                                $rdv->medecin->prenom }}</div>
+                                {{ $rdv->medecin->prenom }}</div>
                             <div class="text-sm text-gray-500 dark:text-gray-400">{{ $rdv->medecin->specialite }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-gray-200">{{
-                                $rdv->date_rdv->format('d/m/Y') }}</div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">{{
-                                \Carbon\Carbon::parse($rdv->heure_rdv)->format('H:i')
-                                }}</div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900 dark:text-gray-200">{{ Str::limit($rdv->motif, 50) }}
@@ -194,12 +191,6 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @switch($rdv->statut)
-                            @case('en_attente')
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
-                                En attente
-                            </span>
-                            @break
                             @case('confirme')
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
@@ -212,20 +203,17 @@
                                 Annulé
                             </span>
                             @break
-                            @case('termine')
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                                Terminé
-                            </span>
-                            @break
                             @endswitch
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $rdv->date_rdv->format('d/m') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
-                                <a href="{{ route('rendezvous.show', $rdv->id) }}"
+                                <a href="{{ route(request()->routeIs('admin.*') ? 'admin.rendezvous.show' : 'rendezvous.show', $rdv->id) }}"
                                     class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                                     <i class="fas fa-eye"></i>
                                 </a>
+                                @if(Auth::user() && Auth::user()->role?->name === 'superadmin' &&
+                                !request()->routeIs('admin.*'))
                                 <a href="{{ route('rendezvous.edit', $rdv->id) }}"
                                     class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
                                     <i class="fas fa-edit"></i>
@@ -239,12 +227,26 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
+                                @endif
+                                @if(Auth::user() && Auth::user()->role?->name === 'admin' &&
+                                !request()->routeIs('admin.*') && $rdv->statut === 'confirme')
+                                <form action="{{ route('rendezvous.change-status', $rdv->id) }}" method="POST"
+                                    class="inline">
+                                    @csrf
+                                    <input type="hidden" name="statut" value="annule">
+                                    <button type="submit"
+                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ?')">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                </form>
+                                @endif
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                             Aucun rendez-vous trouvé.
                         </td>
                     </tr>

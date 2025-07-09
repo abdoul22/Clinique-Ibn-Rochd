@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class RendezVousController extends Controller
 {
@@ -31,6 +32,12 @@ class RendezVousController extends Controller
 
         if ($request->filled('statut')) {
             $query->where('statut', $request->statut);
+        }
+
+        if ($request->filled('patient_phone')) {
+            $query->whereHas('patient', function ($q) use ($request) {
+                $q->where('phone', 'like', '%' . $request->patient_phone . '%');
+            });
         }
 
         // Pour le calendrier
@@ -76,9 +83,7 @@ class RendezVousController extends Controller
             'patient_id' => 'required|exists:gestion_patients,id',
             'medecin_id' => 'required|exists:medecins,id',
             'date_rdv' => 'required|date|after_or_equal:today',
-            'heure_rdv' => 'required|date_format:H:i',
-            'motif' => 'required|string|max:255',
-            'duree_consultation' => 'nullable|integer|min:15|max:180',
+            'motif' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ], [
             'date_rdv.after_or_equal' => 'La date du rendez-vous doit être aujourd\'hui ou une date future.',
@@ -91,35 +96,21 @@ class RendezVousController extends Controller
                 ->withInput();
         }
 
-        // Vérifier si le créneau est disponible
         $dateRdv = $request->date_rdv;
-        $heureRdv = $request->heure_rdv;
-        $duree = (int)($request->duree_consultation ?? 30);
-        $medecinId = $request->medecin_id;
+        $numeroEntree = RendezVous::where('date_rdv', $dateRdv)->max('numero_entree') + 1;
+        $motif = $request->motif ?: 'premier visite';
 
-        $heureFin = Carbon::parse($heureRdv)->addMinutes($duree)->format('H:i:s');
-
-        $conflict = RendezVous::where('medecin_id', $medecinId)
-            ->where('date_rdv', $dateRdv)
-            ->where('statut', '!=', 'annule')
-            ->where(function ($query) use ($heureRdv, $heureFin) {
-                // Vérifier si le début du nouveau RDV chevauche un RDV existant
-                $query->whereBetween('heure_rdv', [$heureRdv, $heureFin])
-                    // Ou si la fin d'un RDV existant chevauche le nouveau RDV
-                    ->orWhere(function ($subQuery) use ($heureRdv, $heureFin) {
-                        $subQuery->whereRaw('TIME_TO_SEC(heure_rdv) + (duree_consultation * 60) > TIME_TO_SEC(?)', [$heureRdv])
-                            ->where('heure_rdv', '<', $heureFin);
-                    });
-            })
-            ->exists();
-
-        if ($conflict) {
-            return redirect()->back()
-                ->withErrors(['heure_rdv' => 'Ce créneau n\'est pas disponible pour ce médecin.'])
-                ->withInput();
-        }
-
-        RendezVous::create($request->all());
+        RendezVous::create([
+            'patient_id' => $request->patient_id,
+            'medecin_id' => $request->medecin_id,
+            'date_rdv' => $dateRdv,
+            'heure_rdv' => null, // Champ non utilisé
+            'motif' => $motif,
+            'statut' => 'confirme',
+            'notes' => $request->notes,
+            'numero_entree' => $numeroEntree,
+            'created_by' => Auth::id(),
+        ]);
 
         return redirect()->route('rendezvous.index')
             ->with('success', 'Rendez-vous créé avec succès.');
@@ -158,11 +149,9 @@ class RendezVousController extends Controller
             'patient_id' => 'required|exists:gestion_patients,id',
             'medecin_id' => 'required|exists:medecins,id',
             'date_rdv' => 'required|date',
-            'heure_rdv' => 'required|date_format:H:i',
-            'motif' => 'required|string|max:255',
-            'duree_consultation' => 'nullable|integer|min:15|max:180',
+            'motif' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
-            'statut' => 'required|in:en_attente,confirme,annule,termine',
+            'statut' => 'required|in:confirme,annule',
         ]);
 
         if ($validator->fails()) {
@@ -171,36 +160,16 @@ class RendezVousController extends Controller
                 ->withInput();
         }
 
-        // Vérifier les conflits (exclure le rendez-vous actuel)
-        $dateRdv = $request->date_rdv;
-        $heureRdv = $request->heure_rdv;
-        $duree = (int)($request->duree_consultation ?? 30);
-        $medecinId = $request->medecin_id;
+        $motif = $request->motif ?: 'premier visite';
 
-        $heureFin = Carbon::parse($heureRdv)->addMinutes($duree)->format('H:i:s');
-
-        $conflict = RendezVous::where('medecin_id', $medecinId)
-            ->where('date_rdv', $dateRdv)
-            ->where('id', '!=', $rendezVous->id)
-            ->where('statut', '!=', 'annule')
-            ->where(function ($query) use ($heureRdv, $heureFin) {
-                // Vérifier si le début du nouveau RDV chevauche un RDV existant
-                $query->whereBetween('heure_rdv', [$heureRdv, $heureFin])
-                    // Ou si la fin d'un RDV existant chevauche le nouveau RDV
-                    ->orWhere(function ($subQuery) use ($heureRdv, $heureFin) {
-                        $subQuery->whereRaw('TIME_TO_SEC(heure_rdv) + (duree_consultation * 60) > TIME_TO_SEC(?)', [$heureRdv])
-                            ->where('heure_rdv', '<', $heureFin);
-                    });
-            })
-            ->exists();
-
-        if ($conflict) {
-            return redirect()->back()
-                ->withErrors(['heure_rdv' => 'Ce créneau n\'est pas disponible pour ce médecin.'])
-                ->withInput();
-        }
-
-        $rendezVous->update($request->all());
+        $rendezVous->update([
+            'patient_id' => $request->patient_id,
+            'medecin_id' => $request->medecin_id,
+            'date_rdv' => $request->date_rdv,
+            'motif' => $motif,
+            'statut' => $request->statut,
+            'notes' => $request->notes,
+        ]);
 
         return redirect()->route('rendezvous.index')
             ->with('success', 'Rendez-vous mis à jour avec succès.');
@@ -226,7 +195,7 @@ class RendezVousController extends Controller
         $rendezVous = RendezVous::findOrFail($id);
 
         $request->validate([
-            'statut' => 'required|in:en_attente,confirme,annule,termine'
+            'statut' => 'required|in:confirme,annule'
         ]);
 
         $rendezVous->update(['statut' => $request->statut]);

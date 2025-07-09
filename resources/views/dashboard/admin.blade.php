@@ -23,7 +23,7 @@
         </a>
 
         {{-- Dossier médical --}}
-        <a href="{{ route('dossiers.index') }}"
+        <a href="{{ route('admin.dossiers.index') }}"
             class="bg-red-500 dark:bg-red-700 text-white rounded-2xl p-6 shadow hover:bg-red-600 dark:hover:bg-red-900 transition">
             <h2 class="text-xl font-semibold mb-2">Dossier Médical</h2>
             <p class="text-sm text-red-100">Accès aux dossiers médicaux autorisés.</p>

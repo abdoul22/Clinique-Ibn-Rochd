@@ -30,13 +30,18 @@ class AssuranceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nom' => 'required|string|max:255',
+            'nom' => 'required|string|max:255|unique:assurances,nom',
             'credit' => 'nullable|numeric|min:0'
-
         ]);
 
-        Assurance::create($request->only('nom', 'credit'));
+        // Vérifier si l'assurance existe déjà
+        $existingAssurance = Assurance::where('nom', $request->nom)->first();
 
+        if ($existingAssurance) {
+            return back()->withErrors(['nom' => 'Une assurance avec ce nom existe déjà.'])->withInput();
+        }
+
+        Assurance::create($request->only('nom', 'credit'));
 
         return redirect()->route('assurances.index')->with('success', 'Assurance ajoutée avec succès.');
     }

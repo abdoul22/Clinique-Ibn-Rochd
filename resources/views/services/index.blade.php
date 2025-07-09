@@ -39,6 +39,7 @@
             <tr>
                 <th class="table-header">ID</th>
                 <th class="table-header">Nom</th>
+                <th class="table-header">Type de service</th>
                 <th class="table-header">Observation</th>
                 <th class="table-header">Actions</th>
             </tr>
@@ -47,8 +48,38 @@
             @foreach($services as $service)
             <tr class="table-row dark:hover:bg-gray-900">
                 <td class="table-cell text-gray-900 dark:text-gray-100">{{ $service->id }}</td>
-                <td class="table-cell text-gray-900 dark:text-gray-100">{{ $service->nom }}</td>
-                <td class="table-cell text-gray-900 dark:text-gray-100">{{ $service->observation }}</td>
+                <td class="table-cell text-gray-900 dark:text-gray-100">
+                    @if($service->type_service === 'medicament' && $service->pharmacie)
+                    <span class="font-semibold text-blue-600 dark:text-blue-400">{{ $service->nom_affichage }}</span>
+                    @else
+                    {{ $service->nom_affichage }}
+                    @endif
+                </td>
+                <td class="table-cell">
+                    @php
+                    $badgeColors = [
+                    'examen' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                    'medicament' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                    'consultation' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+                    'pharmacie' => 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+                    'medecins' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                    ];
+                    $type = strtolower($service->type_service);
+                    $badgeClass = $badgeColors[$type] ?? 'bg-gray-200 text-gray-800 dark:bg-gray-700
+                    dark:text-gray-200';
+                    @endphp
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeClass }}">
+                        {{ ucfirst($service->type_service) }}
+                    </span>
+                </td>
+                <td class="table-cell text-gray-900 dark:text-gray-100">
+                    @if($service->type_service === 'medicament' && $service->pharmacie)
+                    <span class="text-sm text-gray-600 dark:text-gray-400">{{ $service->observation_affichage }}</span>
+                    @else
+                    {{ $service->observation_affichage }}
+                    @endif
+                </td>
                 <td class="table-cell">
                     <div class="table-actions">
                         <!-- Modifier -->

@@ -48,8 +48,8 @@
             @foreach ($services as $index => $service)
             <tr>
                 <td>{{ $index + 1 }}</td>
-                <td>{{ $service->nom }}</td>
-                <td>{{ $service->observation }}</td>
+                <td>{{ $service->nom_affichage }}</td>
+                <td>{{ $service->observation_affichage }}</td>
             </tr>
             @endforeach
         </tbody>

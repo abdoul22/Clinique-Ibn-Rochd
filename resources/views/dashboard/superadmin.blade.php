@@ -50,7 +50,7 @@
         </a>
 
         {{-- H) Hospitalisations --}}
-        <a href="{{ url('/hospitalisations') }}"
+        <a href="{{ route('hospitalisations.index') }}"
             class="bg-pink-600 text-white rounded-2xl p-6 shadow hover:bg-pink-700 transition">
             <h2 class="text-xl font-semibold mb-2">Hospitalisations</h2>
             <p class="text-sm text-pink-100">Suivi des séjours et admissions des patients.</p>
