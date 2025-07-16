@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             ModePaiementSeeder::class,
             MotifSeeder::class,
             RendezVousSeeder::class,
+            ChambreSeeder::class,
 
         ]);
 

@@ -13,12 +13,11 @@ class Hospitalisation extends Model
         'gestion_patient_id',
         'medecin_id',
         'service_id',
+        'lit_id',
         'date_entree',
         'date_sortie',
         'motif',
         'statut',
-        'chambre',
-        'lit',
         'montant_total',
         'observation',
     ];
@@ -40,6 +39,11 @@ class Hospitalisation extends Model
 
     public function lit()
     {
-        return $this->belongsTo(Lit::class);
+        return $this->belongsTo(Lit::class, 'lit_id');
+    }
+
+    public function chambre()
+    {
+        return $this->hasOneThrough(Chambre::class, Lit::class, 'id', 'id', 'lit_id', 'chambre_id');
     }
 }

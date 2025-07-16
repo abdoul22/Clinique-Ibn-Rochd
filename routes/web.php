@@ -24,11 +24,20 @@ use App\Http\Controllers\MotifController;
 use App\Http\Controllers\DossierMedicalController;
 use App\Http\Controllers\PharmacieController;
 use App\Http\Controllers\HospitalisationController;
+use App\Http\Controllers\ChambreController;
+use App\Http\Controllers\LitController;
 
 require __DIR__ . '/auth.php';
-// Page d'accueil
+
+// Page d'accueil (accessible à tous)
 Route::get('/', fn() => view('home'))->name('home');
 
+// Route d'attente d'approbation (accessible aux utilisateurs connectés mais non approuvés)
+Route::get('/waiting-approval', function () {
+    return view('auth.waiting');
+})->middleware('auth')->name('approval.waiting');
+
+// Dashboard principal (redirection selon le rôle)
 Route::get('/dashboard', function () {
     $role = Auth::user()?->role?->name;
 
@@ -37,9 +46,9 @@ Route::get('/dashboard', function () {
         'admin' => redirect()->route('dashboard.admin'),
         default => redirect()->route('login'),
     };
-})->middleware(['auth']);
+})->middleware(['auth', 'is.approved']);
 
-// Authentification
+// Authentification (accessible à tous)
 Route::controller(AuthController::class)->group(function () {
     Route::get('/login', 'showLogin')->name('login');
     Route::post('/login', 'login');
@@ -47,10 +56,6 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('/register', 'showRegister')->name('register');
     Route::post('/register', 'register');
 });
-
-Route::get('/waiting-approval', function () {
-    return view('auth.waiting');
-})->name('approval.waiting');
 
 // Routes pour SUPERADMIN
 Route::middleware(['auth', 'role:superadmin', 'is.approved'])->group(function () {
@@ -69,29 +74,17 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->group(function ()
         Route::delete('/admins/{id}', [App\Http\Controllers\SuperAdmin\AdminController::class, 'destroy'])->name('superadmin.admins.destroy');
     });
 });
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('caisses', CaisseController::class);
-});
 
 // Routes communes pour SUPERADMIN avec préfixe
-Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
+Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmin')->name('superadmin.')->group(function () {
     // Patients
     Route::resource('patients', GestionPatientController::class);
-
-    // Autres ressources pour superadmin
-
+    // Médecins
     Route::resource('medecins', MedecinController::class);
-});
-
-// Route pour afficher la liste des patients (accessible depuis les dashboards)
-Route::middleware(['auth', 'is.approved'])->group(function () {
-    Route::get('/patients', [GestionPatientController::class, 'index'])->name('patients.index');
-
-    //Caisse
-    Route::resource('caisses', CaisseController::class);
-    Route::get('caisses-export-pdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
-    Route::get('caisses-print', [CaisseController::class, 'print'])->name('caisses.print');
-    Route::get('caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
+    // Caisse
+    Route::resource('caisses', CaisseController::class)->parameters(['caisses' => 'caisse']);
+    Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
+    Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
 });
 
 // Routes pour ADMIN
@@ -101,22 +94,33 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->group(function () {
 });
 
 // Routes communes pour ADMIN avec préfixe
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name('admin.')->group(function () {
     // Patients
     Route::resource('patients', GestionPatientController::class);
-
     // Rendez-vous pour admin
     Route::resource('rendezvous', RendezVousController::class)->parameters(['rendezvous' => 'id']);
     Route::post('rendezvous/{id}/change-status', [RendezVousController::class, 'changeStatus'])->name('rendezvous.change-status');
     Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
-
     // Autres ressources pour admin
     Route::resource('caisses', CaisseController::class);
     Route::resource('dossiers', DossierMedicalController::class)->parameters(['dossiers' => 'dossier']);
+    // Caisse
+    Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
+    Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
 });
 
+// Route pour afficher la liste des patients (accessible depuis les dashboards)
+Route::middleware(['auth', 'is.approved'])->group(function () {
+    Route::get('/patients', [GestionPatientController::class, 'index'])->name('patients.index');
+    //Caisse
+    Route::resource('caisses', CaisseController::class);
+    Route::get('caisses-export-pdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
+    Route::get('caisses-print', [CaisseController::class, 'print'])->name('caisses.print');
+    Route::get('caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
+});
 
-Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
+// Routes communes pour ADMIN et SUPERADMIN (protégées par auth et is.approved)
+Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(function () {
     Route::resource('personnels', PersonnelController::class);
 
     // Dossiers médicaux (routes communes pour admin et superadmin)
@@ -144,7 +148,6 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::get('assurances/export/pdf', [AssuranceController::class, 'exportPdf'])->name('assurances.exportPdf');
     Route::get('assurances/print', [AssuranceController::class, 'print'])->name('assurances.print');
 
-
     // depences
     Route::resource('depenses', DepenseController::class);
     Route::get('depenses-export-pdf', [DepenseController::class, 'exportPdf'])->name('depenses.exportPdf');
@@ -168,8 +171,6 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::post('/etatcaisse/generer/assurances', [EtatCaisseController::class, 'generateAllAssuranceEtats'])->name('etatcaisse.generer.assurances');
     // Générer un état journalier (avec filtres date d'aujourd'hui)
     Route::post('/etatcaisse/generer/journalier', [EtatCaisseController::class, 'generateDailyEtat'])->name('etatcaisse.generer.journalier');
-
-
 
     //Recap services
     Route::get('recap-services/print', [RecapitulatifServiceJournalierController::class, 'print'])->name('recap-services.print');
@@ -195,52 +196,47 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::get('/pharmacie-api/medicaments', [PharmacieController::class, 'getMedicaments'])->name('pharmacie.api.medicaments');
     Route::get('/pharmacie-api/medicament/{id}', [PharmacieController::class, 'getMedicament'])->name('pharmacie.api.medicament');
     Route::post('/pharmacie-api/medicament/{id}/deduire-stock', [PharmacieController::class, 'deduireStock'])->name('pharmacie.api.deduire-stock');
-});
 
+    // Hospitalisations (protégées par auth et is.approved)
+    Route::resource('hospitalisations', HospitalisationController::class);
+    Route::get('/hospitalisations/lits-disponibles', [HospitalisationController::class, 'getLitsDisponibles'])->name('hospitalisations.lits.disponibles');
 
-// Route commune à superadmin et admin avec préfixe selon le rôle
-Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
-    Route::resource('caisses', CaisseController::class)->parameters(['caisses' => 'caisse']);
-    Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
-    Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
-});
+    // Chambres (protégées par auth et is.approved)
+    Route::resource('chambres', ChambreController::class);
+    Route::get('/chambres-api/disponibles', [ChambreController::class, 'getChambresDisponibles'])->name('chambres.api.disponibles');
+    Route::get('/chambres/{chambre}/lits-disponibles', [ChambreController::class, 'getLitsDisponibles'])->name('chambres.lits.disponibles');
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('caisses', CaisseController::class)->parameters(['caisses' => 'caisse']);
-    Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
-    Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
-});
-Route::post('/etatcaisse/{id}/valider', [EtatCaisseController::class, 'valider'])
-    ->middleware(['auth', 'role:superadmin'])
-    ->name('etatcaisse.valider');
-Route::post('/etatcaisse/{id}/unvalider', [EtatCaisseController::class, 'unvalider'])->name('etatcaisse.unvalider');
+    // Lits (protégées par auth et is.approved)
+    Route::resource('lits', LitController::class);
+    Route::get('/lits-api/disponibles', [LitController::class, 'getLitsDisponibles'])->name('lits.api.disponibles');
 
-Route::resource('modepaiements', ModePaiementController::class);
-
-Route::resource('credits', CreditController::class);
-Route::get('medecins/{id}/stats', [MedecinController::class, 'statistiques'])->name('medecins.stats');
-Route::get('medecins/{id}/stats', [MedecinController::class, 'stats'])->name('medecins.stats');
-
-// Routes pour les rendez-vous (accessible aux admins et superadmins)
-Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(function () {
+    // Rendez-vous (accessible aux admins et superadmins)
     Route::resource('rendezvous', RendezVousController::class)->parameters(['rendezvous' => 'id']);
     Route::post('rendezvous/{id}/change-status', [RendezVousController::class, 'changeStatus'])->name('rendezvous.change-status');
     Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
-});
 
-// Routes pour les motifs de consultation (accessible aux admins et superadmins)
-Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(function () {
+    // Routes pour les motifs de consultation (accessible aux admins et superadmins)
     Route::resource('motifs', MotifController::class);
     Route::post('motifs/{id}/toggle-status', [MotifController::class, 'toggleStatus'])->name('motifs.toggle-status');
     Route::get('motifs/get-actifs', [MotifController::class, 'getMotifsActifs'])->name('motifs.get-actifs');
 });
 
-Route::get('mode-paiements/dashboard', [App\Http\Controllers\ModePaiementController::class, 'dashboard'])
-    ->name('modepaiements.dashboard')
-    ->middleware('auth');
+// Routes spécifiques (protégées par auth et is.approved)
+Route::middleware(['auth', 'is.approved'])->group(function () {
+    Route::post('/etatcaisse/{id}/valider', [EtatCaisseController::class, 'valider'])
+        ->middleware('role:superadmin')
+        ->name('etatcaisse.valider');
+    Route::post('/etatcaisse/{id}/unvalider', [EtatCaisseController::class, 'unvalider'])->name('etatcaisse.unvalider');
 
-Route::get('mode-paiements/historique', [App\Http\Controllers\ModePaiementController::class, 'historique'])
-    ->name('modepaiements.historique')
-    ->middleware('auth');
+    Route::resource('modepaiements', ModePaiementController::class);
+    Route::resource('credits', CreditController::class);
 
-Route::resource('hospitalisations', HospitalisationController::class);
+    Route::get('medecins/{id}/stats', [MedecinController::class, 'statistiques'])->name('medecins.stats');
+    Route::get('medecins/{id}/stats', [MedecinController::class, 'stats'])->name('medecins.stats');
+
+    Route::get('mode-paiements/dashboard', [App\Http\Controllers\ModePaiementController::class, 'dashboard'])
+        ->name('modepaiements.dashboard');
+
+    Route::get('mode-paiements/historique', [App\Http\Controllers\ModePaiementController::class, 'historique'])
+        ->name('modepaiements.historique');
+});

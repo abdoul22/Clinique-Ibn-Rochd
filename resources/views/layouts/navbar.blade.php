@@ -113,13 +113,7 @@
                         class="text-lg transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">🌙</span>
                 </button>
                 @auth
-                <!-- Notifications -->
-                <button
-                    class="relative p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 group">
-                    <i
-                        class="fas fa-bell text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200"></i>
-                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                </button>
+     
                 <!-- User Profile -->
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open"

@@ -38,4 +38,15 @@ class GestionPatient extends Model
     {
         return $this->hasOne(DossierMedical::class, 'patient_id');
     }
+
+    // Accesseurs pour compatibilité avec les vues
+    public function getNomAttribute()
+    {
+        return $this->last_name;
+    }
+
+    public function getPrenomAttribute()
+    {
+        return $this->first_name;
+    }
 }

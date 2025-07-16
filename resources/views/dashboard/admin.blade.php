@@ -7,7 +7,6 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-
         {{-- Patients --}}
         <a href="{{ route('admin.patients.index') }}"
             class="bg-purple-600 dark:bg-purple-800 text-white rounded-2xl p-6 shadow hover:bg-purple-700 dark:hover:bg-purple-900 transition">
@@ -27,6 +26,20 @@
             class="bg-red-500 dark:bg-red-700 text-white rounded-2xl p-6 shadow hover:bg-red-600 dark:hover:bg-red-900 transition">
             <h2 class="text-xl font-semibold mb-2">Dossier Médical</h2>
             <p class="text-sm text-red-100">Accès aux dossiers médicaux autorisés.</p>
+        </a>
+
+        {{-- Hospitalisations --}}
+        <a href="{{ route('hospitalisations.index') }}"
+            class="bg-blue-600 dark:bg-blue-800 text-white rounded-2xl p-6 shadow hover:bg-blue-700 dark:hover:bg-blue-900 transition">
+            <h2 class="text-xl font-semibold mb-2">Hospitalisations</h2>
+            <p class="text-sm text-blue-100">Gérer les hospitalisations et les lits.</p>
+        </a>
+
+        {{-- Chambres --}}
+        <a href="{{ route('chambres.index') }}"
+            class="bg-green-600 dark:bg-green-800 text-white rounded-2xl p-6 shadow hover:bg-green-700 dark:hover:bg-green-900 transition">
+            <h2 class="text-xl font-semibold mb-2">Gestion des Chambres</h2>
+            <p class="text-sm text-green-100">Gérer les chambres et lits disponibles.</p>
         </a>
 
         {{-- Caisse --}}

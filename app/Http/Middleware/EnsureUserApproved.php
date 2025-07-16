@@ -13,7 +13,8 @@ class EnsureUserApproved
         $user = Auth::user();
 
         if ($user && (!isset($user->is_approved) || !$user->is_approved)) {
-            abort(403, 'Votre compte n\'a pas encore été approuvé par un Admin.');
+            // Rediriger vers la page d'attente d'approbation au lieu d'afficher une erreur 403
+            return redirect()->route('approval.waiting');
         }
 
         return $next($request);

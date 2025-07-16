@@ -10,10 +10,15 @@ return new class extends Migration
     {
         Schema::create('chambres', function (Blueprint $table) {
             $table->id();
-            $table->string('nom'); // ex: Bloc A, Suite 101
-            $table->string('type')->nullable(); // simple, double, suite, etc.
+            $table->string('nom'); // ex: 101, 102, Suite A
+            $table->string('type')->default('standard'); // standard, simple, double, suite, VIP
             $table->string('etage')->nullable();
-            $table->string('statut')->default('active'); // active, inactive
+            $table->string('batiment')->nullable(); // Bloc A, B, C
+            $table->string('statut')->default('active'); // active, inactive, maintenance
+            $table->integer('capacite_lits')->default(1); // nombre de lits dans la chambre
+            $table->decimal('tarif_journalier', 10, 2)->nullable(); // tarif par jour
+            $table->text('description')->nullable();
+            $table->text('equipements')->nullable(); // TV, climatisation, etc.
             $table->timestamps();
         });
     }

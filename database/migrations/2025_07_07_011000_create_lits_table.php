@@ -12,10 +12,13 @@ return new class extends Migration
             $table->id();
             $table->string('numero'); // ex: 1, 2, 3, A1, B2
             $table->unsignedBigInteger('chambre_id');
-            $table->string('statut')->default('libre'); // libre, occupe, maintenance
+            $table->string('statut')->default('libre'); // libre, occupe, maintenance, reserve
+            $table->string('type')->default('standard'); // standard, electrique, manuel
+            $table->text('notes')->nullable(); // notes spéciales sur le lit
             $table->timestamps();
 
             $table->foreign('chambre_id')->references('id')->on('chambres')->onDelete('cascade');
+            $table->unique(['numero', 'chambre_id']); // un numéro unique par chambre
         });
     }
 
