@@ -1,4 +1,3 @@
-voila mon fichier .htaccess donne moi la version correcte juste a copier coller
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
