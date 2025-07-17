@@ -18,18 +18,18 @@
     <!-- Filtres -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
         <form method="GET" action="{{ route('pharmacie.index') }}"
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
             <div>
                 <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Recherche</label>
                 <input type="text" name="search" value="{{ request('search') }}"
                     placeholder="Nom, catégorie, fournisseur..."
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-4 py-3 text-base">
             </div>
 
             <div>
                 <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Statut</label>
                 <select name="statut"
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-4 py-3 text-base">
                     <option value="">Tous les statuts</option>
                     <option value="actif" {{ request('statut')=='actif' ? 'selected' : '' }}>Actif</option>
                     <option value="inactif" {{ request('statut')=='inactif' ? 'selected' : '' }}>Inactif</option>
@@ -40,7 +40,7 @@
             <div>
                 <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Stock</label>
                 <select name="stock"
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-4 py-3 text-base">
                     <option value="">Tous</option>
                     <option value="en_stock" {{ request('stock')=='en_stock' ? 'selected' : '' }}>En stock</option>
                     <option value="rupture" {{ request('stock')=='rupture' ? 'selected' : '' }}>En rupture</option>
@@ -51,16 +51,16 @@
             <div>
                 <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Catégorie</label>
                 <input type="text" name="categorie" value="{{ request('categorie') }}" placeholder="Catégorie..."
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-4 py-3 text-base">
             </div>
 
-            <div class="flex flex-col sm:flex-row items-end gap-2">
+            <div class="flex flex-col sm:flex-row items-end gap-3">
                 <button type="submit"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-base">
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-base w-full sm:w-auto">
                     <i class="fas fa-search mr-2"></i>Filtrer
                 </button>
                 <a href="{{ route('pharmacie.index') }}"
-                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-base text-center">
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-base text-center w-full sm:w-auto">
                     <i class="fas fa-times mr-2"></i>Réinitialiser
                 </a>
             </div>
