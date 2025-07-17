@@ -1,16 +1,17 @@
 <nav
     class="bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200/50 dark:bg-gray-900/95 dark:border-gray-700/50 sticky top-0 z-50 transition-all duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
+    <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+        <div class="flex justify-between items-center h-14 sm:h-16">
             <!-- Logo -->
             <div class="flex-shrink-0">
                 <a href="{{ route('dashboard.superadmin') }}" class="flex items-center space-x-2 group">
-                    <div class="my-2">
-                        <img src="{{ asset('images/logo.png') }}" alt="Logo Clinique" class="h-20 w-20 p-2">
+                    <div class="my-1 sm:my-2">
+                        <img src="{{ asset('images/logo.png') }}" alt="Logo Clinique"
+                            class="h-12 w-12 p-1 sm:h-20 sm:w-20 sm:p-2">
                     </div>
-                    <div class="hidden sm:block">
+                    <div class="block">
                         <h1
-                            class="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                            class="text-base sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                             Clinique Ibn Rochd
                         </h1>
                         <p class="text-xs text-gray-500 dark:text-gray-400 -mt-1">Gestion Médicale</p>
@@ -105,21 +106,32 @@
             </div>
 
             <!-- Right side - User menu and dark mode -->
-            <div class="flex items-center space-x-3">
-                <!-- Dark Mode Toggle (toujours visible) -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <!-- Dark Mode Toggle (inspiré de Laravel Breeze) -->
                 <button type="button" onclick="toggleDarkMode()"
-                    class="relative p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 group">
-                    <span id="darkmode-icon"
-                        class="text-lg transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">🌙</span>
+                    class="relative p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                    <!-- Sun icon -->
+                    <svg class="w-5 h-5 text-gray-900 dark:hidden transition-all duration-300 group-hover:scale-110"
+                        fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    <!-- Moon icon -->
+                    <svg class="w-5 h-5 text-gray-100 hidden dark:block transition-all duration-300 group-hover:scale-110"
+                        fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                    </svg>
                 </button>
                 @auth
-     
+
                 <!-- User Profile -->
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open"
-                        class="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        class="flex items-center space-x-2 sm:space-x-3 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <img src="{{ Auth::user()->profile_photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=4f46e5&color=ffffff&size=128' }}"
-                            alt="Profile" class="w-8 h-8 rounded-lg object-cover border-2 border-blue-500 shadow-md">
+                            alt="Profile"
+                            class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover border-2 border-blue-500 shadow-md">
                         <div class="hidden sm:block text-left">
                             <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ Auth::user()->name }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">{{ Auth::user()->role?->name ??
@@ -133,16 +145,16 @@
                         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                         x-transition:leave="transition ease-in duration-150"
                         x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                        class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50">
+                        class="absolute right-0 mt-2 w-72 sm:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50 max-h-96 overflow-y-auto">
                         <!-- User Info -->
                         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                             <div class="flex items-center space-x-3">
                                 <img src="{{ Auth::user()->profile_photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=4f46e5&color=ffffff&size=128' }}"
-                                    alt="Profile" class="w-10 h-10 rounded-lg object-cover border-2 border-blue-500">
+                                    alt="Profile" class="w-12 h-12 rounded-lg object-cover border-2 border-blue-500">
                                 <div>
-                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
+                                    <p class="text-base font-semibold text-gray-900 dark:text-gray-100">{{
                                         Auth::user()->name }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ Auth::user()->email }}</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ Auth::user()->email }}</p>
                                     <span
                                         class="inline-flex items-center px-2 py-1 mt-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full">
                                         {{ Auth::user()->role?->name ?? 'Utilisateur' }}
@@ -154,81 +166,80 @@
                         <div class="py-1">
                             @if(Auth::user()->role?->name === 'superadmin')
                             <a href="{{ route('dashboard.superadmin') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-home mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-home mr-3 text-gray-400 w-5"></i>
                                 Dashboard
                             </a>
                             <a href="{{ route('superadmin.patients.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-users mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-users mr-3 text-gray-400 w-5"></i>
                                 Patients
                             </a>
                             <a href="{{ route('superadmin.medecins.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-user-md mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-user-md mr-3 text-gray-400 w-5"></i>
                                 Médecins
                             </a>
                             <a href="{{ route('caisses.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-cash-register mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-cash-register mr-3 text-gray-400 w-5"></i>
                                 Caisse
                             </a>
                             <a href="{{ route('rendezvous.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-calendar-alt mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-calendar-alt mr-3 text-gray-400 w-5"></i>
                                 Rendez-vous
                             </a>
                             <a href="{{ route('motifs.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-list-alt mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-list-alt mr-3 text-gray-400 w-5"></i>
                                 Motifs de consultation
                             </a>
                             <a href="{{ route('services.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-stethoscope mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-stethoscope mr-3 text-gray-400 w-5"></i>
                                 Services
                             </a>
                             <a href="{{ route('pharmacie.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-pills mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-pills mr-3 text-gray-400 w-5"></i>
                                 Pharmacie
                             </a>
                             @elseif(Auth::user()->role?->name === 'admin')
                             <a href="{{ route('dashboard.superadmin') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-home mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-home mr-3 text-gray-400 w-5"></i>
                                 Dashboard
                             </a>
                             <a href="{{ route('superadmin.patients.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-users mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-users mr-3 text-gray-400 w-5"></i>
                                 Patients
                             </a>
                             <a href="{{ route('caisses.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-cash-register mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-cash-register mr-3 text-gray-400 w-5"></i>
                                 Caisse
                             </a>
                             <a href="{{ route('rendezvous.index') }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-calendar-alt mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-calendar-alt mr-3 text-gray-400 w-5"></i>
                                 Rendez-vous
-
                             </a>
                             @endif
                             <a href="#"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-user mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-user mr-3 text-gray-400 w-5"></i>
                                 Mon Profil
                             </a>
                             <a href="#"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-cog mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-cog mr-3 text-gray-400 w-5"></i>
                                 Paramètres
                             </a>
                             <a href="#"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-question-circle mr-3 text-gray-400"></i>
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-question-circle mr-3 text-gray-400 w-5"></i>
                                 Aide
                             </a>
                         </div>
@@ -237,8 +248,8 @@
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150">
-                                    <i class="fas fa-sign-out-alt mr-3"></i>
+                                    class="w-full flex items-center px-4 py-3 text-base text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150">
+                                    <i class="fas fa-sign-out-alt mr-3 w-5"></i>
                                     Déconnexion
                                 </button>
                             </form>
@@ -248,8 +259,7 @@
                 @else
                 <!-- Login Link for guests -->
                 <a href="{{ route('login') }}"
-                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
-                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
                     Connexion
                 </a>
                 @endauth
@@ -258,5 +268,14 @@
     </div>
 </nav>
 
-<!-- Alpine.js for dropdown functionality -->
-<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script>
+    function toggleDarkMode() {
+        if (document.documentElement.classList.contains('dark')) {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+</script>
