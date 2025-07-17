@@ -29,14 +29,14 @@
                 <select name="type_service" id="type_service" required
                     class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                     <option value="">-- Sélectionner --</option>
-                    <option value="examen" {{ old('type_service')=='examen' ? 'selected' : '' }}>Examen</option>
-                    <option value="medicament" {{ old('type_service')=='medicament' ? 'selected' : '' }}>Médicament
-                    </option>
-                    <option value="consultation" {{ old('type_service')=='consultation' ? 'selected' : '' }}>
-                        Consultation</option>
-                    <option value="pharmacie" {{ old('type_service')=='pharmacie' ? 'selected' : '' }}>Pharmacie
-                    </option>
-                    <option value="medecins" {{ old('type_service')=='medecins' ? 'selected' : '' }}>Medecins</option>
+                    <option value="consultations" {{ old('type_service')=='consultations' ? 'selected' : '' }}>Consultations</option>
+                    <option value="examens" {{ old('type_service')=='examens' ? 'selected' : '' }}>Examens</option>
+                    <option value="pharmacie" {{ old('type_service')=='pharmacie' ? 'selected' : '' }}>Pharmacie</option>
+                    <option value="infirmerie" {{ old('type_service')=='infirmerie' ? 'selected' : '' }}>Infirmerie</option>
+                    <option value="bloc" {{ old('type_service')=='bloc' ? 'selected' : '' }}>Bloc</option>
+                    <option value="laboratoire" {{ old('type_service')=='laboratoire' ? 'selected' : '' }}>Laboratoire</option>
+                    <option value="hospitalisation" {{ old('type_service')=='hospitalisation' ? 'selected' : '' }}>Hospitalisation</option>
+                    <option value="dentaire" {{ old('type_service')=='dentaire' ? 'selected' : '' }}>Dentaire</option>
                 </select>
                 @error('type_service')
                 <p class="text-sm text-red-500 dark:text-red-300 mt-1">{{ $message }}</p>
