@@ -3,22 +3,18 @@
 @section('content')
 <!-- Hero Section -->
 <section
-    class="hero-section text-white relative overflow-hidden bg-gradient-to-b from-primary-700 to-primary-900 dark:from-gray-900 dark:to-gray-950">
-    <div class="max-w-7xl mx-auto px-4 py-24 md:py-32 text-center relative z-10">
-        <div class="max-w-3xl mx-auto animate-fade-in">
-            <h1 class="text-3xl md:text-4xl font-bold mb-6 leading-tight">
-                Système de gestion médicale<br><br>
-                <span class="font-bold text-5xl md:text-5xl">Clinique </span>
-                <span class="text-secondary-200 font-bold text-5xl md:text-6xl">Ibn Rochd</span>
-            </h1>
-
-            <a href="{{ route('patients.index') }}"
-                class="inline-block bg-white dark:bg-gray-800 text-primary-600 dark:text-white font-semibold px-8 py-4 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <i class="fas fa-users mr-2"></i>Voir les patients
-            </a>
-        </div>
+    class="hero-section text-white relative overflow-hidden bg-gradient-to-b from-primary-700 to-primary-900 dark:from-gray-900 dark:to-gray-950 min-h-[350px] flex items-center justify-center py-12 sm:py-20 md:py-28">
+    <div class="max-w-3xl mx-auto px-2 sm:px-4 text-center relative z-10 animate-fade-in">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-6 leading-tight drop-shadow-lg">
+            Système de gestion médicale<br>
+            <span class="font-extrabold text-4xl sm:text-5xl md:text-6xl">Clinique </span>
+            <span class="text-secondary-200 font-extrabold text-4xl sm:text-5xl md:text-6xl">Ibn Rochd</span>
+        </h1>
+        <a href="{{ route('patients.index') }}"
+            class="inline-block bg-white dark:bg-gray-800 text-primary-600 dark:text-white font-bold px-8 py-4 sm:px-10 sm:py-5 rounded-full shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 text-lg sm:text-xl mt-4">
+            <i class="fas fa-users mr-2"></i>Voir les patients
+        </a>
     </div>
-
     <!-- Waves divider -->
     <div class="absolute bottom-0 left-0 right-0">
         <svg viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"
@@ -34,63 +30,62 @@
         </svg>
     </div>
 </section>
-
 <!-- Features -->
-<section class="max-w-7xl mx-auto px-4 py-16">
-    <div class="text-center mb-16">
-        <h2 class="text-3xl font-bold text-primary-700 dark:text-white mb-4">
+<section class="max-w-7xl mx-auto px-2 sm:px-4 py-10 sm:py-16">
+    <div class="text-center mb-10 sm:mb-16">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-primary-700 dark:text-white mb-4">
             Gestion médicale simplifiée
         </h2>
     </div>
-
-    <div class="grid md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
         <!-- Feature 1 -->
-        <div class="card-hover bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg">
-            <div class="feature-icon bg-blue-50 dark:bg-blue-900/20">
-                <i class="fas fa-user-injured text-primary-600 dark:text-primary-300 text-3xl"></i>
+        <div
+            class="card-hover bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl flex flex-col items-center text-center">
+            <div class="feature-icon bg-blue-50 dark:bg-blue-900/20 mb-4">
+                <i class="fas fa-user-injured text-primary-600 dark:text-primary-300 text-4xl"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">Suivi des patients</h3>
-            <p class="text-gray-600 dark:text-gray-300">
-                Accédez rapidement aux informations médicales et administratives de chaque patient grâce à une
-                interface intuitive.
+            <h3 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Suivi des patients</h3>
+            <p class="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
+                Accédez rapidement aux informations médicales et administratives de chaque patient grâce à une interface
+                intuitive.
             </p>
         </div>
-
         <!-- Feature 2 -->
-        <div class="card-hover bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg">
-            <div class="feature-icon bg-orange-50 dark:bg-orange-900/20">
-                <i class="fas fa-calendar-check text-orange-500 dark:text-orange-300 text-3xl"></i>
+        <div
+            class="card-hover bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl flex flex-col items-center text-center">
+            <div class="feature-icon bg-orange-50 dark:bg-orange-900/20 mb-4">
+                <i class="fas fa-calendar-check text-orange-500 dark:text-orange-300 text-4xl"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">Gestion des rendez-vous</h3>
-            <p class="text-gray-600 dark:text-gray-300">
+            <h3 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Gestion des rendez-vous</h3>
+            <p class="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
                 Planifiez et gérez les rendez-vous en toute simplicité avec notre système de calendrier intelligent.
             </p>
         </div>
-
         <!-- Feature 3 -->
-        <div class="card-hover bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg">
-            <div class="feature-icon bg-green-50 dark:bg-green-900/20">
-                <i class="fas fa-file-invoice-dollar text-green-500 dark:text-green-300 text-3xl"></i>
+        <div
+            class="card-hover bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl flex flex-col items-center text-center">
+            <div class="feature-icon bg-green-50 dark:bg-green-900/20 mb-4">
+                <i class="fas fa-file-invoice-dollar text-green-500 dark:text-green-300 text-4xl"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">Facturation claire</h3>
-            <p class="text-gray-600 dark:text-gray-300">
+            <h3 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Facturation claire</h3>
+            <p class="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
                 Générez des factures précises pour chaque patient en un seul clic et simplifiez votre gestion
                 financière.
             </p>
         </div>
     </div>
 </section>
-
 <!-- CTA Section -->
 <section
-    class="bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-900 dark:to-primary-800 text-white py-16">
-    <div class="max-w-4xl mx-auto px-4 text-center">
-        <h2 class="text-2xl md:text-3xl font-bold mb-6 text-white">Prêt à transformer votre gestion médicale ?</h2>
-        <p class="text-indigo-100 dark:text-indigo-300 text-xl mb-8 max-w-2xl mx-auto">
+    class="bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-900 dark:to-primary-800 text-white py-10 sm:py-16">
+    <div class="max-w-4xl mx-auto px-2 sm:px-4 text-center">
+        <h2 class="text-xl sm:text-2xl md:text-3xl font-extrabold mb-4 text-white">Prêt à transformer votre gestion
+            médicale ?</h2>
+        <p class="text-indigo-100 dark:text-indigo-300 text-base sm:text-xl mb-6 max-w-2xl mx-auto">
             Rejoignez des centaines de professionnels de santé qui utilisent déjà Ibn Rochd
         </p>
         <a href="{{ route('patients.index') }}"
-            class="inline-block bg-white dark:bg-gray-800 text-primary-700 dark:text-white font-semibold px-8 py-4 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            class="inline-block bg-white dark:bg-gray-800 text-primary-700 dark:text-white font-bold px-8 py-4 sm:px-10 sm:py-5 rounded-full shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 text-lg sm:text-xl">
             <i class="fas fa-play-circle mr-2"></i>Commencer maintenant
         </a>
     </div>

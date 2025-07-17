@@ -24,13 +24,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
+        html,
+        body {
+            font-family: 'Poppins', Arial, sans-serif !important;
+        }
+
         .hero-section {
             background-image: linear-gradient(rgba(79, 70, 229, 0.85), rgba(67, 56, 202, 0.9)), url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
+        }
+
+        @media (max-width: 640px) {
+            .hero-section {
+                background-attachment: scroll;
+            }
         }
 
         @keyframes fadeIn {
@@ -68,7 +78,6 @@
             margin: 0 auto 20px;
         }
     </style>
-    {{-- ✅ Pour une meilleure animation --}}
     <style>
         @keyframes fadeIn {
             from {
@@ -88,13 +97,15 @@
     </style>
 </head>
 
-<body class="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100 flex flex-col min-h-screen">
+<body
+    class="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100 flex flex-col min-h-screen text-base sm:text-lg">
 
     {{-- ✅ Navbar --}}
     @include('layouts.navbar')
 
     {{-- ✅ Contenu principal --}}
-    <main class="container mx-auto px-4 py-6 flex-grow fade-in dark:bg-gray-900 dark:text-gray-100">
+    <main
+        class="container w-full max-w-7xl mx-auto px-2 py-4 sm:px-4 sm:py-6 flex-grow fade-in dark:bg-gray-900 dark:text-gray-100">
 
         {{-- ✅ Messages flash --}}
         @foreach (['success' => 'green', 'update' => 'blue', 'delete' => 'red'] as $key => $color)
