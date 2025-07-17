@@ -2,33 +2,34 @@
 @section('title', 'Gestion Pharmacie')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
+<div class="w-full px-0 sm:px-2 lg:px-4 py-4 sm:py-8">
     <!-- En-tête -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestion de la Pharmacie</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-200">Gestion de la Pharmacie</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-2">Gérez votre inventaire de médicaments</p>
         </div>
         <a href="{{ route('pharmacie.create') }}"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center">
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center text-base w-full sm:w-auto justify-center">
             <i class="fas fa-plus mr-2"></i>Nouveau Médicament
         </a>
     </div>
 
     <!-- Filtres -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-        <form method="GET" action="{{ route('pharmacie.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+        <form method="GET" action="{{ route('pharmacie.index') }}"
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recherche</label>
+                <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Recherche</label>
                 <input type="text" name="search" value="{{ request('search') }}"
                     placeholder="Nom, catégorie, fournisseur..."
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Statut</label>
+                <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Statut</label>
                 <select name="statut"
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
                     <option value="">Tous les statuts</option>
                     <option value="actif" {{ request('statut')=='actif' ? 'selected' : '' }}>Actif</option>
                     <option value="inactif" {{ request('statut')=='inactif' ? 'selected' : '' }}>Inactif</option>
@@ -37,9 +38,9 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stock</label>
+                <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Stock</label>
                 <select name="stock"
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
                     <option value="">Tous</option>
                     <option value="en_stock" {{ request('stock')=='en_stock' ? 'selected' : '' }}>En stock</option>
                     <option value="rupture" {{ request('stock')=='rupture' ? 'selected' : '' }}>En rupture</option>
@@ -48,17 +49,18 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catégorie</label>
+                <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Catégorie</label>
                 <input type="text" name="categorie" value="{{ request('categorie') }}" placeholder="Catégorie..."
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
             </div>
 
-            <div class="flex items-end">
-                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
+            <div class="flex flex-col sm:flex-row items-end gap-2">
+                <button type="submit"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-base">
                     <i class="fas fa-search mr-2"></i>Filtrer
                 </button>
                 <a href="{{ route('pharmacie.index') }}"
-                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-base text-center">
                     <i class="fas fa-times mr-2"></i>Réinitialiser
                 </a>
             </div>
@@ -68,7 +70,7 @@
     <!-- Résumé des totaux -->
     @if($resume)
     <div
-        class="alert alert-info my-6 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/10">
+        class="alert alert-info my-4 sm:my-6 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/10 p-4 sm:p-6">
         <h2 class="text-blue-700 dark:text-blue-300 font-semibold mb-4 text-lg flex items-center gap-2">
             <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -76,36 +78,36 @@
             </svg>
             Résumé des données filtrées
         </h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 my-4">
-            <div class="card text-sm flex flex-col items-center">
-                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Total Médicaments</span>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 my-4">
+            <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Total Médicaments</span>
                 <span class="text-blue-700 dark:text-blue-400 text-xl font-bold">{{
                     number_format($resume['total_medicaments'], 0, ',', ' ') }}</span>
             </div>
-            <div class="card text-sm flex flex-col items-center">
-                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Stock Total</span>
+            <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Stock Total</span>
                 <span class="text-green-700 dark:text-green-400 text-xl font-bold">{{
                     number_format($resume['total_stock'], 0, ',', ' ') }} unités</span>
             </div>
-            <div class="card text-sm flex flex-col items-center">
-                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Valeur Stock</span>
+            <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Valeur Stock</span>
                 <span class="text-purple-700 dark:text-purple-400 text-xl font-bold">{{
                     number_format($resume['valeur_stock_vente'], 0, ',', ' ') }} MRU</span>
             </div>
-            <div class="card text-sm flex flex-col items-center">
-                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Marge Moyenne</span>
+            <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Marge Moyenne</span>
                 <span class="text-indigo-700 dark:text-indigo-400 text-xl font-bold">{{
                     number_format($resume['marge_moyenne'], 0, ',', ' ') }} MRU</span>
             </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div class="card text-sm flex flex-col items-center">
-                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">En Rupture</span>
+        <div class="grid grid-cols-2 gap-4 mt-4">
+            <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">En Rupture</span>
                 <span class="text-red-700 dark:text-red-400 text-xl font-bold">{{
                     number_format($resume['medicaments_rupture'], 0, ',', ' ') }}</span>
             </div>
-            <div class="card text-sm flex flex-col items-center">
-                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1">Stock Faible</span>
+            <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Stock Faible</span>
                 <span class="text-yellow-700 dark:text-yellow-400 text-xl font-bold">{{
                     number_format($resume['medicaments_faible_stock'], 0, ',', ' ') }}</span>
             </div>
@@ -115,7 +117,7 @@
 
     <!-- Liste des médicaments -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Liste des Médicaments</h3>
         </div>
 
@@ -124,27 +126,27 @@
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Médicament
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            class="hidden lg:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Prix
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Stock
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            class="hidden md:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Catégorie
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Statut
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Actions
                         </th>
                     </tr>
@@ -152,15 +154,15 @@
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     @forelse($pharmacies as $pharmacie)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10">
+                                <div class="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
                                     <div
-                                        class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                                        <i class="fas fa-pills text-blue-600 dark:text-blue-400"></i>
+                                        class="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                        <i class="fas fa-pills text-blue-600 dark:text-blue-400 text-sm"></i>
                                     </div>
                                 </div>
-                                <div class="ml-4">
+                                <div class="ml-3 sm:ml-4">
                                     <div class="text-sm font-medium text-gray-900 dark:text-gray-200">
                                         {{ $pharmacie->nom_medicament }}
                                     </div>
@@ -170,7 +172,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="hidden lg:table-cell px-3 sm:px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-gray-200">
                                 <div>Achat: {{ number_format($pharmacie->prix_achat, 0, ',', ' ') }} MRU</div>
                                 <div>Vente: {{ number_format($pharmacie->prix_vente, 0, ',', ' ') }} MRU</div>
@@ -178,7 +180,7 @@
                                     ',', ' ') }} MRU</div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900 dark:text-gray-200">
                                 {{ $pharmacie->stock }}
                             </div>
@@ -198,10 +200,11 @@
                                 </span>
                                 @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                        <td
+                            class="hidden md:table-cell px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
                             {{ $pharmacie->categorie ?? 'N/A' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                             @switch($pharmacie->statut)
                             @case('actif')
                             <span
@@ -223,14 +226,14 @@
                             @break
                             @endswitch
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
                                 <a href="{{ route('pharmacie.show', $pharmacie->id) }}"
-                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <a href="{{ route('pharmacie.edit', $pharmacie->id) }}"
-                                    class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                                    class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 p-1">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <form action="{{ route('pharmacie.destroy', $pharmacie->id) }}" method="POST"
@@ -238,7 +241,7 @@
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
-                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1"
                                         onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce médicament ?')">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -248,7 +251,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="6" class="px-4 sm:px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                             Aucun médicament trouvé.
                         </td>
                     </tr>
@@ -257,7 +260,8 @@
             </table>
         </div>
 
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <!-- Pagination -->
+        <div class="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
             {{ $pharmacies->links() }}
         </div>
     </div>

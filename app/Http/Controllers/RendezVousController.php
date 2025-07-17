@@ -48,7 +48,7 @@ class RendezVousController extends Controller
 
         $rendezVous = $query->orderBy('date_rdv', 'asc')
             ->orderBy('heure_rdv', 'asc')
-            ->get();
+            ->paginate(15);
 
         $medecins = Medecin::where('statut', 'actif')->get();
         $patients = GestionPatient::all();
