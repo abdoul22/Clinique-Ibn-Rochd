@@ -4,10 +4,10 @@
 
 @section('content')
 <div class="w-full px-0 sm:px-2 lg:px-4 py-4 sm:py-8">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-4">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 sm:mb-6 gap-4">
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-200">Gestion des Rendez-vous</h1>
         <a href="{{ route('rendezvous.create') }}"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-base sm:text-lg w-full sm:w-auto text-center">
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-base w-full sm:w-auto text-center lg:w-auto">
             <i class="fas fa-plus mr-2"></i>Nouveau Rendez-vous
         </a>
     </div>
@@ -15,11 +15,11 @@
     <!-- Filtres -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
         <form method="GET" action="{{ route('rendezvous.index') }}"
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div>
+            class="flex flex-col lg:flex-row lg:space-x-4 space-y-4 lg:space-y-0">
+            <div class="flex-1 min-w-[180px]">
                 <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Médecin</label>
                 <select name="medecin_id"
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 text-base">
                     <option value="">Tous les médecins</option>
                     @foreach($medecins as $medecin)
                     <option value="{{ $medecin->id }}" {{ request('medecin_id')==$medecin->id ? 'selected' : '' }}>
@@ -28,38 +28,34 @@
                     @endforeach
                 </select>
             </div>
-
-            <div>
+            <div class="flex-1 min-w-[150px]">
                 <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Date</label>
                 <input type="date" name="date" value="{{ request('date') }}"
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 text-base">
             </div>
-
-            <div>
+            <div class="flex-1 min-w-[150px]">
                 <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Statut</label>
                 <select name="statut"
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 text-base">
                     <option value="">Tous les statuts</option>
                     <option value="confirme" {{ request('statut')=='confirme' ? 'selected' : '' }}>Confirmé</option>
                     <option value="annule" {{ request('statut')=='annule' ? 'selected' : '' }}>Annulé</option>
                 </select>
             </div>
-
-            <div>
+            <div class="flex-1 min-w-[180px]">
                 <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Téléphone
                     patient</label>
                 <input type="text" name="patient_phone" value="{{ request('patient_phone') }}"
                     placeholder="Numéro du patient"
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-3 text-base">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 text-base">
             </div>
-
-            <div class="flex flex-col sm:flex-row items-end gap-2">
+            <div class="flex flex-row space-x-2 items-end lg:items-center">
                 <button type="submit"
-                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg text-base">
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-base w-full sm:w-auto lg:w-auto">
                     <i class="fas fa-search mr-2"></i>Filtrer
                 </button>
                 <a href="{{ route('rendezvous.index') }}"
-                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-base text-center">
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-base w-full sm:w-auto lg:w-auto text-center">
                     <i class="fas fa-times mr-2"></i>Réinitialiser
                 </a>
             </div>
