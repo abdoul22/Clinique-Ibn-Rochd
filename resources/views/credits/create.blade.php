@@ -108,7 +108,8 @@
         </div>
 
         <div>
-            <button type="submit" class="form-button">
+            <button type="submit" id="submitBtn" class="form-button"
+                onclick="this.disabled=true; this.innerHTML='<span class=\'inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2\'></span>Ajout en cours...'; this.form.submit();">
                 Enregistrer
             </button>
         </div>

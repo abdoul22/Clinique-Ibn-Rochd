@@ -29,13 +29,18 @@
                 <select name="type_service" id="type_service" required
                     class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                     <option value="">-- Sélectionner --</option>
-                    <option value="consultations" {{ old('type_service')=='consultations' ? 'selected' : '' }}>Consultations</option>
+                    <option value="consultations" {{ old('type_service')=='consultations' ? 'selected' : '' }}>
+                        Consultations</option>
                     <option value="examens" {{ old('type_service')=='examens' ? 'selected' : '' }}>Examens</option>
-                    <option value="pharmacie" {{ old('type_service')=='pharmacie' ? 'selected' : '' }}>Pharmacie</option>
-                    <option value="infirmerie" {{ old('type_service')=='infirmerie' ? 'selected' : '' }}>Infirmerie</option>
+                    <option value="pharmacie" {{ old('type_service')=='pharmacie' ? 'selected' : '' }}>Pharmacie
+                    </option>
+                    <option value="infirmerie" {{ old('type_service')=='infirmerie' ? 'selected' : '' }}>Infirmerie
+                    </option>
                     <option value="bloc" {{ old('type_service')=='bloc' ? 'selected' : '' }}>Bloc</option>
-                    <option value="laboratoire" {{ old('type_service')=='laboratoire' ? 'selected' : '' }}>Laboratoire</option>
-                    <option value="hospitalisation" {{ old('type_service')=='hospitalisation' ? 'selected' : '' }}>Hospitalisation</option>
+                    <option value="laboratoire" {{ old('type_service')=='laboratoire' ? 'selected' : '' }}>Laboratoire
+                    </option>
+                    <option value="hospitalisation" {{ old('type_service')=='hospitalisation' ? 'selected' : '' }}>
+                        Hospitalisation</option>
                     <option value="dentaire" {{ old('type_service')=='dentaire' ? 'selected' : '' }}>Dentaire</option>
                 </select>
                 @error('type_service')
@@ -55,8 +60,11 @@
         </div>
 
         <div class="mt-6 flex justify-end">
-            <button type="submit"
-                class="bg-blue-600 dark:bg-blue-700 text-white px-6 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-800 transition font-semibold shadow">Ajouter</button>
+            <button type="submit" id="submitBtn"
+                class="bg-blue-600 dark:bg-blue-700 text-white px-6 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-800 transition font-semibold shadow"
+                onclick="this.disabled=true; this.innerHTML='<span class=\'inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2\'></span>Ajout en cours...'; this.form.submit();">
+                Ajouter
+            </button>
         </div>
     </form>
 </div>

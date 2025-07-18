@@ -38,7 +38,10 @@
         </div>
 
         <div class="mt-6 flex justify-end">
-            <button type="submit" class="form-button">Ajouter</button>
+            <button type="submit" id="submitBtn" class="form-button"
+                onclick="this.disabled=true; this.innerHTML='<span class=\'inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2\'></span>Ajout en cours...'; this.form.submit();">
+                Ajouter
+            </button>
         </div>
     </form>
 </div>

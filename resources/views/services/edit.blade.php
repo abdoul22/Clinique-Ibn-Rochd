@@ -19,9 +19,11 @@
         <div class="flex justify-end space-x-2">
             <a href="{{ route('services.index') }}"
                 class="bg-gray-600 dark:bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-700 dark:hover:bg-gray-800">Annuler</a>
-            <button type="submit"
-                class="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-800">Mettre
-                à jour</button>
+            <button type="submit" id="submitBtn"
+                class="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-800"
+                onclick="this.disabled=true; this.innerHTML='<span class=\'inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2\'></span>Mise à jour en cours...'; this.form.submit();">
+                Mettre à jour
+            </button>
         </div>
     </form>
 </div>

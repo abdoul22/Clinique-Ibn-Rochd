@@ -28,8 +28,11 @@
         </div>
 
         <div class="mt-6 flex justify-end">
-            <button type="submit"
-                class="bg-blue-600 dark:bg-blue-700 text-white px-6 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-800 transition font-semibold shadow">Ajouter</button>
+            <button type="submit" id="submitBtn"
+                class="bg-blue-600 dark:bg-blue-700 text-white px-6 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-800 transition font-semibold shadow"
+                onclick="this.disabled=true; this.innerHTML='<span class=\'inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2\'></span>Ajout en cours...'; this.form.submit();">
+                Ajouter
+            </button>
         </div>
     </form>
 </div>
