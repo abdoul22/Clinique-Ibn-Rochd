@@ -58,7 +58,7 @@ class ServiceController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'type_service' => 'required|in:examen,medicament,consultation,pharmacie,medecins',
+            'type_service' => 'required|in:consultations,examens,pharmacie,infirmerie,bloc,laboratoire,hospitalisation,dentaire',
             'pharmacie_id' => 'nullable|exists:pharmacies,id',
             'prix' => 'nullable|numeric|min:0',
             'quantite_defaut' => 'nullable|integer|min:1'
@@ -100,7 +100,7 @@ class ServiceController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'type_service' => 'required|in:examen,medicament,consultation,pharmacie,medecins',
+            'type_service' => 'required|in:consultations,examens,pharmacie,infirmerie,bloc,laboratoire,hospitalisation,dentaire',
             'pharmacie_id' => 'nullable|exists:pharmacies,id',
             'prix' => 'nullable|numeric|min:0',
             'quantite_defaut' => 'nullable|integer|min:1'
