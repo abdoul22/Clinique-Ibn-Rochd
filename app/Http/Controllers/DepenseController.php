@@ -22,12 +22,11 @@ class DepenseController extends Controller
 
         $query = Depense::with(['modePaiement', 'credit']);
 
-        // Exclure les crédits personnel et assurance des dépenses
+        // Exclure les crédits personnel des dépenses (ils sont payés par déduction salaire)
         $query->where(function ($q) {
             $q->whereNull('credit_id')
                 ->orWhereHas('credit', function ($creditQuery) {
-                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class)
-                        ->where('source_type', '!=', \App\Models\Assurance::class);
+                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
                 });
         });
 
@@ -60,17 +59,15 @@ class DepenseController extends Controller
             $query->where('nom', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->has('source') && in_array($request->source, ['manuelle', 'automatique', 'part_medecin', 'deduction_salaire'])) {
+        if ($request->has('source') && in_array($request->source, ['manuelle', 'automatique', 'part_medecin'])) {
             if ($request->source === 'part_medecin') {
                 $query->where('nom', 'like', '%Part médecin%');
-            } elseif ($request->source === 'deduction_salaire') {
-                $query->where('mode_paiement_id', 'salaire');
             } else {
                 $query->where('source', $request->source);
             }
         }
 
-        if ($request->has('mode_paiement') && in_array($request->mode_paiement, ['espèces', 'bankily', 'masrivi', 'sedad', 'salaire'])) {
+        if ($request->has('mode_paiement') && in_array($request->mode_paiement, ['espèces', 'bankily', 'masrivi', 'sedad'])) {
             $query->where('mode_paiement_id', $request->mode_paiement);
         }
 

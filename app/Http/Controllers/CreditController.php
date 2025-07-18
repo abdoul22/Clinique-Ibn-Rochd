@@ -99,14 +99,8 @@ class CreditController extends Controller
 
         $credit->save();
 
-        // Créer une dépense pour le salaire déduit
-        Depense::create([
-            'nom' => "Déduction salaire - Crédit personnel : {$personnel->nom}",
-            'montant' => $montant,
-            'mode_paiement_id' => 'salaire',
-            'source' => 'automatique',
-            'etat_caisse_id' => null,
-        ]);
+        // Ne pas créer de dépense pour les crédits personnel car c'est un prélèvement sur salaire
+        // Les crédits personnel ne sont pas des sorties d'argent de la caisse
 
         // Mettre à jour le crédit du personnel
         $personnel->updateCredit();

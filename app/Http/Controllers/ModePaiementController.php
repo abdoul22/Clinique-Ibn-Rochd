@@ -26,7 +26,7 @@ class ModePaiementController extends Controller
 
         $totalCaisse = Caisse::sum('total');
 
-        // Calculer les dépenses (exclure seulement les crédits personnel)
+        // Calculer les dépenses (exclure les crédits personnel car ils sont payés par déduction salaire)
         $totalDepenses = Depense::where(function ($q) {
             $q->whereNull('credit_id')
                 ->orWhereHas('credit', function ($creditQuery) {
@@ -103,7 +103,7 @@ class ModePaiementController extends Controller
         // Récupérer les dépenses
         $queryDepenses = Depense::with(['modePaiement', 'credit']);
 
-        // Exclure seulement les crédits personnel
+        // Exclure les crédits personnel (ils sont payés par déduction salaire, pas par sortie de caisse)
         $queryDepenses->where(function ($q) {
             $q->whereNull('credit_id')
                 ->orWhereHas('credit', function ($creditQuery) {

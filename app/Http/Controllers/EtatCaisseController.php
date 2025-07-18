@@ -58,7 +58,12 @@ class EtatCaisseController extends Controller
         $totalRecette = Caisse::sum('total');
         $totalPartMedecin = EtatCaisse::where('validated', true)->sum('part_medecin');
         $totalPartCabinet = $totalRecette - $totalPartMedecin;
-        $totalDepense = Depense::sum('montant');
+        $totalDepense = Depense::where(function ($q) {
+            $q->whereNull('credit_id')
+                ->orWhereHas('credit', function ($creditQuery) {
+                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
+                });
+        })->sum('montant');
 
         $totalCreditPersonnel = max(
             Credit::where('source_type', \App\Models\Personnel::class)->sum('montant') -
@@ -96,7 +101,13 @@ class EtatCaisseController extends Controller
             $recetteCaisse = Caisse::whereDate('created_at', $date)->sum('total');
             $partMedecin = EtatCaisse::whereDate('created_at', $date)->where('validated', true)->sum('part_medecin');
             $partCabinet = $recetteCaisse - $partMedecin;
-            $depense = Depense::whereDate('created_at', $date)->sum('montant');
+            $depense = Depense::whereDate('created_at', $date)
+                ->where(function ($q) {
+                    $q->whereNull('credit_id')
+                        ->orWhereHas('credit', function ($creditQuery) {
+                            $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
+                        });
+                })->sum('montant');
 
             $creditPersonnel = max(
                 Credit::where('source_type', \App\Models\Personnel::class)->whereDate('created_at', $date)->sum('montant') -
@@ -438,8 +449,13 @@ class EtatCaisseController extends Controller
         // Récupération de la part clinique
         $part_clinique = Examen::sum('part_cabinet');
 
-        // Dépenses totales
-        $depense = Depense::sum('montant');
+        // Dépenses totales (exclure les crédits personnel)
+        $depense = Depense::where(function ($q) {
+            $q->whereNull('credit_id')
+                ->orWhereHas('credit', function ($creditQuery) {
+                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
+                });
+        })->sum('montant');
 
         // Total des crédits du personnel
         $credit_personnel = Personnel::sum('credit');

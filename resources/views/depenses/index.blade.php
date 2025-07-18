@@ -104,8 +104,7 @@
             <option value="bankily" {{ request('mode_paiement')=='bankily' ? 'selected' : '' }}>Bankily</option>
             <option value="masrivi" {{ request('mode_paiement')=='masrivi' ? 'selected' : '' }}>Masrivi</option>
             <option value="sedad" {{ request('mode_paiement')=='sedad' ? 'selected' : '' }}>Sedad</option>
-            <option value="salaire" {{ request('mode_paiement')=='salaire' ? 'selected' : '' }}>Déduction salariale
-            </option>
+
         </select>
 
         <label for="source" class="text-sm font-medium text-gray-700 dark:text-gray-300 ml-4">Source :</label>
@@ -114,8 +113,7 @@
             <option value="manuelle" {{ request('source')=='manuelle' ? 'selected' : '' }}>Manuelle</option>
             <option value="automatique" {{ request('source')=='automatique' ? 'selected' : '' }}>Automatique</option>
             <option value="part_medecin" {{ request('source')=='part_medecin' ? 'selected' : '' }}>Part médecin</option>
-            <option value="deduction_salaire" {{ request('source')=='deduction_salaire' ? 'selected' : '' }}>Déduction
-                salariale</option>
+
         </select>
     </form>
     </form>
