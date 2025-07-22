@@ -182,13 +182,13 @@ class CaisseController extends Controller
 
         EtatCaisse::create([
             'designation' => 'Facture caisse n°' . $caisse->id,
-            'recette' => $caisse->total,
+            'recette' => $montantPatient, // Correction : seulement la part payée par le patient
             'part_medecin' => $part_medecin,
             'part_clinique' => $part_cabinet,
             'depense' => 0,
             'credit_personnel' => null,
             'personnel_id' => null,
-            'assurance_id' => $caisse->assurance_id, // ✅ fonctionne enfin
+            'assurance_id' => $caisse->assurance_id,
             'caisse_id' => $caisse->id,
             'medecin_id' => $caisse->medecin_id,
         ]);

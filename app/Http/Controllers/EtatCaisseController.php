@@ -55,7 +55,7 @@ class EtatCaisseController extends Controller
         $caisse = Caisse::all();
 
         // 🔹 Résumé GLOBAL (toutes dates)
-        $totalRecette = Caisse::sum('total');
+        $totalRecette = EtatCaisse::sum('recette'); // Utiliser EtatCaisse au lieu de Caisse
         $totalPartMedecin = EtatCaisse::where('validated', true)->sum('part_medecin');
         $totalPartCabinet = $totalRecette - $totalPartMedecin;
         $totalDepense = Depense::where('rembourse', false)->sum('montant');
@@ -93,7 +93,7 @@ class EtatCaisseController extends Controller
         // 🔹 Résumé FILTRÉ (si une date est fournie)
         $date = $request->date;
         if ($date) {
-            $recetteCaisse = Caisse::whereDate('created_at', $date)->sum('total');
+            $recetteCaisse = EtatCaisse::whereDate('created_at', $date)->sum('recette'); // Utiliser EtatCaisse
             $partMedecin = EtatCaisse::whereDate('created_at', $date)->where('validated', true)->sum('part_medecin');
             $partCabinet = $recetteCaisse - $partMedecin;
             $depense = Depense::whereDate('created_at', $date)

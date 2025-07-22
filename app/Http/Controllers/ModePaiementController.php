@@ -6,6 +6,7 @@ use App\Models\Caisse;
 use App\Models\ModePaiement;
 use App\Models\Depense;
 use Illuminate\Http\Request;
+use App\Models\EtatCaisse; // Added this import
 
 class ModePaiementController extends Controller
 {
@@ -24,7 +25,7 @@ class ModePaiementController extends Controller
         // Récupérer les types de modes de paiement uniques
         $typesModes = ModePaiement::distinct()->pluck('type')->toArray();
 
-        $totalCaisse = Caisse::sum('total');
+        $totalCaisse = EtatCaisse::sum('recette'); // Utiliser EtatCaisse au lieu de Caisse
 
         // Calculer les dépenses (exclure les crédits personnel car ils sont payés par déduction salaire)
         $totalDepenses = Depense::where('rembourse', false)->sum('montant');
@@ -49,9 +50,9 @@ class ModePaiementController extends Controller
             $montantTotal = ModePaiement::where('type', $type)->sum('montant');
 
             // Calculer les entrées (recettes) pour ce mode de paiement
-            $entree = Caisse::whereHas('mode_paiements', function ($query) use ($type) {
+            $entree = EtatCaisse::whereHas('caisse.mode_paiements', function ($query) use ($type) {
                 $query->where('type', $type);
-            })->sum('total');
+            })->sum('recette'); // Utiliser la recette réelle d'EtatCaisse
 
             // Ajouter SEULEMENT les paiements de crédits d'assurance (vraies recettes)
             $entree += ModePaiement::where('type', $type)
@@ -120,7 +121,7 @@ class ModePaiementController extends Controller
         $depenses = $queryDepenses->orderBy('created_at', 'desc')->get();
 
         // Récupérer les recettes (entrées) de la caisse
-        $queryRecettes = Caisse::with(['mode_paiements', 'patient', 'medecin', 'examen']);
+        $queryRecettes = EtatCaisse::with(['caisse.mode_paiements', 'caisse.patient', 'medecin', 'caisse.examen']);
 
         // Filtres pour les recettes
         if ($request->filled('date_debut')) {
@@ -130,18 +131,20 @@ class ModePaiementController extends Controller
             $queryRecettes->whereDate('created_at', '<=', $request->date_fin);
         }
         if ($request->filled('mode_paiement')) {
-            $queryRecettes->whereHas('mode_paiements', function ($query) use ($request) {
+            $queryRecettes->whereHas('caisse.mode_paiements', function ($query) use ($request) {
                 $query->where('type', $request->mode_paiement);
             });
         }
         if ($request->filled('search')) {
             $search = $request->search;
             $queryRecettes->where(function ($q) use ($search) {
-                $q->where('numero_facture', 'like', "%{$search}%")
-                    ->orWhere('total', 'like', "%{$search}%")
-                    ->orWhereHas('patient', function ($patientQuery) use ($search) {
-                        $patientQuery->where('nom', 'like', "%{$search}%");
-                    });
+                $q->whereHas('caisse', function ($caisseQuery) use ($search) {
+                    $caisseQuery->where('numero_facture', 'like', "%{$search}%")
+                        ->orWhereHas('patient', function ($patientQuery) use ($search) {
+                            $patientQuery->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        });
+                });
             });
         }
 
@@ -189,12 +192,12 @@ class ModePaiementController extends Controller
 
         // Ajouter les recettes comme entrées
         foreach ($recettes as $recette) {
-            $modePaiement = $recette->mode_paiements->first();
+            $modePaiement = $recette->caisse?->mode_paiements?->first();
             $operations->push([
                 'type' => 'recette',
                 'date' => $recette->created_at,
-                'description' => "Facture #{$recette->numero_facture} - " . ($recette->patient ? $recette->patient->nom : 'Patient inconnu'),
-                'montant' => $recette->total,
+                'description' => "Facture #{$recette->caisse?->numero_facture} - " . ($recette->caisse?->patient ? $recette->caisse->patient->first_name . ' ' . $recette->caisse->patient->last_name : 'Patient inconnu'),
+                'montant' => $recette->recette, // Utiliser la recette réelle
                 'mode_paiement' => $modePaiement ? $modePaiement->type : 'N/A',
                 'source' => 'caisse',
                 'operation' => 'entree',
@@ -236,7 +239,7 @@ class ModePaiementController extends Controller
 
         // Calculer les totaux
         $totalDepenses = $depenses->sum('montant');
-        $totalRecettes = $recettes->sum('total');
+        $totalRecettes = $recettes->sum('recette'); // Utiliser la recette réelle
 
         // Séparer les vrais paiements de crédits (assurance) des remboursements de dettes (personnel)
         $totalPaiementsCreditsAssurance = $paiementsCredits->where('source', 'credit_assurance')->sum('montant');
