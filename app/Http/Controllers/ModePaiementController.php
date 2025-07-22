@@ -27,15 +27,12 @@ class ModePaiementController extends Controller
         $totalCaisse = Caisse::sum('total');
 
         // Calculer les dépenses (exclure les crédits personnel car ils sont payés par déduction salaire)
-        $totalDepenses = Depense::where(function ($q) {
-            $q->whereNull('credit_id')
-                ->orWhereHas('credit', function ($creditQuery) {
-                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
-                });
-        })->sum('montant');
+        $totalDepenses = Depense::where('rembourse', false)->sum('montant');
 
-        // Ajouter les paiements de crédits d'assurance comme entrées de trésorerie
-        $paiementsCreditsAssurance = ModePaiement::whereNull('caisse_id')->sum('montant');
+        // Ajouter SEULEMENT les paiements de crédits d'assurance comme entrées de trésorerie (vraies recettes)
+        $paiementsCreditsAssurance = ModePaiement::whereNull('caisse_id')
+            ->where('source', 'credit_assurance')
+            ->sum('montant');
         $totalCaisse += $paiementsCreditsAssurance;
 
         $soldeDisponible = $totalCaisse - $totalDepenses;
@@ -56,19 +53,15 @@ class ModePaiementController extends Controller
                 $query->where('type', $type);
             })->sum('total');
 
-            // Ajouter les paiements de crédits d'assurance pour ce mode de paiement
+            // Ajouter SEULEMENT les paiements de crédits d'assurance (vraies recettes)
             $entree += ModePaiement::where('type', $type)
                 ->whereNull('caisse_id')
+                ->where('source', 'credit_assurance')
                 ->sum('montant');
 
             // Calculer les sorties (dépenses) pour ce mode de paiement
             $sortie = Depense::where('mode_paiement_id', $type)
-                ->where(function ($q) {
-                    $q->whereNull('credit_id')
-                        ->orWhereHas('credit', function ($creditQuery) {
-                            $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
-                        });
-                })
+                ->where('rembourse', false)
                 ->sum('montant');
 
             $solde = $entree - $sortie;
@@ -103,13 +96,8 @@ class ModePaiementController extends Controller
         // Récupérer les dépenses
         $queryDepenses = Depense::with(['modePaiement', 'credit']);
 
-        // Exclure les crédits personnel (ils sont payés par déduction salaire, pas par sortie de caisse)
-        $queryDepenses->where(function ($q) {
-            $q->whereNull('credit_id')
-                ->orWhereHas('credit', function ($creditQuery) {
-                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
-                });
-        });
+        // Suppression de l'exclusion : on affiche toutes les dépenses
+        $queryDepenses->where('rembourse', false);
 
         // Filtres pour les dépenses
         if ($request->filled('date_debut')) {
@@ -214,15 +202,18 @@ class ModePaiementController extends Controller
             ]);
         }
 
-        // Ajouter les paiements de crédits d'assurance comme entrées
+        // Ajouter les paiements de crédits d'assurance et personnel comme entrées
         foreach ($paiementsCredits as $paiement) {
+            $isPersonnel = $paiement->source === 'credit_personnel';
             $operations->push([
-                'type' => 'paiement_credit_assurance',
+                'type' => $isPersonnel ? 'paiement_credit_personnel' : 'paiement_credit_assurance',
                 'date' => $paiement->created_at,
-                'description' => "Paiement crédit assurance - {$paiement->type}",
+                'description' => $isPersonnel
+                    ? "Paiement crédit personnel - {$paiement->type}"
+                    : "Paiement crédit assurance - {$paiement->type}",
                 'montant' => $paiement->montant,
                 'mode_paiement' => $paiement->type,
-                'source' => 'credit_assurance',
+                'source' => $isPersonnel ? 'credit_personnel' : 'credit_assurance',
                 'operation' => 'entree',
                 'data' => $paiement
             ]);
@@ -246,8 +237,12 @@ class ModePaiementController extends Controller
         // Calculer les totaux
         $totalDepenses = $depenses->sum('montant');
         $totalRecettes = $recettes->sum('total');
-        $totalPaiementsCredits = $paiementsCredits->sum('montant');
-        $totalRecettesAvecCredits = $totalRecettes + $totalPaiementsCredits;
+
+        // Séparer les vrais paiements de crédits (assurance) des remboursements de dettes (personnel)
+        $totalPaiementsCreditsAssurance = $paiementsCredits->where('source', 'credit_assurance')->sum('montant');
+        $totalRemboursementsPersonnel = $paiementsCredits->where('source', 'credit_personnel')->sum('montant');
+
+        $totalRecettesAvecCredits = $totalRecettes + $totalPaiementsCreditsAssurance;
         $totalOperations = $totalRecettesAvecCredits - $totalDepenses;
 
         $modes = ModePaiement::all();
@@ -258,6 +253,8 @@ class ModePaiementController extends Controller
             'totalRecettes' => $totalRecettes,
             'totalRecettesAvecCredits' => $totalRecettesAvecCredits,
             'totalOperations' => $totalOperations,
+            'totalPaiementsCreditsAssurance' => $totalPaiementsCreditsAssurance,
+            'totalRemboursementsPersonnel' => $totalRemboursementsPersonnel,
             'modes' => $modes,
         ]);
     }

@@ -21,14 +21,15 @@ class DepenseController extends Controller
         $dateEnd = $request->input('date_end');
 
         $query = Depense::with(['modePaiement', 'credit']);
+        $query->where('rembourse', false);
 
-        // Exclure les crédits personnel des dépenses (ils sont payés par déduction salaire)
-        $query->where(function ($q) {
-            $q->whereNull('credit_id')
-                ->orWhereHas('credit', function ($creditQuery) {
-                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
-                });
-        });
+        // Ancienne exclusion supprimée :
+        // $query->where(function ($q) {
+        //     $q->whereNull('credit_id')
+        //         ->orWhereHas('credit', function ($creditQuery) {
+        //             $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
+        //         });
+        // });
 
         // Filtrage par période
         if ($period === 'day' && $date) {
@@ -74,7 +75,7 @@ class DepenseController extends Controller
         $depenses = $query->latest()->paginate(10);
 
         // Calculer le total des dépenses (excluant les crédits personnel et assurance)
-        $totalDepenses = $query->sum('montant');
+        $totalDepenses = Depense::where('rembourse', false)->sum('montant');
 
         return view('depenses.index', ['depenses' => $depenses]);
     }

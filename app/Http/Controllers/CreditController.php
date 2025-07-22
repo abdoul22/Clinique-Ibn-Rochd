@@ -91,16 +91,34 @@ class CreditController extends Controller
         // Mettre à jour le crédit
         $credit->montant_paye += $montant;
 
+        // Mettre à jour dynamiquement le montant de la dépense liée
+        $depense = $credit->depense;
+        if ($depense) {
+            $nouveauMontant = max($credit->montant - $credit->montant_paye, 0);
+            $depense->montant = $nouveauMontant;
+            $depense->save();
+        }
+
         if ($credit->montant_paye >= $credit->montant) {
             $credit->status = 'payé';
+            // Marquer la dépense liée comme remboursée
+            if ($depense) {
+                $depense->rembourse = true;
+                $depense->save();
+            }
         } else {
             $credit->status = 'partiellement payé';
         }
 
         $credit->save();
 
-        // Ne pas créer de dépense pour les crédits personnel car c'est un prélèvement sur salaire
-        // Les crédits personnel ne sont pas des sorties d'argent de la caisse
+        // Créer une recette (entrée) pour le remboursement du crédit
+        \App\Models\ModePaiement::create([
+            'type' => 'espèces',
+            'montant' => $montant,
+            'caisse_id' => null,
+            'source' => 'credit_personnel',
+        ]);
 
         // Mettre à jour le crédit du personnel
         $personnel->updateCredit();
@@ -148,6 +166,7 @@ class CreditController extends Controller
             'type' => $request->mode_paiement_id,
             'montant' => $montant,
             'caisse_id' => null, // Pas de caisse pour les remboursements
+            'source' => 'credit_assurance', // Ajout explicite
         ]);
 
         // Mise à jour du crédit de la source
@@ -215,7 +234,7 @@ class CreditController extends Controller
             'mode_paiement' => $modePaiementId,
         ]);
 
-        Credit::create([
+        $credit = Credit::create([
             'source_type' => $sourceType,
             'source_id' => $sourceId,
             'montant' => $request->montant,
@@ -224,6 +243,18 @@ class CreditController extends Controller
             'montant_paye' => 0,
             'mode_paiement_id' => $modePaiementId
         ]);
+
+        // Création automatique d'une dépense pour les crédits du personnel
+        if ($sourceType === \App\Models\Personnel::class) {
+            \App\Models\Depense::create([
+                'nom' => "Crédit accordé à $sourceNom",
+                'montant' => $request->montant,
+                'etat_caisse_id' => null,
+                'mode_paiement_id' => 'espèces', // Correction : mode de paiement par défaut
+                'source' => 'crédit personnel',
+                'credit_id' => $credit->id,
+            ]);
+        }
 
         // Mettre à jour le crédit de la source
         if ($sourceType === \App\Models\Personnel::class) {

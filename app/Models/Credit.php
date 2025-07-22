@@ -45,6 +45,11 @@ class Credit extends Model
         return $this->source?->nom ?? '—';
     }
 
+    public function depense()
+    {
+        return $this->hasOne(\App\Models\Depense::class, 'credit_id');
+    }
+
     public function deduireCredit()
     {
         if (method_exists($this->source, 'updateCredit')) {

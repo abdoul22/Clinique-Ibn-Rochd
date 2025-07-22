@@ -58,12 +58,7 @@ class EtatCaisseController extends Controller
         $totalRecette = Caisse::sum('total');
         $totalPartMedecin = EtatCaisse::where('validated', true)->sum('part_medecin');
         $totalPartCabinet = $totalRecette - $totalPartMedecin;
-        $totalDepense = Depense::where(function ($q) {
-            $q->whereNull('credit_id')
-                ->orWhereHas('credit', function ($creditQuery) {
-                    $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
-                });
-        })->sum('montant');
+        $totalDepense = Depense::where('rembourse', false)->sum('montant');
 
         $totalCreditPersonnel = max(
             Credit::where('source_type', \App\Models\Personnel::class)->sum('montant') -
@@ -102,12 +97,8 @@ class EtatCaisseController extends Controller
             $partMedecin = EtatCaisse::whereDate('created_at', $date)->where('validated', true)->sum('part_medecin');
             $partCabinet = $recetteCaisse - $partMedecin;
             $depense = Depense::whereDate('created_at', $date)
-                ->where(function ($q) {
-                    $q->whereNull('credit_id')
-                        ->orWhereHas('credit', function ($creditQuery) {
-                            $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
-                        });
-                })->sum('montant');
+                ->where('rembourse', false)
+                ->sum('montant');
 
             $creditPersonnel = max(
                 Credit::where('source_type', \App\Models\Personnel::class)->whereDate('created_at', $date)->sum('montant') -

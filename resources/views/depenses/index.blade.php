@@ -191,7 +191,15 @@
             @foreach($depenses as $depense)
             <tr class="table-row hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="table-cell">
-                    <div class="font-medium">{{ $depense->nom }}</div>
+                    <div class="font-medium">{{ $depense->nom }}
+                        @if($depense->montant == 0)
+                            <span class="inline-block ml-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-300">Remboursée</span>
+                        @elseif($depense->rembourse)
+                            <span class="inline-block ml-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-300">Remboursée</span>
+                        @elseif($depense->credit && $depense->montant < $depense->credit->montant)
+                            <span class="inline-block ml-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-300">Partiellement remboursée</span>
+                        @endif
+                    </div>
                     @if(isset($depense->etat_caisse_id) && $depense->etat_caisse_id)
                     <div class="text-xs text-gray-500 dark:text-gray-400">État caisse #{{ $depense->etat_caisse_id }}
                     </div>

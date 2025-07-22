@@ -156,6 +156,8 @@
                 assuranceSection.classList.add('hidden');
                 personnelSelect.required = true;
                 assuranceSelect.required = false;
+                personnelSelect.disabled = false; // Correction ajoutée
+                assuranceSelect.disabled = true;  // Correction ajoutée
                 updatePersonnelInfos();
 
                 // Masquer le mode de paiement pour les crédits personnel
@@ -168,6 +170,8 @@
                 assuranceSection.classList.remove('hidden');
                 personnelSelect.required = false;
                 assuranceSelect.required = true;
+                personnelSelect.disabled = true;  // Correction ajoutée
+                assuranceSelect.disabled = false; // Correction ajoutée
                 updateAssuranceInfos();
 
                 // Masquer le mode de paiement pour les assurances
@@ -180,6 +184,8 @@
                 assuranceSection.classList.add('hidden');
                 personnelSelect.required = false;
                 assuranceSelect.required = false;
+                personnelSelect.disabled = true;  // Correction ajoutée
+                assuranceSelect.disabled = true;  // Correction ajoutée
 
                 // Masquer le mode de paiement
                 document.getElementById('mode_paiement_id').parentElement.classList.add('hidden');
