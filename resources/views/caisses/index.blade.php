@@ -168,7 +168,7 @@
                 <td class="py-3 px-4">{{ $caisse->patient->first_name ?? 'N/A' }} {{ $caisse->patient->last_name ?? ''
                     }}</td>
                 <td class="py-3 px-4">{{ $caisse->medecin->nom ?? 'N/A' }}</td>
-                <td class="py-3 px-4">{{ $caisse->date_examen->diffForHumans() }}</td>
+                <td class="py-3 px-4">{{ $caisse->created_at->setTimezone('Africa/Nouakchott')->diffForHumans() }}</td>
                 <td class="py-3 px-4">{{ number_format($caisse->total, 2) }} MRU</td>
                 <td class="py-3 px-4">{{ $caisse->nom_caissier }}</td>
                 <td class="py-3 px-4">

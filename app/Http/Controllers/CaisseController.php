@@ -60,7 +60,7 @@ class CaisseController extends Controller
             $query->whereBetween('date_examen', [$dateStart, $dateEnd]);
         }
 
-        $caisses = $query->orderBy('date_examen', 'desc')->paginate(10);
+        $caisses = $query->orderBy('created_at', 'desc')->paginate(10);
         return view('caisses.index', compact('caisses'));
     }
 
