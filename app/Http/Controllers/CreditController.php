@@ -169,6 +169,59 @@ class CreditController extends Controller
             'source' => 'credit_assurance', // Ajout explicite
         ]);
 
+        // Mettre à jour l'EtatCaisse existant au lieu de créer une nouvelle entrée
+        $etatCaisseExistant = null;
+
+        // Essayer plusieurs méthodes de recherche pour trouver l'entrée existante
+        if ($credit->caisse_id) {
+            // Méthode 1 : Recherche par caisse_id et assurance_id
+            $etatCaisseExistant = \App\Models\EtatCaisse::where('assurance_id', $credit->source_id)
+                ->where('caisse_id', $credit->caisse_id)
+                ->first();
+        }
+
+        if (!$etatCaisseExistant) {
+            // Méthode 2 : Recherche par assurance_id seulement (plus récente)
+            $etatCaisseExistant = \App\Models\EtatCaisse::where('assurance_id', $credit->source_id)
+                ->whereNotNull('caisse_id')
+                ->latest()
+                ->first();
+        }
+
+        if ($etatCaisseExistant) {
+            // Mettre à jour l'entrée existante
+            $etatCaisseExistant->increment('recette', $montant);
+            $etatCaisseExistant->increment('part_clinique', $montant);
+
+            // Log pour débugger (optionnel)
+            \Log::info("EtatCaisse mis à jour", [
+                'etat_caisse_id' => $etatCaisseExistant->id,
+                'credit_id' => $credit->id,
+                'montant' => $montant
+            ]);
+        } else {
+            // Créer seulement si aucune entrée n'existe (cas de fallback)
+            \App\Models\EtatCaisse::create([
+                'designation' => 'Remboursement assurance - ' . $credit->source->nom,
+                'recette' => $montant,
+                'part_medecin' => 0,
+                'part_clinique' => $montant,
+                'depense' => 0,
+                'credit_personnel' => null,
+                'personnel_id' => null,
+                'assurance_id' => $credit->source_id,
+                'caisse_id' => null,
+                'medecin_id' => null,
+            ]);
+
+            // Log pour débugger
+            \Log::warning("Nouvelle entrée EtatCaisse créée car aucune existante trouvée", [
+                'credit_id' => $credit->id,
+                'assurance_id' => $credit->source_id,
+                'caisse_id' => $credit->caisse_id
+            ]);
+        }
+
         // Mise à jour du crédit de la source
         if ($credit->source_type === 'App\\Models\\Assurance') {
             $credit->source->updateCredit();
