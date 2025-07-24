@@ -23,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Configuration de la pagination pour utiliser Tailwind par défaut
+        Paginator::defaultView('pagination::tailwind');
+        Paginator::defaultSimpleView('pagination::simple-tailwind');
+
         // Enregistrement global du middleware 'is.approved'
         Route::middlewareGroup('web', [
             IsApproved::class, // Ceci va l'ajouter aux routes web (facultatif si tu veux tout protéger automatiquement)

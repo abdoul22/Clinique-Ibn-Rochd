@@ -76,10 +76,28 @@ class Caisse extends Model
                 $caisse->numero_facture = $max + 1;
             }
 
-            // Génération du numéro d'entrée journalier (remis à 0 chaque jour à 00h GMT)
-            $today = now()->startOfDay();
-            $countToday = self::whereDate('created_at', $today)->count();
-            $caisse->numero_entre = $countToday + 1;
+            // Génération du numéro d'entrée spécifique au médecin ET au jour
+            // (partagé entre caisses ET rendez-vous)
+            if (!empty($caisse->medecin_id)) {
+                $today = now()->startOfDay(); // 00h GMT du jour actuel
+
+                // Compter les caisses de ce médecin aujourd'hui
+                $countCaisses = self::where('medecin_id', $caisse->medecin_id)
+                    ->whereDate('created_at', $today)
+                    ->count();
+
+                // Compter les rendez-vous de ce médecin aujourd'hui
+                $countRendezVous = \App\Models\RendezVous::where('medecin_id', $caisse->medecin_id)
+                    ->whereDate('created_at', $today)
+                    ->count();
+
+                // Total des entrées pour ce médecin aujourd'hui
+                $totalEntrees = $countCaisses + $countRendezVous;
+                $caisse->numero_entre = $totalEntrees + 1;
+            } else {
+                // Fallback si pas de médecin (ne devrait pas arriver)
+                $caisse->numero_entre = 1;
+            }
         });
     }
 }

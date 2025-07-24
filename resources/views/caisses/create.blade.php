@@ -32,7 +32,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Numéro d'entrée
                     </label>
-                    <input type="text" value="{{ $numero_prevu }}" disabled
+                    <input type="text" id="numero_entree_display" value="{{ $numero_prevu }}" disabled
                         class="w-full font-bold bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-500 dark:text-gray-400">
                 </div>
                 <div>
@@ -56,7 +56,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Médecin *</label>
-                    <select name="medecin_id" required
+                    <select name="medecin_id" id="medecin_select" required
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                         <option value="">Sélectionner un médecin</option>
                         @foreach($medecins as $medecin)
@@ -289,6 +289,27 @@
         const quantiteInput = document.getElementById('quantite_medicament');
         if (quantiteInput) {
             quantiteInput.addEventListener('input', updateTotal);
+        }
+
+        // Mettre à jour le numéro d'entrée quand un médecin est sélectionné
+        const medecinSelect = document.getElementById('medecin_select');
+        const numeroEntreeDisplay = document.getElementById('numero_entree_display');
+
+        // Numéros par médecin passés depuis le contrôleur
+        const numerosParMedecin = @json($numeros_par_medecin);
+
+        if (medecinSelect && numeroEntreeDisplay) {
+            medecinSelect.addEventListener('change', function() {
+                const medecinId = this.value;
+
+                if (medecinId && numerosParMedecin[medecinId]) {
+                    // Utiliser le numéro pré-calculé pour ce médecin
+                    numeroEntreeDisplay.value = numerosParMedecin[medecinId];
+                } else {
+                    // Aucun médecin sélectionné
+                    numeroEntreeDisplay.value = '{{ $numero_prevu }}';
+                }
+            });
         }
     });
 </script>

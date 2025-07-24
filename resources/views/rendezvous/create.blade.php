@@ -95,14 +95,12 @@
                     <div>
                         <label for="numero_entree"
                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Numéro d'entrée <span class="text-red-500">*</span>
+                            Numéro d'entrée
                         </label>
-                        <input type="text" name="numero_entree" id="numero_entree" value="{{ old('numero_entree') }}"
-                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('numero_entree') border-red-500 @enderror"
-                            readonly required>
-                        @error('numero_entree')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
+                        <input type="text" name="numero_entree" id="numero_entree" value="1"
+                            class="w-full font-bold bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-500 dark:text-gray-400"
+                            readonly disabled>
+                        <input type="hidden" name="numero_entree_hidden" id="numero_entree_hidden" value="1" />
                     </div>
 
                     <!-- Motif -->
@@ -171,7 +169,7 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Validation côté client
+        // Validation côté client - avec vérifications de sécurité
         const form = document.querySelector('form');
         const medecinSelect = document.getElementById('medecin_id');
         const dateInput = document.getElementById('date_rdv');
@@ -193,37 +191,41 @@
             @endforeach
         ];
 
-        // Auto-remplir le téléphone quand on sélectionne un patient
-        patientSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            if (selectedOption.value) {
-                const phone = selectedOption.getAttribute('data-phone');
-                patientPhone.value = phone;
-            } else {
-                patientPhone.value = '';
-            }
-        });
+        // Auto-remplir le téléphone quand on sélectionne un patient - AVEC VÉRIFICATION
+        if (patientSelect && patientPhone) {
+            patientSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    const phone = selectedOption.getAttribute('data-phone');
+                    patientPhone.value = phone || '';
+                } else {
+                    patientPhone.value = '';
+                }
+            });
+        }
 
-        // Recherche de patient par numéro de téléphone
-        patientPhone.addEventListener('input', function() {
-            const phone = this.value.trim();
+        // Recherche de patient par numéro de téléphone - AVEC VÉRIFICATIONS
+        if (patientPhone && phoneSuggestions) {
+            patientPhone.addEventListener('input', function() {
+                const phone = this.value.trim();
 
-            if (phone.length < 3) {
-                phoneSuggestions.classList.add('hidden');
-                return;
-            }
+                if (phone.length < 3) {
+                    phoneSuggestions.classList.add('hidden');
+                    return;
+                }
 
-            // Filtrer les patients par numéro de téléphone
-            const filteredPatients = patientsData.filter(patient =>
-                patient.phone.includes(phone)
-            );
+                // Filtrer les patients par numéro de téléphone
+                const filteredPatients = patientsData.filter(patient =>
+                    patient.phone.includes(phone)
+                );
 
-            if (filteredPatients.length > 0) {
-                displayPhoneSuggestions(filteredPatients);
-            } else {
-                phoneSuggestions.classList.add('hidden');
-            }
-        });
+                if (filteredPatients.length > 0) {
+                    displayPhoneSuggestions(filteredPatients);
+                } else {
+                    phoneSuggestions.classList.add('hidden');
+                }
+            });
+        }
 
         // Afficher les suggestions
         function displayPhoneSuggestions(patients) {
@@ -250,34 +252,43 @@
         }
 
         // Masquer les suggestions quand on clique ailleurs
-        document.addEventListener('click', function(e) {
-            if (!patientPhone.contains(e.target) && !phoneSuggestions.contains(e.target)) {
-                phoneSuggestions.classList.add('hidden');
-            }
-        });
+        if (patientPhone && phoneSuggestions) {
+            document.addEventListener('click', function(e) {
+                if (!patientPhone.contains(e.target) && !phoneSuggestions.contains(e.target)) {
+                    phoneSuggestions.classList.add('hidden');
+                }
+            });
+        }
 
         // Gestion du champ motif personnalisé
-        motifSelect.addEventListener('change', function() {
-            if (this.value === 'autre') {
-                motifCustom.style.display = 'block';
-                motifCustom.required = true;
-                motifCustom.focus();
-            } else {
-                motifCustom.style.display = 'none';
-                motifCustom.required = false;
-                motifCustom.value = '';
-            }
-        });
+        if (motifSelect && motifCustom) {
+            motifSelect.addEventListener('change', function() {
+                if (this.value === 'autre') {
+                    motifCustom.style.display = 'block';
+                    motifCustom.required = true;
+                    motifCustom.focus();
+                } else {
+                    motifCustom.style.display = 'none';
+                    motifCustom.required = false;
+                    motifCustom.value = '';
+                }
+            });
+        }
 
         // Vérifier la disponibilité du créneau
         async function checkAvailability() {
+            // Vérifications de sécurité
+            if (!medecinSelect || !dateInput || !heureInput) {
+                return;
+            }
+
             const medecinId = medecinSelect.value;
             const date = dateInput.value;
             const heure = heureInput.value;
 
             if (medecinId && date && heure) {
                 try {
-                    const response = await fetch(`/rendezvous/check-availability?medecin_id=${medecinId}&date=${date}&heure=${heure}`);
+                    const response = await fetch(`/api/rendezvous/check-availability?medecin_id=${medecinId}&date=${date}&heure=${heure}`);
                     const data = await response.json();
 
                     if (!data.available) {
@@ -291,23 +302,60 @@
         }
 
         // Écouter les changements
-        medecinSelect.addEventListener('change', checkAvailability);
-        dateInput.addEventListener('change', checkAvailability);
-        heureInput.addEventListener('change', checkAvailability);
+        if (medecinSelect) {
+            medecinSelect.addEventListener('change', checkAvailability);
+        }
+        if (dateInput) {
+            dateInput.addEventListener('change', checkAvailability);
+        }
+        if (heureInput) {
+            heureInput.addEventListener('change', checkAvailability);
+        }
 
         // Initialiser l'état du champ personnalisé
-        if (motifSelect.value === 'autre') {
-            motifCustom.style.display = 'block';
-            motifCustom.required = true;
+        if (motifSelect && motifCustom) {
+            if (motifSelect.value === 'autre') {
+                motifCustom.style.display = 'block';
+                motifCustom.required = true;
+            }
         }
 
         // Initialiser le téléphone si un patient est déjà sélectionné
-        if (patientSelect.value) {
+        if (patientSelect && patientPhone) {
             const selectedOption = patientSelect.options[patientSelect.selectedIndex];
-            const phone = selectedOption.getAttribute('data-phone');
+            const phone = selectedOption ? selectedOption.getAttribute('data-phone') : null;
             if (phone) {
                 patientPhone.value = phone;
             }
+        }
+
+        // Mettre à jour le numéro d'entrée quand un médecin est sélectionné
+        const numeroEntreeDisplay = document.getElementById('numero_entree');
+        const numeroEntreeHidden = document.getElementById('numero_entree_hidden');
+
+        // Numéros par médecin passés depuis le contrôleur
+        const numerosParMedecin = @json($numeros_par_medecin);
+
+        if (medecinSelect && numeroEntreeDisplay) {
+            medecinSelect.addEventListener('change', function() {
+                const medecinId = this.value;
+
+                if (medecinId && numerosParMedecin[medecinId]) {
+                    // Utiliser le numéro pré-calculé pour ce médecin
+                    const numeroPrevu = numerosParMedecin[medecinId];
+
+                    numeroEntreeDisplay.value = numeroPrevu;
+                    if (numeroEntreeHidden) {
+                        numeroEntreeHidden.value = numeroPrevu;
+                    }
+                } else {
+                    // Aucun médecin sélectionné
+                    numeroEntreeDisplay.value = '1';
+                    if (numeroEntreeHidden) {
+                        numeroEntreeHidden.value = '1';
+                    }
+                }
+            });
         }
     });
 </script>

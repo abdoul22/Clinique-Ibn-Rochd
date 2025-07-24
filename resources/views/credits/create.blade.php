@@ -23,6 +23,9 @@
     <form action="{{ route('credits.store') }}" method="POST" class="space-y-4">
         @csrf
 
+        <!-- Champs cachés pour source_id -->
+        <input type="hidden" id="source_id_hidden" name="source_id" value="">
+
         <div>
             <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Type de source</label>
             <select name="source_type" id="source-type" class="form-select" required>
@@ -34,7 +37,8 @@
 
         <div id="personnel-section" class="hidden">
             <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Personnel</label>
-            <select name="source_id" id="personnel-select" class="form-select">
+            @if($personnels->count() > 0)
+            <select id="personnel-select" class="form-select">
                 @foreach($personnels as $personnel)
                 @php
                 $personnel->updateCredit(); // Mettre à jour le crédit actuel
@@ -58,11 +62,40 @@
                 <p><strong class="font-bold text-purple-500 dark:text-purple-400">💵 Salaire net après déduction
                         :</strong> <span id="salaire-net">--</span> MRU</p>
             </div>
+            @else
+            <div
+                class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                            Aucun personnel trouvé
+                        </h3>
+                        <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                            <p>Vous devez d'abord créer du personnel avant de pouvoir leur donner des crédits.</p>
+                            <p class="mt-1">
+                                <a href="{{ route('personnels.create') }}"
+                                    class="font-medium underline text-yellow-800 dark:text-yellow-200 hover:text-yellow-600 dark:hover:text-yellow-100">
+                                    Cliquez ici pour ajouter du personnel →
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
         </div>
 
         <div id="assurance-section" class="hidden">
             <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Assurance</label>
-            <select name="source_id" id="assurance-select" class="form-select">
+            @if($assurances->count() > 0)
+            <select id="assurance-select" class="form-select">
                 @foreach($assurances as $assurance)
                 @php
                 $totalCredits = $assurance->credits->sum('montant');
@@ -78,6 +111,33 @@
                 <p><strong class="font-bold text-orange-500 dark:text-orange-400">Crédit actuel :</strong> <span
                         id="assurance-credit-actuel">--</span> MRU</p>
             </div>
+            @else
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            Aucune assurance trouvée
+                        </h3>
+                        <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                            <p>Vous devez d'abord créer des assurances avant de pouvoir leur donner des crédits.</p>
+                            <p class="mt-1">
+                                <a href="{{ route('assurances.create') }}"
+                                    class="font-medium underline text-blue-800 dark:text-blue-200 hover:text-blue-600 dark:hover:text-blue-100">
+                                    Cliquez ici pour ajouter une assurance →
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
         </div>
 
         <div class="mb-4">
@@ -132,32 +192,38 @@
         const assuranceCreditActuelEl = document.getElementById('assurance-credit-actuel');
 
         function updatePersonnelInfos() {
-            const selected = personnelSelect.options[personnelSelect.selectedIndex];
+            const selected = personnelSelect?.options[personnelSelect.selectedIndex];
+            if (!selected) return;
+
             const salaire = parseFloat(selected.dataset.salaire) || 0;
             const creditActuel = parseFloat(selected.dataset.creditActuel) || 0;
             const creditMax = parseFloat(selected.dataset.creditMax) || 0;
             const salaireNet = salaire - creditActuel;
 
-            salaireEl.textContent = salaire.toLocaleString();
-            creditActuelEl.textContent = creditActuel.toLocaleString();
-            creditMaxEl.textContent = creditMax.toLocaleString();
-            salaireNetEl.textContent = salaireNet.toLocaleString();
+            if (salaireEl) salaireEl.textContent = salaire.toLocaleString();
+            if (creditActuelEl) creditActuelEl.textContent = creditActuel.toLocaleString();
+            if (creditMaxEl) creditMaxEl.textContent = creditMax.toLocaleString();
+            if (salaireNetEl) salaireNetEl.textContent = salaireNet.toLocaleString();
         }
 
         function updateAssuranceInfos() {
-            const selected = assuranceSelect.options[assuranceSelect.selectedIndex];
+            const selected = assuranceSelect?.options[assuranceSelect.selectedIndex];
+            if (!selected) return;
+
             const creditActuel = parseFloat(selected.dataset.creditActuel) || 0;
-            assuranceCreditActuelEl.textContent = creditActuel.toLocaleString();
+            if (assuranceCreditActuelEl) assuranceCreditActuelEl.textContent = creditActuel.toLocaleString();
         }
 
         sourceTypeSelect.addEventListener('change', function () {
+            const sourceIdHidden = document.getElementById('source_id_hidden');
+
             if (this.value === 'personnel') {
                 personnelSection.classList.remove('hidden');
                 assuranceSection.classList.add('hidden');
                 personnelSelect.required = true;
                 assuranceSelect.required = false;
-                personnelSelect.disabled = false; // Correction ajoutée
-                assuranceSelect.disabled = true;  // Correction ajoutée
+                // Mettre à jour le champ hidden avec la valeur du personnel sélectionné
+                sourceIdHidden.value = personnelSelect.value;
                 updatePersonnelInfos();
 
                 // Masquer le mode de paiement pour les crédits personnel
@@ -170,8 +236,8 @@
                 assuranceSection.classList.remove('hidden');
                 personnelSelect.required = false;
                 assuranceSelect.required = true;
-                personnelSelect.disabled = true;  // Correction ajoutée
-                assuranceSelect.disabled = false; // Correction ajoutée
+                // Mettre à jour le champ hidden avec la valeur de l'assurance sélectionnée
+                sourceIdHidden.value = assuranceSelect.value;
                 updateAssuranceInfos();
 
                 // Masquer le mode de paiement pour les assurances
@@ -184,8 +250,7 @@
                 assuranceSection.classList.add('hidden');
                 personnelSelect.required = false;
                 assuranceSelect.required = false;
-                personnelSelect.disabled = true;  // Correction ajoutée
-                assuranceSelect.disabled = true;  // Correction ajoutée
+                sourceIdHidden.value = '';
 
                 // Masquer le mode de paiement
                 document.getElementById('mode_paiement_id').parentElement.classList.add('hidden');
@@ -195,8 +260,24 @@
             }
         });
 
-        personnelSelect.addEventListener('change', updatePersonnelInfos);
-        assuranceSelect.addEventListener('change', updateAssuranceInfos);
+        // Écouter les changements sur les selects pour mettre à jour le champ hidden
+        if (personnelSelect) {
+            personnelSelect.addEventListener('change', function() {
+                if (sourceTypeSelect.value === 'personnel') {
+                    document.getElementById('source_id_hidden').value = this.value;
+                    updatePersonnelInfos();
+                }
+            });
+        }
+
+        if (assuranceSelect) {
+            assuranceSelect.addEventListener('change', function() {
+                if (sourceTypeSelect.value === 'assurance') {
+                    document.getElementById('source_id_hidden').value = this.value;
+                    updateAssuranceInfos();
+                }
+            });
+        }
     });
 </script>
 @endpush

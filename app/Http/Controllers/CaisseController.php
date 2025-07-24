@@ -72,11 +72,32 @@ class CaisseController extends Controller
         $services = Service::all();
         $exam_types = Examen::with('service.pharmacie')->get();
         $assurances = \App\Models\Assurance::all();
-        $todayCount = \App\Models\Caisse::whereDate('created_at', now())->count();
-        $numero_prevu = $todayCount + 1;
+
+        // Calculer le numéro prévu pour chaque médecin (par jour, partagé entre caisses et rendez-vous)
+        $today = now()->startOfDay();
+        $numeros_par_medecin = [];
+        foreach ($medecins as $medecin) {
+            // Compter les caisses de ce médecin aujourd'hui
+            $countCaisses = Caisse::where('medecin_id', $medecin->id)
+                ->whereDate('created_at', $today)
+                ->count();
+
+            // Compter les rendez-vous de ce médecin aujourd'hui
+            $countRendezVous = \App\Models\RendezVous::where('medecin_id', $medecin->id)
+                ->whereDate('created_at', $today)
+                ->count();
+
+            // Total des entrées pour ce médecin aujourd'hui
+            $totalEntrees = $countCaisses + $countRendezVous;
+            $numeros_par_medecin[$medecin->id] = $totalEntrees + 1;
+        }
+
+        // Numéro par défaut
+        $numero_prevu = 1;
 
         return view('caisses.create', compact(
             'numero_prevu',
+            'numeros_par_medecin',
             'patients',
             'medecins',
             'prescripteurs',

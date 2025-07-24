@@ -46,8 +46,8 @@ class RendezVousController extends Controller
                 ->whereMonth('date_rdv', $request->month);
         }
 
-        $rendezVous = $query->orderBy('date_rdv', 'asc')
-            ->orderBy('heure_rdv', 'asc')
+        $rendezVous = $query->orderBy('date_rdv', 'desc')
+            ->orderBy('heure_rdv', 'desc')
             ->paginate(15);
 
         $medecins = Medecin::where('statut', 'actif')->get();
@@ -71,7 +71,26 @@ class RendezVousController extends Controller
         $patients = GestionPatient::all();
         $motifs = Motif::actifs()->orderBy('nom')->get();
 
-        return view('rendezvous.create', compact('medecins', 'patients', 'motifs'));
+        // Calculer le numéro prévu pour chaque médecin (par jour, partagé entre caisses et rendez-vous)
+        $today = now()->startOfDay();
+        $numeros_par_medecin = [];
+        foreach ($medecins as $medecin) {
+            // Compter les caisses de ce médecin aujourd'hui
+            $countCaisses = \App\Models\Caisse::where('medecin_id', $medecin->id)
+                ->whereDate('created_at', $today)
+                ->count();
+
+            // Compter les rendez-vous de ce médecin aujourd'hui
+            $countRendezVous = RendezVous::where('medecin_id', $medecin->id)
+                ->whereDate('created_at', $today)
+                ->count();
+
+            // Total des entrées pour ce médecin aujourd'hui
+            $totalEntrees = $countCaisses + $countRendezVous;
+            $numeros_par_medecin[$medecin->id] = $totalEntrees + 1;
+        }
+
+        return view('rendezvous.create', compact('medecins', 'patients', 'motifs', 'numeros_par_medecin'));
     }
 
     /**
@@ -97,7 +116,25 @@ class RendezVousController extends Controller
         }
 
         $dateRdv = $request->date_rdv;
-        $numeroEntree = RendezVous::where('date_rdv', $dateRdv)->max('numero_entree') + 1;
+
+        // Génération du numéro d'entrée spécifique au médecin ET au jour
+        // (partagé entre caisses ET rendez-vous)
+        $today = now()->startOfDay(); // 00h GMT du jour actuel
+
+        // Compter les caisses de ce médecin aujourd'hui
+        $countCaisses = \App\Models\Caisse::where('medecin_id', $request->medecin_id)
+            ->whereDate('created_at', $today)
+            ->count();
+
+        // Compter les rendez-vous de ce médecin aujourd'hui
+        $countRendezVous = RendezVous::where('medecin_id', $request->medecin_id)
+            ->whereDate('created_at', $today)
+            ->count();
+
+        // Total des entrées pour ce médecin aujourd'hui
+        $totalEntrees = $countCaisses + $countRendezVous;
+        $numeroEntree = $totalEntrees + 1;
+
         $motif = $request->motif ?: 'premier visite';
 
         RendezVous::create([
