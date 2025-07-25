@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Gestion des Patients')</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
@@ -40,6 +41,36 @@
         @media (max-width: 640px) {
             .hero-section {
                 background-attachment: scroll;
+            }
+        }
+
+        /* Améliorations mobile pour les tableaux */
+        @media (max-width: 1024px) {
+            .mobile-responsive {
+                display: block !important;
+            }
+
+            .desktop-only {
+                display: none !important;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .mobile-responsive {
+                display: none !important;
+            }
+
+            .desktop-only {
+                display: block !important;
+            }
+        }
+
+        /* Améliorer la lisibilité sur mobile */
+        @media (max-width: 640px) {
+            .mobile-card {
+                margin: 0.5rem;
+                border-radius: 0.75rem;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
             }
         }
 
