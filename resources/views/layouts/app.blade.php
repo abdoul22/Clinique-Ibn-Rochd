@@ -74,6 +74,291 @@
             }
         }
 
+        /* Tableaux responsive avec scroll horizontal */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 0.75rem;
+            border: 1px solid rgb(229 231 235);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+
+        .dark .table-container {
+            border-color: rgb(75 85 99);
+            background: rgb(31 41 55);
+        }
+
+        .table-main {
+            width: 100%;
+            min-width: 700px;
+            /* Largeur minimale pour éviter l'écrasement */
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .table-main {
+                min-width: 800px;
+                /* Plus large sur mobile pour forcer le scroll */
+                font-size: 0.75rem;
+                /* Texte plus petit sur mobile */
+            }
+        }
+
+        .table-header th {
+            background: rgb(249 250 251);
+            color: rgb(55 65 81);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 1rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgb(229 231 235);
+            white-space: nowrap;
+        }
+
+        .dark .table-header th {
+            background: rgb(55 65 81);
+            color: rgb(209 213 219);
+            border-bottom-color: rgb(75 85 99);
+        }
+
+        .table-body tr {
+            border-bottom: 1px solid rgb(243 244 246);
+            transition: background-color 0.15s ease;
+        }
+
+        .table-body tr:hover {
+            background: rgb(249 250 251);
+        }
+
+        .dark .table-body tr {
+            border-bottom-color: rgb(75 85 99);
+        }
+
+        .dark .table-body tr:hover {
+            background: rgb(55 65 81);
+        }
+
+        .table-cell {
+            padding: 0.75rem;
+            color: rgb(55 65 81);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .dark .table-cell {
+            color: rgb(209 213 219);
+        }
+
+        .table-cell-medium {
+            padding: 0.75rem;
+            color: rgb(55 65 81);
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        .dark .table-cell-medium {
+            color: rgb(209 213 219);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.375rem;
+            transition: all 0.15s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .action-btn-view {
+            background: rgb(239 246 255);
+            color: rgb(59 130 246);
+        }
+
+        .action-btn-view:hover {
+            background: rgb(219 234 254);
+            color: rgb(37 99 235);
+        }
+
+        .action-btn-edit {
+            background: rgb(254 249 195);
+            color: rgb(161 98 7);
+        }
+
+        .action-btn-edit:hover {
+            background: rgb(253 230 138);
+            color: rgb(146 64 14);
+        }
+
+        .action-btn-delete {
+            background: rgb(254 242 242);
+            color: rgb(220 38 38);
+        }
+
+        .action-btn-delete:hover {
+            background: rgb(252 226 226);
+            color: rgb(185 28 28);
+        }
+
+        .dark .action-btn-view {
+            background: rgb(30 58 138);
+            color: rgb(147 197 253);
+        }
+
+        .dark .action-btn-edit {
+            background: rgb(133 77 14);
+            color: rgb(252 211 77);
+        }
+
+        .dark .action-btn-delete {
+            background: rgb(153 27 27);
+            color: rgb(248 113 113);
+        }
+
+        /* Indicateur de scroll pour mobile */
+        @media (max-width: 768px) {
+            .table-container::after {
+                content: "← Faites défiler horizontalement →";
+                position: sticky;
+                left: 0;
+                bottom: 0;
+                background: rgba(59 130 246 / 0.1);
+                color: rgb(59 130 246);
+                padding: 0.5rem;
+                text-align: center;
+                font-size: 0.75rem;
+                font-weight: 500;
+                border-top: 1px solid rgb(59 130 246 / 0.2);
+            }
+
+            .dark .table-container::after {
+                background: rgba(147 197 253 / 0.1);
+                color: rgb(147 197 253);
+                border-top-color: rgba(147 197 253 / 0.2);
+            }
+        }
+
+        /* Styles pour les formulaires responsives */
+        .form-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: linear-gradient(to right, rgb(99 102 241), rgb(79 70 229));
+            color: white;
+            font-weight: 500;
+            padding: 0.625rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+
+        .form-button:hover {
+            background: linear-gradient(to right, rgb(79 70 229), rgb(67 56 202));
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99 102 241, 0.4);
+        }
+
+        .form-button-secondary {
+            background: rgb(107 114 128);
+            color: white;
+        }
+
+        .form-button-secondary:hover {
+            background: rgb(75 85 99);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid rgb(209 213 219);
+            border-radius: 0.5rem;
+            background: white;
+            color: rgb(31 41 55);
+            font-size: 0.875rem;
+            transition: all 0.15s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: rgb(99 102 241);
+            box-shadow: 0 0 0 3px rgba(99 102 241, 0.1);
+        }
+
+        .dark .form-input,
+        .dark .form-select {
+            background: rgb(55 65 81);
+            border-color: rgb(75 85 99);
+            color: rgb(243 244 246);
+        }
+
+        .dark .form-input:focus,
+        .dark .form-select:focus {
+            border-color: rgb(129 140 248);
+        }
+
+        /* Page title responsive */
+        .page-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: rgb(31 41 55);
+            margin-bottom: 1.5rem;
+        }
+
+        .dark .page-title {
+            color: rgb(243 244 246);
+        }
+
+        @media (max-width: 640px) {
+            .page-title {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Alertes responsives */
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .alert-success {
+            background: rgb(240 253 244);
+            border: 1px solid rgb(34 197 94);
+            color: rgb(21 128 61);
+        }
+
+        .dark .alert-success {
+            background: rgb(20 83 45);
+            border-color: rgb(34 197 94);
+            color: rgb(134 239 172);
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
