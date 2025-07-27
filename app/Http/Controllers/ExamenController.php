@@ -83,7 +83,7 @@ class ExamenController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'idsvc' => 'required|exists:services,id',
+            'idsvc' => 'nullable|exists:services,id',
             'tarif' => 'required|numeric|min:0',
             'part_cabinet' => 'nullable|numeric|min:0',
             'part_medecin' => 'nullable|numeric|min:0',
@@ -99,16 +99,44 @@ class ExamenController extends Controller
         } elseif (is_null($part_cabinet) && !is_null($part_medecin)) {
             $part_cabinet = $tarif - $part_medecin;
         } elseif (is_null($part_cabinet) && is_null($part_medecin)) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Remplir au moins une part (cabinet ou médecin).'], 422);
+            }
             return back()->withErrors(['part_medecin' => 'Remplir au moins une part (cabinet ou médecin).']);
         }
 
-        Examen::create([
+        // Si aucun service n'est fourni, utiliser un service par défaut ou le premier service disponible
+        $serviceId = $request->idsvc;
+        if (!$serviceId) {
+            $defaultService = Service::first();
+            if (!$defaultService) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Aucun service disponible. Veuillez créer un service d\'abord.'], 422);
+                }
+                return back()->withErrors(['idsvc' => 'Aucun service disponible. Veuillez créer un service d\'abord.']);
+            }
+            $serviceId = $defaultService->id;
+        }
+
+        $examen = Examen::create([
             'nom' => $request->nom,
-            'idsvc' => $request->idsvc,
+            'idsvc' => $serviceId,
             'tarif' => $tarif,
             'part_cabinet' => $part_cabinet,
             'part_medecin' => $part_medecin,
         ]);
+
+        // Si c'est une requête AJAX, retourner du JSON
+        if ($request->expectsJson()) {
+            return response()->json([
+                'id' => $examen->id,
+                'nom' => $examen->nom,
+                'tarif' => $examen->tarif,
+                'part_cabinet' => $examen->part_cabinet,
+                'part_medecin' => $examen->part_medecin,
+                'message' => 'Examen ajouté avec succès.'
+            ]);
+        }
 
         return redirect()->route('examens.index')->with('success', 'Examen ajouté avec succès.');
     }

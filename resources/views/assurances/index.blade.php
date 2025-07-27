@@ -51,28 +51,26 @@
                 <td class="py-2 px-4">{{ $assurance->credit_format }}</td>
                 <td class="py-2 px-4">
                     <div class="flex space-x-2">
+                        <!-- Voir -->
+                        <a href="{{ route(auth()->user()->role->name . '.assurances.show', $assurance->id) }}"
+                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
+                            <i class="fas fa-eye"></i>
+                        </a>
+
                         <!-- Modifier -->
-                        <a href="{{ route('assurances.edit', $assurance->id) }}"
-                            class="text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15.232 5.232l3.536 3.536M16.768 4.768a2 2 0 112.828 2.828l-9.192 9.192H7v-3.192l9.768-9.828z" />
-                            </svg>
+                        <a href="{{ route(auth()->user()->role->name . '.assurances.edit', $assurance->id) }}"
+                            class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1">
+                            <i class="fas fa-edit"></i>
                         </a>
 
                         <!-- Supprimer -->
-                        <form action="{{ route('assurances.destroy', $assurance->id) }}" method="POST"
-                            onsubmit="return confirm('Êtes-vous sûr ?')">
+                        <form action="{{ route(auth()->user()->role->name . '.assurances.destroy', $assurance->id) }}"
+                            method="POST" onsubmit="return confirm('Êtes-vous sûr ?')" class="inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit"
-                                class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
-                                </svg>
+                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1">
+                                <i class="fas fa-trash"></i>
                             </button>
                         </form>
                     </div>

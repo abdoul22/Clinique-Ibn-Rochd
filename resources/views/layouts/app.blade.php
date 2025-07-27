@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Gestion des Patients')</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
@@ -74,9 +75,17 @@
             }
         }
 
+        /* Prévention du scroll horizontal global */
+        html,
+        body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+
         /* Tableaux responsive avec scroll horizontal */
         .table-container {
             width: 100%;
+            max-width: 100%;
             overflow-x: auto;
             border-radius: 0.75rem;
             border: 1px solid rgb(229 231 235);
@@ -190,22 +199,22 @@
 
         .action-btn-view {
             background: rgb(239 246 255);
-            color: rgb(59 130 246);
+            color: rgb(37 99 235);
         }
 
         .action-btn-view:hover {
             background: rgb(219 234 254);
-            color: rgb(37 99 235);
+            color: rgb(29 78 216);
         }
 
         .action-btn-edit {
-            background: rgb(254 249 195);
-            color: rgb(161 98 7);
+            background: rgb(238 242 255);
+            color: rgb(79 70 229);
         }
 
         .action-btn-edit:hover {
-            background: rgb(253 230 138);
-            color: rgb(146 64 14);
+            background: rgb(224 231 255);
+            color: rgb(67 56 202);
         }
 
         .action-btn-delete {
@@ -220,12 +229,12 @@
 
         .dark .action-btn-view {
             background: rgb(30 58 138);
-            color: rgb(147 197 253);
+            color: rgb(96 165 250);
         }
 
         .dark .action-btn-edit {
-            background: rgb(133 77 14);
-            color: rgb(252 211 77);
+            background: rgb(55 48 163);
+            color: rgb(129 140 248);
         }
 
         .dark .action-btn-delete {
@@ -233,26 +242,30 @@
             color: rgb(248 113 113);
         }
 
-        /* Indicateur de scroll pour mobile */
+        /* Indicateur de scroll léger pour mobile */
         @media (max-width: 768px) {
             .table-container::after {
-                content: "← Faites défiler horizontalement →";
+                content: "⟷";
                 position: sticky;
-                left: 0;
-                bottom: 0;
-                background: rgba(59 130 246 / 0.1);
-                color: rgb(59 130 246);
-                padding: 0.5rem;
-                text-align: center;
+                left: 50%;
+                bottom: 0.5rem;
+                transform: translateX(-50%);
+                background: rgba(59 130 246 / 0.8);
+                color: white;
+                padding: 0.25rem 0.5rem;
+                border-radius: 1rem;
                 font-size: 0.75rem;
-                font-weight: 500;
-                border-top: 1px solid rgb(59 130 246 / 0.2);
+                font-weight: 600;
+                text-align: center;
+                z-index: 10;
+                width: fit-content;
+                margin: 0 auto;
+                pointer-events: none;
             }
 
             .dark .table-container::after {
-                background: rgba(147 197 253 / 0.1);
-                color: rgb(147 197 253);
-                border-top-color: rgba(147 197 253 / 0.2);
+                background: rgba(147 197 253 / 0.8);
+                color: rgb(30 41 59);
             }
         }
 

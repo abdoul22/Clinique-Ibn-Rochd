@@ -175,32 +175,19 @@
         @endif
     </td>
     <td class="table-cell py-2 px-2">
-        <div class="table-actions">
-            <a href="{{ route('etatcaisse.show', $etat->id) }}" class="action-btn action-btn-view" title="Voir">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12H9m12 0A9 9 0 113 12a9 9 0 0118 0z" />
-                </svg>
-            </a>
-
-            <a href="{{ route('etatcaisse.edit', $etat->id) }}" class="action-btn action-btn-edit" title="Modifier">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414
-                        a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
+        <div class="flex space-x-2">
+            <a href="{{ route('etatcaisse.show', $etat->id) }}"
+                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
+                <i class="fas fa-eye"></i>
             </a>
 
             <form action="{{ route('etatcaisse.destroy', $etat->id) }}" method="POST"
-                onsubmit="return confirm('Supprimer ?')">
-                @csrf @method('DELETE')
-                <button type="submit" class="action-btn action-btn-delete" title="Supprimer">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                onsubmit="return confirm('Supprimer ?')" class="inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1">
+                    <i class="fas fa-trash"></i>
                 </button>
             </form>
         </div>

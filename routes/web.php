@@ -81,10 +81,28 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmi
     Route::resource('patients', GestionPatientController::class);
     // Médecins
     Route::resource('medecins', MedecinController::class);
+    // Examens
+    Route::resource('examens', ExamenController::class);
+    Route::get('/examens/print', [ExamenController::class, 'print'])->name('examens.print');
+    Route::get('/examens/export-pdf', [ExamenController::class, 'exportPdf'])->name('examens.exportPdf');
+    // Services
+    Route::resource('services', ServiceController::class);
+    Route::get('/services/export-pdf', [ServiceController::class, 'exportPdf'])->name('services.exportPdf');
+    Route::get('/services/print', [ServiceController::class, 'print'])->name('services.print');
+    // Prescripteurs
+    Route::resource('prescripteurs', PrescripteurController::class);
+    Route::get('/prescripteurs/print', [PrescripteurController::class, 'print'])->name('prescripteurs.print');
+    Route::get('prescripteurs/export-pdf', [PrescripteurController::class, 'exportPdf'])->name('prescripteurs.exportPdf');
+    // Assurances
+    Route::resource('assurances', AssuranceController::class);
+    Route::get('assurances/export/pdf', [AssuranceController::class, 'exportPdf'])->name('assurances.exportPdf');
+    Route::get('assurances/print', [AssuranceController::class, 'print'])->name('assurances.print');
     // Caisse
     Route::resource('caisses', CaisseController::class)->parameters(['caisses' => 'caisse']);
     Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
     Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
+    // API pour numéro d'entrée
+    Route::get('/api/caisses/numero-entree/{medecin_id}', [CaisseController::class, 'getNextNumeroEntree'])->name('caisses.getNextNumeroEntree');
 });
 
 // Routes pour ADMIN
@@ -97,6 +115,24 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->group(function () {
 Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name('admin.')->group(function () {
     // Patients
     Route::resource('patients', GestionPatientController::class);
+    // Médecins
+    Route::resource('medecins', MedecinController::class);
+    // Examens
+    Route::resource('examens', ExamenController::class);
+    Route::get('/examens/print', [ExamenController::class, 'print'])->name('examens.print');
+    Route::get('/examens/export-pdf', [ExamenController::class, 'exportPdf'])->name('examens.exportPdf');
+    // Services
+    Route::resource('services', ServiceController::class);
+    Route::get('/services/export-pdf', [ServiceController::class, 'exportPdf'])->name('services.exportPdf');
+    Route::get('/services/print', [ServiceController::class, 'print'])->name('services.print');
+    // Prescripteurs
+    Route::resource('prescripteurs', PrescripteurController::class);
+    Route::get('/prescripteurs/print', [PrescripteurController::class, 'print'])->name('prescripteurs.print');
+    Route::get('prescripteurs/export-pdf', [PrescripteurController::class, 'exportPdf'])->name('prescripteurs.exportPdf');
+    // Assurances
+    Route::resource('assurances', AssuranceController::class);
+    Route::get('assurances/export/pdf', [AssuranceController::class, 'exportPdf'])->name('assurances.exportPdf');
+    Route::get('assurances/print', [AssuranceController::class, 'print'])->name('assurances.print');
     // Rendez-vous pour admin
     Route::resource('rendezvous', RendezVousController::class)->parameters(['rendezvous' => 'id']);
     Route::post('rendezvous/{id}/change-status', [RendezVousController::class, 'changeStatus'])->name('rendezvous.change-status');
@@ -240,3 +276,6 @@ Route::middleware(['auth', 'is.approved'])->group(function () {
     Route::get('mode-paiements/historique', [App\Http\Controllers\ModePaiementController::class, 'historique'])
         ->name('modepaiements.historique');
 });
+
+// API pour récupérer le prochain numéro d'entrée d'un médecin
+Route::get('/api/caisses/numero-entree/{medecin_id}', [CaisseController::class, 'getNextNumeroEntree'])->name('caisses.getNextNumeroEntree');

@@ -191,15 +191,7 @@
             @foreach($depenses as $depense)
             <tr class="table-row hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="table-cell">
-                    <div class="font-medium">{{ $depense->nom }}
-                        @if($depense->montant == 0)
-                            <span class="inline-block ml-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-300">Remboursée</span>
-                        @elseif($depense->rembourse)
-                            <span class="inline-block ml-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-300">Remboursée</span>
-                        @elseif($depense->credit && $depense->montant < $depense->credit->montant)
-                            <span class="inline-block ml-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-300">Partiellement remboursée</span>
-                        @endif
-                    </div>
+                    <div class="font-medium">{{ $depense->nom }}</div>
                     @if(isset($depense->etat_caisse_id) && $depense->etat_caisse_id)
                     <div class="text-xs text-gray-500 dark:text-gray-400">État caisse #{{ $depense->etat_caisse_id }}
                     </div>
@@ -254,38 +246,25 @@
                 </td>
                 <td class="table-cell">
                     @if(empty($depense->is_credit_personnel))
-                    <div class="table-actions">
+                    <div class="flex space-x-2">
                         <!-- Voir -->
-                        <a href="{{ route('depenses.show', $depense->id) }}" class="action-btn action-btn-view"
-                            title="Voir">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.522 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S3.732 16.057 2.458 12z" />
-                            </svg>
+                        <a href="{{ route('depenses.show', $depense->id) }}"
+                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
+                            <i class="fas fa-eye"></i>
                         </a>
                         <!-- Modifier -->
-                        <a href="{{ route('depenses.edit', $depense->id) }}" class="action-btn action-btn-edit"
-                            title="Modifier">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15.232 5.232l3.536 3.536M16.768 4.768a2 2 0 112.828 2.828l-9.192 9.192H7v-3.192l9.768-9.828z" />
-                            </svg>
+                        <a href="{{ route('depenses.edit', $depense->id) }}"
+                            class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1">
+                            <i class="fas fa-edit"></i>
                         </a>
                         <!-- Supprimer -->
                         <form action="{{ route('depenses.destroy', $depense->id) }}" method="POST"
                             onsubmit="return confirm('Supprimer cette dépense ?')" class="inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="action-btn action-btn-delete" title="Supprimer">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
-                                </svg>
+                            <button type="submit"
+                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1">
+                                <i class="fas fa-trash"></i>
                             </button>
                         </form>
                     </div>

@@ -233,16 +233,16 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <a href="{{ route('pharmacie.edit', $pharmacie->id) }}"
-                                    class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 p-1">
+                                    class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <form action="{{ route('pharmacie.destroy', $pharmacie->id) }}" method="POST"
-                                    class="inline">
+                                    class="inline"
+                                    onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit pharmaceutique ?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
-                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1"
-                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce médicament ?')">
+                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>

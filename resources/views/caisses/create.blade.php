@@ -89,27 +89,50 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Type d'examen
                         *</label>
-                    <select name="examen_id" id="examen_id" required
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        onchange="updateTotal()">
-                        <option value="">Sélectionner un type d'examen</option>
-                        @foreach($exam_types as $type)
-                        @php
-                        $service = $type->service;
-                        $isPharmacie = $service && $service->type_service === 'medicament' && $service->pharmacie;
-                        $stockInfo = $isPharmacie ? "Stock: {$service->pharmacie->stock}" : '';
-                        @endphp
-                        <option value="{{ $type->id }}" data-tarif="{{ $type->tarif }}"
-                            data-service-type="{{ $service ? $service->type_service : '' }}"
-                            data-is-pharmacie="{{ $isPharmacie ? 'true' : 'false' }}"
-                            data-stock="{{ $isPharmacie ? $service->pharmacie->stock : '' }}">
-                            {{ $type->nom }} - {{ number_format($type->tarif, 2) }} MRU
-                            @if($isPharmacie)
-                            ({{ $service->pharmacie->nom_medicament }})
-                            @endif
-                        </option>
-                        @endforeach
-                    </select>
+                    <div class="flex space-x-2">
+                        <select name="examen_id" id="examen_id" required
+                            class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            onchange="updateTotal()">
+                            <option value="">Sélectionner un type d'examen</option>
+                            @foreach($exam_types as $type)
+                            @php
+                            $service = $type->service;
+                            $isPharmacie = $service && $service->type_service === 'medicament' && $service->pharmacie;
+                            $stockInfo = $isPharmacie ? "Stock: {$service->pharmacie->stock}" : '';
+                            @endphp
+                            <option value="{{ $type->id }}" data-tarif="{{ $type->tarif }}"
+                                data-service-type="{{ $service ? $service->type_service : '' }}"
+                                data-is-pharmacie="{{ $isPharmacie ? 'true' : 'false' }}"
+                                data-stock="{{ $isPharmacie ? $service->pharmacie->stock : '' }}"
+                                data-nom="{{ $type->nom }}" data-part-cabinet="{{ $type->part_cabinet }}"
+                                data-part-medecin="{{ $type->part_medecin }}">
+                                {{ $type->nom }} - {{ number_format($type->tarif, 2) }} MRU
+                                @if($isPharmacie)
+                                ({{ $service->pharmacie->nom_medicament }})
+                                @endif
+                            </option>
+                            @endforeach
+                        </select>
+                        <button type="button" onclick="openExamenModal()"
+                            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center"
+                            title="Choisir un examen à ajouter">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Zone d'affichage des examens sélectionnés -->
+                <div id="examens_selectionnes_div" style="display: none;">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Examens
+                        sélectionnés</label>
+                    <div id="examens_liste"
+                        class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800 space-y-2">
+                        <!-- Les examens ajoutés apparaîtront ici -->
+                    </div>
+                    <button type="button" onclick="ajouterExamenAListe()"
+                        class="mt-2 bg-blue-500 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded">
+                        Ajouter cet examen à la liste
+                    </button>
                 </div>
 
                 <!-- Champ quantité pour médicament (caché par défaut) -->
@@ -131,8 +154,9 @@
                 {{-- Champs assurance : nom + couverture --}}
                 <div id="assuranceFields" style="display: none;">
                     <label for="assurance_id" class="text-gray-700 dark:text-gray-200">Nom de l'assurance :</label>
-                    <select name="assurance_id" id="assurance_id"
+                    <select name="assurance_id" id="assurance_id" disabled
                         class="form-select bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600">
+                        <option value="">-- Sélectionner une assurance --</option>
                         @foreach ($assurances as $assurance)
                         <option value="{{ $assurance->id }}">{{ $assurance->nom }}</option>
                         @endforeach
@@ -183,21 +207,96 @@
                 </button>
             </div>
         </div>
+
+        <!-- Champs cachés pour les examens multiples -->
+        <input type="hidden" name="examens_data" id="examens_data" value="">
+        <input type="hidden" name="examens_multiple" id="examens_multiple" value="false">
     </form>
+</div>
+
+<!-- Modal pour choisir un examen -->
+<div id="examenModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div
+        class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Choisir un examen à ajouter</h3>
+                <button type="button" onclick="closeExamenModal()"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Examens
+                        disponibles</label>
+                    <select id="modal_examen_select"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                        <option value="">Sélectionner un examen</option>
+                        @foreach($exam_types ?? [] as $examen)
+                        <option value="{{ $examen->id }}" data-nom="{{ $examen->nom }}"
+                            data-tarif="{{ $examen->tarif }}" data-part-cabinet="{{ $examen->part_cabinet }}"
+                            data-part-medecin="{{ $examen->part_medecin }}"
+                            data-service-type="{{ $examen->service ? $examen->service->type_service : 'consultation' }}"
+                            data-is-pharmacie="{{ $examen->service && $examen->service->type_service === 'medicament' ? 'true' : 'false' }}"
+                            data-stock="{{ $examen->service && $examen->service->pharmacie ? $examen->service->pharmacie->stock : '' }}">
+                            {{ $examen->nom }} - {{ number_format($examen->tarif, 2) }} MRU
+                        </option>
+                        @endforeach
+                    </select>
+                    <small class="text-gray-500 dark:text-gray-400 mt-1">
+                        Sélectionnez un examen dans la liste pour l'ajouter à votre facture.
+                    </small>
+                </div>
+
+                <!-- Champ quantité pour médicament (caché par défaut) -->
+                <div id="modal_quantite_div" style="display: none;">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Quantité</label>
+                    <input type="number" id="modal_quantite" min="1" value="1"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                    <small id="modal_stock_info" class="text-gray-500 dark:text-gray-400"></small>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" onclick="closeExamenModal()"
+                    class="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded">
+                    Annuler
+                </button>
+                <button type="button" onclick="ajouterExamenDeModal()"
+                    class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    Ajouter cet examen
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const assuranceToggle = document.getElementById('hasAssurance');
         const assuranceFields = document.getElementById('assuranceFields');
+        const assuranceSelect = document.getElementById('assurance_id');
         const couvertureField = document.getElementById('couverture');
+        const couvertureInput = document.getElementById('couverture');
         const modePaiementField = document.getElementById('modePaiement');
 
         // Affiche/masque les champs assurance
         assuranceToggle.addEventListener('change', function () {
             if (this.checked) {
                 assuranceFields.style.display = 'block';
+                assuranceSelect.disabled = false;
+                assuranceSelect.required = true;
             } else {
                 assuranceFields.style.display = 'none';
+                assuranceSelect.disabled = true;
+                assuranceSelect.required = false;
+                // Réinitialiser les valeurs
+                assuranceSelect.value = '';
+                couvertureInput.value = '';
                 modePaiementField.style.display = 'block'; // réaffiche toujours
             }
         });
@@ -229,6 +328,194 @@
                 patientSelect.value = found.value;
             }
         });
+    });
+
+    // Variables globales pour les examens multiples
+    let examensSelectionnes = [];
+    let prochainIdExamen = null;
+
+    // Fonctions pour le modal d'examen
+    function openExamenModal() {
+        document.getElementById('examenModal').classList.remove('hidden');
+        // Réinitialiser la sélection
+        document.getElementById('modal_examen_select').value = '';
+        document.getElementById('modal_quantite_div').style.display = 'none';
+        document.getElementById('modal_quantite').value = 1;
+    }
+
+    function closeExamenModal() {
+        document.getElementById('examenModal').classList.add('hidden');
+    }
+
+    function ajouterExamenDeModal() {
+        const select = document.getElementById('modal_examen_select');
+        const selectedOption = select.options[select.selectedIndex];
+
+        if (!select.value) {
+            alert('Veuillez sélectionner un examen.');
+            return;
+        }
+
+        const quantiteInput = document.getElementById('modal_quantite');
+        const quantite = parseInt(quantiteInput.value) || 1;
+
+        const examen = {
+            id: select.value,
+            nom: selectedOption.getAttribute('data-nom'),
+            tarif: parseFloat(selectedOption.getAttribute('data-tarif')),
+            quantite: quantite,
+            total: parseFloat(selectedOption.getAttribute('data-tarif')) * quantite,
+            isPharmacie: selectedOption.getAttribute('data-is-pharmacie') === 'true'
+        };
+
+        // Vérifier si l'examen existe déjà dans la liste
+        const existant = examensSelectionnes.find(e => e.id === examen.id);
+        if (existant) {
+            existant.quantite += quantite;
+            existant.total = existant.tarif * existant.quantite;
+        } else {
+            examensSelectionnes.push(examen);
+        }
+
+        // Mettre à jour l'affichage
+        afficherExamensSelectionnes();
+
+        // Activer le mode examens multiples
+        document.getElementById('examens_multiple').value = 'true';
+        document.getElementById('examens_data').value = JSON.stringify(examensSelectionnes);
+
+        // Afficher la zone des examens sélectionnés
+        document.getElementById('examens_selectionnes_div').style.display = 'block';
+
+        // Fermer la modal
+        closeExamenModal();
+    }
+
+    // Gestion de la quantité pour les médicaments dans la modal
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalSelect = document.getElementById('modal_examen_select');
+        if (modalSelect) {
+            modalSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const quantiteDiv = document.getElementById('modal_quantite_div');
+                const stockInfo = document.getElementById('modal_stock_info');
+
+                if (this.value && selectedOption.getAttribute('data-is-pharmacie') === 'true') {
+                    quantiteDiv.style.display = 'block';
+                    const stock = selectedOption.getAttribute('data-stock');
+                    if (stock) {
+                        stockInfo.textContent = `Stock disponible: ${stock} unités`;
+                        stockInfo.className = parseInt(stock) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                    }
+                } else {
+                    quantiteDiv.style.display = 'none';
+                    stockInfo.textContent = '';
+                    document.getElementById('modal_quantite').value = 1;
+                }
+            });
+        }
+    });
+
+    function ajouterExamenAListe() {
+        const select = document.getElementById('examen_id');
+        const selectedOption = select.options[select.selectedIndex];
+
+        if (!select.value) {
+            alert('Veuillez sélectionner un examen.');
+            return;
+        }
+
+        const quantiteInput = document.getElementById('quantite_medicament');
+        const quantite = parseInt(quantiteInput.value) || 1;
+
+        const examen = {
+            id: select.value,
+            nom: selectedOption.getAttribute('data-nom'),
+            tarif: parseFloat(selectedOption.getAttribute('data-tarif')),
+            quantite: quantite,
+            total: parseFloat(selectedOption.getAttribute('data-tarif')) * quantite,
+            isPharmacie: selectedOption.getAttribute('data-is-pharmacie') === 'true'
+        };
+
+        // Vérifier si l'examen existe déjà
+        const existant = examensSelectionnes.find(e => e.id === examen.id);
+        if (existant) {
+            existant.quantite += quantite;
+            existant.total = existant.tarif * existant.quantite;
+        } else {
+            examensSelectionnes.push(examen);
+        }
+
+        // Mettre à jour l'affichage
+        afficherExamensSelectionnes();
+
+        // Activer le mode examens multiples
+        document.getElementById('examens_multiple').value = 'true';
+        document.getElementById('examens_data').value = JSON.stringify(examensSelectionnes);
+
+        // Réinitialiser les sélections
+        select.value = '';
+        quantiteInput.value = 1;
+        document.getElementById('quantite_medicament_div').style.display = 'none';
+
+        // Afficher la zone des examens sélectionnés
+        document.getElementById('examens_selectionnes_div').style.display = 'block';
+    }
+
+    function afficherExamensSelectionnes() {
+        const container = document.getElementById('examens_liste');
+        let html = '';
+        let totalGeneral = 0;
+
+        examensSelectionnes.forEach((examen, index) => {
+            totalGeneral += examen.total;
+            html += `
+                <div class="flex justify-between items-center bg-white dark:bg-gray-700 p-2 rounded border">
+                    <div>
+                        <span class="font-medium">${examen.nom}</span>
+                        ${examen.isPharmacie ? ` <span class="text-sm text-gray-500">(Qté: ${examen.quantite})</span>` : ''}
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            ${examen.tarif.toFixed(2)} MRU × ${examen.quantite} = ${examen.total.toFixed(2)} MRU
+                        </div>
+                    </div>
+                    <button type="button" onclick="supprimerExamen(${index})"
+                        class="text-red-500 hover:text-red-700">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+        });
+
+        if (examensSelectionnes.length === 0) {
+            html = '<div class="text-gray-500 text-center">Aucun examen sélectionné</div>';
+            document.getElementById('examens_selectionnes_div').style.display = 'none';
+            document.getElementById('examens_multiple').value = 'false';
+        }
+
+        container.innerHTML = html;
+
+        // Mettre à jour le total
+        document.getElementById('display_total').value = totalGeneral.toFixed(2);
+        document.getElementById('total').value = totalGeneral.toFixed(2);
+    }
+
+    function supprimerExamen(index) {
+        examensSelectionnes.splice(index, 1);
+        afficherExamensSelectionnes();
+        document.getElementById('examens_data').value = JSON.stringify(examensSelectionnes);
+
+        if (examensSelectionnes.length === 0) {
+            document.getElementById('examens_multiple').value = 'false';
+        }
+    }
+
+    // Fermer le modal en cliquant en dehors
+    document.getElementById('examenModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeExamenModal();
+        }
     });
 </script>
 <script>
@@ -291,7 +578,7 @@
             quantiteInput.addEventListener('input', updateTotal);
         }
 
-        // Mettre à jour le numéro d'entrée quand un médecin est sélectionné
+                // Mettre à jour le numéro d'entrée quand un médecin est sélectionné
         const medecinSelect = document.getElementById('medecin_select');
         const numeroEntreeDisplay = document.getElementById('numero_entree_display');
 

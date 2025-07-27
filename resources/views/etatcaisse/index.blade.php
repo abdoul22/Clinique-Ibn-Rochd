@@ -1,4 +1,7 @@
 @extends('layouts.app')
+
+
+
 @section('title', 'État de Caisse')
 
 @section('content')
@@ -151,6 +154,11 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
     </table>
 </div>
 
+<!-- Pagination -->
+<div class="pagination-container my-4">
+    {{ $etatcaisses->links() }}
+</div>
+
 <!-- Résumé filtré moderne (toujours affiché, même sans filtre) -->
 @php
 $isFiltre = (
@@ -202,15 +210,10 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
         </div>
     </div>
     <div class="mt-4">
-        <canvas id="chartFiltre" height="100"></canvas>
+        <canvas id="chartFiltre" height="100" class="w-full h-48 sm:h-32 md:h-48 lg:h-80 xl:h-96"></canvas>
     </div>
 </div>
 @endif
-
-<!-- Pagination -->
-<div class="pagination-container">
-    {{ $etatcaisses->links() }}
-</div>
 
 <script>
     function ajouterEtatCaisse(data) {
@@ -316,6 +319,7 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
                     title: { display: false }
@@ -325,12 +329,21 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
                         beginAtZero: true,
                         ticks: {
                             color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151',
-                            callback: function(value) { return value.toLocaleString() + ' MRU'; }
+                            callback: function(value) { return value.toLocaleString() + ' MRU'; },
+                            font: {
+                                size: window.innerWidth < 640 ? 10 : 12
+                            }
                         },
                         grid: { color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb' }
                     },
                     x: {
-                        ticks: { color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151' },
+                        ticks: {
+                            color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151',
+                            font: {
+                                size: window.innerWidth < 640 ? 10 : 12
+                            },
+                            maxRotation: window.innerWidth < 640 ? 45 : 0
+                        },
                         grid: { color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb' }
                     }
                 }
@@ -363,6 +376,7 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
                     title: { display: false }
@@ -372,12 +386,21 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
                         beginAtZero: true,
                         ticks: {
                             color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151',
-                            callback: function(value) { return value.toLocaleString() + ' MRU'; }
+                            callback: function(value) { return value.toLocaleString() + ' MRU'; },
+                            font: {
+                                size: window.innerWidth < 640 ? 10 : 12
+                            }
                         },
                         grid: { color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb' }
                     },
                     x: {
-                        ticks: { color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151' },
+                        ticks: {
+                            color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151',
+                            font: {
+                                size: window.innerWidth < 640 ? 10 : 12
+                            },
+                            maxRotation: window.innerWidth < 640 ? 45 : 0
+                        },
                         grid: { color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb' }
                     }
                 }
@@ -388,5 +411,14 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
     document.addEventListener('turbo:load', renderChartGlobal);
 </script>
 @endpush
+
+@if(session('timestamp'))
+<script>
+    // Si on vient d'une modification de caisse, forcer le rafraîchissement
+    if (performance.navigation.type === performance.navigation.TYPE_BACK_FORWARD) {
+        window.location.reload(true);
+    }
+</script>
+@endif
 
 @endsection

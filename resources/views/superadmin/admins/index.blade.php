@@ -72,25 +72,26 @@
                             </button>
                         </form>
                         @else
-                        <a href="{{ route('superadmin.admins.show', $admin->id) }}"
-                            class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                            title="Voir">
-                            👁️
-                        </a>
-                        <a href="{{ route('superadmin.admins.edit', $admin->id) }}"
-                            class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300"
-                            title="Modifier">
-                            ✏️
-                        </a>
-                        <form action="{{ route('superadmin.admins.destroy', $admin->id) }}" method="POST"
-                            class="inline">
-                            @csrf
-                            @method('DELETE')
-                            <button class="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                                title="Supprimer">
-                                🗑️
-                            </button>
-                        </form>
+                        <div class="flex space-x-2">
+                            <a href="{{ route('superadmin.admins.show', $admin->id) }}"
+                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('superadmin.admins.edit', $admin->id) }}"
+                                class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ route('superadmin.admins.destroy', $admin->id) }}" method="POST"
+                                class="inline"
+                                onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet administrateur ?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                         @endif
                     </td>
                 </tr>

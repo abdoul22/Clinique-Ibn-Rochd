@@ -473,8 +473,7 @@ class EtatCaisseController extends Controller
 
     public function show($id)
     {
-
-        $etatcaisse = EtatCaisse::with(['personnel', 'assurance'])->findOrFail($id);
+        $etatcaisse = EtatCaisse::with(['personnel', 'assurance', 'caisse', 'medecin'])->findOrFail($id);
         return view('etatcaisse.show', compact('etatcaisse'));
     }
 
