@@ -100,7 +100,7 @@ class CaisseController extends Controller
         return view('caisses.index', compact('caisses', 'patients', 'medecins'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $patients = GestionPatient::all();
         $medecins = Medecin::all();
@@ -109,27 +109,54 @@ class CaisseController extends Controller
         $exam_types = Examen::with('service.pharmacie')->get();
         $assurances = \App\Models\Assurance::all();
 
-        // Calculer le numéro prévu pour chaque médecin (par jour, partagé entre caisses et rendez-vous)
+        // Variables pour pré-remplissage depuis un rendez-vous
+        $fromRdv = null;
+        $prefilledPatient = null;
+        $prefilledMedecin = null;
+        $prefilledNumeroEntree = null;
+
+        // Si on vient d'un rendez-vous, récupérer les données
+        if ($request->has('from_rdv')) {
+            $fromRdv = \App\Models\RendezVous::find($request->from_rdv);
+            if ($fromRdv) {
+                $prefilledPatient = $fromRdv->patient;
+                $prefilledMedecin = $fromRdv->medecin;
+                $prefilledNumeroEntree = $fromRdv->numero_entree;
+            }
+        }
+
+        // Calculer le numéro prévu pour chaque médecin (par jour, tous les numéros utilisés)
         $today = now()->startOfDay();
         $numeros_par_medecin = [];
         foreach ($medecins as $medecin) {
-            // Compter les caisses de ce médecin aujourd'hui
-            $countCaisses = Caisse::where('medecin_id', $medecin->id)
+            // Récupérer tous les numéros d'entrée utilisés aujourd'hui pour ce médecin
+            $numerosCaisses = Caisse::where('medecin_id', $medecin->id)
                 ->whereDate('created_at', $today)
-                ->count();
+                ->pluck('numero_entre')
+                ->toArray();
 
-            // Compter les rendez-vous de ce médecin aujourd'hui
-            $countRendezVous = \App\Models\RendezVous::where('medecin_id', $medecin->id)
+            $numerosRendezVous = \App\Models\RendezVous::where('medecin_id', $medecin->id)
                 ->whereDate('created_at', $today)
-                ->count();
+                ->pluck('numero_entree')
+                ->toArray();
 
-            // Total des entrées pour ce médecin aujourd'hui
-            $totalEntrees = $countCaisses + $countRendezVous;
-            $numeros_par_medecin[$medecin->id] = $totalEntrees + 1;
+            // Fusionner et trier tous les numéros utilisés
+            $numerosUtilises = array_merge($numerosCaisses, $numerosRendezVous);
+            sort($numerosUtilises);
+
+            // Trouver le prochain numéro disponible
+            $prochainNumero = 1;
+            foreach ($numerosUtilises as $numero) {
+                if ($numero >= $prochainNumero) {
+                    $prochainNumero = $numero + 1;
+                }
+            }
+
+            $numeros_par_medecin[$medecin->id] = $prochainNumero;
         }
 
         // Numéro par défaut
-        $numero_prevu = 1;
+        $numero_prevu = $prefilledNumeroEntree ?? 1;
 
         return view('caisses.create', compact(
             'numero_prevu',
@@ -139,7 +166,11 @@ class CaisseController extends Controller
             'prescripteurs',
             'exam_types',
             'services',
-            'assurances'
+            'assurances',
+            'fromRdv',
+            'prefilledPatient',
+            'prefilledMedecin',
+            'prefilledNumeroEntree'
         ));
     }
 
@@ -170,6 +201,22 @@ class CaisseController extends Controller
         $dernierNumero = Caisse::max('numero_facture') ?? 0;
         $prochainNumero = $dernierNumero + 1;
 
+        // Déterminer le numéro d'entrée
+        $numeroEntree = null;
+
+        // Si on vient d'un rendez-vous, utiliser le numéro d'entrée du rendez-vous
+        if ($request->filled('from_rdv')) {
+            $rendezVous = \App\Models\RendezVous::find($request->from_rdv);
+            if ($rendezVous) {
+                $numeroEntree = $rendezVous->numero_entree;
+            }
+        }
+
+        // Si pas de numéro d'entrée du rendez-vous, générer un nouveau
+        if (!$numeroEntree) {
+            $numeroEntree = $this->getNextNumeroEntree($request->medecin_id);
+        }
+
         // Préparer les données de base de la facture
         $data = $request->only([
             'gestion_patient_id',
@@ -178,9 +225,9 @@ class CaisseController extends Controller
             'date_examen',
             'total',
             'assurance_id',
-            'couverture',
-            'numero_entre'
+            'couverture'
         ]);
+        $data['numero_entre'] = $numeroEntree;
         $data['nom_caissier'] = Auth::user()->name;
         $data['numero_facture'] = $prochainNumero;
         $data['couverture'] = $request->couverture ?? 0;
@@ -230,30 +277,28 @@ class CaisseController extends Controller
                 }
             }
         } else {
-            // Déduction simple pour un seul examen
-            if ($request->filled('quantite_medicament') && $request->quantite_medicament > 0) {
-                $examen = Examen::findOrFail($request->examen_id);
-                $service = Service::find($examen->idsvc);
+            // Déduire le stock pour un seul médicament
+            $examen = Examen::findOrFail($request->examen_id);
+            $service = Service::find($examen->idsvc);
+            $quantite = $request->quantite_medicament ?? 1;
 
-                if ($service && $service->type_service === 'medicament' && $service->pharmacie_id) {
-                    $medicament = \App\Models\Pharmacie::find($service->pharmacie_id);
+            if ($service && $service->type_service === 'medicament' && $service->pharmacie_id && $quantite > 0) {
+                $medicament = \App\Models\Pharmacie::find($service->pharmacie_id);
 
-                    if ($medicament && $medicament->stockSuffisant($request->quantite_medicament)) {
-                        $medicament->deduireStock($request->quantite_medicament);
-                    } else {
-                        $caisse->delete();
-                        return back()->withErrors(['quantite_medicament' => 'Stock insuffisant pour ce médicament. Stock disponible: ' . ($medicament ? $medicament->stock : 0)]);
-                    }
+                if ($medicament && $medicament->stockSuffisant($quantite)) {
+                    $medicament->deduireStock($quantite);
+                } else {
+                    $caisse->delete();
+                    return back()->withErrors(['quantite_medicament' => "Stock insuffisant pour {$examen->nom}. Stock disponible: " . ($medicament ? $medicament->stock : 0)]);
                 }
             }
         }
 
-        // Calculer les parts (cabinet et médecin)
+        // Calculer les parts cabinet et médecin
         $part_cabinet = 0;
         $part_medecin = 0;
 
         if ($request->examens_multiple === 'true' && $request->filled('examens_data')) {
-            // Calculer les parts pour examens multiples
             $examensData = json_decode($request->examens_data, true);
             foreach ($examensData as $examenData) {
                 $examen = Examen::find($examenData['id']);
@@ -261,60 +306,34 @@ class CaisseController extends Controller
                 $part_medecin += ($examen->part_medecin ?? 0) * $examenData['quantite'];
             }
         } else {
-            // Calcul simple pour un seul examen
             $examen = Examen::findOrFail($request->examen_id);
             $quantite = $request->quantite_medicament ?? 1;
             $part_cabinet = ($examen->part_cabinet ?? 0) * $quantite;
             $part_medecin = ($examen->part_medecin ?? 0) * $quantite;
         }
 
-        // Gestion de l'assurance et des paiements
-        $couverture = $request->couverture ?? 0;
-        $montantTotal = $caisse->total;
-        $montantPatient = round($montantTotal * (100 - $couverture) / 100, 0);
-        $montantAssurance = $montantTotal - $montantPatient;
-
-        // Créer le paiement si nécessaire
-        if ($montantPatient > 0) {
-            $caisse->paiements()->create([
-                'type' => $request->type,
-                'montant' => $montantPatient,
-            ]);
-        }
-
-        // Gérer le crédit d'assurance
-        if ($caisse->assurance_id && $montantAssurance > 0) {
-            $assurance = \App\Models\Assurance::find($caisse->assurance_id);
-            $assurance->increment('credit', $montantAssurance);
-
-            \App\Models\Credit::create([
-                'source_type'   => \App\Models\Assurance::class,
-                'source_id'     => $caisse->assurance_id,
-                'montant'       => $montantAssurance,
-                'montant_paye'  => 0,
-                'status'        => 'non payé',
-                'statut'        => 'non payé',
-                'caisse_id'     => $caisse->id,
-            ]);
-        }
-
         // Créer l'état de caisse
-        EtatCaisse::create([
-            'designation' => 'Facture caisse n°' . $caisse->id,
-            'recette' => $montantPatient,
+        $etatCaisse = EtatCaisse::create([
+            'caisse_id' => $caisse->id,
+            'designation' => 'Facture N°' . $caisse->numero_facture,
+            'recette' => $caisse->total,
             'part_medecin' => $part_medecin,
             'part_clinique' => $part_cabinet,
-            'depense' => 0,
-            'credit_personnel' => null,
-            'personnel_id' => null,
-            'assurance_id' => $caisse->assurance_id && $caisse->couverture > 0 ? $caisse->assurance_id : null,
-            'caisse_id' => $caisse->id,
+            'paiement' => $request->type ?? 'especes',
+            'validation' => 'validé',
+            'assurance_id' => $caisse->assurance_id,
             'medecin_id' => $caisse->medecin_id,
         ]);
 
-        $role = Auth::user()->role->name;
-        return redirect()->route($role . '.caisses.show', $caisse->id)
-            ->with('success', 'Facture et état de caisse créés avec succès.');
+        // Créer le paiement
+        ModePaiement::create([
+            'caisse_id' => $caisse->id,
+            'type' => $request->type ?? 'especes',
+            'montant' => $caisse->total,
+            'source' => 'caisse'
+        ]);
+
+        return redirect()->route('caisses.show', $caisse->id)->with('success', 'Facture et état de caisse créés avec succès.');
     }
 
     public function show($id)
@@ -464,20 +483,30 @@ class CaisseController extends Controller
     {
         $today = now()->startOfDay();
 
-        // Compter les caisses de ce médecin aujourd'hui
-        $countCaisses = Caisse::where('medecin_id', $medecinId)
+        // Récupérer tous les numéros d'entrée utilisés aujourd'hui pour ce médecin
+        // (caisses + rendez-vous) pour éviter les doublons
+        $numerosCaisses = Caisse::where('medecin_id', $medecinId)
             ->whereDate('created_at', $today)
-            ->count();
+            ->pluck('numero_entre')
+            ->toArray();
 
-        // Compter les rendez-vous de ce médecin aujourd'hui
-        $countRendezVous = \App\Models\RendezVous::where('medecin_id', $medecinId)
+        $numerosRendezVous = \App\Models\RendezVous::where('medecin_id', $medecinId)
             ->whereDate('created_at', $today)
-            ->count();
+            ->pluck('numero_entree')
+            ->toArray();
 
-        // Total des entrées pour ce médecin aujourd'hui
-        $totalEntrees = $countCaisses + $countRendezVous;
-        $prochainNumero = $totalEntrees + 1;
+        // Fusionner et trier tous les numéros utilisés
+        $numerosUtilises = array_merge($numerosCaisses, $numerosRendezVous);
+        sort($numerosUtilises);
 
-        return response()->json(['numero_entree' => $prochainNumero]);
+        // Trouver le prochain numéro disponible
+        $prochainNumero = 1;
+        foreach ($numerosUtilises as $numero) {
+            if ($numero >= $prochainNumero) {
+                $prochainNumero = $numero + 1;
+            }
+        }
+
+        return $prochainNumero;
     }
 }

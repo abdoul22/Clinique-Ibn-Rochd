@@ -178,6 +178,37 @@
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Actions</h3>
 
                     <div class="space-y-3">
+                        <!-- Bouton Payer ou Statut de paiement -->
+                        @if($rendezVous->isPaid())
+                            @php
+                                $facture = $rendezVous->getFacture();
+                            @endphp
+                            <div class="w-full bg-blue-100 dark:bg-blue-900 border border-blue-400 dark:border-blue-700 text-blue-700 dark:text-blue-200 px-4 py-3 rounded flex items-center justify-center">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <div class="text-center">
+                                    <div class="font-semibold">✅ Rendez-vous déjà payé</div>
+                                    <div class="text-sm mt-1">
+                                        Facture N° {{ $facture->numero_facture }}
+                                        (N° d'entrée: {{ $facture->numero_entre }})
+                                    </div>
+                                    <a href="{{ route(auth()->user()->role->name . '.caisses.show', $facture->id) }}"
+                                       class="text-blue-600 dark:text-blue-400 hover:underline text-sm mt-1 inline-block">
+                                        Voir la facture
+                                    </a>
+                                </div>
+                            </div>
+                        @else
+                            <a href="{{ route('caisses.create', [
+                                'from_rdv' => $rendezVous->id,
+                                'patient_id' => $rendezVous->patient_id,
+                                'medecin_id' => $rendezVous->medecin_id,
+                                'numero_entree' => $rendezVous->numero_entree
+                            ]) }}"
+                                class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
+                                <i class="fas fa-credit-card mr-2"></i>💳 Payer ce rendez-vous
+                            </a>
+                        @endif
+
                         @if(Auth::user() && Auth::user()->role?->name === 'superadmin')
                         <a href="{{ route('rendezvous.edit', $rendezVous->id) }}"
                             class="w-full bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center">

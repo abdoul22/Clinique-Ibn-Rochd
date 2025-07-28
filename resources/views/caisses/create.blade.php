@@ -16,6 +16,9 @@
 
     <form method="POST" action="{{ route(auth()->user()->role->name . '.caisses.store') }}" id="formFacture">
         @csrf
+        @if($fromRdv)
+        <input type="hidden" name="from_rdv" value="{{ $fromRdv->id }}">
+        @endif
         @if ($errors->any())
         <div
             class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-2 rounded mb-4">
@@ -26,11 +29,33 @@
             </ul>
         </div>
         @endif
+
+        @if($fromRdv)
+        <div
+            class="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-200 px-4 py-3 rounded mb-6">
+            <div class="flex items-center">
+                <i class="fas fa-info-circle mr-2"></i>
+                <div>
+                    <strong>Paiement depuis un rendez-vous</strong>
+                    <p class="text-sm mt-1">
+                        Vous êtes en train de créer une facture pour le rendez-vous du patient
+                        <strong>{{ $prefilledPatient->first_name }} {{ $prefilledPatient->last_name }}</strong>
+                        avec le Dr. <strong>{{ $prefilledMedecin->nom }}</strong>.
+                        Les informations patient et médecin sont pré-remplies et ne peuvent pas être modifiées.
+                    </p>
+                </div>
+            </div>
+        </div>
+        @endif
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <!-- Colonne de gauche -->
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Numéro d'entrée
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        Numéro d'entrée
+                        @if($fromRdv)
+                        <span class="text-green-600 text-xs">(Depuis le rendez-vous)</span>
+                        @endif
                     </label>
                     <input type="text" id="numero_entree_display" value="{{ $numero_prevu }}" disabled
                         class="w-full font-bold bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-500 dark:text-gray-400">
@@ -43,26 +68,49 @@
                         placeholder="Saisir le numéro de téléphone du patient">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Patient *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        Patient *
+                        @if($fromRdv)
+                        <span class="text-green-600 text-xs">(Pré-rempli depuis le rendez-vous)</span>
+                        @endif
+                    </label>
                     <select name="gestion_patient_id" id="patient_select" required
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white {{ $fromRdv ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : '' }}"
+                        {{ $fromRdv ? 'disabled' : '' }}>
                         <option value="">Sélectionner un patient</option>
                         @foreach($patients as $patient)
-                        <option value="{{ $patient->id }}" data-phone="{{ $patient->phone }}">{{ $patient->first_name }}
-                            {{ $patient->last_name }}</option>
+                        <option value="{{ $patient->id }}" data-phone="{{ $patient->phone }}" {{ $fromRdv &&
+                            $prefilledPatient && $patient->id == $prefilledPatient->id ? 'selected' : '' }}>
+                            {{ $patient->first_name }} {{ $patient->last_name }}
+                        </option>
                         @endforeach
                     </select>
+                    @if($fromRdv && $prefilledPatient)
+                    <input type="hidden" name="gestion_patient_id" value="{{ $prefilledPatient->id }}">
+                    @endif
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Médecin *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        Médecin *
+                        @if($fromRdv)
+                        <span class="text-green-600 text-xs">(Pré-rempli depuis le rendez-vous)</span>
+                        @endif
+                    </label>
                     <select name="medecin_id" id="medecin_select" required
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white {{ $fromRdv ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : '' }}"
+                        {{ $fromRdv ? 'disabled' : '' }}>
                         <option value="">Sélectionner un médecin</option>
                         @foreach($medecins as $medecin)
-                        <option value="{{ $medecin->id }}">{{ $medecin->nom }}</option>
+                        <option value="{{ $medecin->id }}" {{ $fromRdv && $prefilledMedecin && $medecin->id ==
+                            $prefilledMedecin->id ? 'selected' : '' }}>
+                            {{ $medecin->nom }}
+                        </option>
                         @endforeach
                     </select>
+                    @if($fromRdv && $prefilledMedecin)
+                    <input type="hidden" name="medecin_id" value="{{ $prefilledMedecin->id }}">
+                    @endif
                 </div>
 
                 <div>

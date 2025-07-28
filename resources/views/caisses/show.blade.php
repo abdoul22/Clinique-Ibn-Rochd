@@ -34,8 +34,20 @@
 
             <div class="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg">
                 <p class="text-lg font-bold text-center text-gray-900 dark:text-white">Total</p>
+                @if($caisse->assurance && $caisse->couverture > 0)
+                @php
+                $montantAssurance = $caisse->total * ($caisse->couverture / 100);
+                $montantPatient = $caisse->total - $montantAssurance;
+                @endphp
+                <p class="text-2xl font-bold text-blue-700 dark:text-blue-300 text-center">{{
+                    number_format($montantPatient, 2) }} MRU</p>
+                <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-1">
+                    ({{ $caisse->couverture }}% pris en charge par {{ $caisse->assurance->nom }})
+                </p>
+                @else
                 <p class="text-2xl font-bold text-blue-700 dark:text-blue-300 text-center">{{
                     number_format($caisse->total, 2) }} MRU</p>
+                @endif
             </div>
         </div>
 

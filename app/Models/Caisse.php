@@ -78,10 +78,12 @@ class Caisse extends Model
                 $caisse->numero_facture = $max + 1;
             }
 
-            // Génération du numéro d'entrée journalier (remis à 0 chaque jour à 00h GMT)
-            $today = now()->startOfDay();
-            $countToday = self::whereDate('created_at', $today)->count();
-            $caisse->numero_entre = $countToday + 1;
+            // Génération du numéro d'entrée journalier SEULEMENT si pas déjà défini
+            if (empty($caisse->numero_entre)) {
+                $today = now()->startOfDay();
+                $countToday = self::whereDate('created_at', $today)->count();
+                $caisse->numero_entre = $countToday + 1;
+            }
         });
     }
 }

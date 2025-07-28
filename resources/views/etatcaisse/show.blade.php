@@ -37,20 +37,20 @@
                 <div class="flex justify-between">
                     <strong class="text-gray-700 dark:text-gray-300">Recette :</strong>
                     <span class="text-green-600 dark:text-green-400 font-semibold">
-                        {{ number_format($etatcaisse->recette ?? 0, 2) }} DH
+                        {{ number_format($etatcaisse->recette ?? 0, 2) }} MRU
                     </span>
                 </div>
                 <div class="flex justify-between">
                     <strong class="text-gray-700 dark:text-gray-300">Dépense :</strong>
                     <span class="text-red-600 dark:text-red-400 font-semibold">
-                        {{ number_format($etatcaisse->depense ?? 0, 2) }} DH
+                        {{ number_format($etatcaisse->depense ?? 0, 2) }} MRU
                     </span>
                 </div>
                 @if($etatcaisse->part_medecin)
                 <div class="flex justify-between">
                     <strong class="text-gray-700 dark:text-gray-300">Part Médecin :</strong>
                     <span class="text-blue-600 dark:text-blue-400 font-semibold">
-                        {{ number_format($etatcaisse->part_medecin, 2) }} DH
+                        {{ number_format($etatcaisse->part_medecin, 2) }} MRU
                     </span>
                 </div>
                 @endif
@@ -58,7 +58,7 @@
                 <div class="flex justify-between">
                     <strong class="text-gray-700 dark:text-gray-300">Part Clinique :</strong>
                     <span class="text-purple-600 dark:text-purple-400 font-semibold">
-                        {{ number_format($etatcaisse->part_clinique, 2) }} DH
+                        {{ number_format($etatcaisse->part_clinique, 2) }} MRU
                     </span>
                 </div>
                 @endif
@@ -70,7 +70,7 @@
                     @endphp
                     <span
                         class="{{ $solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                        {{ number_format($solde, 2) }} DH
+                        {{ number_format($solde, 2) }} MRU
                     </span>
                 </div>
             </div>

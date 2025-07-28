@@ -71,23 +71,34 @@ class RendezVousController extends Controller
         $patients = GestionPatient::all();
         $motifs = Motif::actifs()->orderBy('nom')->get();
 
-        // Calculer le numéro prévu pour chaque médecin (par jour, partagé entre caisses et rendez-vous)
+        // Calculer le numéro prévu pour chaque médecin (par jour, tous les numéros utilisés)
         $today = now()->startOfDay();
         $numeros_par_medecin = [];
         foreach ($medecins as $medecin) {
-            // Compter les caisses de ce médecin aujourd'hui
-            $countCaisses = \App\Models\Caisse::where('medecin_id', $medecin->id)
+            // Récupérer tous les numéros d'entrée utilisés aujourd'hui pour ce médecin
+            $numerosCaisses = \App\Models\Caisse::where('medecin_id', $medecin->id)
                 ->whereDate('created_at', $today)
-                ->count();
+                ->pluck('numero_entre')
+                ->toArray();
 
-            // Compter les rendez-vous de ce médecin aujourd'hui
-            $countRendezVous = RendezVous::where('medecin_id', $medecin->id)
+            $numerosRendezVous = RendezVous::where('medecin_id', $medecin->id)
                 ->whereDate('created_at', $today)
-                ->count();
+                ->pluck('numero_entree')
+                ->toArray();
 
-            // Total des entrées pour ce médecin aujourd'hui
-            $totalEntrees = $countCaisses + $countRendezVous;
-            $numeros_par_medecin[$medecin->id] = $totalEntrees + 1;
+            // Fusionner et trier tous les numéros utilisés
+            $numerosUtilises = array_merge($numerosCaisses, $numerosRendezVous);
+            sort($numerosUtilises);
+
+            // Trouver le prochain numéro disponible
+            $prochainNumero = 1;
+            foreach ($numerosUtilises as $numero) {
+                if ($numero >= $prochainNumero) {
+                    $prochainNumero = $numero + 1;
+                }
+            }
+
+            $numeros_par_medecin[$medecin->id] = $prochainNumero;
         }
 
         return view('rendezvous.create', compact('medecins', 'patients', 'motifs', 'numeros_par_medecin'));
@@ -121,19 +132,28 @@ class RendezVousController extends Controller
         // (partagé entre caisses ET rendez-vous)
         $today = now()->startOfDay(); // 00h GMT du jour actuel
 
-        // Compter les caisses de ce médecin aujourd'hui
-        $countCaisses = \App\Models\Caisse::where('medecin_id', $request->medecin_id)
+        // Récupérer tous les numéros d'entrée utilisés aujourd'hui pour ce médecin
+        $numerosCaisses = \App\Models\Caisse::where('medecin_id', $request->medecin_id)
             ->whereDate('created_at', $today)
-            ->count();
+            ->pluck('numero_entre')
+            ->toArray();
 
-        // Compter les rendez-vous de ce médecin aujourd'hui
-        $countRendezVous = RendezVous::where('medecin_id', $request->medecin_id)
+        $numerosRendezVous = RendezVous::where('medecin_id', $request->medecin_id)
             ->whereDate('created_at', $today)
-            ->count();
+            ->pluck('numero_entree')
+            ->toArray();
 
-        // Total des entrées pour ce médecin aujourd'hui
-        $totalEntrees = $countCaisses + $countRendezVous;
-        $numeroEntree = $totalEntrees + 1;
+        // Fusionner et trier tous les numéros utilisés
+        $numerosUtilises = array_merge($numerosCaisses, $numerosRendezVous);
+        sort($numerosUtilises);
+
+        // Trouver le prochain numéro disponible
+        $numeroEntree = 1;
+        foreach ($numerosUtilises as $numero) {
+            if ($numero >= $numeroEntree) {
+                $numeroEntree = $numero + 1;
+            }
+        }
 
         $motif = $request->motif ?: 'premier visite';
 

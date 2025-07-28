@@ -46,6 +46,25 @@ class RendezVous extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    // Relation avec les caisses (pour vérifier si le rendez-vous a été payé)
+    public function caisses()
+    {
+        return $this->hasMany(Caisse::class, 'numero_entre', 'numero_entree')
+            ->where('medecin_id', $this->medecin_id);
+    }
+
+    // Méthode pour vérifier si le rendez-vous a été payé
+    public function isPaid()
+    {
+        return $this->caisses()->exists();
+    }
+
+    // Méthode pour récupérer la facture associée
+    public function getFacture()
+    {
+        return $this->caisses()->first();
+    }
+
     // Accesseur pour le nom complet du patient
     public function getPatientNomCompletAttribute()
     {
