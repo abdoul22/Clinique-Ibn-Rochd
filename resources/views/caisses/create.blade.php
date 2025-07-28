@@ -89,9 +89,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Type d'examen
                         *</label>
-                    <div class="flex space-x-2">
+                    <div class="flex-container-safe">
                         <select name="examen_id" id="examen_id" required
-                            class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            class="flex-item-safe border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                             onchange="updateTotal()">
                             <option value="">Sélectionner un type d'examen</option>
                             @foreach($exam_types as $type)
@@ -114,7 +114,7 @@
                             @endforeach
                         </select>
                         <button type="button" onclick="openExamenModal()"
-                            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center"
+                            class="flex-button-safe bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center"
                             title="Choisir un examen à ajouter">
                             <i class="fas fa-plus"></i>
                         </button>

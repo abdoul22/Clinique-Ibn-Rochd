@@ -148,19 +148,163 @@ select:focus[data-flux-control] {
 /* Styles pour les formulaires en mode dark */
 @layer components {
     .form-input {
-        @apply w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400;
+        @apply w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white;
     }
 
     .form-select {
-        @apply w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100;
+        @apply w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white;
     }
 
     .form-button {
-        @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors duration-200;
+        @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+    }
+
+    .form-button-primary {
+        @apply bg-blue-600 hover:bg-blue-700 text-white;
     }
 
     .form-button-secondary {
-        @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg shadow-sm transition-colors duration-200;
+        @apply bg-gray-500 hover:bg-gray-600 text-white;
+    }
+
+    /* Gradients robustes pour production */
+    .gradient-header {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #6366f1 100%);
+        background: -webkit-linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #6366f1 100%);
+        background: -moz-linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #6366f1 100%);
+        background: -o-linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #6366f1 100%);
+    }
+
+    .gradient-button {
+        background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+        background: -webkit-linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+        background: -moz-linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+        background: -o-linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+    }
+
+    /* Layout fixes pour production */
+    .flex-container-safe {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .flex-item-safe {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .flex-button-safe {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    /* Tableau principal avec dark mode */
+    .table-container {
+        @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700;
+    }
+
+    .table-main {
+        @apply w-full text-sm text-left text-gray-900 dark:text-gray-100;
+    }
+
+    .table-header {
+        @apply bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300;
+    }
+
+    .table-header th {
+        @apply py-2 px-2 font-medium;
+    }
+
+    .table-body {
+        @apply divide-y divide-gray-100 dark:divide-gray-600;
+    }
+
+    .table-row {
+        @apply hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200;
+    }
+
+    .table-cell {
+        @apply py-2 px-2 text-gray-900 dark:text-gray-100;
+    }
+
+    .table-cell-medium {
+        @apply py-4 px-4 font-medium text-gray-900 dark:text-gray-100;
+    }
+
+    /* Actions dans les tableaux */
+    .table-actions {
+        @apply flex justify-center space-x-3;
+    }
+
+    .action-btn {
+        @apply p-1.5 rounded-full transition-colors duration-200;
+    }
+
+    .action-btn-view {
+        @apply text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600;
+    }
+
+    .action-btn-edit {
+        @apply text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20;
+    }
+
+    .action-btn-delete {
+        @apply text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20;
+    }
+
+    /* Badges et statuts */
+    .status-badge {
+        @apply inline-block text-xs px-3 py-1 rounded-full transition-colors duration-200;
+    }
+
+    .status-badge-primary {
+        @apply bg-indigo-600 hover:bg-indigo-700 text-white;
+    }
+
+    .status-badge-success {
+        @apply bg-green-600 hover:bg-green-700 text-white;
+    }
+
+    .status-badge-warning {
+        @apply bg-yellow-600 hover:bg-yellow-700 text-white;
+    }
+
+    .status-badge-danger {
+        @apply bg-red-600 hover:bg-red-700 text-white;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        @apply mt-6 flex justify-center;
+    }
+
+    /* Responsive utilities */
+    .responsive-grid {
+        @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+    }
+
+    .responsive-flex {
+        @apply flex flex-col md:flex-row gap-4;
+    }
+
+    /* Dark mode overrides */
+    .dark .gradient-header {
+        background: linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #4f46e5 100%);
+        background: -webkit-linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #4f46e5 100%);
+        background: -moz-linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #4f46e5 100%);
+        background: -o-linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #4f46e5 100%);
+    }
+
+    .dark .gradient-button {
+        background: linear-gradient(135deg, #1e40af 0%, #4f46e5 100%);
+        background: -webkit-linear-gradient(135deg, #1e40af 0%, #4f46e5 100%);
+        background: -moz-linear-gradient(135deg, #1e40af 0%, #4f46e5 100%);
+        background: -o-linear-gradient(135deg, #1e40af 0%, #4f46e5 100%);
     }
 }
 
@@ -233,5 +377,41 @@ select:focus[data-flux-control] {
 
     .alert-info {
         @apply bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200;
+    }
+}
+
+/* Fixes spécifiques pour production */
+@media (max-width: 768px) {
+    .flex-container-safe {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .flex-item-safe {
+        flex: none;
+        width: 100%;
+    }
+
+    .flex-button-safe {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Fallbacks pour les navigateurs plus anciens */
+@supports not (display: flex) {
+    .flex-container-safe {
+        display: block;
+    }
+
+    .flex-item-safe {
+        display: block;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .flex-button-safe {
+        display: inline-block;
+        width: auto;
     }
 }

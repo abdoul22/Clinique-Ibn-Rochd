@@ -5,8 +5,7 @@
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4">
     <!-- En-tête moderne avec gradient -->
     <div class="mb-8">
-        <div
-            class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 shadow-2xl">
+        <div class="relative overflow-hidden rounded-3xl gradient-header shadow-2xl">
             <div class="absolute inset-0 bg-black/20"></div>
             <div class="relative p-8 md:p-12">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between">
