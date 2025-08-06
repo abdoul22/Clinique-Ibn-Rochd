@@ -40,7 +40,7 @@ class Pharmacie extends Model
             if ($pharmacie->statut === 'actif') {
                 Service::create([
                     'nom' => "Vente {$pharmacie->nom_medicament}",
-                    'type_service' => 'medicament',
+                    'type_service' => 'pharmacie',
                     'pharmacie_id' => $pharmacie->id,
                     'prix' => $pharmacie->prix_vente,
                     'quantite_defaut' => $pharmacie->quantite,
@@ -63,7 +63,7 @@ class Pharmacie extends Model
 
         // Quand un médicament est mis à jour, mettre à jour le service correspondant
         static::updated(function ($pharmacie) {
-            $service = $pharmacie->services()->where('type_service', 'medicament')->first();
+            $service = $pharmacie->services()->where('type_service', 'pharmacie')->first();
             if ($service) {
                 $service->update([
                     'nom' => "Vente {$pharmacie->nom_medicament}",

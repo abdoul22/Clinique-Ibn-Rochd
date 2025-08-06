@@ -23,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Forcer la locale française
+        app()->setLocale('fr');
+
         // Configuration de la pagination pour utiliser Tailwind par défaut
         Paginator::defaultView('pagination::tailwind');
         Paginator::defaultSimpleView('pagination::simple-tailwind');

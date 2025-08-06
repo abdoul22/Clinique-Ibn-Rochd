@@ -50,7 +50,9 @@ class RendezVous extends Model
     public function caisses()
     {
         return $this->hasMany(Caisse::class, 'numero_entre', 'numero_entree')
-            ->where('medecin_id', $this->medecin_id);
+            ->where('medecin_id', $this->medecin_id)
+            ->where('gestion_patient_id', $this->patient_id)
+            ->whereDate('created_at', $this->date_rdv);
     }
 
     // Méthode pour vérifier si le rendez-vous a été payé

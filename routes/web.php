@@ -179,6 +179,33 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
     Route::get('/examens/print', [ExamenController::class, 'print'])->name('examens.print');
     Route::get('/examens/export-pdf', [ExamenController::class, 'exportPdf'])->name('examens.exportPdf');
 
+    // Route API pour les informations de stock des examens
+    Route::get('/api/examens/{id}/stock-info', function ($id) {
+        $examen = \App\Models\Examen::with('service.pharmacie')->find($id);
+
+        if (!$examen) {
+            return response()->json(['error' => 'Examen non trouvé'], 404);
+        }
+
+        $service = $examen->service;
+        $isMedicament = $service && $service->type_service === 'pharmacie' && $service->pharmacie;
+
+        if ($isMedicament) {
+            $medicament = $service->pharmacie;
+            return response()->json([
+                'is_medicament' => true,
+                'stock_info' => [
+                    'nom_medicament' => $medicament->nom_medicament,
+                    'stock' => $medicament->stock,
+                    'prix_vente' => number_format($medicament->prix_vente, 0, ',', ' '),
+                    'statut' => $medicament->statut
+                ]
+            ]);
+        }
+
+        return response()->json(['is_medicament' => false]);
+    });
+
     //assurances
     Route::resource('assurances', AssuranceController::class);
     Route::get('assurances/export/pdf', [AssuranceController::class, 'exportPdf'])->name('assurances.exportPdf');

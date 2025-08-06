@@ -103,6 +103,7 @@ class CaisseController extends Controller
     public function create(Request $request)
     {
         $patients = GestionPatient::all();
+        // Récupérer tous les médecins pour afficher leur statut
         $medecins = Medecin::all();
         $prescripteurs = Prescripteur::all();
         $services = Service::all();
@@ -198,6 +199,12 @@ class CaisseController extends Controller
 
         $request->validate($rules);
 
+        // Vérifier que le médecin est actif
+        $medecin = Medecin::find($request->medecin_id);
+        if (!$medecin || trim($medecin->statut) !== 'actif') {
+            return back()->withErrors(['medecin_id' => 'Ce médecin n\'est pas actif et ne peut pas effectuer d\'examens.']);
+        }
+
         $dernierNumero = Caisse::max('numero_facture') ?? 0;
         $prochainNumero = $dernierNumero + 1;
 
@@ -265,7 +272,7 @@ class CaisseController extends Controller
                 $examen = Examen::find($examenData['id']);
                 $service = Service::find($examen->idsvc);
 
-                if ($service && $service->type_service === 'medicament' && $service->pharmacie_id && $examenData['quantite'] > 0) {
+                if ($service && $service->type_service === 'pharmacie' && $service->pharmacie_id && $examenData['quantite'] > 0) {
                     $medicament = \App\Models\Pharmacie::find($service->pharmacie_id);
 
                     if ($medicament && $medicament->stockSuffisant($examenData['quantite'])) {
@@ -282,7 +289,7 @@ class CaisseController extends Controller
             $service = Service::find($examen->idsvc);
             $quantite = $request->quantite_medicament ?? 1;
 
-            if ($service && $service->type_service === 'medicament' && $service->pharmacie_id && $quantite > 0) {
+            if ($service && $service->type_service === 'pharmacie' && $service->pharmacie_id && $quantite > 0) {
                 $medicament = \App\Models\Pharmacie::find($service->pharmacie_id);
 
                 if ($medicament && $medicament->stockSuffisant($quantite)) {

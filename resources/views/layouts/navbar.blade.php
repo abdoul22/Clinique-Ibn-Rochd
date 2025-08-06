@@ -108,19 +108,32 @@
             <!-- Right side - User menu and dark mode -->
             <div class="flex items-center space-x-2 sm:space-x-3">
                 <!-- Dark Mode Toggle (inspiré de Laravel Breeze, version Alpine.js) -->
-                <button
-                    x-data="{ dark: (localStorage.getItem('theme') === 'dark') || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches) }"
-                    @click="dark = !dark; document.documentElement.classList.toggle('dark', dark); localStorage.setItem('theme', dark ? 'dark' : 'light')"
+                <button x-data="{
+                        dark: (localStorage.getItem('theme') === 'dark') || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+                        init() {
+                            // S'assurer que l'état initial est correct
+                            this.dark = (localStorage.getItem('theme') === 'dark') || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                            document.documentElement.classList.toggle('dark', this.dark);
+                        }
+                    }" @click="
+                        dark = !dark;
+                        document.documentElement.classList.toggle('dark', dark);
+                        localStorage.setItem('theme', dark ? 'dark' : 'light');
+                        // Émettre un événement pour notifier les autres scripts
+                        document.dispatchEvent(new CustomEvent('darkModeChanged', { detail: { isDark: dark } }));
+                    "
                     class="relative p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
                     <!-- Sun icon -->
-                    <svg x-show="!dark" class="w-5 h-5 text-gray-900 transition-all duration-300 group-hover:scale-110"
+                    <svg x-show="!dark" x-cloak
+                        class="w-5 h-5 text-gray-900 transition-all duration-300 group-hover:scale-110"
                         fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd"
                             d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
                             clip-rule="evenodd" />
                     </svg>
                     <!-- Moon icon -->
-                    <svg x-show="dark" class="w-5 h-5 text-gray-100 transition-all duration-300 group-hover:scale-110"
+                    <svg x-show="dark" x-cloak
+                        class="w-5 h-5 text-gray-100 transition-all duration-300 group-hover:scale-110"
                         fill="currentColor" viewBox="0 0 20 20">
                         <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                     </svg>
@@ -128,7 +141,23 @@
                 @auth
 
                 <!-- User Profile -->
-                <div class="relative" x-data="{ open: false }">
+                <div class="relative" x-data="{
+                    open: false,
+                    init() {
+                        // Fermer le menu lors de la navigation
+                        document.addEventListener('click', (e) => {
+                            const link = e.target.closest('a');
+                            if (link && link.href && !link.href.includes('#')) {
+                                this.open = false;
+                            }
+                        });
+
+                        // Fermer le menu lors des soumissions de formulaire
+                        document.addEventListener('submit', () => {
+                            this.open = false;
+                        });
+                    }
+                }">
                     <button @click="open = !open"
                         class="flex items-center space-x-2 sm:space-x-3 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <img src="{{ Auth::user()->profile_photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=4f46e5&color=ffffff&size=128' }}"
@@ -143,7 +172,8 @@
                             :class="{ 'rotate-180': open }"></i>
                     </button>
                     <!-- Dropdown Menu (mobile inclus) -->
-                    <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200"
+                    <div x-show="open" x-cloak @click.away="open = false"
+                        x-transition:enter="transition ease-out duration-200"
                         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                         x-transition:leave="transition ease-in duration-150"
                         x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"

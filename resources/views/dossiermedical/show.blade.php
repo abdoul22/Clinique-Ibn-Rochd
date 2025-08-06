@@ -234,6 +234,21 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination des examens -->
+        @if($examens->hasPages())
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-600">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Affichage de {{ $examens->firstItem() ?? 1 }} à {{ $examens->lastItem() ?? $examens->count() }}
+                    sur {{ $examens->total() ?? $examens->count() }} examens
+                </div>
+                <div class="flex justify-center">
+                    {{ $examens->appends(request()->query())->links() }}
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 
     <!-- Historique des rendez-vous -->
@@ -326,6 +341,22 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination des rendez-vous -->
+        @if($rendezVous->hasPages())
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-600">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Affichage de {{ $rendezVous->firstItem() ?? 1 }} à {{ $rendezVous->lastItem() ??
+                    $rendezVous->count() }}
+                    sur {{ $rendezVous->total() ?? $rendezVous->count() }} rendez-vous
+                </div>
+                <div class="flex justify-center">
+                    {{ $rendezVous->appends(request()->query())->links() }}
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 @endsection

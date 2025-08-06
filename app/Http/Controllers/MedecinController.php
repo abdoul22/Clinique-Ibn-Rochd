@@ -12,14 +12,20 @@ use Illuminate\Support\Facades\DB;
 use Carbon\CarbonPeriod;
 
 
-
 class MedecinController extends Controller
 {
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $nameFilter = $request->input('name_filter');
+        $specialiteFilter = $request->input('specialite_filter');
+        $phoneFilter = $request->input('phone_filter');
+        $statusFilter = $request->input('status_filter');
+        $emailFilter = $request->input('email_filter');
+
         $query = Medecin::query();
 
+        // Filtre de recherche générale
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nom', 'like', "%{$search}%")
@@ -30,7 +36,35 @@ class MedecinController extends Controller
             });
         }
 
-        $medecins = $query->orderBy('created_at', 'desc')->paginate(6);
+        // Filtre par nom/prénom
+        if ($nameFilter) {
+            $query->where(function ($q) use ($nameFilter) {
+                $q->where('nom', 'like', "%{$nameFilter}%")
+                    ->orWhere('prenom', 'like', "%{$nameFilter}%");
+            });
+        }
+
+        // Filtre par spécialité
+        if ($specialiteFilter) {
+            $query->where('specialite', 'like', "%{$specialiteFilter}%");
+        }
+
+        // Filtre par téléphone
+        if ($phoneFilter) {
+            $query->where('telephone', 'like', "%{$phoneFilter}%");
+        }
+
+        // Filtre par statut
+        if ($statusFilter) {
+            $query->where('statut', $statusFilter);
+        }
+
+        // Filtre par email
+        if ($emailFilter) {
+            $query->where('email', 'like', "%{$emailFilter}%");
+        }
+
+        $medecins = $query->orderBy('created_at', 'desc')->paginate(10);
 
         $viewPath = $this->resolveViewPath('index');
         return view($viewPath, compact('medecins'));
@@ -74,29 +108,28 @@ class MedecinController extends Controller
 
         $startDate = $request->input('start_date') ?? now()->subMonth()->toDateString();
         $endDate = $request->input('end_date') ?? now()->toDateString();
-        $today = now()->startOfDay(); // 00h GMT
 
-        // Forcer la fin de journée jusqu'à 23:59:59 pour bien inclure aujourd’hui
-        $endDate = Carbon::parse($endDate)->endOfDay()->toDateTimeString();
-        $startDate = Carbon::parse($startDate)->startOfDay()->toDateTimeString();
+        // Convertir en objets Carbon pour une manipulation cohérente
+        $startDateCarbon = Carbon::parse($startDate)->startOfDay();
+        $endDateCarbon = Carbon::parse($endDate)->endOfDay();
 
         $examensHier = Caisse::where('medecin_id', $id)
             ->whereDate('date_examen', now()->subDay())
             ->count();
 
-        $whereBetween = [$startDate, $endDate];
-
         $examensParJour = Caisse::where('medecin_id', $id)
-            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-            ->selectRaw('DATE(created_at) as jour, COUNT(*) as total')
+            ->whereBetween('date_examen', [$startDateCarbon, $endDateCarbon])
+            ->selectRaw('DATE(date_examen) as jour, COUNT(*) as total')
             ->groupBy('jour')
             ->orderBy('jour')
             ->pluck('total', 'jour');
 
-        $examensAujourdhui = $examensParJour[now()->toDateString()] ?? 0;
+        $examensAujourdhui = Caisse::where('medecin_id', $id)
+            ->whereDate('date_examen', now()->toDateString())
+            ->count();
 
         // Étendre les dates manquantes dans la période
-        $period = CarbonPeriod::create($startDate, $endDate);
+        $period = CarbonPeriod::create($startDateCarbon, $endDateCarbon);
         $examensParJourComplet = collect();
         foreach ($period as $date) {
             $jour = $date->toDateString();
@@ -106,14 +139,14 @@ class MedecinController extends Controller
 
         $partsParJour = EtatCaisse::where('medecin_id', $id)
             ->where('validated', true)
-            ->whereBetween('created_at', $whereBetween)
+            ->whereBetween('created_at', [$startDateCarbon, $endDateCarbon])
             ->selectRaw('DATE(created_at) as jour, SUM(part_medecin) as total')
             ->groupBy('jour')
             ->orderBy('jour')
             ->pluck('total', 'jour');
 
         $examensHebdo = Caisse::where('medecin_id', $id)
-            ->whereBetween('date_examen', $whereBetween)
+            ->whereBetween('date_examen', [$startDateCarbon, $endDateCarbon])
             ->selectRaw('YEARWEEK(date_examen, 1) as semaine, COUNT(*) as total')
             ->groupBy('semaine')
             ->orderBy('semaine')
@@ -124,19 +157,19 @@ class MedecinController extends Controller
             $jour = $date->toDateString();
             $partsParJourComplet[$jour] = $partsParJour[$jour] ?? 0;
         }
-        $totalExamens = $examensParJour->sum(); // ← au lieu de combiner plusieurs sources
+        $totalExamens = $examensParJour->sum();
 
         $partsParJour = $partsParJourComplet;
 
         $examensMensuels = Caisse::where('medecin_id', $id)
-            ->whereBetween('date_examen', $whereBetween)
+            ->whereBetween('date_examen', [$startDateCarbon, $endDateCarbon])
             ->selectRaw('DATE_FORMAT(date_examen, "%Y-%m") as mois, COUNT(*) as total')
             ->groupBy('mois')
             ->orderBy('mois')
             ->pluck('total', 'mois');
 
         $examensAnnuels = Caisse::where('medecin_id', $id)
-            ->whereBetween('date_examen', $whereBetween)
+            ->whereBetween('date_examen', [$startDateCarbon, $endDateCarbon])
             ->selectRaw('YEAR(date_examen) as annee, COUNT(*) as total')
             ->groupBy('annee')
             ->orderBy('annee')

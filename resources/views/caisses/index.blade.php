@@ -18,12 +18,12 @@
                         </p>
                     </div>
                     <div class="flex-shrink-0">
-                        <a href="{{ route('caisses.create') }}"
+        <a href="{{ route('caisses.create') }}"
                             class="inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white font-semibold hover:bg-white/30 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 4v16m8-8H4" />
-                            </svg>
+            </svg>
                             Nouvelle Facture
                         </a>
                     </div>
@@ -99,13 +99,13 @@
                         </label>
                         <select name="period" id="period"
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                            <option value="day" {{ request('period', 'day' )=='day' ? 'selected' : '' }}>Jour</option>
-                            <option value="week" {{ request('period')=='week' ? 'selected' : '' }}>Semaine</option>
-                            <option value="month" {{ request('period')=='month' ? 'selected' : '' }}>Mois</option>
-                            <option value="year" {{ request('period')=='year' ? 'selected' : '' }}>Année</option>
+                <option value="day" {{ request('period', 'day' )=='day' ? 'selected' : '' }}>Jour</option>
+                <option value="week" {{ request('period')=='week' ? 'selected' : '' }}>Semaine</option>
+                <option value="month" {{ request('period')=='month' ? 'selected' : '' }}>Mois</option>
+                <option value="year" {{ request('period')=='year' ? 'selected' : '' }}>Année</option>
                             <option value="range" {{ request('period')=='range' ? 'selected' : '' }}>Plage personnalisée
                             </option>
-                        </select>
+            </select>
                     </div>
 
                     <!-- Inputs de période dynamiques -->
@@ -168,7 +168,7 @@
                 </div>
             </form>
         </div>
-    </div>
+            </div>
 
     <!-- Affichage des filtres actifs -->
     @php
@@ -187,7 +187,7 @@
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span class="text-blue-800 dark:text-blue-200 font-medium">Filtres actifs :</span>
-                </div>
+            </div>
                 <a href="{{ route('caisses.index') }}"
                     class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 font-medium">
                     Effacer tous les filtres
@@ -219,7 +219,7 @@
                 </span>
                 @endif
             </div>
-        </div>
+            </div>
     </div>
     @endif
 
@@ -238,8 +238,8 @@
                         <th class="px-6 py-4 text-left text-sm font-semibold">Total</th>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Caissier</th>
                         <th class="px-6 py-4 text-center text-sm font-semibold">Actions</th>
-                    </tr>
-                </thead>
+            </tr>
+        </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     @forelse($caisses as $caisse)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
@@ -285,30 +285,30 @@
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex justify-center space-x-2">
-                                @php
-                                $role = auth()->user()->role->name;
-                                $showRoute = $role === 'superadmin' || $role === 'admin' ? $role . '.caisses.show' :
-                                'caisses.show';
+                        @php
+                        $role = auth()->user()->role->name;
+                        $showRoute = $role === 'superadmin' || $role === 'admin' ? $role . '.caisses.show' :
+                        'caisses.show';
                                 $destroyRoute = $role === 'superadmin' || $role === 'admin' ? $role . '.caisses.destroy'
                                 : 'caisses.destroy';
-                                @endphp
+                        @endphp
 
-                                <a href="{{ route($showRoute, $caisse->id) }}"
-                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <form action="{{ route($destroyRoute, $caisse->id) }}" method="POST" class="inline"
+                        <a href="{{ route($showRoute, $caisse->id) }}"
+                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <form action="{{ route($destroyRoute, $caisse->id) }}" method="POST" class="inline"
                                     onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
                     @empty
                     <tr>
                         <td colspan="8" class="px-6 py-12 text-center">
@@ -334,12 +334,12 @@
                         </td>
                     </tr>
                     @endforelse
-                </tbody>
-            </table>
+        </tbody>
+    </table>
         </div>
-    </div>
+</div>
 
-    <!-- Pagination -->
+<!-- Pagination -->
     @if($caisses->hasPages())
     <div class="mt-8">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">

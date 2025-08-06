@@ -39,6 +39,8 @@ class User extends Authenticatable
         'password',
         'role_id',
         'is_approved',
+        'last_login_at',
+        'fonction',
     ];
 
     /**
@@ -62,6 +64,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_approved' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
     }
 
@@ -72,7 +75,7 @@ class User extends Authenticatable
     {
         return Str::of($this->name)
             ->explode(' ')
-            ->map(fn (string $name) => Str::of($name)->substr(0, 1))
+            ->map(fn(string $name) => Str::of($name)->substr(0, 1))
             ->implode('');
     }
 }

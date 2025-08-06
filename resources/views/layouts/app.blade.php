@@ -10,14 +10,22 @@
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     {{-- Script pour initialiser le dark mode immédiatement (anti-FOUC) --}}
     <script>
-        if (
-            localStorage.getItem('theme') === 'dark' ||
-            (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
-        ) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        // Initialisation immédiate du dark mode pour éviter le FOUC
+        (function() {
+            const isDark = localStorage.getItem('theme') === 'dark' ||
+                          (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
+            // S'assurer que le localStorage a une valeur par défaut
+            if (!localStorage.getItem('theme')) {
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            }
+        })();
     </script>
 
     {{-- Vite CSS/JS --}}
@@ -423,6 +431,11 @@
         .fade-in {
             animation: fadeIn 0.4s ease-in-out;
         }
+
+        /* Style pour x-cloak (masquer les éléments Alpine.js avant initialisation) */
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 </head>
 
@@ -485,6 +498,7 @@
 
     @endpush
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="{{ asset('js/navbar-fixes.js') }}" defer></script>
 </body>
 
 </html>

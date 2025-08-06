@@ -1,126 +1,204 @@
 @extends('layouts.app')
 
-
-
 @section('title', 'État de Caisse')
 
 @section('content')
-<!-- Titre + Boutons -->
-<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
-    <h1 class="page-title">Liste des États de caisse</h1>
 
-
-</div>
-
-<!-- Résumé de la période sélectionnée -->
-@php
-$period = request('period', 'day');
-$summary = '';
-if ($period === 'day' && request('date')) {
-$summary = 'Filtré sur le jour du ' . \Carbon\Carbon::parse(request('date'))->translatedFormat('d F Y');
-} elseif ($period === 'week' && request('week')) {
-$parts = explode('-W', request('week'));
-if (count($parts) === 2) {
-$start = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
-$end = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
-$summary = 'Filtré sur la semaine du ' . $start->translatedFormat('d F Y') . ' au ' . $end->translatedFormat('d F Y');
-}
-} elseif ($period === 'month' && request('month')) {
-$parts = explode('-', request('month'));
-if (count($parts) === 2) {
-$summary = 'Filtré sur le mois de ' . \Carbon\Carbon::create($parts[0], $parts[1])->translatedFormat('F Y');
-}
-} elseif ($period === 'year' && request('year')) {
-$summary = 'Filtré sur l\'année ' . request('year');
-} elseif ($period === 'range' && request('date_start') && request('date_end')) {
-$summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->translatedFormat('d F Y') . ' au ' .
-\Carbon\Carbon::parse(request('date_end'))->translatedFormat('d F Y');
-}
-@endphp
-@if($summary)
-<div class="mb-4 flex items-center gap-3">
-    <span
-        class="inline-block bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium transition">{{
-        $summary }}</span>
-    <a href="{{ route('etatcaisse.index') }}" class="form-button form-button-secondary text-xs">Réinitialiser</a>
-</div>
-@endif
-<!-- Filtre avancé par période -->
-<form method="GET" action="" class="mb-6 flex flex-wrap gap-2 items-center" id="periode-filter-form" autocomplete="off">
-    <label for="period" class="text-sm font-medium text-gray-700 dark:text-gray-300">Période :</label>
-    <select name="period" id="period" class="form-select text-sm" aria-label="Choisir la période">
-        <option value="day" {{ request('period', 'day' )=='day' ? 'selected' : '' }}>Jour</option>
-        <option value="week" {{ request('period')=='week' ? 'selected' : '' }}>Semaine</option>
-        <option value="month" {{ request('period')=='month' ? 'selected' : '' }}>Mois</option>
-        <option value="year" {{ request('period')=='year' ? 'selected' : '' }}>Année</option>
-        <option value="range" {{ request('period')=='range' ? 'selected' : '' }}>Plage personnalisée</option>
-    </select>
-    <div id="input-day" class="period-input transition-all duration-300">
-        <input type="date" name="date" value="{{ request('date') }}" class="form-input text-sm"
-            placeholder="Choisir une date" aria-label="Date du jour">
-    </div>
-    <div id="input-week" class="period-input hidden transition-all duration-300">
-        <input type="week" name="week" value="{{ request('week') }}" class="form-input text-sm"
-            placeholder="Choisir une semaine" aria-label="Semaine">
-    </div>
-    <div id="input-month" class="period-input hidden transition-all duration-300">
-        <input type="month" name="month" value="{{ request('month') }}" class="form-input text-sm"
-            placeholder="Choisir un mois" aria-label="Mois">
-    </div>
-    <div id="input-year" class="period-input hidden transition-all duration-300">
-        <input type="number" name="year" min="1900" max="2100" step="1" value="{{ request('year', date('Y')) }}"
-            class="form-input text-sm w-24" placeholder="Année" aria-label="Année">
-    </div>
-    <div id="input-range" class="period-input hidden flex gap-2 items-center transition-all duration-300">
-        <input type="date" name="date_start" value="{{ request('date_start') }}" class="form-input text-sm"
-            placeholder="Début" aria-label="Date de début">
-        <span class="text-gray-500 dark:text-gray-400">à</span>
-        <input type="date" name="date_end" value="{{ request('date_end') }}" class="form-input text-sm"
-            placeholder="Fin" aria-label="Date de fin">
-    </div>
-    <button type="submit" class="form-button text-sm" id="btn-filtrer">Filtrer</button>
-    <a href="{{ route('etatcaisse.index') }}" class="ml-2 text-sm text-gray-600 dark:text-gray-400 underline">Afficher
-        tous</a>
-</form>
-
-<!-- Filtres -->
-<div class="card mb-4">
-    <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0 w-full lg:w-auto">
-        <a href="{{ route('modepaiements.dashboard') }}" class="form-button">
-            Voir la trésorerie globale </a>
-        <!-- Boutons Export -->
-        <a href="{{ route('etatcaisse.exportPdf') }}"
-            class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition">PDF</a>
-        <a href="{{ route('etatcaisse.print') }}" target="_blank"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded transition">Imprimer</a>
-    </div>
-</div>
-
-<div class="flex-1/6 items-center">
-    <!-- Boutons de génération -->
-    <div class="flex flex-wrap gap-2 mb-4">
-
-
-
-        <div class="flex items-center">
-
-            <div class="display block">
-                @if(request('personnel_id'))
-                @php
-                $employe = $personnels->where('id', request('personnel_id'))->first();
-                @endphp
-                <div class="mb-4 card">
-                    <p class="text-sm text-gray-700 dark:text-gray-300">
-                        Total des crédits de {{ $employe->nom }} :
-                        <strong class="text-indigo-600 dark:text-indigo-400">{{ number_format($employe->credit, 2) }}
-                            MRU</strong>
-                    </p>
-                </div>
-                @endif
+<!-- Header avec gradient -->
+<div class="gradient-header mb-8">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+                    <i class="fas fa-calculator mr-3"></i>État de Caisse
+                </h1>
+                <p class="text-blue-100 text-lg">Gérez et analysez vos états de caisse</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="{{ route('modepaiements.dashboard') }}"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center">
+                    <i class="fas fa-chart-pie mr-2"></i>Trésorerie Globale
+                </a>
+                <a href="{{ route('etatcaisse.exportPdf') }}"
+                    class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center">
+                    <i class="fas fa-file-pdf mr-2"></i>Exporter PDF
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Section des filtres -->
+<div class="container mx-auto px-4 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <div class="p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-filter mr-2 text-blue-500"></i>Filtres de recherche
+            </h2>
+
+            <!-- Résumé de la période sélectionnée -->
+            @php
+            $period = request('period', 'day');
+            $summary = '';
+            if ($period === 'day' && request('date')) {
+            $summary = 'Filtré sur le jour du ' . \Carbon\Carbon::parse(request('date'))->translatedFormat('d F Y');
+            } elseif ($period === 'week' && request('week')) {
+            $parts = explode('-W', request('week'));
+            if (count($parts) === 2) {
+            $start = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
+            $end = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
+            $summary = 'Filtré sur la semaine du ' . $start->translatedFormat('d F Y') . ' au ' .
+            $end->translatedFormat('d F Y');
+            }
+            } elseif ($period === 'month' && request('month')) {
+            $parts = explode('-', request('month'));
+            if (count($parts) === 2) {
+            $summary = 'Filtré sur le mois de ' . \Carbon\Carbon::create($parts[0], $parts[1])->translatedFormat('F Y');
+            }
+            } elseif ($period === 'year' && request('year')) {
+            $summary = 'Filtré sur l\'année ' . request('year');
+            } elseif ($period === 'range' && request('date_start') && request('date_end')) {
+            $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->translatedFormat('d F Y') . ' au ' .
+            \Carbon\Carbon::parse(request('date_end'))->translatedFormat('d F Y');
+            }
+            @endphp
+
+            @if($summary)
+            <div class="mb-4 flex items-center gap-3">
+                <span
+                    class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium transition">
+                    {{ $summary }}
+                </span>
+                <a href="{{ route('etatcaisse.index') }}"
+                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm underline">
+                    Réinitialiser
+                </a>
+            </div>
+            @endif
+
+            <!-- Formulaire de filtres -->
+            <form method="GET" action="" class="space-y-4" id="periode-filter-form" autocomplete="off">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Période -->
+                    <div>
+                        <label for="period" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-calendar mr-1"></i>Période
+                        </label>
+                        <select name="period" id="period"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                            <option value="day" {{ request('period', 'day' )=='day' ? 'selected' : '' }}>Jour</option>
+                            <option value="week" {{ request('period')=='week' ? 'selected' : '' }}>Semaine</option>
+                            <option value="month" {{ request('period')=='month' ? 'selected' : '' }}>Mois</option>
+                            <option value="year" {{ request('period')=='year' ? 'selected' : '' }}>Année</option>
+                            <option value="range" {{ request('period')=='range' ? 'selected' : '' }}>Plage personnalisée
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Input Jour -->
+                    <div id="input-day" class="period-input">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-calendar-day mr-1"></i>Date
+                        </label>
+                        <input type="date" name="date" value="{{ request('date') }}"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            placeholder="Choisir une date">
+                    </div>
+
+                    <!-- Input Semaine -->
+                    <div id="input-week" class="period-input hidden">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-calendar-week mr-1"></i>Semaine
+                        </label>
+                        <input type="week" name="week" value="{{ request('week') }}"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            placeholder="Choisir une semaine">
+                    </div>
+
+                    <!-- Input Mois -->
+                    <div id="input-month" class="period-input hidden">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-calendar-alt mr-1"></i>Mois
+                        </label>
+                        <input type="month" name="month" value="{{ request('month') }}"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            placeholder="Choisir un mois">
+                    </div>
+
+                    <!-- Input Année -->
+                    <div id="input-year" class="period-input hidden">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-calendar mr-1"></i>Année
+                        </label>
+                        <input type="number" name="year" min="1900" max="2100" step="1"
+                            value="{{ request('year', date('Y')) }}"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            placeholder="Année">
+                    </div>
+                </div>
+
+                <!-- Plage personnalisée -->
+                <div id="input-range" class="period-input hidden">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-calendar-range mr-1"></i>Plage de dates
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Date de début</label>
+                            <input type="date" name="date_start" value="{{ request('date_start') }}"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                                placeholder="Début">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Date de fin</label>
+                            <input type="date" name="date_end" value="{{ request('date_end') }}"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                                placeholder="Fin">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button type="submit" id="btn-filtrer"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
+                        <i class="fas fa-search mr-2"></i>Filtrer
+                    </button>
+                    <a href="{{ route('etatcaisse.index') }}"
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
+                        <i class="fas fa-times mr-2"></i>Afficher tous
+                    </a>
+                    <a href="{{ route('etatcaisse.print') }}" target="_blank"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
+                        <i class="fas fa-print mr-2"></i>Imprimer
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Affichage des crédits personnel -->
+@if(request('personnel_id'))
+@php
+$employe = $personnels->where('id', request('personnel_id'))->first();
+@endphp
+<div class="container mx-auto px-4 mb-6">
+    <div class="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg p-4">
+        <div class="flex items-center">
+            <i class="fas fa-user-circle text-green-500 mr-3 text-xl"></i>
+            <div>
+                <h3 class="text-lg font-semibold text-green-800 dark:text-green-200">
+                    Total des crédits de {{ $employe->nom }}
+                </h3>
+                <p class="text-green-700 dark:text-green-300 text-2xl font-bold">
+                    {{ number_format($employe->credit, 2) }} MRU
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 <!-- Tableau -->
 <div class="table-container">

@@ -29,6 +29,10 @@ class AuthController extends Controller
             $user = Auth::user();
             $user->load('role');
 
+            // Mettre à jour la date de dernière connexion
+            $user->last_login_at = now();
+            $user->save();
+
             if (!$user->is_approved) {
                 Auth::logout();
                 return redirect()->route('login')->with('error', 'Votre compte est en attente d\'approbation.');
@@ -78,8 +82,8 @@ class AuthController extends Controller
             'name'        => $request->name,
             'email'       => $request->email,
             'password'    => Hash::make($request->password),
-            'role_id'     => $role?->id,  // Assure-toi que ta table `users` a un champ `role_id`
-            'is_approved' => false,
+            'role_id'     => $role?->id ?? 2,  // ID par défaut pour admin
+            'is_approved' => false, // En attente d'approbation par le superadmin
         ]);
 
         return redirect()->route('login')->with('success', 'Inscription réussie. Veuillez attendre l\'approbation d\'un administrateur.');

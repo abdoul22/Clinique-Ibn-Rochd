@@ -193,3 +193,95 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const prixAchatInput = document.getElementById('prix_achat');
+    const prixVenteInput = document.getElementById('prix_vente');
+    const prixUnitaireInput = document.getElementById('prix_unitaire');
+    const quantiteInput = document.getElementById('quantite');
+
+    // Calculer automatiquement le prix unitaire
+    function calculerPrixUnitaire() {
+        const prixAchat = parseFloat(prixAchatInput.value) || 0;
+        const prixVente = parseFloat(prixVenteInput.value) || 0;
+        const quantite = parseInt(quantiteInput.value) || 1;
+
+        if (prixVente > 0 && quantite > 0) {
+            const prixUnitaire = prixVente / quantite;
+            prixUnitaireInput.value = prixUnitaire.toFixed(2);
+        }
+    }
+
+    // Calculer automatiquement le prix de vente basé sur la marge souhaitée
+    function calculerPrixVente() {
+        const prixAchat = parseFloat(prixAchatInput.value) || 0;
+        const margePourcentage = 30; // Marge par défaut de 30%
+
+        if (prixAchat > 0) {
+            const prixVente = prixAchat * (1 + margePourcentage / 100);
+            prixVenteInput.value = prixVente.toFixed(2);
+            calculerPrixUnitaire();
+        }
+    }
+
+    // Écouter les changements pour les calculs automatiques
+    prixAchatInput.addEventListener('input', function() {
+        if (prixVenteInput.value === '') {
+            calculerPrixVente();
+        } else {
+            calculerPrixUnitaire();
+        }
+    });
+
+    prixVenteInput.addEventListener('input', calculerPrixUnitaire);
+    quantiteInput.addEventListener('input', calculerPrixUnitaire);
+
+    // Afficher les informations de calcul
+    function afficherCalculs() {
+        const prixAchat = parseFloat(prixAchatInput.value) || 0;
+        const prixVente = parseFloat(prixVenteInput.value) || 0;
+
+        if (prixAchat > 0 && prixVente > 0) {
+            const marge = prixVente - prixAchat;
+            const margePourcentage = prixAchat > 0 ? (marge / prixAchat) * 100 : 0;
+
+            // Créer ou mettre à jour l'affichage des calculs
+            let calculsDiv = document.getElementById('calculs-info');
+            if (!calculsDiv) {
+                calculsDiv = document.createElement('div');
+                calculsDiv.id = 'calculs-info';
+                calculsDiv.className = 'mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800';
+                prixVenteInput.parentNode.parentNode.appendChild(calculsDiv);
+            }
+
+            calculsDiv.innerHTML = `
+                <div class="text-sm text-blue-800 dark:text-blue-200">
+                    <div class="font-semibold mb-2">📊 Calculs automatiques :</div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="font-medium">Marge absolue :</span>
+                            <span class="text-green-600 dark:text-green-400 font-bold">${marge.toFixed(2)} MRU</span>
+                        </div>
+                        <div>
+                            <span class="font-medium">Marge % :</span>
+                            <span class="text-green-600 dark:text-green-400 font-bold">${margePourcentage.toFixed(1)}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // Écouter les changements pour afficher les calculs
+    prixAchatInput.addEventListener('input', afficherCalculs);
+    prixVenteInput.addEventListener('input', afficherCalculs);
+
+    // Initialiser les calculs au chargement
+    if (prixAchatInput.value && prixVenteInput.value) {
+        afficherCalculs();
+    }
+});
+</script>
+@endpush

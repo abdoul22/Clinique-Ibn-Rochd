@@ -58,8 +58,8 @@ class ExamenController extends Controller
 
         // Traiter les données pour l'affichage
         $examens->getCollection()->transform(function ($examen) {
-            // Si l'examen est lié à un service de type médicament (pharmacie)
-            if ($examen->service && $examen->service->type_service === 'medicament' && $examen->service->pharmacie) {
+            // Si l'examen est lié à un service de type pharmacie
+            if ($examen->service && $examen->service->type_service === 'pharmacie' && $examen->service->pharmacie) {
                 $examen->nom_affichage = $examen->service->pharmacie->nom_medicament;
                 $examen->service_affichage = 'Pharmacie';
             } else {
@@ -75,8 +75,9 @@ class ExamenController extends Controller
     public function create()
     {
         $services = Service::all();
+        $medicaments = \App\Models\Pharmacie::where('statut', 'actif')->where('stock', '>', 0)->get();
         $totaux = \App\Models\Examen::getTotaux();
-        return view('examens.create', compact('services', 'totaux'));
+        return view('examens.create', compact('services', 'medicaments', 'totaux'));
     }
 
     public function store(Request $request)
@@ -84,6 +85,7 @@ class ExamenController extends Controller
         $request->validate([
             'nom' => 'required|string|max:255',
             'idsvc' => 'nullable|exists:services,id',
+            'medicament_id' => 'nullable|exists:pharmacies,id',
             'tarif' => 'required|numeric|min:0',
             'part_cabinet' => 'nullable|numeric|min:0',
             'part_medecin' => 'nullable|numeric|min:0',
@@ -118,8 +120,28 @@ class ExamenController extends Controller
             $serviceId = $defaultService->id;
         }
 
+        // Si un médicament est sélectionné, créer un service de pharmacie
+        if ($request->medicament_id) {
+            $medicament = \App\Models\Pharmacie::find($request->medicament_id);
+            if ($medicament) {
+                // Créer ou récupérer le service de pharmacie pour ce médicament
+                $servicePharmacie = Service::firstOrCreate([
+                    'type_service' => 'pharmacie',
+                    'pharmacie_id' => $medicament->id,
+                ], [
+                    'nom' => "Vente {$medicament->nom_medicament}",
+                    'prix' => $medicament->prix_vente,
+                    'quantite_defaut' => 1,
+                    'observation' => "Service de vente pour {$medicament->nom_medicament}",
+                ]);
+
+                $serviceId = $servicePharmacie->id;
+                $nomExamen = "Vente {$medicament->nom_medicament}";
+            }
+        }
+
         $examen = Examen::create([
-            'nom' => $request->nom,
+            'nom' => $nomExamen ?? $request->nom,
             'idsvc' => $serviceId,
             'tarif' => $tarif,
             'part_cabinet' => $part_cabinet,

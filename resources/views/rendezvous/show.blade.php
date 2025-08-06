@@ -197,6 +197,16 @@
                                     </a>
                                 </div>
                             </div>
+                        @elseif($rendezVous->statut === 'annule')
+                            <div class="w-full bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded flex items-center justify-center">
+                                <i class="fas fa-times-circle mr-2"></i>
+                                <div class="text-center">
+                                    <div class="font-semibold">❌ Rendez-vous annulé</div>
+                                    <div class="text-sm mt-1">
+                                        Ce rendez-vous ne peut pas être payé car il a été annulé
+                                    </div>
+                                </div>
+                            </div>
                         @else
                             <a href="{{ route('caisses.create', [
                                 'from_rdv' => $rendezVous->id,

@@ -48,7 +48,15 @@ class Service extends Model
      */
     public function isMedicament(): bool
     {
-        return $this->type_service === 'medicament' && $this->pharmacie_id !== null;
+        return $this->type_service === 'pharmacie' && $this->pharmacie_id !== null;
+    }
+
+    /**
+     * Vérifier si le service est de type pharmacie
+     */
+    public function isPharmacie(): bool
+    {
+        return $this->type_service === 'pharmacie' && $this->pharmacie_id !== null;
     }
 
     /**

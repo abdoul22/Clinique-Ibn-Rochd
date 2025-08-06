@@ -11,6 +11,10 @@ class GestionPatientController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $phoneFilter = $request->input('phone_filter');
+        $genderFilter = $request->input('gender_filter');
+        $nameFilter = $request->input('name_filter');
+        $birthDateFilter = $request->input('birth_date_filter');
         $period = $request->input('period', 'day');
         $date = $request->input('date');
         $week = $request->input('week');
@@ -21,6 +25,7 @@ class GestionPatientController extends Controller
 
         $query = GestionPatient::query();
 
+        // Filtre de recherche générale
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
@@ -40,6 +45,29 @@ class GestionPatientController extends Controller
                     ->orWhere('emergency_contact_phone', 'like', "%{$search}%")
                     ->orWhere('national_id', 'like', "%{$search}%");
             });
+        }
+
+        // Filtre par numéro de téléphone
+        if ($phoneFilter) {
+            $query->where('phone', 'like', "%{$phoneFilter}%");
+        }
+
+        // Filtre par sexe
+        if ($genderFilter) {
+            $query->where('gender', $genderFilter);
+        }
+
+        // Filtre par nom/prénom
+        if ($nameFilter) {
+            $query->where(function ($q) use ($nameFilter) {
+                $q->where('first_name', 'like', "%{$nameFilter}%")
+                    ->orWhere('last_name', 'like', "%{$nameFilter}%");
+            });
+        }
+
+        // Filtre par date de naissance
+        if ($birthDateFilter) {
+            $query->whereDate('date_of_birth', $birthDateFilter);
         }
 
         // Filtrage par période sur created_at

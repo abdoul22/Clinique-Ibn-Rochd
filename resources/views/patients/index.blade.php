@@ -3,170 +3,238 @@
 
 @section('content')
 
-<!-- Titre + Bouton Ajouter + Formulaire -->
-<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
-    <h1 class="page-title">Liste des Patients</h1>
-
-    <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0 w-full lg:w-auto">
-        <!-- Bouton Ajouter -->
-        <a href="{{ route(auth()->user()->role->name . '.patients.create') }}" class="form-button text-sm">
-            + Ajouter un Patient
-        </a>
-
-        <!-- Formulaire de recherche -->
-        <form method="GET" action="{{ route('patients.index') }}" class="flex flex-wrap gap-2 items-center">
-            <!-- Recherche -->
-            <input type="text" name="search" placeholder="Rechercher..." value="{{ request('search') }}"
-                class="form-input text-sm w-full md:w-auto">
-
-            <!-- Sexe -->
-            <select name="sexe" class="form-select text-sm w-full md:w-auto">
-                <option value="">Tous les sexes</option>
-                <option value="Homme" {{ request('sexe')=='male' ? 'selected' : '' }}>Homme</option>
-                <option value="Femme" {{ request('sexe')=='female' ? 'selected' : '' }}>Femme</option>
-            </select>
-
-            <!-- Type -->
-            <select name="type_patient" class="form-select text-sm w-full md:w-auto">
-                <option value="">Tous les types</option>
-                <option value="Interne" {{ request('type_patient')=='Interne' ? 'selected' : '' }}>Interne</option>
-                <option value="Externe" {{ request('type_patient')=='Externe' ? 'selected' : '' }}>Externe</option>
-            </select>
-
-            <!-- Bouton Filtrer -->
-            <button type="submit" class="form-button text-sm">
-                Filtrer
-            </button>
-        </form>
+<!-- Header avec gradient et titre -->
+<div class="gradient-header mb-8">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+                    <i class="fas fa-users mr-3"></i>Gestion des Patients
+                </h1>
+                <p class="text-blue-100 text-lg">Gérez vos patients et leurs informations médicales</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="{{ route(auth()->user()->role->name . '.patients.create') }}"
+                   class="gradient-button flex items-center justify-center px-6 py-3 rounded-lg text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-plus mr-2"></i>Nouveau Patient
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Résumé de la période sélectionnée -->
-@php
-$period = request('period', 'day');
-$summary = '';
-if ($period === 'day' && request('date')) {
-$summary = 'Filtré sur le jour du ' . \Carbon\Carbon::parse(request('date'))->translatedFormat('d F Y');
-} elseif ($period === 'week' && request('week')) {
-$parts = explode('-W', request('week'));
-if (count($parts) === 2) {
-$start = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
-$end = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
-$summary = 'Filtré sur la semaine du ' . $start->translatedFormat('d F Y') . ' au ' . $end->translatedFormat('d F Y');
-}
-} elseif ($period === 'month' && request('month')) {
-$parts = explode('-', request('month'));
-if (count($parts) === 2) {
-$summary = 'Filtré sur le mois de ' . \Carbon\Carbon::create($parts[0], $parts[1])->translatedFormat('F Y');
-}
-} elseif ($period === 'year' && request('year')) {
-$summary = 'Filtré sur l\'année ' . request('year');
-} elseif ($period === 'range' && request('date_start') && request('date_end')) {
-$summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->translatedFormat('d F Y') . ' au ' .
-\Carbon\Carbon::parse(request('date_end'))->translatedFormat('d F Y');
-}
-@endphp
-@if($summary)
-<div class="mb-4 flex items-center gap-3">
-    <span
-        class="inline-block bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium transition">{{
-        $summary }}</span>
-    <a href="{{ route('patients.index') }}" class="form-button form-button-secondary text-xs">Réinitialiser</a>
-</div>
-@endif
+<!-- Section des filtres -->
+<div class="container mx-auto px-4 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <div class="p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-filter mr-2 text-blue-500"></i>Filtres de recherche
+            </h2>
 
-<!-- Filtre avancé par période -->
-<form method="GET" action="" class="mb-6 flex flex-wrap gap-2 items-center" id="periode-filter-form" autocomplete="off">
-    <label for="period" class="text-sm font-medium text-gray-700 dark:text-gray-300">Période :</label>
-    <select name="period" id="period" class="form-select text-sm" aria-label="Choisir la période">
-        <option value="day" {{ request('period', 'day' )=='day' ? 'selected' : '' }}>Jour</option>
-        <option value="week" {{ request('period')=='week' ? 'selected' : '' }}>Semaine</option>
-        <option value="month" {{ request('period')=='month' ? 'selected' : '' }}>Mois</option>
-        <option value="year" {{ request('period')=='year' ? 'selected' : '' }}>Année</option>
-        <option value="range" {{ request('period')=='range' ? 'selected' : '' }}>Plage personnalisée</option>
+            <form method="GET" action="{{ route('patients.index') }}" class="space-y-4">
+                <!-- Première ligne de filtres -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Recherche générale -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-search mr-1"></i>Recherche générale
+                        </label>
+                        <input type="text" name="search" value="{{ request('search') }}"
+                               placeholder="Nom, téléphone, adresse..."
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                    </div>
+
+                    <!-- Filtre par nom -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-user mr-1"></i>Nom du patient
+                        </label>
+                        <input type="text" name="name_filter" value="{{ request('name_filter') }}"
+                               placeholder="Nom ou prénom..."
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                    </div>
+
+                    <!-- Filtre par téléphone -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-phone mr-1"></i>Numéro de téléphone
+                        </label>
+                        <input type="text" name="phone_filter" value="{{ request('phone_filter') }}"
+                               placeholder="Numéro de téléphone..."
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                    </div>
+
+                    <!-- Filtre par sexe -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-venus-mars mr-1"></i>Sexe
+                        </label>
+                        <select name="gender_filter" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                            <option value="">Tous les sexes</option>
+                            <option value="Homme" {{ request('gender_filter') == 'Homme' ? 'selected' : '' }}>Homme</option>
+                            <option value="Femme" {{ request('gender_filter') == 'Femme' ? 'selected' : '' }}>Femme</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Deuxième ligne de filtres -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Filtre par date de naissance -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-calendar mr-1"></i>Date de naissance
+                        </label>
+                        <input type="date" name="birth_date_filter" value="{{ request('birth_date_filter') }}"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+</div>
+
+                    <!-- Filtre par période -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-clock mr-1"></i>Période d'inscription
+                        </label>
+                        <select name="period" id="period" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                            <option value="all" {{ request('period', 'all') == 'all' ? 'selected' : '' }}>Toutes les périodes</option>
+                            <option value="day" {{ request('period') == 'day' ? 'selected' : '' }}>Aujourd'hui</option>
+                            <option value="week" {{ request('period') == 'week' ? 'selected' : '' }}>Cette semaine</option>
+                            <option value="month" {{ request('period') == 'month' ? 'selected' : '' }}>Ce mois</option>
+                            <option value="year" {{ request('period') == 'year' ? 'selected' : '' }}>Cette année</option>
     </select>
-    <div id="input-day" class="period-input transition-all duration-300">
-        <input type="date" name="date" value="{{ request('date') }}" class="form-input text-sm"
-            placeholder="Choisir une date" aria-label="Date du jour">
-    </div>
-    <div id="input-week" class="period-input hidden transition-all duration-300">
-        <input type="week" name="week" value="{{ request('week') }}" class="form-input text-sm"
-            placeholder="Choisir une semaine" aria-label="Semaine">
-    </div>
-    <div id="input-month" class="period-input hidden transition-all duration-300">
-        <input type="month" name="month" value="{{ request('month') }}" class="form-input text-sm"
-            placeholder="Choisir un mois" aria-label="Mois">
-    </div>
-    <div id="input-year" class="period-input hidden transition-all duration-300">
-        <input type="number" name="year" min="1900" max="2100" step="1" value="{{ request('year', date('Y')) }}"
-            class="form-input text-sm w-24" placeholder="Année" aria-label="Année">
-    </div>
-    <div id="input-range" class="period-input hidden flex gap-2 items-center transition-all duration-300">
-        <input type="date" name="date_start" value="{{ request('date_start') }}" class="form-input text-sm"
-            placeholder="Début" aria-label="Date de début">
-        <span class="text-gray-500 dark:text-gray-400">à</span>
-        <input type="date" name="date_end" value="{{ request('date_end') }}" class="form-input text-sm"
-            placeholder="Fin" aria-label="Date de fin">
-    </div>
-    <button type="submit" class="form-button text-sm" id="btn-filtrer">Filtrer</button>
-    <a href="{{ route('patients.index') }}" class="ml-2 text-sm text-gray-600 dark:text-gray-400 underline">Afficher
-        tous</a>
-</form>
+                    </div>
 
-<!-- Tableau -->
-<div class="table-container">
-    <table class="table-main">
-        <thead class="table-header">
-            <tr>
-                <th>ID</th>
-                <th>Nom</th>
-                <th>Sexe</th>
-                <th>Date de naissance</th>
-                <th>Téléphone</th>
-                <th>Adresse</th>
-                <th>Actions</th>
+                    <!-- Boutons d'action -->
+                    <div class="flex items-end gap-3">
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
+                            <i class="fas fa-search mr-2"></i>Filtrer
+                        </button>
+                        <a href="{{ route('patients.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center">
+                            <i class="fas fa-times mr-2"></i>Réinitialiser
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Affichage des filtres actifs -->
+            @if(request('search') || request('name_filter') || request('phone_filter') || request('gender_filter') || request('birth_date_filter'))
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filtres actifs :</h3>
+                <div class="flex flex-wrap gap-2">
+                    @if(request('search'))
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                        Recherche: {{ request('search') }}
+                    </span>
+                    @endif
+                    @if(request('name_filter'))
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                        Nom: {{ request('name_filter') }}
+                    </span>
+                    @endif
+                    @if(request('phone_filter'))
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
+                        Téléphone: {{ request('phone_filter') }}
+                    </span>
+                    @endif
+                    @if(request('gender_filter'))
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
+                        Sexe: {{ request('gender_filter') }}
+                    </span>
+                    @endif
+                    @if(request('birth_date_filter'))
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+                        Date de naissance: {{ request('birth_date_filter') }}
+                    </span>
+                    @endif
+    </div>
+    </div>
+            @endif
+    </div>
+    </div>
+    </div>
+
+<!-- Section des résultats -->
+<div class="container mx-auto px-4">
+    @if($patients->count() > 0)
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Patient</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sexe</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date de naissance</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Téléphone</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Adresse</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
             </tr>
         </thead>
-        <tbody class="table-body">
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             @foreach($patients as $patient)
-            <tr class="table-row">
-                <td class="table-cell">{{ $patient->id }}</td>
-                <td class="table-cell-medium">{{ $patient->first_name }} {{ $patient->last_name }}</td>
-                <td class="table-cell">{{ $patient->gender }}</td>
-                <td class="table-cell">
-                    <span
-                        class="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-medium">
-                        <svg class="w-4 h-4 text-blue-500 mr-1" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {{ \Carbon\Carbon::parse($patient->date_of_birth)->translatedFormat('d F Y') }}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            #{{ $patient->id }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                        <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ $patient->first_name }} {{ $patient->last_name }}
+                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        ID: {{ $patient->id }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $patient->gender == 'Homme' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200' }}">
+                                <i class="fas {{ $patient->gender == 'Homme' ? 'fa-mars' : 'fa-venus' }} mr-1"></i>
+                                {{ $patient->gender }}
                     </span>
                 </td>
-                <td class="table-cell">{{ $patient->phone }}</td>
-                <td class="table-cell">{{ $patient->address }}</td>
-                <td class="table-cell">
-                    <div class="flex space-x-2">
-                        <!-- Voir -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar text-gray-400 mr-2"></i>
+                                {{ \Carbon\Carbon::parse($patient->date_of_birth)->format('d/m/Y') }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            <div class="flex items-center">
+                                <i class="fas fa-phone text-gray-400 mr-2"></i>
+                                {{ $patient->phone }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            <div class="flex items-center">
+                                <i class="fas fa-map-marker-alt text-gray-400 mr-2"></i>
+                                {{ $patient->address ?: 'Non renseignée' }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex items-center space-x-2">
                         <a href="{{ route(auth()->user()->role->name . '.patients.show', $patient->id) }}"
-                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
+                                   class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1 transition-colors duration-200"
+                                   title="Voir les détails">
                             <i class="fas fa-eye"></i>
                         </a>
-
-                        <!-- Modifier -->
                         <a href="{{ route(auth()->user()->role->name . '.patients.edit', $patient->id) }}"
-                            class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1">
+                                   class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1 transition-colors duration-200"
+                                   title="Modifier">
                             <i class="fas fa-edit"></i>
                         </a>
-
-                        <!-- Supprimer -->
                         <form action="{{ route(auth()->user()->role->name . '.patients.destroy', $patient->id) }}"
-                            method="POST" onsubmit="return confirm('Êtes-vous sûr ?')" class="inline">
+                                      method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce patient ?')"
+                                      class="inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit"
-                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1">
+                                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1 transition-colors duration-200"
+                                            title="Supprimer">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
@@ -176,69 +244,50 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
             @endforeach
         </tbody>
     </table>
+        </div>
 </div>
 
 <!-- Pagination -->
-<div class="pagination-container">
+    <div class="mt-6">
     {{ $patients->links() }}
+    </div>
+
+    @else
+    <!-- État vide -->
+    <div class="text-center py-12">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+            <i class="fas fa-users text-gray-400 text-xl"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Aucun patient trouvé</h3>
+        <p class="text-gray-500 dark:text-gray-400 mb-6">
+            @if(request('search') || request('name_filter') || request('phone_filter') || request('gender_filter') || request('birth_date_filter'))
+                Aucun patient ne correspond aux critères de recherche.
+            @else
+                Aucun patient n'a été ajouté pour le moment.
+            @endif
+        </p>
+        <a href="{{ route(auth()->user()->role->name . '.patients.create') }}"
+           class="gradient-button inline-flex items-center px-6 py-3 rounded-lg text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl">
+            <i class="fas fa-plus mr-2"></i>Ajouter le premier patient
+        </a>
+    </div>
+    @endif
 </div>
 
 @endsection
 
 @push('scripts')
 <script>
-    // Affichage dynamique des inputs selon la période + accessibilité + transitions
-    function updatePeriodInputs() {
-        const period = document.getElementById('period').value;
-        document.querySelectorAll('.period-input').forEach(div => div.classList.add('hidden'));
-        if (period === 'day') document.getElementById('input-day').classList.remove('hidden');
-        if (period === 'week') document.getElementById('input-week').classList.remove('hidden');
-        if (period === 'month') document.getElementById('input-month').classList.remove('hidden');
-        if (period === 'year') document.getElementById('input-year').classList.remove('hidden');
-        if (period === 'range') document.getElementById('input-range').classList.remove('hidden');
-        updateFiltrerButtonState();
-        updateFiltrerButtonLabel();
-    }
-    function updateFiltrerButtonState() {
-        const period = document.getElementById('period').value;
-        let valid = false;
-        if (period === 'day') {
-            valid = !!document.querySelector('input[name="date"]').value;
-        } else if (period === 'week') {
-            valid = !!document.querySelector('input[name="week"]').value;
-        } else if (period === 'month') {
-            valid = !!document.querySelector('input[name="month"]').value;
-        } else if (period === 'year') {
-            valid = !!document.querySelector('input[name="year"]').value;
-        } else if (period === 'range') {
-            const start = document.querySelector('input[name="date_start"]').value;
-            const end = document.querySelector('input[name="date_end"]').value;
-            valid = !!start && !!end && start <= end;
+    // Gestion des filtres dynamiques
+    document.addEventListener('DOMContentLoaded', function() {
+        // Réinitialisation des filtres
+        const resetButton = document.querySelector('a[href="{{ route("patients.index") }}"]');
+        if (resetButton) {
+            resetButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = this.href;
+            });
         }
-        document.getElementById('btn-filtrer').disabled = !valid;
-        document.getElementById('btn-filtrer').classList.toggle('opacity-50', !valid);
-        document.getElementById('btn-filtrer').classList.toggle('cursor-not-allowed', !valid);
-    }
-    function updateFiltrerButtonLabel() {
-        const period = document.getElementById('period').value;
-        let label = 'Filtrer';
-        if (period === 'day') label = 'Filtrer par jour';
-        else if (period === 'week') label = 'Filtrer par semaine';
-        else if (period === 'month') label = 'Filtrer par mois';
-        else if (period === 'year') label = 'Filtrer par année';
-        else if (period === 'range') label = 'Filtrer par plage';
-        document.getElementById('btn-filtrer').textContent = label;
-    }
-    document.getElementById('period').addEventListener('change', updatePeriodInputs);
-    document.querySelectorAll('.period-input input').forEach(input => {
-        input.addEventListener('input', function() {
-            updateFiltrerButtonState();
-        });
-    });
-    window.addEventListener('DOMContentLoaded', function() {
-        updatePeriodInputs();
-        updateFiltrerButtonState();
-        updateFiltrerButtonLabel();
     });
 </script>
 @endpush

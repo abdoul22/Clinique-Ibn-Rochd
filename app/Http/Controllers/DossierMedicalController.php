@@ -91,18 +91,18 @@ class DossierMedicalController extends Controller
         // Calculer les statistiques
         $statistiques = $dossier->calculerStatistiques();
 
-        // Récupérer l'historique des examens
+        // Récupérer l'historique des examens avec pagination
         $examens = $dossier->examens()
             ->with(['medecin', 'examen', 'service', 'prescripteur'])
             ->orderBy('date_examen', 'desc')
-            ->get();
+            ->paginate(10, ['*'], 'examens_page');
 
-        // Récupérer l'historique des rendez-vous
+        // Récupérer l'historique des rendez-vous avec pagination
         $rendezVous = $dossier->rendezVous()
             ->with(['medecin'])
             ->orderBy('date_rdv', 'desc')
             ->orderBy('heure_rdv', 'desc')
-            ->get();
+            ->paginate(10, ['*'], 'rendezvous_page');
 
         // Grouper les examens par année/mois
         $examensParPeriode = $examens->groupBy(function ($examen) {

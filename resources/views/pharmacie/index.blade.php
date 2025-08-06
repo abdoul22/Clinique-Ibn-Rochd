@@ -97,7 +97,17 @@
             <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                 <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Marge Moyenne</span>
                 <span class="text-indigo-700 dark:text-indigo-400 text-xl font-bold">{{
-                    number_format($resume['marge_moyenne'], 0, ',', ' ') }} MRU</span>
+                    number_format($resume['marge_moyenne_absolue'], 0, ',', ' ') }} MRU</span>
+            </div>
+            <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Marge %</span>
+                <span class="text-orange-700 dark:text-orange-400 text-xl font-bold">{{
+                    number_format($resume['marge_moyenne_pourcentage'], 1, ',', ' ') }}%</span>
+            </div>
+            <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Bénéfice Potentiel</span>
+                <span class="text-green-700 dark:text-green-400 text-xl font-bold">{{
+                    number_format($resume['benefice_potentiel_total'], 0, ',', ' ') }} MRU</span>
             </div>
         </div>
         <div class="grid grid-cols-2 gap-4 mt-4">

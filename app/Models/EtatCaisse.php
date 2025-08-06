@@ -105,4 +105,36 @@ class EtatCaisse extends Model
     {
         return $this->belongsTo(Caisse::class);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Observers
+    |--------------------------------------------------------------------------
+    */
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Créer automatiquement un crédit d'assurance lors de la création d'un état de caisse
+        static::created(function ($etatCaisse) {
+            if ($etatCaisse->assurance_id) {
+                Credit::create([
+                    'source_type' => \App\Models\Assurance::class,
+                    'source_id' => $etatCaisse->assurance_id,
+                    'montant' => $etatCaisse->recette,
+                    'montant_paye' => 0,
+                    'status' => 'non payé',
+                    'statut' => 'Non payé',
+                    'caisse_id' => $etatCaisse->caisse_id,
+                ]);
+
+                // Mettre à jour le crédit de l'assurance
+                $assurance = $etatCaisse->assurance;
+                if ($assurance) {
+                    $assurance->updateCredit();
+                }
+            }
+        });
+    }
 }

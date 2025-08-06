@@ -61,11 +61,17 @@
                         class="w-full font-bold bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-500 dark:text-gray-400">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Numéro de téléphone
-                        *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        Numéro de téléphone *
+                        @if($fromRdv)
+                        <span class="text-green-600 text-xs">(Pré-rempli depuis le rendez-vous)</span>
+                        @endif
+                    </label>
                     <input type="text" id="patient_phone" name="patient_phone"
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        placeholder="Saisir le numéro de téléphone du patient">
+                        value="{{ $fromRdv && $prefilledPatient ? $prefilledPatient->phone : '' }}"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 {{ $fromRdv ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-900' }} text-gray-900 dark:text-white"
+                        placeholder="{{ $fromRdv ? '' : 'Saisir le numéro de téléphone du patient' }}" {{ $fromRdv
+                        ? 'disabled' : '' }}>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -98,16 +104,41 @@
                         @endif
                     </label>
                     <select name="medecin_id" id="medecin_select" required
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white {{ $fromRdv ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : '' }}"
-                        {{ $fromRdv ? 'disabled' : '' }}>
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        onchange="checkMedecinStatus()">
                         <option value="">Sélectionner un médecin</option>
                         @foreach($medecins as $medecin)
-                        <option value="{{ $medecin->id }}" {{ $fromRdv && $prefilledMedecin && $medecin->id ==
-                            $prefilledMedecin->id ? 'selected' : '' }}>
-                            {{ $medecin->nom }}
+                        <option value="{{ $medecin->id }}" data-statut="{{ $medecin->statut }}" {{ $fromRdv &&
+                            $prefilledMedecin && $medecin->id == $prefilledMedecin->id ? 'selected' : '' }}>
+                            {{ $medecin->nom }} ({{ ucfirst($medecin->statut) }})
                         </option>
                         @endforeach
                     </select>
+
+                    <!-- Alerte pour médecin inactif/suspendu -->
+                    <div id="medecin_alert" class="hidden mt-3 p-4 rounded-lg border-2 shadow-lg">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 text-lg"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200"
+                                    id="medecin_alert_title">
+                                    Médecin non autorisé
+                                </h3>
+                                <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300" id="medecin_alert_text">
+                                    <!-- Le message sera inséré ici par JavaScript -->
+                                </div>
+                                <div class="mt-3">
+                                    <span class="text-xs text-yellow-600 dark:text-yellow-400">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Veuillez sélectionner un médecin actif pour continuer.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     @if($fromRdv && $prefilledMedecin)
                     <input type="hidden" name="medecin_id" value="{{ $prefilledMedecin->id }}">
                     @endif
@@ -137,29 +168,15 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Type d'examen
                         *</label>
+                    <small class="text-blue-600 dark:text-blue-400 mb-2 block">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Cliquez sur l'icône + pour sélectionner vos examens
+                    </small>
                     <div class="flex-container-safe">
-                        <select name="examen_id" id="examen_id" required
-                            class="flex-item-safe border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        <select name="examen_id" id="examen_id" required disabled
+                            class="flex-item-safe border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                             onchange="updateTotal()">
-                            <option value="">Sélectionner un type d'examen</option>
-                            @foreach($exam_types as $type)
-                            @php
-                            $service = $type->service;
-                            $isPharmacie = $service && $service->type_service === 'medicament' && $service->pharmacie;
-                            $stockInfo = $isPharmacie ? "Stock: {$service->pharmacie->stock}" : '';
-                            @endphp
-                            <option value="{{ $type->id }}" data-tarif="{{ $type->tarif }}"
-                                data-service-type="{{ $service ? $service->type_service : '' }}"
-                                data-is-pharmacie="{{ $isPharmacie ? 'true' : 'false' }}"
-                                data-stock="{{ $isPharmacie ? $service->pharmacie->stock : '' }}"
-                                data-nom="{{ $type->nom }}" data-part-cabinet="{{ $type->part_cabinet }}"
-                                data-part-medecin="{{ $type->part_medecin }}">
-                                {{ $type->nom }} - {{ number_format($type->tarif, 2) }} MRU
-                                @if($isPharmacie)
-                                ({{ $service->pharmacie->nom_medicament }})
-                                @endif
-                            </option>
-                            @endforeach
+                            <option value="">Sélectionnez des examens via l'icône +</option>
                         </select>
                         <button type="button" onclick="openExamenModal()"
                             class="flex-button-safe bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center"
@@ -191,6 +208,16 @@
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                         onchange="updateTotal()">
                     <small class="text-gray-500 dark:text-gray-400" id="stock_info"></small>
+
+                    <!-- Informations de stock pour les médicaments -->
+                    <div id="stock_details"
+                        class="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+                        style="display: none;">
+                        <div class="text-sm text-blue-800 dark:text-blue-200">
+                            <div class="font-semibold mb-1">📦 Informations de stock :</div>
+                            <div id="stock_details_content"></div>
+                        </div>
+                    </div>
                 </div>
                 {{-- Checkbox : le patient a-t-il une assurance ? --}}
                 <div>
@@ -290,7 +317,7 @@
                             data-tarif="{{ $examen->tarif }}" data-part-cabinet="{{ $examen->part_cabinet }}"
                             data-part-medecin="{{ $examen->part_medecin }}"
                             data-service-type="{{ $examen->service ? $examen->service->type_service : 'consultation' }}"
-                            data-is-pharmacie="{{ $examen->service && $examen->service->type_service === 'medicament' ? 'true' : 'false' }}"
+                            data-is-pharmacie="{{ $examen->service && $examen->service->type_service === 'pharmacie' ? 'true' : 'false' }}"
                             data-stock="{{ $examen->service && $examen->service->pharmacie ? $examen->service->pharmacie->stock : '' }}">
                             {{ $examen->nom }} - {{ number_format($examen->tarif, 2) }} MRU
                         </option>
@@ -503,8 +530,11 @@
 
         // Réinitialiser les sélections
         select.value = '';
-        quantiteInput.value = 1;
+        quantiteInput.value = '1';
         document.getElementById('quantite_medicament_div').style.display = 'none';
+        document.getElementById('stock_info').textContent = '';
+        document.getElementById('display_total').value = '';
+        document.getElementById('total').value = '';
 
         // Afficher la zone des examens sélectionnés
         document.getElementById('examens_selectionnes_div').style.display = 'block';
@@ -568,63 +598,42 @@
 </script>
 <script>
     function updateTotal() {
-        const select = document.getElementById('examen_id');
-        const selectedOption = select.options[select.selectedIndex];
-        const quantiteDiv = document.getElementById('quantite_medicament_div');
-        const stockInfo = document.getElementById('stock_info');
-        const quantiteInput = document.getElementById('quantite_medicament');
+        // Le select est désactivé, donc on calcule le total uniquement à partir des examens sélectionnés
+        const examensSelectionnes = JSON.parse(document.getElementById('examens_data').value || '[]');
+        const displayTotal = document.getElementById('display_total');
+        const totalHidden = document.getElementById('total');
 
-        if (select.value) {
-            const tarif = parseFloat(selectedOption.getAttribute('data-tarif'));
-            const isPharmacie = selectedOption.getAttribute('data-is-pharmacie') === 'true';
-            const stock = selectedOption.getAttribute('data-stock');
+        let totalGeneral = 0;
 
-            if (isPharmacie) {
-                // Afficher le champ quantité pour les médicaments
-                quantiteDiv.style.display = 'block';
+        examensSelectionnes.forEach(examen => {
+            totalGeneral += examen.total || 0;
+        });
 
-                // Afficher les informations de stock
-                if (stock) {
-                    stockInfo.textContent = `Stock disponible: ${stock} unités`;
-                    stockInfo.className = parseInt(stock) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-                }
-
-                // Calculer le total avec la quantité
-                const quantite = parseInt(quantiteInput.value) || 1;
-                const total = tarif * quantite;
-
-                // Vérifier le stock
-                if (stock && quantite > parseInt(stock)) {
-                    stockInfo.textContent = `Stock insuffisant! Disponible: ${stock} unités`;
-                    stockInfo.className = 'text-red-600 dark:text-red-400';
-                }
-
-                document.getElementById('display_total').value = total.toFixed(2);
-                document.getElementById('total').value = total.toFixed(2);
-            } else {
-                // Cacher le champ quantité pour les autres types de services
-                quantiteDiv.style.display = 'none';
-                stockInfo.textContent = '';
-
-                // Total simple pour les services non-médicament
-                document.getElementById('display_total').value = tarif.toFixed(2);
-                document.getElementById('total').value = tarif.toFixed(2);
-            }
-        } else {
-            // Aucun examen sélectionné
-            quantiteDiv.style.display = 'none';
-            stockInfo.textContent = '';
-            document.getElementById('display_total').value = '';
-            document.getElementById('total').value = '';
+        if (displayTotal) {
+            displayTotal.value = totalGeneral.toFixed(2);
         }
-    }
+        if (totalHidden) {
+            totalHidden.value = totalGeneral.toFixed(2);
+        }
+
+        // Mettre à jour l'affichage des examens sélectionnés
+        afficherExamensSelectionnes();
+
 
     // Mettre à jour le total quand la quantité change
     document.addEventListener('DOMContentLoaded', function() {
-        const quantiteInput = document.getElementById('quantite_medicament');
-        if (quantiteInput) {
-            quantiteInput.addEventListener('input', updateTotal);
-        }
+        // Le select est désactivé, donc on n'a plus besoin d'écouter ses changements
+        // Le total se met à jour automatiquement via la modal
+
+        // Appeler updateTotal au chargement de la page
+        setTimeout(function() {
+            if (typeof updateTotal === 'function') {
+                updateTotal();
+            }
+
+            // Forcer le mode examens multiples puisque le select est désactivé
+            document.getElementById('examens_multiple').value = 'true';
+        }, 100);
 
                 // Mettre à jour le numéro d'entrée quand un médecin est sélectionné
         const medecinSelect = document.getElementById('medecin_select');
@@ -644,8 +653,139 @@
                     // Aucun médecin sélectionné
                     numeroEntreeDisplay.value = '{{ $numero_prevu }}';
                 }
+
+                // Vérifier le statut du médecin
+                checkMedecinStatus();
             });
+
+            // Ajouter un événement pour vérifier le statut quand le sélecteur change
+            if (medecinSelect) {
+                medecinSelect.addEventListener('change', function() {
+                    checkMedecinStatus();
+                });
+            }
         }
+
+                                // Fonction pour vérifier le statut du médecin
+        function checkMedecinStatus() {
+            const medecinSelect = document.getElementById('medecin_select');
+            const selectedOption = medecinSelect.options[medecinSelect.selectedIndex];
+            const alertDiv = document.getElementById('medecin_alert');
+            const alertText = document.getElementById('medecin_alert_text');
+            const alertTitle = document.getElementById('medecin_alert_title');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (selectedOption && selectedOption.value) {
+                const statut = selectedOption.getAttribute('data-statut');
+
+                                if (statut === 'inactif' || statut === 'suspendu') {
+                    // Afficher l'alerte
+                    alertDiv.classList.remove('hidden');
+                    alertDiv.classList.add('bg-yellow-100', 'dark:bg-yellow-900', 'border-yellow-400', 'dark:border-yellow-700');
+
+                    if (statut === 'inactif') {
+                        alertTitle.textContent = 'Médecin Inactif';
+                        alertText.textContent = 'Ce médecin est actuellement inactif et ne peut pas effectuer d\'examens. Veuillez sélectionner un médecin actif pour continuer.';
+                    } else {
+                        alertTitle.textContent = 'Médecin Suspendu';
+                        alertText.textContent = 'Ce médecin est actuellement suspendu et ne peut pas effectuer d\'examens. Veuillez sélectionner un médecin actif pour continuer.';
+                    }
+
+                    // Désactiver le bouton d'enregistrement
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    submitBtn.classList.remove('hover:bg-blue-700', 'dark:hover:bg-blue-800');
+                    submitBtn.title = 'Impossible d\'enregistrer avec un médecin inactif/suspendu';
+                } else {
+                    // Cacher l'alerte et réactiver le bouton
+                    alertDiv.classList.add('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    submitBtn.classList.add('hover:bg-blue-700', 'dark:hover:bg-blue-800');
+                    submitBtn.title = '';
+                }
+            } else {
+                // Aucun médecin sélectionné
+                alertDiv.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                submitBtn.classList.add('hover:bg-blue-700', 'dark:hover:bg-blue-800');
+                submitBtn.title = '';
+            }
+        }
+
+                        // Fonction pour désactiver les options de médecins inactifs/suspendus
+        function disableInactiveMedecins() {
+            const medecinSelect = document.getElementById('medecin_select');
+            const options = medecinSelect.options;
+
+            for (let i = 0; i < options.length; i++) {
+                const option = options[i];
+                const statut = option.getAttribute('data-statut');
+
+                if (statut === 'inactif' || statut === 'suspendu') {
+                    option.disabled = true;
+                    option.style.color = '#9CA3AF'; // Gris pour les options désactivées
+                }
+            }
+        }
+
+                // Vérifier le statut au chargement de la page
+        checkMedecinStatus();
+        disableInactiveMedecins();
+
+                // Fonction pour afficher les informations de stock des médicaments
+        function afficherInfosStock(examenId) {
+            const stockDetails = document.getElementById('stock_details');
+            const stockDetailsContent = document.getElementById('stock_details_content');
+            const quantiteDiv = document.getElementById('quantite_medicament_div');
+
+            if (examenId) {
+                // Récupérer les informations de l'examen via AJAX
+                fetch(`/api/examens/${examenId}/stock-info`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.is_medicament && data.stock_info) {
+                            const stockInfo = data.stock_info;
+                            stockDetailsContent.innerHTML = `
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span class="font-medium">Médicament :</span>
+                                        <span class="text-green-600 dark:text-green-400">${stockInfo.nom_medicament}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium">Stock disponible :</span>
+                                        <span class="text-blue-600 dark:text-blue-400">${stockInfo.stock} unités</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium">Prix unitaire :</span>
+                                        <span class="text-purple-600 dark:text-purple-400">${stockInfo.prix_vente} MRU</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium">Statut :</span>
+                                        <span class="${stockInfo.stock > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">${stockInfo.stock > 0 ? 'En stock' : 'Rupture'}</span>
+                                    </div>
+                                </div>
+                            `;
+                            stockDetails.style.display = 'block';
+                            quantiteDiv.style.display = 'block';
+                        } else {
+                            stockDetails.style.display = 'none';
+                            quantiteDiv.style.display = 'none';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la récupération des infos stock:', error);
+                        stockDetails.style.display = 'none';
+                        quantiteDiv.style.display = 'none';
+                    });
+            } else {
+                stockDetails.style.display = 'none';
+                quantiteDiv.style.display = 'none';
+            }
+        }
+
+        // Le select est désactivé, donc on n'a plus besoin d'écouter ses changements
     });
 </script>
 <script>

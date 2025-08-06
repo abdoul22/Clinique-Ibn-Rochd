@@ -16,13 +16,15 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\SetLocale::class,
         ]);
 
-        // Middlewares d’alias utilisés dans les routes
+        // Middlewares d'alias utilisés dans les routes
         $middleware->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'is.approved' => \App\Http\Middleware\IsApproved::class,
+            'update.lastlogin' => \App\Http\Middleware\UpdateLastLoginAt::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
