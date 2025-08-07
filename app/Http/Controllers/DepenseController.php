@@ -102,27 +102,46 @@ class DepenseController extends Controller
             abort(403, 'Création manuelle des parts médecin interdite.');
         }
 
-        // Vérification du solde du mode de paiement
-        $modePaiement = \App\Models\ModePaiement::where('type', $request->mode_paiement_id)->latest()->first();
-        if ($modePaiement && $modePaiement->montant < $request->montant) {
+        // Vérification du solde du mode de paiement (calcul correct comme dans le dashboard)
+        $entree = \App\Models\EtatCaisse::whereHas('caisse.mode_paiements', function ($query) use ($request) {
+            $query->where('type', $request->mode_paiement_id);
+        })->sum('recette');
+
+        // Ajouter les paiements de crédits d'assurance
+        $entree += \App\Models\ModePaiement::where('type', $request->mode_paiement_id)
+            ->whereNull('caisse_id')
+            ->where('source', 'credit_assurance')
+            ->sum('montant');
+
+        // Calculer les sorties (dépenses)
+        $sortie = \App\Models\Depense::where('mode_paiement_id', $request->mode_paiement_id)
+            ->where('rembourse', false)
+            ->sum('montant');
+
+        $soldeDisponible = $entree - $sortie;
+
+        if ($request->montant > $soldeDisponible) {
             return back()->withErrors([
-                'mode_paiement_id' => "Fonds insuffisants dans le mode de paiement {$request->mode_paiement_id}. Solde disponible : {$modePaiement->montant} MRU"
+                'mode_paiement_id' => "Fonds insuffisants dans le mode de paiement {$request->mode_paiement_id}. Solde disponible : " . number_format($soldeDisponible, 2) . " MRU"
             ]);
         }
 
         // Vérification du solde global de la caisse
         $soldeCaisse = \App\Models\Caisse::sum('total');
         $totalDepenses = \App\Models\Depense::sum('montant');
-        $soldeDisponible = $soldeCaisse - $totalDepenses;
-        if ($request->montant > $soldeDisponible) {
+        $soldeDisponibleGlobal = $soldeCaisse - $totalDepenses;
+        if ($request->montant > $soldeDisponibleGlobal) {
             return back()->withErrors([
-                'montant' => "Le montant de la dépense ({$request->montant} MRU) dépasse le solde disponible de la caisse ({$soldeDisponible} MRU). Dépense refusée."
+                'montant' => "Le montant de la dépense ({$request->montant} MRU) dépasse le solde disponible de la caisse (" . number_format($soldeDisponibleGlobal, 2) . " MRU). Dépense refusée."
             ]);
         }
 
-        if ($modePaiement) {
-            $modePaiement->decrement('montant', $request->montant);
-        }
+        // Créer un nouvel enregistrement ModePaiement pour la sortie
+        \App\Models\ModePaiement::create([
+            'type' => $request->mode_paiement_id,
+            'montant' => -$request->montant, // Montant négatif pour sortie
+            'source' => 'depense'
+        ]);
 
         Depense::create([
             'nom' => $request->nom,
