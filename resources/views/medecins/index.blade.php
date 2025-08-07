@@ -210,7 +210,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                        Dr. {{ $medecin->nom }} {{ $medecin->prenom }}
+                                        Dr. {{ $medecin->prenom }} {{ $medecin->nom }}
                                     </div>
                                     <div class="text-sm text-gray-500 dark:text-gray-400">
                                         ID: {{ $medecin->id }}

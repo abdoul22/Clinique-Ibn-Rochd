@@ -12,10 +12,10 @@
         @csrf
 
         <div class="grid md:grid-cols-2 gap-4">
-            <input type="text" name="nom" placeholder="Nom"
+            <input type="text" name="prenom" placeholder="Prénom"
                 class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500"
                 required>
-            <input type="text" name="prenom" placeholder="Prénom"
+            <input type="text" name="nom" placeholder="Nom"
                 class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500"
                 required>
             <input type="text" name="specialite" placeholder="Spécialité"

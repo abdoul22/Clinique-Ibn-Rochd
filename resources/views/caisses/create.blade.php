@@ -57,8 +57,9 @@
                         <span class="text-green-600 text-xs">(Depuis le rendez-vous)</span>
                         @endif
                     </label>
-                    <input type="text" id="numero_entree_display" value="{{ $numero_prevu }}" disabled
-                        class="w-full font-bold bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-500 dark:text-gray-400">
+                    <input type="text" id="numero_entree_display" name="numero_entree" value="{{ $numero_prevu }}"
+                        readonly
+                        class="w-full font-bold bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-900 dark:text-gray-100">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -105,39 +106,15 @@
                     </label>
                     <select name="medecin_id" id="medecin_select" required
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        onchange="checkMedecinStatus()">
+                        onchange="updateNumeroEntreeSimple();">
                         <option value="">Sélectionner un médecin</option>
                         @foreach($medecins as $medecin)
-                        <option value="{{ $medecin->id }}" data-statut="{{ $medecin->statut }}" {{ $fromRdv &&
-                            $prefilledMedecin && $medecin->id == $prefilledMedecin->id ? 'selected' : '' }}>
-                            {{ $medecin->nom }} ({{ ucfirst($medecin->statut) }})
+                        <option value="{{ $medecin->id }}" {{ $fromRdv && $prefilledMedecin && $medecin->id ==
+                            $prefilledMedecin->id ? 'selected' : '' }}>
+                            {{ $medecin->nom_complet }}{{ $medecin->specialite ? ' - ' . $medecin->specialite : '' }}
                         </option>
                         @endforeach
                     </select>
-
-                    <!-- Alerte pour médecin inactif/suspendu -->
-                    <div id="medecin_alert" class="hidden mt-3 p-4 rounded-lg border-2 shadow-lg">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-exclamation-triangle text-yellow-500 text-lg"></i>
-                            </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200"
-                                    id="medecin_alert_title">
-                                    Médecin non autorisé
-                                </h3>
-                                <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300" id="medecin_alert_text">
-                                    <!-- Le message sera inséré ici par JavaScript -->
-                                </div>
-                                <div class="mt-3">
-                                    <span class="text-xs text-yellow-600 dark:text-yellow-400">
-                                        <i class="fas fa-info-circle mr-1"></i>
-                                        Veuillez sélectionner un médecin actif pour continuer.
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     @if($fromRdv && $prefilledMedecin)
                     <input type="hidden" name="medecin_id" value="{{ $prefilledMedecin->id }}">
@@ -150,7 +127,8 @@
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                         <option value="">Sélectionner un prescripteur</option>
                         @foreach($prescripteurs as $prescripteur)
-                        <option value="{{ $prescripteur->id }}">{{ $prescripteur->nom }}</option>
+                        <option value="{{ $prescripteur->id }}">{{ $prescripteur->nom }}{{ $prescripteur->specialite ? '
+                            - ' . $prescripteur->specialite : '' }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -635,104 +613,9 @@
             document.getElementById('examens_multiple').value = 'true';
         }, 100);
 
-                // Mettre à jour le numéro d'entrée quand un médecin est sélectionné
-        const medecinSelect = document.getElementById('medecin_select');
-        const numeroEntreeDisplay = document.getElementById('numero_entree_display');
 
-        // Numéros par médecin passés depuis le contrôleur
-        const numerosParMedecin = @json($numeros_par_medecin);
 
-        if (medecinSelect && numeroEntreeDisplay) {
-            medecinSelect.addEventListener('change', function() {
-                const medecinId = this.value;
-
-                if (medecinId && numerosParMedecin[medecinId]) {
-                    // Utiliser le numéro pré-calculé pour ce médecin
-                    numeroEntreeDisplay.value = numerosParMedecin[medecinId];
-                } else {
-                    // Aucun médecin sélectionné
-                    numeroEntreeDisplay.value = '{{ $numero_prevu }}';
-                }
-
-                // Vérifier le statut du médecin
-                checkMedecinStatus();
-            });
-
-            // Ajouter un événement pour vérifier le statut quand le sélecteur change
-            if (medecinSelect) {
-                medecinSelect.addEventListener('change', function() {
-                    checkMedecinStatus();
-                });
-            }
-        }
-
-                                // Fonction pour vérifier le statut du médecin
-        function checkMedecinStatus() {
-            const medecinSelect = document.getElementById('medecin_select');
-            const selectedOption = medecinSelect.options[medecinSelect.selectedIndex];
-            const alertDiv = document.getElementById('medecin_alert');
-            const alertText = document.getElementById('medecin_alert_text');
-            const alertTitle = document.getElementById('medecin_alert_title');
-            const submitBtn = document.getElementById('submitBtn');
-
-            if (selectedOption && selectedOption.value) {
-                const statut = selectedOption.getAttribute('data-statut');
-
-                                if (statut === 'inactif' || statut === 'suspendu') {
-                    // Afficher l'alerte
-                    alertDiv.classList.remove('hidden');
-                    alertDiv.classList.add('bg-yellow-100', 'dark:bg-yellow-900', 'border-yellow-400', 'dark:border-yellow-700');
-
-                    if (statut === 'inactif') {
-                        alertTitle.textContent = 'Médecin Inactif';
-                        alertText.textContent = 'Ce médecin est actuellement inactif et ne peut pas effectuer d\'examens. Veuillez sélectionner un médecin actif pour continuer.';
-                    } else {
-                        alertTitle.textContent = 'Médecin Suspendu';
-                        alertText.textContent = 'Ce médecin est actuellement suspendu et ne peut pas effectuer d\'examens. Veuillez sélectionner un médecin actif pour continuer.';
-                    }
-
-                    // Désactiver le bouton d'enregistrement
-                    submitBtn.disabled = true;
-                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                    submitBtn.classList.remove('hover:bg-blue-700', 'dark:hover:bg-blue-800');
-                    submitBtn.title = 'Impossible d\'enregistrer avec un médecin inactif/suspendu';
-                } else {
-                    // Cacher l'alerte et réactiver le bouton
-                    alertDiv.classList.add('hidden');
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    submitBtn.classList.add('hover:bg-blue-700', 'dark:hover:bg-blue-800');
-                    submitBtn.title = '';
-                }
-            } else {
-                // Aucun médecin sélectionné
-                alertDiv.classList.add('hidden');
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                submitBtn.classList.add('hover:bg-blue-700', 'dark:hover:bg-blue-800');
-                submitBtn.title = '';
-            }
-        }
-
-                        // Fonction pour désactiver les options de médecins inactifs/suspendus
-        function disableInactiveMedecins() {
-            const medecinSelect = document.getElementById('medecin_select');
-            const options = medecinSelect.options;
-
-            for (let i = 0; i < options.length; i++) {
-                const option = options[i];
-                const statut = option.getAttribute('data-statut');
-
-                if (statut === 'inactif' || statut === 'suspendu') {
-                    option.disabled = true;
-                    option.style.color = '#9CA3AF'; // Gris pour les options désactivées
-                }
-            }
-        }
-
-                // Vérifier le statut au chargement de la page
-        checkMedecinStatus();
-        disableInactiveMedecins();
+        
 
                 // Fonction pour afficher les informations de stock des médicaments
         function afficherInfosStock(examenId) {
@@ -788,6 +671,28 @@
         // Le select est désactivé, donc on n'a plus besoin d'écouter ses changements
     });
 </script>
+
+<script>
+    // Données des numéros par médecin (scope global)
+const numerosParMedecin = @json($numeros_par_medecin);
+
+// Fonction globale pour mettre à jour le numéro d'entrée
+function updateNumeroEntreeSimple() {
+    const medecinSelect = document.getElementById('medecin_select');
+    const numeroEntreeDisplay = document.getElementById('numero_entree_display');
+    
+    if (medecinSelect && numeroEntreeDisplay) {
+        const medecinId = medecinSelect.value;
+        
+        if (medecinId && numerosParMedecin[medecinId]) {
+            numeroEntreeDisplay.value = numerosParMedecin[medecinId];
+        } else {
+            numeroEntreeDisplay.value = 1;
+        }
+    }
+}
+</script>
+
 <script>
     document.addEventListener('click', function (event) {
             const dropdown = document.getElementById('profile-dropdown');

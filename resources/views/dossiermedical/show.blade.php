@@ -209,7 +209,7 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                            {{ $examen->medecin->nom ?? 'N/A' }} {{ $examen->medecin->prenom ?? '' }}
+                            {{ $examen->medecin->prenom ?? '' }} {{ $examen->medecin->nom ?? 'N/A' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
                             {{ $examen->prescripteur->nom ?? 'N/A' }} {{ $examen->prescripteur->prenom ?? '' }}
@@ -291,7 +291,7 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                            {{ $rdv->medecin->nom ?? 'N/A' }} {{ $rdv->medecin->prenom ?? '' }}
+                            {{ $rdv->medecin->prenom ?? '' }} {{ $rdv->medecin->nom ?? 'N/A' }}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">
                             {{ Str::limit($rdv->motif, 50) }}

@@ -17,8 +17,8 @@
                         <i class="fas fa-edit mr-3"></i>Modifier le Médecin
                     </h1>
                 </div>
-                <p class="text-blue-100 text-lg">Modifiez les informations du Dr. {{ $medecin->nom }} {{
-                    $medecin->prenom }}</p>
+                <p class="text-blue-100 text-lg">Modifiez les informations du Dr. {{ $medecin->prenom }} {{
+                    $medecin->nom }}</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-3">
                 <a href="{{ route(auth()->user()->role->name . '.medecins.show', $medecin->id) }}"
@@ -87,20 +87,6 @@
                     </h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Nom -->
-                        <div>
-                            <label for="nom" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Nom * <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" id="nom" name="nom" value="{{ old('nom', $medecin->nom) }}"
-                                placeholder="Nom du médecin"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200 @error('nom') border-red-500 @enderror"
-                                required>
-                            @error('nom')
-                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                            @enderror
-                        </div>
-
                         <!-- Prénom -->
                         <div>
                             <label for="prenom" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -111,6 +97,20 @@
                                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200 @error('prenom') border-red-500 @enderror"
                                 required>
                             @error('prenom')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Nom -->
+                        <div>
+                            <label for="nom" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Nom * <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="nom" name="nom" value="{{ old('nom', $medecin->nom) }}"
+                                placeholder="Nom du médecin"
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200 @error('nom') border-red-500 @enderror"
+                                required>
+                            @error('nom')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>

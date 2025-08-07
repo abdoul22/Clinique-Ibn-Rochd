@@ -23,7 +23,7 @@
                     <option value="">Tous les médecins</option>
                     @foreach($medecins as $medecin)
                     <option value="{{ $medecin->id }}" {{ request('medecin_id')==$medecin->id ? 'selected' : '' }}>
-                        {{ $medecin->nom }} {{ $medecin->prenom }} - {{ $medecin->specialite }}
+                        {{ $medecin->prenom }} {{ $medecin->nom }} - {{ $medecin->specialite }}
                     </option>
                     @endforeach
                 </select>

@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Statistiques du médecin</h1>
-            <p class="text-xl font-extrabold text-indigo-600 dark:text-indigo-300 mt-2">{{ $medecin->prenom }} {{
+            <p class="text-xl font-extrabold text-indigo-600 dark:text-indigo-300 mt-2">Dr. {{ $medecin->prenom }} {{
                 $medecin->nom }}</p>
         </div>
 

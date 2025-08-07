@@ -143,7 +143,7 @@
             <div>
                 <strong class="text-gray-700 dark:text-gray-300">Médecin :</strong>
                 <div class="mt-1 p-2 bg-purple-50 dark:bg-purple-900/30 rounded">
-                    <p class="font-medium">Dr. {{ $etatcaisse->medecin->nom }} {{ $etatcaisse->medecin->prenom }}</p>
+                    <p class="font-medium">Dr. {{ $etatcaisse->medecin->prenom }} {{ $etatcaisse->medecin->nom }}</p>
                     @if($etatcaisse->medecin->specialite)
                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ $etatcaisse->medecin->specialite }}</p>
                     @endif

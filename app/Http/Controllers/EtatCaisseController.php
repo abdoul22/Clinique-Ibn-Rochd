@@ -221,6 +221,7 @@ class EtatCaisseController extends Controller
 
 
         $etat->load('personnel', 'assurance', 'medecin', 'caisse.paiements');
+
         // Création automatique du crédit assurance si une assurance est liée
         if ($etat->assurance_id) {
             Credit::create([
@@ -233,6 +234,13 @@ class EtatCaisseController extends Controller
                 'caisse_id' => $etat->caisse_id,
             ]);
         }
+
+        // Validation automatique si la part médecin est 0
+        if ($etat->part_medecin == 0) {
+            $etat->validated = true;
+            $etat->save();
+        }
+
         return response()->json([
             'etat' => $etat,
             'view' => view('etatcaisse.partials.row', compact('etat'))->render()

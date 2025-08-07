@@ -19,6 +19,7 @@ class EtatCaisse extends Model
         'assurance_id',
         'caisse_id',
         'medecin_id',
+        'validated',
     ];
 
     /*
@@ -134,6 +135,12 @@ class EtatCaisse extends Model
                 if ($assurance) {
                     $assurance->updateCredit();
                 }
+            }
+
+            // Validation automatique si la part médecin est 0
+            if ($etatCaisse->part_medecin == 0) {
+                $etatCaisse->validated = true;
+                $etatCaisse->save();
             }
         });
     }

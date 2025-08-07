@@ -17,7 +17,7 @@
                         <i class="fas fa-user-md mr-3"></i>Détails du Médecin
                     </h1>
                 </div>
-                <p class="text-blue-100 text-lg">Informations complètes du Dr. {{ $medecin->nom }} {{ $medecin->prenom
+                <p class="text-blue-100 text-lg">Informations complètes du Dr. {{ $medecin->prenom }} {{ $medecin->nom
                     }}</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-3">
@@ -50,7 +50,7 @@
                             </div>
                         </div>
                         <div class="ml-4">
-                            <h2 class="text-2xl font-bold text-white">Dr. {{ $medecin->nom }} {{ $medecin->prenom }}
+                            <h2 class="text-2xl font-bold text-white">Dr. {{ $medecin->prenom }} {{ $medecin->nom }}
                             </h2>
                             <p class="text-blue-100">{{ $medecin->specialite }}</p>
                         </div>
@@ -237,7 +237,7 @@
                             </span>
                         </div>
                     </div>
-    </div>
+                </div>
 
                 <!-- Carte d'actions rapides -->
                 <div
@@ -278,13 +278,13 @@
                     <form action="{{ route(auth()->user()->role->name . '.medecins.destroy', $medecin->id) }}"
                         method="POST"
                         onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce médecin ? Cette action est irréversible.')">
-            @csrf
-            @method('DELETE')
+                        @csrf
+                        @method('DELETE')
                         <button type="submit"
                             class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center">
                             <i class="fas fa-trash mr-2"></i>Supprimer le médecin
-            </button>
-        </form>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

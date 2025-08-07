@@ -103,8 +103,14 @@ class CaisseController extends Controller
     public function create(Request $request)
     {
         $patients = GestionPatient::all();
-        // Récupérer tous les médecins pour afficher leur statut
-        $medecins = Medecin::all();
+        // Récupérer seulement les médecins actifs avec noms complets
+        $medecins = Medecin::where('statut', 'actif')
+            ->select('id', 'nom', 'prenom', 'specialite')
+            ->get()
+            ->map(function ($medecin) {
+                $medecin->nom_complet = trim($medecin->prenom . ' ' . $medecin->nom);
+                return $medecin;
+            });
         $prescripteurs = Prescripteur::all();
         $services = Service::all();
         $exam_types = Examen::with('service.pharmacie')->get();
@@ -198,12 +204,6 @@ class CaisseController extends Controller
         }
 
         $request->validate($rules);
-
-        // Vérifier que le médecin est actif
-        $medecin = Medecin::find($request->medecin_id);
-        if (!$medecin || trim($medecin->statut) !== 'actif') {
-            return back()->withErrors(['medecin_id' => 'Ce médecin n\'est pas actif et ne peut pas effectuer d\'examens.']);
-        }
 
         $dernierNumero = Caisse::max('numero_facture') ?? 0;
         $prochainNumero = $dernierNumero + 1;

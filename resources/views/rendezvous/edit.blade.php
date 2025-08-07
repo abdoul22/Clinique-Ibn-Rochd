@@ -72,7 +72,7 @@
                             @foreach($medecins as $medecin)
                             <option value="{{ $medecin->id }}" {{ old('medecin_id', $rendezVous->medecin_id) ==
                                 $medecin->id ? 'selected' : '' }}>
-                                {{ $medecin->nom }} {{ $medecin->prenom }} - {{ $medecin->specialite }}
+                                {{ $medecin->prenom }} {{ $medecin->nom }} - {{ $medecin->specialite }}
                             </option>
                             @endforeach
                         </select>

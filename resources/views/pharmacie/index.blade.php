@@ -90,9 +90,9 @@
                     number_format($resume['total_stock'], 0, ',', ' ') }} unités</span>
             </div>
             <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Valeur Stock</span>
+                <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Valeur Stock (Achat)</span>
                 <span class="text-purple-700 dark:text-purple-400 text-xl font-bold">{{
-                    number_format($resume['valeur_stock_vente'], 0, ',', ' ') }} MRU</span>
+                    number_format($resume['valeur_stock_achat'], 0, ',', ' ') }} MRU</span>
             </div>
             <div class="card text-sm flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                 <span class="font-bold text-gray-700 dark:text-gray-300 mb-1 text-center">Marge Moyenne</span>

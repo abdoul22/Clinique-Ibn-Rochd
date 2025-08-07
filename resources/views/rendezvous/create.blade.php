@@ -68,7 +68,7 @@
                             <option value="">Sélectionner un médecin</option>
                             @foreach($medecins as $medecin)
                             <option value="{{ $medecin->id }}" {{ old('medecin_id')==$medecin->id ? 'selected' : '' }}>
-                                {{ $medecin->nom }} {{ $medecin->prenom }} - {{ $medecin->specialite }}
+                                {{ $medecin->prenom }} {{ $medecin->nom }} - {{ $medecin->specialite }}
                             </option>
                             @endforeach
                         </select>
@@ -98,8 +98,8 @@
                             Numéro d'entrée
                         </label>
                         <input type="text" name="numero_entree" id="numero_entree" value="1"
-                            class="w-full font-bold bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-500 dark:text-gray-400"
-                            readonly disabled>
+                            class="w-full font-bold bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100"
+                            readonly>
                         <input type="hidden" name="numero_entree_hidden" id="numero_entree_hidden" value="1" />
                     </div>
 
@@ -336,9 +336,10 @@
         // Numéros par médecin passés depuis le contrôleur
         const numerosParMedecin = @json($numeros_par_medecin);
 
-        if (medecinSelect && numeroEntreeDisplay) {
-            medecinSelect.addEventListener('change', function() {
-                const medecinId = this.value;
+        // Fonction pour mettre à jour le numéro d'entrée
+        function updateNumeroEntree() {
+            if (medecinSelect && numeroEntreeDisplay) {
+                const medecinId = medecinSelect.value;
 
                 if (medecinId && numerosParMedecin[medecinId]) {
                     // Utiliser le numéro pré-calculé pour ce médecin
@@ -349,12 +350,23 @@
                         numeroEntreeHidden.value = numeroPrevu;
                     }
                 } else {
-                    // Aucun médecin sélectionné
-                    numeroEntreeDisplay.value = '1';
+                    // Aucun médecin sélectionné - utiliser le premier numéro disponible
+                    const premierNumero = Object.values(numerosParMedecin)[0] || 1;
+                    numeroEntreeDisplay.value = premierNumero;
                     if (numeroEntreeHidden) {
-                        numeroEntreeHidden.value = '1';
+                        numeroEntreeHidden.value = premierNumero;
                     }
                 }
+            }
+        }
+
+        // Initialiser le numéro d'entrée au chargement
+        if (medecinSelect && numeroEntreeDisplay) {
+            // Initialiser avec le premier médecin ou le numéro par défaut
+            updateNumeroEntree();
+
+            medecinSelect.addEventListener('change', function() {
+                updateNumeroEntree();
             });
         }
     });
