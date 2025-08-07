@@ -206,21 +206,22 @@ class ModePaiementController extends Controller
         }
 
         // Ajouter les paiements de crédits d'assurance et personnel comme entrées
-        foreach ($paiementsCredits as $paiement) {
-            $isPersonnel = $paiement->source === 'credit_personnel';
-            $operations->push([
-                'type' => $isPersonnel ? 'paiement_credit_personnel' : 'paiement_credit_assurance',
-                'date' => $paiement->created_at,
-                'description' => $isPersonnel
-                    ? "Paiement crédit personnel - {$paiement->type}"
-                    : "Paiement crédit assurance - {$paiement->type}",
-                'montant' => $paiement->montant,
-                'mode_paiement' => $paiement->type,
-                'source' => $isPersonnel ? 'credit_personnel' : 'credit_assurance',
-                'operation' => 'entree',
-                'data' => $paiement
-            ]);
-        }
+        // COMMENTÉ : Les paiements de crédits ne doivent apparaître que dans le module /credits
+        // foreach ($paiementsCredits as $paiement) {
+        //     $isPersonnel = $paiement->source === 'credit_personnel';
+        //     $operations->push([
+        //         'type' => $isPersonnel ? 'paiement_credit_personnel' : 'paiement_credit_assurance',
+        //         'date' => $paiement->created_at,
+        //         'description' => $isPersonnel
+        //             ? "Paiement crédit personnel - {$paiement->type}"
+        //             : "Paiement crédit assurance - {$paiement->type}",
+        //         'montant' => $paiement->montant,
+        //         'mode_paiement' => $paiement->type,
+        //         'source' => $isPersonnel ? 'credit_personnel' : 'credit_assurance',
+        //         'operation' => 'entree',
+        //         'data' => $paiement
+        //     ]);
+        // }
 
         // Trier par date décroissante
         $operations = $operations->sortByDesc('date');
@@ -241,12 +242,13 @@ class ModePaiementController extends Controller
         $totalDepenses = $depenses->sum('montant');
         $totalRecettes = $recettes->sum('recette'); // Utiliser la recette réelle
 
+        // COMMENTÉ : Les paiements de crédits ne sont plus affichés dans l'historique général
         // Séparer les vrais paiements de crédits (assurance) des remboursements de dettes (personnel)
-        $totalPaiementsCreditsAssurance = $paiementsCredits->where('source', 'credit_assurance')->sum('montant');
-        $totalRemboursementsPersonnel = $paiementsCredits->where('source', 'credit_personnel')->sum('montant');
+        // $totalPaiementsCreditsAssurance = $paiementsCredits->where('source', 'credit_assurance')->sum('montant');
+        // $totalRemboursementsPersonnel = $paiementsCredits->where('source', 'credit_personnel')->sum('montant');
 
-        $totalRecettesAvecCredits = $totalRecettes + $totalPaiementsCreditsAssurance;
-        $totalOperations = $totalRecettesAvecCredits - $totalDepenses;
+        // $totalRecettesAvecCredits = $totalRecettes + $totalPaiementsCreditsAssurance;
+        $totalOperations = $totalRecettes - $totalDepenses;
 
         $modes = ModePaiement::all();
 
@@ -254,10 +256,10 @@ class ModePaiementController extends Controller
             'historiquePaginated' => $historiquePaginated,
             'totalDepenses' => $totalDepenses,
             'totalRecettes' => $totalRecettes,
-            'totalRecettesAvecCredits' => $totalRecettesAvecCredits,
+            'totalRecettesAvecCredits' => $totalRecettes, // This total is no longer relevant as credits are not shown
             'totalOperations' => $totalOperations,
-            'totalPaiementsCreditsAssurance' => $totalPaiementsCreditsAssurance,
-            'totalRemboursementsPersonnel' => $totalRemboursementsPersonnel,
+            'totalPaiementsCreditsAssurance' => 0, // No longer applicable
+            'totalRemboursementsPersonnel' => 0, // No longer applicable
             'modes' => $modes,
         ]);
     }
