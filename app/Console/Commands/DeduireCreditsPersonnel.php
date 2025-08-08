@@ -29,7 +29,13 @@ class DeduireCreditsPersonnel extends Command
     {
         $this->info('=== DÉDUCTION AUTOMATIQUE DES CRÉDITS PERSONNEL ===');
 
-        // Vérifier si c'est la fin du mois (optionnel avec --force)
+        // 1) Vérifier si l'auto-déduction est activée, sinon sortir immédiatement
+        if (!config('payroll.auto_deduct', false)) {
+            $this->warn('Auto-déduction désactivée (config/payroll.php). Aucune action.');
+            return 0;
+        }
+
+        // 2) Vérifier si c'est la fin du mois (optionnel avec --force)
         if (!$this->option('force') && !$this->estFinDeMois()) {
             $this->warn('Ce n\'est pas la fin du mois. Utilisez --force pour forcer la déduction.');
             return 1;

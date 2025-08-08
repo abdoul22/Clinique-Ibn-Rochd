@@ -102,8 +102,8 @@ class DepenseController extends Controller
             abort(403, 'Création manuelle des parts médecin interdite.');
         }
 
-        // Vérification du solde du mode de paiement (calcul correct comme dans le dashboard)
-        $entree = \App\Models\EtatCaisse::whereHas('caisse.mode_paiements', function ($query) use ($request) {
+        // Vérification du solde du mode de paiement (aligné au dashboard)
+        $entree = \App\Models\EtatCaisse::whereNotNull('caisse_id')->whereHas('caisse.mode_paiements', function ($query) use ($request) {
             $query->where('type', $request->mode_paiement_id);
         })->sum('recette');
 
@@ -126,15 +126,7 @@ class DepenseController extends Controller
             ]);
         }
 
-        // Vérification du solde global de la caisse
-        $soldeCaisse = \App\Models\Caisse::sum('total');
-        $totalDepenses = \App\Models\Depense::sum('montant');
-        $soldeDisponibleGlobal = $soldeCaisse - $totalDepenses;
-        if ($request->montant > $soldeDisponibleGlobal) {
-            return back()->withErrors([
-                'montant' => "Le montant de la dépense ({$request->montant} MRU) dépasse le solde disponible de la caisse (" . number_format($soldeDisponibleGlobal, 2) . " MRU). Dépense refusée."
-            ]);
-        }
+        // Le contrôle par mode est suffisant et cohérent avec le dashboard.
 
         // Créer un nouvel enregistrement ModePaiement pour la sortie
         \App\Models\ModePaiement::create([

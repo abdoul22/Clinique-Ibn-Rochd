@@ -255,32 +255,15 @@ class CreditController extends Controller
             $etatCaisseExistant->increment('part_clinique', $montant);
 
             // Log pour débugger (optionnel)
-            \Log::info("EtatCaisse mis à jour", [
+            Log::info("EtatCaisse mis à jour", [
                 'etat_caisse_id' => $etatCaisseExistant->id,
                 'credit_id' => $credit->id,
                 'montant' => $montant
             ]);
         } else {
-            // Créer seulement si aucune entrée n'existe (cas de fallback)
-            \App\Models\EtatCaisse::create([
-                'designation' => 'Remboursement assurance - ' . $credit->source->nom,
-                'recette' => $montant,
-                'part_medecin' => 0,
-                'part_clinique' => $montant,
-                'depense' => 0,
-                'credit_personnel' => null,
-                'personnel_id' => null,
-                'assurance_id' => $credit->source_id,
-                'caisse_id' => null,
-                'medecin_id' => null,
-            ]);
-
-            // Log pour débugger
-            \Log::warning("Nouvelle entrée EtatCaisse créée car aucune existante trouvée", [
-                'credit_id' => $credit->id,
-                'assurance_id' => $credit->source_id,
-                'caisse_id' => $credit->caisse_id
-            ]);
+            // Ne pas créer d' EtatCaisse sans caisse pour un remboursement d'assurance.
+            // On s'appuie uniquement sur l'entrée ModePaiement (source=credit_assurance) et l'historique l'affiche désormais.
+            Log::info("Aucune entrée EtatCaisse trouvée à mettre à jour pour le crédit #{$credit->id}; enregistrement du paiement uniquement dans ModePaiement.");
         }
 
         // Mise à jour du crédit de la source
@@ -293,22 +276,21 @@ class CreditController extends Controller
 
     public function create()
     {
+        // Ne proposer la création de crédits que pour le personnel.
         $personnels = Personnel::all();
         foreach ($personnels as $personnel) {
             $personnel->updateCredit();
         }
-        $assurances = \App\Models\Assurance::all();
-        foreach ($assurances as $assurance) {
-            $assurance->updateCredit();
-        }
         $modes = \App\Models\ModePaiement::getTypes();
+        // On envoie une liste d'assurances vide pour masquer la section dans la vue
+        $assurances = collect();
         return view('credits.create', compact('personnels', 'assurances', 'modes'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'source_type' => 'required|in:personnel,assurance',
+            'source_type' => 'required|in:personnel',
             'source_id' => 'required',
             'montant' => 'required|numeric|min:1',
         ]);
@@ -331,13 +313,8 @@ class CreditController extends Controller
             // Pour les crédits personnel, pas de mode_paiement_id (payé par salaire)
             $modePaiementId = null;
         } else {
-            $assurance = \App\Models\Assurance::findOrFail($request->source_id);
-            $sourceType = \App\Models\Assurance::class;
-            $sourceId = $assurance->id;
-            $sourceNom = $assurance->nom;
-
-            // Pour les assurances, pas de mode_paiement_id (payé quand l'assurance rembourse)
-            $modePaiementId = null;
+            // Bloqué : la création de crédits d'assurance se fait automatiquement à la création de facture
+            return back()->with('error', "La création de crédits d'assurance se fait automatiquement lors de la facturation d'un patient assuré.");
         }
 
         Log::info('Création crédit', [
@@ -373,8 +350,6 @@ class CreditController extends Controller
         // Mettre à jour le crédit de la source
         if ($sourceType === \App\Models\Personnel::class) {
             $personnel->updateCredit();
-        } elseif ($sourceType === \App\Models\Assurance::class) {
-            $assurance->updateCredit();
         }
 
         return redirect()->route('credits.index')->with('success', 'Crédit ajouté avec succès.');

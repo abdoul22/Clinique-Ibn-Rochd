@@ -190,7 +190,8 @@ class CaisseController extends Controller
             'prescripteur_id' => 'nullable|exists:prescripteurs,id',
             'date_examen' => 'required|date',
             'total' => 'required|numeric',
-            'type' => 'nullable|string|in:bankily,masrivi,especes',
+            // accepter temporairement 'especes' puis normaliser
+            'type' => 'nullable|string|in:espèces,especes,bankily,masrivi',
             'assurance_id' => 'nullable|exists:assurances,id',
             'couverture' => 'nullable|numeric|min:0|max:100',
         ];
@@ -319,6 +320,12 @@ class CaisseController extends Controller
             $part_medecin = ($examen->part_medecin ?? 0) * $quantite;
         }
 
+        // Normaliser le type de paiement
+        $typePaiement = $request->type;
+        if ($typePaiement === 'especes') {
+            $typePaiement = 'espèces';
+        }
+
         // Créer l'état de caisse
         $etatCaisse = EtatCaisse::create([
             'caisse_id' => $caisse->id,
@@ -326,8 +333,6 @@ class CaisseController extends Controller
             'recette' => $caisse->total,
             'part_medecin' => $part_medecin,
             'part_clinique' => $part_cabinet,
-            'paiement' => $request->type ?? 'especes',
-            'validation' => 'validé',
             'assurance_id' => $caisse->assurance_id,
             'medecin_id' => $caisse->medecin_id,
         ]);
@@ -335,7 +340,7 @@ class CaisseController extends Controller
         // Créer le paiement
         ModePaiement::create([
             'caisse_id' => $caisse->id,
-            'type' => $request->type ?? 'especes',
+            'type' => $typePaiement ?? 'espèces',
             'montant' => $caisse->total,
             'source' => 'caisse'
         ]);

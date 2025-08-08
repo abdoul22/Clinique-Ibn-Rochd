@@ -18,7 +18,13 @@ class ModePaiement extends Model
      */
     public static function getTypes()
     {
-        return self::distinct()->pluck('type')->toArray();
+        $types = self::distinct()->pluck('type')->filter()->toArray();
+        if (empty($types)) {
+            return ['espèces', 'bankily', 'masrivi', 'sedad'];
+        }
+        // Normaliser/ajouter les manquants si la base est incomplète
+        $defaults = collect(['espèces', 'bankily', 'masrivi', 'sedad']);
+        return $defaults->merge($types)->unique()->values()->toArray();
     }
 
     /**

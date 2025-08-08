@@ -31,7 +31,6 @@
             <select name="source_type" id="source-type" class="form-select" required>
                 <option value="">-- Sélectionner --</option>
                 <option value="personnel">Personnel</option>
-                <option value="assurance">Assurance</option>
             </select>
         </div>
 
@@ -94,24 +93,6 @@
 
         <div id="assurance-section" class="hidden">
             <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Assurance</label>
-            @if($assurances->count() > 0)
-            <select id="assurance-select" class="form-select">
-                @foreach($assurances as $assurance)
-                @php
-                $totalCredits = $assurance->credits->sum('montant');
-                $totalPayes = $assurance->credits->sum('montant_paye');
-                $creditActuel = $totalCredits - $totalPayes;
-                @endphp
-                <option value="{{ $assurance->id }}" data-credit-actuel="{{ $creditActuel }}">
-                    {{ $assurance->nom }}
-                </option>
-                @endforeach
-            </select>
-            <div class="text-sm text-gray-700 dark:text-gray-300 space-y-1 mt-2">
-                <p><strong class="font-bold text-orange-500 dark:text-orange-400">Crédit actuel :</strong> <span
-                        id="assurance-credit-actuel">--</span> MRU</p>
-            </div>
-            @else
             <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
                 <div class="flex">
                     <div class="flex-shrink-0">
@@ -123,21 +104,15 @@
                     </div>
                     <div class="ml-3">
                         <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">
-                            Aucune assurance trouvée
+                            Les crédits d'assurance sont créés automatiquement lors de la facturation d'un patient
+                            assuré.
                         </h3>
                         <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                            <p>Vous devez d'abord créer des assurances avant de pouvoir leur donner des crédits.</p>
-                            <p class="mt-1">
-                                <a href="{{ route('assurances.create') }}"
-                                    class="font-medium underline text-blue-800 dark:text-blue-200 hover:text-blue-600 dark:hover:text-blue-100">
-                                    Cliquez ici pour ajouter une assurance →
-                                </a>
-                            </p>
+                            <p>Utilisez cette page uniquement pour accorder des crédits au personnel.</p>
                         </div>
                     </div>
                 </div>
             </div>
-            @endif
         </div>
 
         <div class="mb-4">

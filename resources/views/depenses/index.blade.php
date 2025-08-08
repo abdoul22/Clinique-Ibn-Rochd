@@ -23,6 +23,46 @@
 
 <!-- Filtres -->
 <div class="card mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Total Salaires Bruts
+                (Mois en cours)</div>
+            <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{
+                number_format(\App\Models\Personnel::sum('salaire'), 0, ',', ' ') }} MRU</div>
+        </div>
+        <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Crédits Personnel
+                (Restants)</div>
+            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{
+                number_format(\App\Models\Credit::where('source_type', App\Models\Personnel::class)->sum('montant') -
+                \App\Models\Credit::where('source_type', App\Models\Personnel::class)->sum('montant_paye'), 0, ',', ' ')
+                }} MRU</div>
+        </div>
+        <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Total Salaires Nets
+                (Brut - Crédits)</div>
+            @php
+            $totalBrut = \App\Models\Personnel::sum('salaire');
+            $creditsRestants = \App\Models\Credit::where('source_type', App\Models\Personnel::class)->sum('montant') -
+            \App\Models\Credit::where('source_type', App\Models\Personnel::class)->sum('montant_paye');
+            $totalNet = max($totalBrut - $creditsRestants, 0);
+            @endphp
+            <div class="text-2xl font-bold text-green-700 dark:text-green-400">{{ number_format($totalNet, 0, ',', ' ')
+                }} MRU</div>
+        </div>
+        <div
+            class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between">
+            <div>
+                <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Salaire</div>
+                <div class="text-sm text-gray-700 dark:text-gray-300">Payer les salaires (redirige vers les crédits)
+                </div>
+            </div>
+            <a href="{{ route('salaires.payer') }}"
+                class="inline-flex items-center px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm transition">
+                <i class="fas fa-file-invoice-dollar mr-2"></i>Payer les salaires
+            </a>
+        </div>
+    </div>
     @php
     $period = request('period', 'day');
     $summary = '';

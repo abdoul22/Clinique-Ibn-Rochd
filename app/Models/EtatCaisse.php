@@ -119,7 +119,8 @@ class EtatCaisse extends Model
 
         // Créer automatiquement un crédit d'assurance lors de la création d'un état de caisse
         static::created(function ($etatCaisse) {
-            if ($etatCaisse->assurance_id) {
+            // Ne créer le crédit que pour les entrées liées à une facture (caisse_id non null)
+            if ($etatCaisse->assurance_id && $etatCaisse->caisse_id) {
                 Credit::create([
                     'source_type' => \App\Models\Assurance::class,
                     'source_id' => $etatCaisse->assurance_id,

@@ -302,6 +302,11 @@ Route::middleware(['auth', 'is.approved'])->group(function () {
 
     Route::get('mode-paiements/historique', [App\Http\Controllers\ModePaiementController::class, 'historique'])
         ->name('modepaiements.historique');
+
+    // Bouton "Payer les salaires" -> redirige vers /credits (paiements et gestion des crédits)
+    Route::get('salaires/payer', function () {
+        return redirect()->route('credits.index');
+    })->name('salaires.payer');
 });
 
 // API pour récupérer le prochain numéro d'entrée d'un médecin

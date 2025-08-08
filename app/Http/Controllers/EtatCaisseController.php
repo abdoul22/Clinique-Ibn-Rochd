@@ -222,18 +222,7 @@ class EtatCaisseController extends Controller
 
         $etat->load('personnel', 'assurance', 'medecin', 'caisse.paiements');
 
-        // Création automatique du crédit assurance si une assurance est liée
-        if ($etat->assurance_id) {
-            Credit::create([
-                'source_type' => \App\Models\Assurance::class,
-                'source_id' => $etat->assurance_id,
-                'montant' => $etat->recette,
-                'montant_paye' => 0,
-                'status' => 'non payé',
-                'statut' => 'non payé',
-                'caisse_id' => $etat->caisse_id,
-            ]);
-        }
+        // Suppression: la création du crédit assurance est gérée par l'observer d' EtatCaisse (Model)
 
         // Validation automatique si la part médecin est 0
         if ($etat->part_medecin == 0) {
