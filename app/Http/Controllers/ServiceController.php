@@ -30,14 +30,8 @@ class ServiceController extends Controller
 
         // Traiter les données pour l'affichage
         $services->getCollection()->transform(function ($service) {
-            // Si c'est un service de type médicament lié à la pharmacie
-            if ($service->type_service === 'medicament' && $service->pharmacie) {
-                $service->nom_affichage = 'Pharmacie';
-                $service->observation_affichage = $service->pharmacie->nom_medicament;
-            } else {
-                $service->nom_affichage = $service->nom;
-                $service->observation_affichage = $service->observation;
-            }
+            $service->nom_affichage = $service->nom;
+            $service->observation_affichage = $service->observation;
             return $service;
         });
 
@@ -66,14 +60,7 @@ class ServiceController extends Controller
 
         $data = $request->only(['nom', 'observation', 'type_service', 'pharmacie_id', 'prix', 'quantite_defaut']);
 
-        // Si c'est un médicament, récupérer le prix depuis la pharmacie
-        if ($data['type_service'] === 'PHARMACIE' && $data['pharmacie_id']) {
-            $medicament = Pharmacie::find($data['pharmacie_id']);
-            if ($medicament) {
-                $data['prix'] = $medicament->prix_vente;
-                $data['quantite_defaut'] = $medicament->quantite;
-            }
-        }
+        // La création de médicaments ne doit pas créer automatiquement un service ici
 
         Service::create($data);
         return redirect('services')->with('success', 'Service ajouté avec succès.');
@@ -109,14 +96,7 @@ class ServiceController extends Controller
         $service = Service::findOrFail($id);
         $data = $request->only(['nom', 'observation', 'type_service', 'pharmacie_id', 'prix', 'quantite_defaut']);
 
-        // Si c'est un médicament, récupérer le prix depuis la pharmacie
-        if ($data['type_service'] === 'PHARMACIE' && $data['pharmacie_id']) {
-            $medicament = Pharmacie::find($data['pharmacie_id']);
-            if ($medicament) {
-                $data['prix'] = $medicament->prix_vente;
-                $data['quantite_defaut'] = $medicament->quantite;
-            }
-        }
+        // Pas de synchronisation automatique depuis pharmacie ici
 
         $service->update($data);
         return redirect('services')->with('success', 'Service mis à jour.');
@@ -175,24 +155,6 @@ class ServiceController extends Controller
      */
     public function getServicesMedicaments()
     {
-        $services = Service::where('type_service', 'medicament')
-            ->whereHas('pharmacie', function ($query) {
-                $query->where('stock', '>', 0)->where('statut', 'actif');
-            })
-            ->with('pharmacie')
-            ->get()
-            ->map(function ($service) {
-                return [
-                    'id' => $service->id,
-                    'nom' => $service->nom,
-                    'pharmacie_id' => $service->pharmacie_id,
-                    'medicament' => $service->pharmacie->nom_medicament,
-                    'prix' => $service->pharmacie->prix_vente,
-                    'stock' => $service->pharmacie->stock,
-                    'quantite_defaut' => $service->quantite_defaut
-                ];
-            });
-
-        return response()->json($services);
+        return response()->json([]);
     }
 }

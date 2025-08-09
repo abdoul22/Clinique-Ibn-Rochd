@@ -35,18 +35,9 @@ class Pharmacie extends Model
     {
         parent::boot();
 
-        // Quand un médicament est créé, créer automatiquement un service
+        // Ne plus créer automatiquement un service lors de la création d'un médicament
         static::created(function ($pharmacie) {
-            if ($pharmacie->statut === 'actif') {
-                Service::create([
-                    'nom' => "Vente {$pharmacie->nom_medicament}",
-                    'type_service' => 'pharmacie',
-                    'pharmacie_id' => $pharmacie->id,
-                    'prix' => $pharmacie->prix_vente,
-                    'quantite_defaut' => $pharmacie->quantite,
-                    'observation' => "Service de vente pour {$pharmacie->nom_medicament}",
-                ]);
-            }
+            // Intentionnellement vide pour éviter les créations automatiques dans services
         });
 
         // Quand un médicament est supprimé, supprimer automatiquement les services et examens liés
@@ -63,15 +54,7 @@ class Pharmacie extends Model
 
         // Quand un médicament est mis à jour, mettre à jour le service correspondant
         static::updated(function ($pharmacie) {
-            $service = $pharmacie->services()->where('type_service', 'pharmacie')->first();
-            if ($service) {
-                $service->update([
-                    'nom' => "Vente {$pharmacie->nom_medicament}",
-                    'prix' => $pharmacie->prix_vente,
-                    'quantite_defaut' => $pharmacie->quantite,
-                    'observation' => "Service de vente pour {$pharmacie->nom_medicament}",
-                ]);
-            }
+            // Ne plus synchroniser automatiquement avec services
         });
     }
 

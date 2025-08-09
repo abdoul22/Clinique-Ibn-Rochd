@@ -33,15 +33,15 @@
                     </option>
                     <option value="PHARMACIE" {{ old('type_service')=='PHARMACIE' ? 'selected' : '' }}>PHARMACIE
                     </option>
-                    <option value="MÉDECINE DENTAIRE" {{ old('type_service')=='MÉDECINE DENTAIRE' ? 'selected' : '' }}>
+                    <option value="MEDECINE DENTAIRE" {{ old('type_service')=='MEDECINE DENTAIRE' ? 'selected' : '' }}>
                         MÉDECINE DENTAIRE</option>
-                    <option value="IMAGERIE MÉDICALE" {{ old('type_service')=='IMAGERIE MÉDICALE' ? 'selected' : '' }}>
+                    <option value="IMAGERIE MEDICALE" {{ old('type_service')=='IMAGERIE MEDICALE' ? 'selected' : '' }}>
                         IMAGERIE MÉDICALE</option>
                     <option value="CONSULTATIONS EXTERNES" {{ old('type_service')=='CONSULTATIONS EXTERNES' ? 'selected'
                         : '' }}>CONSULTATIONS EXTERNES</option>
                     <option value="HOSPITALISATION" {{ old('type_service')=='HOSPITALISATION' ? 'selected' : '' }}>
                         HOSPITALISATION</option>
-                    <option value="BLOC OPÉRATOIRE" {{ old('type_service')=='BLOC OPÉRATOIRE' ? 'selected' : '' }}>BLOC
+                    <option value="BLOC OPERATOIRE" {{ old('type_service')=='BLOC OPERATOIRE' ? 'selected' : '' }}>BLOC
                         OPÉRATOIRE</option>
                     <option value="INFIRMERIE" {{ old('type_service')=='INFIRMERIE' ? 'selected' : '' }}>INFIRMERIE
                     </option>
@@ -53,7 +53,7 @@
                 @enderror
             </div>
 
-            <div>
+            <div id="pharmacie-fields" class="hidden">
                 <label for="observation" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Observation
                     (facultatif)</label>
                 <textarea name="observation" id="observation" rows="4"
@@ -73,4 +73,18 @@
         </div>
     </form>
 </div>
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const typeSelect = document.getElementById('type_service');
+    const pharmFields = document.getElementById('pharmacie-fields');
+    function toggleFields(){
+      const isPharmacie = typeSelect.value === 'PHARMACIE';
+      pharmFields.classList.toggle('hidden', false); // keep observation visible for all
+    }
+    typeSelect.addEventListener('change', toggleFields);
+    toggleFields();
+  });
+</script>
+@endpush
 @endsection
