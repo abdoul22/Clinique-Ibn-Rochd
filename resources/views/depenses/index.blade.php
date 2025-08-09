@@ -52,10 +52,18 @@
         </div>
         <div
             class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-end">
+            @if(\Illuminate\Support\Facades\Route::has('salaires.index'))
             <a href="{{ route('salaires.index') }}"
                 class="inline-flex items-center px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm transition">
                 <i class="fas fa-file-invoice-dollar mr-2"></i>Payer les salaires
             </a>
+            @else
+            <a href="#"
+                onclick="alert('Module salaires non disponible sur ce serveur. Veuillez mettre à jour l\'application.'); return false;"
+                class="inline-flex items-center px-3 py-2 rounded-lg bg-purple-600 text-white text-sm opacity-70 cursor-not-allowed">
+                <i class="fas fa-file-invoice-dollar mr-2"></i>Payer les salaires
+            </a>
+            @endif
         </div>
     </div>
     @php
