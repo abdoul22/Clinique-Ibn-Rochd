@@ -58,7 +58,7 @@ class ServiceController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'type_service' => 'required|in:consultations,examens,pharmacie,infirmerie,bloc,laboratoire,hospitalisation,dentaire',
+            'type_service' => 'required|in:LABORATOIRE,PHARMACIE,MÉDECINE DENTAIRE,IMAGERIE MÉDICALE,CONSULTATIONS EXTERNES,HOSPITALISATION,BLOC OPÉRATOIRE,INFIRMERIE,EXPLORATIONS FONCTIONNELLES',
             'pharmacie_id' => 'nullable|exists:pharmacies,id',
             'prix' => 'nullable|numeric|min:0',
             'quantite_defaut' => 'nullable|integer|min:1'
@@ -67,7 +67,7 @@ class ServiceController extends Controller
         $data = $request->only(['nom', 'observation', 'type_service', 'pharmacie_id', 'prix', 'quantite_defaut']);
 
         // Si c'est un médicament, récupérer le prix depuis la pharmacie
-        if ($data['type_service'] === 'medicament' && $data['pharmacie_id']) {
+        if ($data['type_service'] === 'PHARMACIE' && $data['pharmacie_id']) {
             $medicament = Pharmacie::find($data['pharmacie_id']);
             if ($medicament) {
                 $data['prix'] = $medicament->prix_vente;
@@ -100,7 +100,7 @@ class ServiceController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'type_service' => 'required|in:consultations,examens,pharmacie,infirmerie,bloc,laboratoire,hospitalisation,dentaire',
+            'type_service' => 'required|in:LABORATOIRE,PHARMACIE,MÉDECINE DENTAIRE,IMAGERIE MÉDICALE,CONSULTATIONS EXTERNES,HOSPITALISATION,BLOC OPÉRATOIRE,INFIRMERIE,EXPLORATIONS FONCTIONNELLES',
             'pharmacie_id' => 'nullable|exists:pharmacies,id',
             'prix' => 'nullable|numeric|min:0',
             'quantite_defaut' => 'nullable|integer|min:1'
@@ -110,7 +110,7 @@ class ServiceController extends Controller
         $data = $request->only(['nom', 'observation', 'type_service', 'pharmacie_id', 'prix', 'quantite_defaut']);
 
         // Si c'est un médicament, récupérer le prix depuis la pharmacie
-        if ($data['type_service'] === 'medicament' && $data['pharmacie_id']) {
+        if ($data['type_service'] === 'PHARMACIE' && $data['pharmacie_id']) {
             $medicament = Pharmacie::find($data['pharmacie_id']);
             if ($medicament) {
                 $data['prix'] = $medicament->prix_vente;
