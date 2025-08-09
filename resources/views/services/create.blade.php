@@ -29,19 +29,24 @@
                 <select name="type_service" id="type_service" required
                     class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                     <option value="">-- Sélectionner --</option>
-                    <option value="consultations" {{ old('type_service')=='consultations' ? 'selected' : '' }}>
-                        Consultations</option>
-                    <option value="examens" {{ old('type_service')=='examens' ? 'selected' : '' }}>Examens</option>
-                    <option value="pharmacie" {{ old('type_service')=='pharmacie' ? 'selected' : '' }}>Pharmacie
+                    <option value="LABORATOIRE" {{ old('type_service')=='LABORATOIRE' ? 'selected' : '' }}>LABORATOIRE
                     </option>
-                    <option value="infirmerie" {{ old('type_service')=='infirmerie' ? 'selected' : '' }}>Infirmerie
+                    <option value="PHARMACIE" {{ old('type_service')=='PHARMACIE' ? 'selected' : '' }}>PHARMACIE
                     </option>
-                    <option value="bloc" {{ old('type_service')=='bloc' ? 'selected' : '' }}>Bloc</option>
-                    <option value="laboratoire" {{ old('type_service')=='laboratoire' ? 'selected' : '' }}>Laboratoire
+                    <option value="MÉDECINE DENTAIRE" {{ old('type_service')=='MÉDECINE DENTAIRE' ? 'selected' : '' }}>
+                        MÉDECINE DENTAIRE</option>
+                    <option value="IMAGERIE MÉDICALE" {{ old('type_service')=='IMAGERIE MÉDICALE' ? 'selected' : '' }}>
+                        IMAGERIE MÉDICALE</option>
+                    <option value="CONSULTATIONS EXTERNES" {{ old('type_service')=='CONSULTATIONS EXTERNES' ? 'selected'
+                        : '' }}>CONSULTATIONS EXTERNES</option>
+                    <option value="HOSPITALISATION" {{ old('type_service')=='HOSPITALISATION' ? 'selected' : '' }}>
+                        HOSPITALISATION</option>
+                    <option value="BLOC OPÉRATOIRE" {{ old('type_service')=='BLOC OPÉRATOIRE' ? 'selected' : '' }}>BLOC
+                        OPÉRATOIRE</option>
+                    <option value="INFIRMERIE" {{ old('type_service')=='INFIRMERIE' ? 'selected' : '' }}>INFIRMERIE
                     </option>
-                    <option value="hospitalisation" {{ old('type_service')=='hospitalisation' ? 'selected' : '' }}>
-                        Hospitalisation</option>
-                    <option value="dentaire" {{ old('type_service')=='dentaire' ? 'selected' : '' }}>Dentaire</option>
+                    <option value="EXPLORATIONS FONCTIONNELLES" {{ old('type_service')=='EXPLORATIONS FONCTIONNELLES'
+                        ? 'selected' : '' }}>EXPLORATIONS FONCTIONNELLES</option>
                 </select>
                 @error('type_service')
                 <p class="text-sm text-red-500 dark:text-red-300 mt-1">{{ $message }}</p>

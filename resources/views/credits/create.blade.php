@@ -20,24 +20,23 @@
         </ul>
     </div>
     @endif
-    <form action="{{ route('credits.store') }}" method="POST" class="space-y-4">
+    <form action="{{ route('credits.store') }}" method="POST"
+        class="space-y-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow">
         @csrf
 
-        <!-- Champs cachés pour source_id -->
-        <input type="hidden" id="source_id_hidden" name="source_id" value="">
+        <!-- Sélection de la source, le champ name=source_id est porté par le select -->
 
         <div>
             <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Type de source</label>
             <select name="source_type" id="source-type" class="form-select" required>
-                <option value="">-- Sélectionner --</option>
-                <option value="personnel">Personnel</option>
+                <option value="personnel" selected>Personnel</option>
             </select>
         </div>
 
-        <div id="personnel-section" class="hidden">
+        <div id="personnel-section" class="">
             <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Personnel</label>
             @if($personnels->count() > 0)
-            <select id="personnel-select" class="form-select">
+            <select id="personnel-select" name="source_id" class="form-select">
                 @foreach($personnels as $personnel)
                 @php
                 $personnel->updateCredit(); // Mettre à jour le crédit actuel
@@ -119,9 +118,8 @@
             <label for="mode_paiement_id" class="block text-bold font-medium text-gray-700 dark:text-gray-300">Mode de
                 paiement</label>
             <select name="mode_paiement_id" id="mode_paiement_id" class="form-select">
-                <option value="">-- Sélectionner --</option>
                 @foreach($modes as $mode)
-                <option value="{{ $mode }}">{{ ucfirst($mode) }}</option>
+                <option value="{{ $mode }}" {{ $mode==='espèces' ? 'selected' : '' }}>{{ ucfirst($mode) }}</option>
                 @endforeach
             </select>
             <div id="mode-paiement-info" class="text-sm text-gray-600 dark:text-gray-400 mt-2 hidden">
@@ -139,7 +137,7 @@
 
         <div>
             <label class="block text-bold font-medium text-gray-700 dark:text-gray-300">Montant</label>
-            <input type="number" name="montant" class="form-input" required>
+            <input type="number" name="montant" class="form-input" required placeholder="Ex: 5000">
         </div>
 
         <div>
@@ -189,30 +187,29 @@
             if (assuranceCreditActuelEl) assuranceCreditActuelEl.textContent = creditActuel.toLocaleString();
         }
 
-        sourceTypeSelect.addEventListener('change', function () {
-            const sourceIdHidden = document.getElementById('source_id_hidden');
-
-            if (this.value === 'personnel') {
+        function applySourceUI(value){
+            if (value === 'personnel') {
                 personnelSection.classList.remove('hidden');
                 assuranceSection.classList.add('hidden');
                 personnelSelect.required = true;
                 assuranceSelect.required = false;
-                // Mettre à jour le champ hidden avec la valeur du personnel sélectionné
-                sourceIdHidden.value = personnelSelect.value;
+                // Assigner le name pour soumission
+                if (personnelSelect) { personnelSelect.setAttribute('name', 'source_id'); }
+                if (assuranceSelect) { assuranceSelect.removeAttribute('name'); }
                 updatePersonnelInfos();
 
                 // Masquer le mode de paiement pour les crédits personnel
-                document.getElementById('mode_paiement_id').parentElement.classList.add('hidden');
-                document.getElementById('mode_paiement_id').required = false;
+                document.getElementById('mode-paiement_id').parentElement.classList.remove('hidden');
+                document.getElementById('mode-paiement_id').required = false;
                 document.getElementById('mode-paiement-info').classList.remove('hidden');
                 document.getElementById('mode-paiement-info-assurance').classList.add('hidden');
-            } else if (this.value === 'assurance') {
+            } else if (value === 'assurance') {
                 personnelSection.classList.add('hidden');
                 assuranceSection.classList.remove('hidden');
                 personnelSelect.required = false;
                 assuranceSelect.required = true;
-                // Mettre à jour le champ hidden avec la valeur de l'assurance sélectionnée
-                sourceIdHidden.value = assuranceSelect.value;
+                if (assuranceSelect) { assuranceSelect.setAttribute('name', 'source_id'); }
+                if (personnelSelect) { personnelSelect.removeAttribute('name'); }
                 updateAssuranceInfos();
 
                 // Masquer le mode de paiement pour les assurances
@@ -225,7 +222,8 @@
                 assuranceSection.classList.add('hidden');
                 personnelSelect.required = false;
                 assuranceSelect.required = false;
-                sourceIdHidden.value = '';
+                if (personnelSelect) { personnelSelect.removeAttribute('name'); }
+                if (assuranceSelect) { assuranceSelect.removeAttribute('name'); }
 
                 // Masquer le mode de paiement
                 document.getElementById('mode_paiement_id').parentElement.classList.add('hidden');
@@ -233,7 +231,14 @@
                 document.getElementById('mode-paiement-info').classList.add('hidden');
                 document.getElementById('mode-paiement-info-assurance').classList.add('hidden');
             }
-        });
+        }
+
+        sourceTypeSelect.addEventListener('change', function(){ applySourceUI(this.value); });
+
+        // Defaults at load
+        sourceTypeSelect.value = 'personnel';
+        applySourceUI('personnel');
+        // Default mode paiement 'espèces' (déjà présélectionné dans le select)
 
         // Écouter les changements sur les selects pour mettre à jour le champ hidden
         if (personnelSelect) {

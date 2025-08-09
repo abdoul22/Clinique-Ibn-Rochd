@@ -50,9 +50,14 @@ class PayrollController extends Controller
             ];
         });
 
-        // Mettre en tête ceux qui ont du crédit ce mois-ci
-        $personnels = $personnels->sortByDesc(function ($x) {
-            return ($x['credit_ce_mois'] > 0 ? 2 : 1) + ($x['is_paid'] ? 0 : 0.1);
+        // Tri: 1) crédit restant > 0, 2) net à payer > 0, 3) non payé d'abord, 4) nom
+        $personnels = $personnels->sortBy(function ($x) {
+            return [
+                $x['credit_restant'] > 0 ? 0 : 1,
+                $x['net_a_payer'] > 0 ? 0 : 1,
+                $x['is_paid'] ? 1 : 0,
+                strtolower($x['nom'])
+            ];
         })->values();
 
         $modes = ModePaiement::getTypes();
@@ -249,8 +254,10 @@ class PayrollController extends Controller
                 'mode' => $mode,
                 'paid_at' => now(),
             ]);
+            return redirect()->route('salaires.index')->with('success', 'Salaire payé pour ' . $personnel->nom . '.');
         }
 
-        return redirect()->route('salaires.index')->with('success', 'Salaire payé pour ' . $personnel->nom . '.');
+        // Cas net=0: prévenir clairement
+        return redirect()->route('salaires.index')->with('info', "Paiement ignoré pour {$personnel->nom} : aucun salaire net à verser (salaire ou net à payer égal à 0).");
     }
 }

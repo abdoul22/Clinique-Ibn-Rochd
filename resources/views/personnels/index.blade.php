@@ -95,6 +95,20 @@
                     <td class="table-cell table-actions">
                         <div class="flex space-x-2">
                             @if($personnel['type'] === 'personnel')
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function(){
+                                  const row = document.currentScript.closest('tr');
+                                  const approved = {{ $personnel['is_approved'] ? 'true' : 'false' }};
+                                  // Désactiver tout bouton de crédit s'il en existe (par convention data-action="credit")
+                                  const creditBtns = row.querySelectorAll('[data-action="credit"]');
+                                  creditBtns.forEach(btn => {
+                                    if(!approved){
+                                      btn.classList.add('opacity-50','cursor-not-allowed');
+                                      btn.addEventListener('click', function(e){ e.preventDefault(); alert('Ce personnel n\'est pas approuvé. Impossible de lui attribuer un crédit.'); });
+                                    }
+                                  });
+                                });
+                            </script>
                             <a href="{{ route('personnels.show', $personnel['id']) }}"
                                 class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1"
                                 title="Voir">
