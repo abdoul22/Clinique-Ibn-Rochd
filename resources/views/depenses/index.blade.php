@@ -57,7 +57,7 @@
                 <div class="text-sm text-gray-700 dark:text-gray-300">Payer les salaires (redirige vers les crédits)
                 </div>
             </div>
-            <a href="{{ route('credits.index') }}"
+            <a href="{{ route('salaires.index') }}"
                 class="inline-flex items-center px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm transition">
                 <i class="fas fa-file-invoice-dollar mr-2"></i>Payer les salaires
             </a>

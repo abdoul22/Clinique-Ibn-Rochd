@@ -303,10 +303,11 @@ Route::middleware(['auth', 'is.approved'])->group(function () {
     Route::get('mode-paiements/historique', [App\Http\Controllers\ModePaiementController::class, 'historique'])
         ->name('modepaiements.historique');
 
-    // Bouton "Payer les salaires" -> redirige vers /credits (paiements et gestion des crédits)
-    Route::get('salaires/payer', function () {
-        return redirect()->route('credits.index');
-    })->name('salaires.payer');
+    // Salaires (liste, PDF, paiement global/individuel)
+    Route::get('salaires', [App\Http\Controllers\PayrollController::class, 'index'])->name('salaires.index');
+    Route::get('salaires/pdf', [App\Http\Controllers\PayrollController::class, 'pdf'])->name('salaires.pdf');
+    Route::post('salaires/payer-tout', [App\Http\Controllers\PayrollController::class, 'payAll'])->name('salaires.payAll');
+    Route::post('salaires/{personnelId}/payer', [App\Http\Controllers\PayrollController::class, 'payOne'])->name('salaires.payOne');
 });
 
 // API pour récupérer le prochain numéro d'entrée d'un médecin

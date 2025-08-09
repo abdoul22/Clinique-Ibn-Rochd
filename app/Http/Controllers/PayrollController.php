@@ -1,0 +1,256 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Credit;
+use App\Models\ModePaiement;
+use App\Models\Personnel;
+use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+
+class PayrollController extends Controller
+{
+    public function index(Request $request)
+    {
+        $now = now();
+        $year = (int) $request->get('year', $now->year);
+        $month = (int) $request->get('month', $now->month);
+
+        $debut = now()->setDate($year, $month, 1)->startOfDay();
+        $fin = (clone $debut)->endOfMonth()->endOfDay();
+
+        $personnels = Personnel::orderBy('nom')->get()->map(function (Personnel $p) use ($debut, $fin, $year, $month) {
+            $creditTotal = Credit::where('source_type', Personnel::class)
+                ->where('source_id', $p->id)
+                ->sum('montant');
+            $creditPaye = Credit::where('source_type', Personnel::class)
+                ->where('source_id', $p->id)
+                ->sum('montant_paye');
+            $creditRestant = max($creditTotal - $creditPaye, 0);
+
+            $creditMois = Credit::where('source_type', Personnel::class)
+                ->where('source_id', $p->id)
+                ->whereBetween('created_at', [$debut, $fin])
+                ->sum('montant');
+
+            $isPaid = \App\Models\Payroll::where('personnel_id', $p->id)
+                ->where('year', $year)
+                ->where('month', $month)
+                ->exists();
+
+            return [
+                'id' => $p->id,
+                'nom' => $p->nom,
+                'fonction' => $p->fonction,
+                'salaire' => (float) $p->salaire,
+                'credit_restant' => (float) $creditRestant,
+                'net_a_payer' => max(((float) $p->salaire) - $creditRestant, 0),
+                'credit_ce_mois' => (float) $creditMois,
+                'is_paid' => $isPaid,
+            ];
+        });
+
+        // Mettre en tête ceux qui ont du crédit ce mois-ci
+        $personnels = $personnels->sortByDesc(function ($x) {
+            return ($x['credit_ce_mois'] > 0 ? 2 : 1) + ($x['is_paid'] ? 0 : 0.1);
+        })->values();
+
+        $modes = ModePaiement::getTypes();
+
+        return view('salaires.index', [
+            'personnels' => $personnels,
+            'year' => $year,
+            'month' => $month,
+            'modes' => $modes,
+            // URL pour payer un par un -> /credits avec filtres prédéfinis
+            'url_paiement_un_par_un' => route('credits.index', ['type' => 'personnel', 'status' => 'non payé']),
+        ]);
+    }
+
+    public function pdf(Request $request)
+    {
+        // Préparer les mêmes données que index
+        $now = now();
+        $year = (int) $request->get('year', $now->year);
+        $month = (int) $request->get('month', $now->month);
+
+        $debut = now()->setDate($year, $month, 1)->startOfDay();
+        $fin = (clone $debut)->endOfMonth()->endOfDay();
+
+        $personnels = Personnel::orderBy('nom')->get()->map(function (Personnel $p) use ($debut, $fin, $year, $month) {
+            $creditTotal = Credit::where('source_type', Personnel::class)
+                ->where('source_id', $p->id)
+                ->sum('montant');
+            $creditPaye = Credit::where('source_type', Personnel::class)
+                ->where('source_id', $p->id)
+                ->sum('montant_paye');
+            $creditRestant = max($creditTotal - $creditPaye, 0);
+
+            $creditMois = Credit::where('source_type', Personnel::class)
+                ->where('source_id', $p->id)
+                ->whereBetween('created_at', [$debut, $fin])
+                ->sum('montant');
+
+            return [
+                'id' => $p->id,
+                'nom' => $p->nom,
+                'fonction' => $p->fonction,
+                'salaire' => (float) $p->salaire,
+                'credit_restant' => (float) $creditRestant,
+                'net_a_payer' => max(((float) $p->salaire) - $creditRestant, 0),
+                'credit_ce_mois' => (float) $creditMois,
+                'is_paid' => \App\Models\Payroll::where('personnel_id', $p->id)->where('year', $year)->where('month', $month)->exists(),
+            ];
+        });
+        $personnels = $personnels->sortByDesc(function ($x) {
+            return $x['credit_ce_mois'] > 0 ? 1 : 0;
+        })->values();
+
+        $data = ['personnels' => $personnels, 'year' => $year, 'month' => $month];
+        $pdf = Pdf::loadView('salaires.pdf', $data);
+        $filename = 'salaires_' . $year . '_' . str_pad($month, 2, '0', STR_PAD_LEFT) . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function payAll(Request $request)
+    {
+        $request->validate([
+            'mode' => 'required|string|in:' . implode(',', ModePaiement::getTypes()),
+        ]);
+        $mode = $request->mode;
+        $now = now();
+        $year = (int) $request->get('year', $now->year);
+        $month = (int) $request->get('month', $now->month);
+
+        $personnels = Personnel::all();
+        foreach ($personnels as $personnel) {
+            // Si déjà payé ce mois-ci, sauter
+            if (\App\Models\Payroll::where('personnel_id', $personnel->id)->where('year', $year)->where('month', $month)->exists()) {
+                continue;
+            }
+            // 1) Payer tous les crédits restants du personnel via déduction salariale
+            $credits = Credit::where('source_type', Personnel::class)
+                ->where('source_id', $personnel->id)
+                ->whereColumn('montant_paye', '<', 'montant')
+                ->get();
+
+            foreach ($credits as $credit) {
+                $reste = $credit->montant - $credit->montant_paye;
+                if ($reste <= 0) {
+                    continue;
+                }
+
+                // Marquer comme payé totalement
+                $credit->montant_paye = $credit->montant;
+                $credit->status = 'payé';
+                $credit->save();
+
+                // Journaliser l'opération comme "entrée" de remboursement (déduction salariale)
+                ModePaiement::create([
+                    'type' => $mode,
+                    'montant' => $reste,
+                    'caisse_id' => null,
+                    'source' => 'credit_personnel',
+                ]);
+            }
+
+            // 2) Créer la dépense de salaire net (salaire - totalité crédits restants avant paiement)
+            $creditTotal = Credit::where('source_type', Personnel::class)
+                ->where('source_id', $personnel->id)
+                ->sum('montant');
+            $creditPaye = Credit::where('source_type', Personnel::class)
+                ->where('source_id', $personnel->id)
+                ->sum('montant_paye');
+            $creditRestantApres = max($creditTotal - $creditPaye, 0);
+            $net = max($personnel->salaire - $creditRestantApres, 0);
+
+            if ($net > 0) {
+                \App\Models\Depense::create([
+                    'nom' => 'Salaire ' . now()->translatedFormat('F Y') . ' - ' . $personnel->nom,
+                    'montant' => $net,
+                    'mode_paiement_id' => $mode,
+                    'source' => 'salaire',
+                ]);
+                \App\Models\Payroll::create([
+                    'personnel_id' => $personnel->id,
+                    'year' => $year,
+                    'month' => $month,
+                    'montant_net' => $net,
+                    'mode' => $mode,
+                    'paid_at' => now(),
+                ]);
+            }
+        }
+
+        return redirect()->route('salaires.index')->with('success', 'Tous les salaires ont été traités.');
+    }
+
+    public function payOne(Request $request, $personnelId)
+    {
+        $request->validate([
+            'mode' => 'required|string|in:' . implode(',', ModePaiement::getTypes()),
+        ]);
+        $mode = $request->mode;
+
+        $personnel = Personnel::findOrFail($personnelId);
+        $now = now();
+        $year = (int) $request->get('year', $now->year);
+        $month = (int) $request->get('month', $now->month);
+
+        // Bloquer si déjà payé
+        if (\App\Models\Payroll::where('personnel_id', $personnel->id)->where('year', $year)->where('month', $month)->exists()) {
+            return redirect()->route('salaires.index')->with('info', 'Salaire déjà payé pour ' . $personnel->nom . ' ce mois.');
+        }
+
+        // Payer crédits restants
+        $credits = Credit::where('source_type', Personnel::class)
+            ->where('source_id', $personnel->id)
+            ->whereColumn('montant_paye', '<', 'montant')
+            ->get();
+        foreach ($credits as $credit) {
+            $reste = $credit->montant - $credit->montant_paye;
+            if ($reste <= 0) {
+                continue;
+            }
+            $credit->montant_paye = $credit->montant;
+            $credit->status = 'payé';
+            $credit->save();
+
+            ModePaiement::create([
+                'type' => $mode,
+                'montant' => $reste,
+                'caisse_id' => null,
+                'source' => 'credit_personnel',
+            ]);
+        }
+
+        // Créer la dépense de salaire net
+        $creditTotal = Credit::where('source_type', Personnel::class)
+            ->where('source_id', $personnel->id)
+            ->sum('montant');
+        $creditPaye = Credit::where('source_type', Personnel::class)
+            ->where('source_id', $personnel->id)
+            ->sum('montant_paye');
+        $creditRestantApres = max($creditTotal - $creditPaye, 0);
+        $net = max($personnel->salaire - $creditRestantApres, 0);
+
+        if ($net > 0) {
+            \App\Models\Depense::create([
+                'nom' => 'Salaire ' . now()->translatedFormat('F Y') . ' - ' . $personnel->nom,
+                'montant' => $net,
+                'mode_paiement_id' => $mode,
+                'source' => 'salaire',
+            ]);
+            \App\Models\Payroll::create([
+                'personnel_id' => $personnel->id,
+                'year' => $year,
+                'month' => $month,
+                'montant_net' => $net,
+                'mode' => $mode,
+                'paid_at' => now(),
+            ]);
+        }
+
+        return redirect()->route('salaires.index')->with('success', 'Salaire payé pour ' . $personnel->nom . '.');
+    }
+}
