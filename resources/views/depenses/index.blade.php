@@ -50,18 +50,7 @@
             <div class="text-2xl font-bold text-green-700 dark:text-green-400">{{ number_format($totalNet, 0, ',', ' ')
                 }} MRU</div>
         </div>
-        <div
-            class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between">
-            <div>
-                <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Salaire</div>
-                <div class="text-sm text-gray-700 dark:text-gray-300">Payer les salaires (redirige vers les crédits)
-                </div>
-            </div>
-            <a href="{{ route('salaires.index') }}"
-                class="inline-flex items-center px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm transition">
-                <i class="fas fa-file-invoice-dollar mr-2"></i>Payer les salaires
-            </a>
-        </div>
+
     </div>
     @php
     $period = request('period', 'day');
