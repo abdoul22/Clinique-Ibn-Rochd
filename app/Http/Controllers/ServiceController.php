@@ -52,7 +52,7 @@ class ServiceController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'type_service' => 'required|in:LABORATOIRE,PHARMACIE,MÉDECINE DENTAIRE,IMAGERIE MÉDICALE,CONSULTATIONS EXTERNES,HOSPITALISATION,BLOC OPÉRATOIRE,INFIRMERIE,EXPLORATIONS FONCTIONNELLES',
+            'type_service' => 'required|in:LABORATOIRE,PHARMACIE,MEDECINE DENTAIRE,IMAGERIE MEDICALE,CONSULTATIONS EXTERNES,HOSPITALISATION,BLOC OPERATOIRE,INFIRMERIE,EXPLORATIONS FONCTIONNELLES',
             'pharmacie_id' => 'nullable|exists:pharmacies,id',
             'prix' => 'nullable|numeric|min:0',
             'quantite_defaut' => 'nullable|integer|min:1'
@@ -87,7 +87,7 @@ class ServiceController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'type_service' => 'required|in:LABORATOIRE,PHARMACIE,MÉDECINE DENTAIRE,IMAGERIE MÉDICALE,CONSULTATIONS EXTERNES,HOSPITALISATION,BLOC OPÉRATOIRE,INFIRMERIE,EXPLORATIONS FONCTIONNELLES',
+            'type_service' => 'required|in:LABORATOIRE,PHARMACIE,MEDECINE DENTAIRE,IMAGERIE MEDICALE,CONSULTATIONS EXTERNES,HOSPITALISATION,BLOC OPERATOIRE,INFIRMERIE,EXPLORATIONS FONCTIONNELLES',
             'pharmacie_id' => 'nullable|exists:pharmacies,id',
             'prix' => 'nullable|numeric|min:0',
             'quantite_defaut' => 'nullable|integer|min:1'
