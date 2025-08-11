@@ -58,23 +58,30 @@
                 <td class="table-cell">
                     @php
                     $badgeColors = [
-                    'examen' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-                    'medicament' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-                    'consultation' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-                    'pharmacie' => 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
-                    'medecins' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                    'LABORATOIRE' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                    'PHARMACIE' => 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+                    'MEDECINE DENTAIRE' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                    'IMAGERIE MEDICALE' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+                    'CONSULTATIONS EXTERNES' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+                    'HOSPITALISATION' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+                    'BLOC OPERATOIRE' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                    'INFIRMERIE' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                    'EXPLORATIONS FONCTIONNELLES' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                    'medicament' => 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200', // compat
+                    'pharmacie' => 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200', // compat
                     ];
-                    $type = strtolower($service->type_service);
-                    $badgeClass = $badgeColors[$type] ?? 'bg-gray-200 text-gray-800 dark:bg-gray-700
-                    dark:text-gray-200';
+                    $typeKey = $service->type_service;
+                    $badgeClass = $badgeColors[$typeKey] ?? $badgeColors[strtolower($typeKey)] ?? 'bg-gray-200
+                    text-gray-800 dark:bg-gray-700 dark:text-gray-200';
                     @endphp
                     <span
                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeClass }}">
-                        {{ ucfirst($service->type_service) }}
+                        {{ $service->type_service === 'medicament' ? 'PHARMACIE' : $service->type_service }}
                     </span>
                 </td>
                 <td class="table-cell text-gray-900 dark:text-gray-100">
-                    @if($service->type_service === 'medicament' && $service->pharmacie)
+                    @if(($service->type_service === 'medicament' || $service->type_service === 'PHARMACIE') &&
+                    $service->pharmacie)
                     <span class="text-sm text-gray-600 dark:text-gray-400">{{ $service->observation_affichage }}</span>
                     @else
                     {{ $service->observation_affichage }}

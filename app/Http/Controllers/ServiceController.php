@@ -14,7 +14,7 @@ class ServiceController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $query = Service::query();
+        $query = Service::query()->whereNull('pharmacie_id'); // masquer les lignes liées aux médicaments
 
         if ($search) {
             $query->where('nom', 'like', "%{$search}%")
@@ -30,8 +30,14 @@ class ServiceController extends Controller
 
         // Traiter les données pour l'affichage
         $services->getCollection()->transform(function ($service) {
-            $service->nom_affichage = $service->nom;
-            $service->observation_affichage = $service->observation;
+            // Afficher le nom du médicament si service pharmacie/medicament
+            if ($service->type_service === 'PHARMACIE' && $service->pharmacie) {
+                $service->nom_affichage = $service->pharmacie->nom_medicament;
+                $service->observation_affichage = $service->observation;
+            } else {
+                $service->nom_affichage = $service->nom;
+                $service->observation_affichage = $service->observation;
+            }
             return $service;
         });
 
@@ -87,14 +93,17 @@ class ServiceController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'type_service' => 'required|in:LABORATOIRE,PHARMACIE,MEDECINE DENTAIRE,IMAGERIE MEDICALE,CONSULTATIONS EXTERNES,HOSPITALISATION,BLOC OPERATOIRE,INFIRMERIE,EXPLORATIONS FONCTIONNELLES',
+            'type_service' => 'nullable|in:LABORATOIRE,PHARMACIE,MEDECINE DENTAIRE,IMAGERIE MEDICALE,CONSULTATIONS EXTERNES,HOSPITALISATION,BLOC OPERATOIRE,INFIRMERIE,EXPLORATIONS FONCTIONNELLES',
             'pharmacie_id' => 'nullable|exists:pharmacies,id',
             'prix' => 'nullable|numeric|min:0',
             'quantite_defaut' => 'nullable|integer|min:1'
         ]);
 
         $service = Service::findOrFail($id);
-        $data = $request->only(['nom', 'observation', 'type_service', 'pharmacie_id', 'prix', 'quantite_defaut']);
+        $data = $request->only(['nom', 'observation', 'pharmacie_id', 'prix', 'quantite_defaut']);
+        if ($request->filled('type_service')) {
+            $data['type_service'] = $request->input('type_service');
+        }
 
         // Pas de synchronisation automatique depuis pharmacie ici
 
@@ -115,10 +124,10 @@ class ServiceController extends Controller
 
         // Traiter les données pour l'affichage
         $services->transform(function ($service) {
-            // Si c'est un service de type médicament lié à la pharmacie
-            if ($service->type_service === 'medicament' && $service->pharmacie) {
-                $service->nom_affichage = 'Pharmacie';
-                $service->observation_affichage = $service->pharmacie->nom_medicament;
+            // Si c'est un service de type medicament/pharmacie lié à la pharmacie
+            if ($service->type_service === 'PHARMACIE' && $service->pharmacie) {
+                $service->nom_affichage = $service->pharmacie->nom_medicament;
+                $service->observation_affichage = $service->observation;
             } else {
                 $service->nom_affichage = $service->nom;
                 $service->observation_affichage = $service->observation;
@@ -126,7 +135,7 @@ class ServiceController extends Controller
             return $service;
         });
 
-        $pdf = PDF::loadView('services.export_pdf', compact('services'));
+        $pdf = Pdf::loadView('services.export_pdf', compact('services'));
         return $pdf->download('services.pdf');
     }
 
@@ -136,10 +145,9 @@ class ServiceController extends Controller
 
         // Traiter les données pour l'affichage
         $services->transform(function ($service) {
-            // Si c'est un service de type médicament lié à la pharmacie
-            if ($service->type_service === 'medicament' && $service->pharmacie) {
-                $service->nom_affichage = 'Pharmacie';
-                $service->observation_affichage = $service->pharmacie->nom_medicament;
+            if ($service->type_service === 'PHARMACIE' && $service->pharmacie) {
+                $service->nom_affichage = $service->pharmacie->nom_medicament;
+                $service->observation_affichage = $service->observation;
             } else {
                 $service->nom_affichage = $service->nom;
                 $service->observation_affichage = $service->observation;

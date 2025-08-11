@@ -294,8 +294,8 @@
                         <option value="{{ $examen->id }}" data-nom="{{ $examen->nom }}"
                             data-tarif="{{ $examen->tarif }}" data-part-cabinet="{{ $examen->part_cabinet }}"
                             data-part-medecin="{{ $examen->part_medecin }}"
-                            data-service-type="{{ $examen->service ? $examen->service->type_service : 'consultation' }}"
-                            data-is-pharmacie="{{ $examen->service && $examen->service->type_service === 'pharmacie' ? 'true' : 'false' }}"
+                            data-service-type="{{ $examen->service ? $examen->service->type_service : 'CONSULTATIONS EXTERNES' }}"
+                            data-is-pharmacie="{{ $examen->service && ($examen->service->type_service === 'PHARMACIE') ? 'true' : 'false' }}"
                             data-stock="{{ $examen->service && $examen->service->pharmacie ? $examen->service->pharmacie->stock : '' }}">
                             {{ $examen->nom }} - {{ number_format($examen->tarif, 2) }} MRU
                         </option>

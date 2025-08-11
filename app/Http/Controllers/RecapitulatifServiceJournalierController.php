@@ -13,14 +13,15 @@ class RecapitulatifServiceJournalierController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Caisse::with('service')
+        // Grouper par service en fusionnant tous les actes PHARMACIE sous une même clé
+        $query = Caisse::join('services', 'caisses.service_id', '=', 'services.id')
             ->select([
-                'service_id',
-                DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00")) as jour'),
-                DB::raw('SUM(total) as total'),
+                DB::raw("CASE WHEN services.type_service='PHARMACIE' THEN 'PHARMACIE' ELSE CAST(services.id AS CHAR) END as service_key"),
+                DB::raw('DATE(CONVERT_TZ(caisses.date_examen, "+00:00", "+00:00")) as jour'),
+                DB::raw('SUM(caisses.total) as total'),
                 DB::raw('COUNT(*) as nombre'),
             ])
-            ->groupBy('service_id', DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00"))'));
+            ->groupBy('service_key', DB::raw('DATE(CONVERT_TZ(caisses.date_examen, "+00:00", "+00:00"))'));
 
         // Filtrage par période
         $period = $request->get('period', 'all');
@@ -49,25 +50,34 @@ class RecapitulatifServiceJournalierController extends Controller
         // Filtre de recherche par nom de service
         if ($request->filled('search')) {
             $searchTerm = $request->search;
-            $query->whereHas('service', function ($q) use ($searchTerm) {
-                $q->where('nom', 'like', "%{$searchTerm}%");
-            });
+            $query->where('services.nom', 'like', "%{$searchTerm}%");
         }
 
         // Filtre par service spécifique
         if ($request->filled('service_id')) {
-            $query->where('service_id', $request->service_id);
+            $query->where('caisses.service_id', $request->service_id);
         }
 
         $recaps = $query->orderBy('jour', 'desc')
-            ->orderBy('service_id')
+            ->orderBy('service_key')
             ->paginate(15);
 
         // Charger les services séparément pour éviter les problèmes de relations
-        $serviceIds = $recaps->pluck('service_id')->unique()->filter();
+        $serviceIds = $recaps->pluck('service_key')->unique()->filter();
         $services = [];
         if ($serviceIds->count() > 0) {
-            $services = \App\Models\Service::whereIn('id', $serviceIds)->pluck('nom', 'id')->toArray();
+            $numericIds = $serviceIds->filter(fn($k) => is_numeric($k))->values();
+            $map = [];
+            if ($numericIds->count() > 0) {
+                $map = \App\Models\Service::whereIn('id', $numericIds)->pluck('nom', 'id')->toArray();
+            }
+            foreach ($serviceIds as $key) {
+                if ($key === 'PHARMACIE') {
+                    $services[$key] = 'PHARMACIE';
+                } elseif (isset($map[$key])) {
+                    $services[$key] = $map[$key];
+                }
+            }
         }
 
         // Calculer les totaux pour le résumé
@@ -101,7 +111,7 @@ class RecapitulatifServiceJournalierController extends Controller
         }
 
         if ($request->filled('service_id')) {
-            $totauxQuery->where('service_id', $request->service_id);
+            $totauxQuery->where('caisses.service_id', $request->service_id);
         }
 
         $totaux = $totauxQuery->select([
@@ -183,7 +193,12 @@ class RecapitulatifServiceJournalierController extends Controller
         $serviceIds = $recaps->pluck('service_id')->unique()->filter();
         $services = [];
         if ($serviceIds->count() > 0) {
-            $services = \App\Models\Service::whereIn('id', $serviceIds)->pluck('nom', 'id')->toArray();
+            $services = \App\Models\Service::whereIn('id', $serviceIds)
+                ->get()
+                ->mapWithKeys(function ($s) {
+                    $label = $s->type_service === 'PHARMACIE' ? 'PHARMACIE' : $s->nom;
+                    return [$s->id => $label];
+                })->toArray();
         }
 
         // Calculer les totaux pour le résumé - Version simplifiée

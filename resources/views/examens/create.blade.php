@@ -33,7 +33,8 @@
                     required>
                     <option value="">-- Sélectionner un service --</option>
                     @foreach($services as $service)
-                    <option value="{{ $service->id }}" {{ old('idsvc')==$service->id ? 'selected' : '' }}>
+                    <option value="{{ $service->id }}" data-type="{{ $service->type_service }}" {{
+                        old('idsvc')==$service->id ? 'selected' : '' }}>
                         {{ $service->nom }}
                     </option>
                     @endforeach
@@ -49,7 +50,11 @@
                     class="block text-sm font-medium text-gray-700 dark:text-gray-200">Médicament</label>
                 <div class="relative">
                     <input type="text" id="medicament_search" placeholder="Rechercher un médicament..."
-                        class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white mb-2">
+                        class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white mb-2"
+                        autocomplete="off">
+                    <div id="medicament_suggestions"
+                        class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow hidden max-h-56 overflow-auto">
+                    </div>
                     <select name="medicament_id" id="medicament_id"
                         class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                         <option value="">-- Sélectionner un médicament --</option>
@@ -123,19 +128,35 @@
         const medicamentsSection = document.getElementById('medicaments-section');
         const medicamentSelect = document.getElementById('medicament_id');
         const medicamentSearch = document.getElementById('medicament_search');
+        const medicamentSuggestions = document.getElementById('medicament_suggestions');
+        const nomInput = document.getElementById('nom');
 
         // Gestion de l'affichage des médicaments
         function toggleMedicamentsSection() {
             const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
-            const isPharmacie = selectedOption && selectedOption.text.toLowerCase().includes('pharmacie');
+            const type = selectedOption ? (selectedOption.dataset.type || '').toUpperCase() : '';
+            const isPharmacie = type === 'PHARMACIE';
 
             if (isPharmacie) {
                 medicamentsSection.classList.remove('hidden');
                 medicamentSelect.required = true;
+                // Rendre le nom dérivé du médicament sélectionné
+                nomInput.readOnly = true;
+                nomInput.placeholder = 'Choisissez un médicament';
+                // Forcer la part médecin à 0 et part cabinet = tarif si déjà renseigné
+                partMedecinInput.value = 0;
+                partMedecinInput.readOnly = true;
+                if (tarifInput.value) {
+                    partCabinetInput.value = parseFloat(tarifInput.value).toFixed(2);
+                }
             } else {
                 medicamentsSection.classList.add('hidden');
                 medicamentSelect.required = false;
                 medicamentSelect.value = '';
+                nomInput.readOnly = false;
+                nomInput.placeholder = '';
+                partMedecinInput.readOnly = false;
+                medicamentSuggestions.classList.add('hidden');
             }
         }
 
@@ -147,30 +168,58 @@
                 tarifInput.value = prix;
 
                 // Déclencher le calcul automatique des parts
-                if (lastModified === 'medecin') {
-                    calculateMissingPart('medecin');
-                } else if (lastModified === 'cabinet') {
-                    calculateMissingPart('cabinet');
+                if (serviceSelect.options[serviceSelect.selectedIndex] && (serviceSelect.options[serviceSelect.selectedIndex].dataset.type || '').toUpperCase() === 'PHARMACIE') {
+                    partMedecinInput.value = 0;
+                    partCabinetInput.value = prix.toFixed(2);
+                } else {
+                    if (lastModified === 'medecin') {
+                        calculateMissingPart('medecin');
+                    } else if (lastModified === 'cabinet') {
+                        calculateMissingPart('cabinet');
+                    }
                 }
+                // Nom d'examen = nom du médicament
+                const nomMed = selectedOption.text.split(' - ')[0];
+                nomInput.value = nomMed;
             }
         }
 
-        // Recherche de médicaments
+        // Autocomplete réactif pour médicaments
         function filterMedicaments() {
-            const searchTerm = medicamentSearch.value.toLowerCase();
-            const options = medicamentSelect.querySelectorAll('option');
+            const searchTerm = (medicamentSearch.value || '').toLowerCase();
+            const options = Array.from(medicamentSelect.querySelectorAll('option')).filter(o => o.value !== '');
 
-            options.forEach(option => {
-                if (option.value === '') return; // Garder l'option par défaut
+            const matched = options.filter(o => (o.dataset.nom || '').includes(searchTerm)).slice(0, 10);
 
-                const nom = option.dataset.nom || '';
-                if (nom.includes(searchTerm)) {
-                    option.style.display = '';
-                } else {
-                    option.style.display = 'none';
-                }
-            });
+            if (searchTerm.length === 0 || matched.length === 0) {
+                medicamentSuggestions.classList.add('hidden');
+                medicamentSuggestions.innerHTML = '';
+                return;
+            }
+
+            medicamentSuggestions.innerHTML = matched.map(o => {
+                const label = o.textContent;
+                return `<div class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" data-value="${o.value}">${label}</div>`;
+            }).join('');
+            medicamentSuggestions.classList.remove('hidden');
         }
+
+        // Sélection depuis la liste des suggestions
+        medicamentSuggestions.addEventListener('click', function (e) {
+            const item = e.target.closest('[data-value]');
+            if (!item) return;
+            const value = item.getAttribute('data-value');
+            medicamentSelect.value = value;
+            medicamentSuggestions.classList.add('hidden');
+            updateTarifFromMedicament();
+        });
+
+        // Fermer la liste si clic à l'extérieur
+        document.addEventListener('click', function (e) {
+            if (!medicamentSuggestions.contains(e.target) && e.target !== medicamentSearch) {
+                medicamentSuggestions.classList.add('hidden');
+            }
+        });
 
         // Écouter les changements de service
         serviceSelect.addEventListener('change', toggleMedicamentsSection);
@@ -249,6 +298,15 @@
         });
 
         tarifInput.addEventListener('input', function () {
+            // Si PHARMACIE: part médecin 0 et part cabinet = tarif
+            const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+            const type = selectedOption ? (selectedOption.dataset.type || '').toUpperCase() : '';
+            if (type === 'PHARMACIE') {
+                const prix = parseFloat(tarifInput.value || '0');
+                partMedecinInput.value = 0;
+                partCabinetInput.value = isNaN(prix) ? '' : prix.toFixed(2);
+                return;
+            }
             if (lastModified === 'medecin') {
                 calculateMissingPart('medecin');
             } else if (lastModified === 'cabinet') {

@@ -58,8 +58,13 @@ class ExamenController extends Controller
 
         // Traiter les données pour l'affichage
         $examens->getCollection()->transform(function ($examen) {
-            // Si l'examen est lié à un service de type pharmacie
-            if ($examen->service && $examen->service->type_service === 'pharmacie' && $examen->service->pharmacie) {
+            // Détection compatible: ancien 'medicament' ou nouveau 'PHARMACIE'
+            $isMedicament = $examen->service && (
+                $examen->service->type_service === 'medicament' ||
+                $examen->service->type_service === 'PHARMACIE'
+            ) && $examen->service->pharmacie;
+
+            if ($isMedicament) {
                 $examen->nom_affichage = $examen->service->pharmacie->nom_medicament;
                 $examen->service_affichage = 'Pharmacie';
             } else {
@@ -120,23 +125,18 @@ class ExamenController extends Controller
             $serviceId = $defaultService->id;
         }
 
-        // Si un médicament est sélectionné, créer un service de pharmacie
+        // Si un médicament est sélectionné: ne pas créer de service automatiquement.
         if ($request->medicament_id) {
             $medicament = \App\Models\Pharmacie::find($request->medicament_id);
             if ($medicament) {
-                // Créer ou récupérer le service de pharmacie pour ce médicament
-                $servicePharmacie = Service::firstOrCreate([
-                    'type_service' => 'pharmacie',
-                    'pharmacie_id' => $medicament->id,
-                ], [
-                    'nom' => "Vente {$medicament->nom_medicament}",
-                    'prix' => $medicament->prix_vente,
-                    'quantite_defaut' => 1,
-                    'observation' => "Service de vente pour {$medicament->nom_medicament}",
-                ]);
-
-                $serviceId = $servicePharmacie->id;
-                $nomExamen = "Vente {$medicament->nom_medicament}";
+                // Reprendre le service sélectionné dans le select (idsvc) qui est de type PHARMACIE
+                // et lier simplement l'examen à ce service générique.
+                $serviceId = $request->idsvc ?? ($serviceId ?? null);
+                $nomExamen = $medicament->nom_medicament;
+                // Mettre le tarif par défaut sur le prix du médicament
+                $tarif = $medicament->prix_vente;
+                $part_cabinet = $tarif; // PHARMACIE: part cabinet = tarif
+                $part_medecin = 0;
             }
         }
 
@@ -217,8 +217,8 @@ class ExamenController extends Controller
 
         // Traiter les données pour l'affichage
         $examens->transform(function ($examen) {
-            // Si l'examen est lié à un service de type médicament (pharmacie)
-            if ($examen->service && $examen->service->type_service === 'medicament' && $examen->service->pharmacie) {
+            // Si l'examen est lié à un service de type médicament (ancien ou nouveau)
+            if ($examen->service && ($examen->service->type_service === 'medicament' || $examen->service->type_service === 'PHARMACIE') && $examen->service->pharmacie) {
                 $examen->nom_affichage = $examen->service->pharmacie->nom_medicament;
                 $examen->service_affichage = 'Pharmacie';
             } else {
@@ -238,8 +238,8 @@ class ExamenController extends Controller
 
         // Traiter les données pour l'affichage
         $examens->transform(function ($examen) {
-            // Si l'examen est lié à un service de type médicament (pharmacie)
-            if ($examen->service && $examen->service->type_service === 'medicament' && $examen->service->pharmacie) {
+            // Si l'examen est lié à un service de type médicament (ancien ou nouveau)
+            if ($examen->service && ($examen->service->type_service === 'medicament' || $examen->service->type_service === 'PHARMACIE') && $examen->service->pharmacie) {
                 $examen->nom_affichage = $examen->service->pharmacie->nom_medicament;
                 $examen->service_affichage = 'Pharmacie';
             } else {

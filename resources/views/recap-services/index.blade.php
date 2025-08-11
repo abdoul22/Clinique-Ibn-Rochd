@@ -170,36 +170,37 @@
             @forelse($recaps as $recap)
             <tr class="border-t border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-3 px-4">
-                    @if(isset($services[$recap->service_id]))
                     @php
-                    $serviceModel = \App\Models\Service::find($recap->service_id);
+                    $key = $recap->service_key ?? $recap->service_id;
                     $badgeColors = [
-                    'examen' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-                    'medicament' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-                    'consultation' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-                    'pharmacie' => 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
-                    'medecins' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                    'LABORATOIRE' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                    'PHARMACIE' => 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+                    'MEDECINE DENTAIRE' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                    'IMAGERIE MEDICALE' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+                    'CONSULTATIONS EXTERNES' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+                    'HOSPITALISATION' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+                    'BLOC OPERATOIRE' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                    'INFIRMERIE' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                    'EXPLORATIONS FONCTIONNELLES' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
                     ];
-                    $type = $serviceModel ? strtolower($serviceModel->type_service) : null;
-                    $badgeClass = $badgeColors[$type] ?? 'bg-gray-200 text-gray-800 dark:bg-gray-700
-                    dark:text-gray-200';
+
+                    if ($key === 'PHARMACIE') {
+                    $displayName = 'PHARMACIE';
+                    $typeKey = 'PHARMACIE';
+                    $badgeClass = $badgeColors[$typeKey];
+                    } else {
+                    $serviceModel = \App\Models\Service::find($key);
+                    $typeKey = $serviceModel?->type_service;
+                    $badgeClass = $typeKey ? ($badgeColors[$typeKey] ?? 'bg-gray-200 text-gray-800 dark:bg-gray-700
+                    dark:text-gray-200') : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+                    $displayName = $services[$key] ?? ($serviceModel->nom ?? 'Service non assigné');
+                    }
                     @endphp
-                    <span class="font-medium text-gray-900 dark:text-white">{{ $services[$recap->service_id] }}</span>
-                    @if($serviceModel)
+                    <span class="font-medium text-gray-900 dark:text-white">{{ $displayName }}</span>
                     <span
                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeClass }} ml-2">
-                        {{ ucfirst($serviceModel->type_service) }}
+                        {{ $typeKey ?? '—' }}
                     </span>
-                    @endif
-                    @else
-                    <span class="text-red-500 italic text-xs">
-                        @if($recap->service_id === null)
-                        Service non assigné
-                        @else
-                        Service ID: {{ $recap->service_id }} (introuvable)
-                        @endif
-                    </span>
-                    @endif
                 </td>
                 <td class="py-3 px-4">
                     <span

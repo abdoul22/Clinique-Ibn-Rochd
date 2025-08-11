@@ -18,7 +18,7 @@ return new class extends Migration
         \Illuminate\Support\Facades\DB::table('services')->whereIn('type_service', ['imagerie', 'Imagerie', 'IMAGERIE MÉDICALE'])->update(['type_service' => 'IMAGERIE MEDICALE']);
         \Illuminate\Support\Facades\DB::table('services')->whereIn('type_service', ['consultations', 'consultation', 'Consultations', 'Consultation', 'medecins', 'Médecins'])->update(['type_service' => 'CONSULTATIONS EXTERNES']);
         \Illuminate\Support\Facades\DB::table('services')->whereIn('type_service', ['hospitalisation', 'Hospitalisation'])->update(['type_service' => 'HOSPITALISATION']);
-        \Illuminate\Support\Facades\DB::table('services')->whereIn('type_service', ['bloc', 'Bloc', 'BLOC OPÉRATOIRE'])->update(['type_service' => 'BLOC OPERATOIRE']);
+        \Illuminate\Support\Facades\DB::table('services')->whereIn('type_service', ['bloc', 'Bloc', '     '])->update(['type_service' => 'BLOC OPERATOIRE']);
         \Illuminate\Support\Facades\DB::table('services')->whereIn('type_service', ['infirmerie', 'Infirmerie', 'INFIRMIER', 'INFIRMIERIE'])->update(['type_service' => 'INFIRMERIE']);
         \Illuminate\Support\Facades\DB::table('services')->whereIn('type_service', ['examens', 'examen', 'Examens', 'Examen'])->update(['type_service' => 'EXPLORATIONS FONCTIONNELLES']);
 

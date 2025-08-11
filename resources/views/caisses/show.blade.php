@@ -28,8 +28,13 @@
                     $caisse->date_examen ? $caisse->date_examen->format('d/m/Y') : 'N/A' }}</p>
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Type d'examen:</span> {{
                     $caisse->examen->nom ?? 'N/A' }}</p>
-                <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Service:</span> {{
-                    $caisse->service->nom ?? 'N/A' }}</p>
+                <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Service:</span>
+                    @php
+                    $svc = $caisse->service;
+                    $serviceLabel = $svc && $svc->type_service === 'PHARMACIE' ? 'PHARMACIE' : ($svc->nom ?? 'N/A');
+                    @endphp
+                    {{ $serviceLabel }}
+                </p>
             </div>
 
             <div class="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg">

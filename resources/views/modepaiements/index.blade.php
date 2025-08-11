@@ -20,6 +20,7 @@
                     <th class="table-header">Type</th>
                     <th class="table-header">Montant</th>
                     <th class="table-header">Facture Caisse</th>
+                    <th class="table-header">Date</th>
 
                 </tr>
             </thead>
@@ -37,8 +38,18 @@
                             Facture n°{{ $paiement->caisse->id }}
                         </a>
                         @else
+                        @if($paiement->source === 'credit_assurance')
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            Paiement crédit assurance
+                        </span>
+                        @else
                         <span class="text-gray-400 dark:text-gray-500 italic">Aucune</span>
                         @endif
+                        @endif
+                    </td>
+                    <td class="table-cell">
+                        {{ optional($paiement->created_at)->format('d/m/Y - H:i') }}
                     </td>
                 </tr>
                 @empty

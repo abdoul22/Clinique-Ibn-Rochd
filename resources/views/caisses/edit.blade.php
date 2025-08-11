@@ -89,7 +89,7 @@
                         @foreach($exam_types as $type)
                         @php
                         $service = $type->service;
-                        $isPharmacie = $service && $service->type_service === 'medicament' && $service->pharmacie;
+                        $isPharmacie = $service && ($service->type_service === 'medicament' || $service->type_service === 'PHARMACIE') && $service->pharmacie;
                         @endphp
                         <option value="{{ $type->id }}" data-tarif="{{ $type->tarif }}"
                             data-service-type="{{ $service ? $service->type_service : '' }}"

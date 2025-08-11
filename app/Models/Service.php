@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\RecapitulatifServiceJournier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -48,7 +47,9 @@ class Service extends Model
      */
     public function isMedicament(): bool
     {
-        return $this->type_service === 'pharmacie' && $this->pharmacie_id !== null;
+        // Nouveau schéma: 'PHARMACIE' stocké en base (ENUM), ancien 'medicament' encore supporté côté vues
+        return ($this->type_service === 'PHARMACIE' && $this->pharmacie_id !== null)
+            || ($this->type_service === 'medicament' && $this->pharmacie_id !== null);
     }
 
     /**
@@ -56,7 +57,7 @@ class Service extends Model
      */
     public function isPharmacie(): bool
     {
-        return $this->type_service === 'pharmacie' && $this->pharmacie_id !== null;
+        return ($this->type_service === 'PHARMACIE') || ($this->type_service === 'pharmacie');
     }
 
     /**

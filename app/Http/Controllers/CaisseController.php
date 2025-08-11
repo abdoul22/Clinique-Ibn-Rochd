@@ -273,7 +273,7 @@ class CaisseController extends Controller
                 $examen = Examen::find($examenData['id']);
                 $service = Service::find($examen->idsvc);
 
-                if ($service && $service->type_service === 'pharmacie' && $service->pharmacie_id && $examenData['quantite'] > 0) {
+                if ($service && (in_array($service->type_service, ['medicament', 'PHARMACIE']) || $service->pharmacie_id) && $service->pharmacie_id && $examenData['quantite'] > 0) {
                     $medicament = \App\Models\Pharmacie::find($service->pharmacie_id);
 
                     if ($medicament && $medicament->stockSuffisant($examenData['quantite'])) {
@@ -290,7 +290,7 @@ class CaisseController extends Controller
             $service = Service::find($examen->idsvc);
             $quantite = $request->quantite_medicament ?? 1;
 
-            if ($service && $service->type_service === 'pharmacie' && $service->pharmacie_id && $quantite > 0) {
+            if ($service && (in_array($service->type_service, ['medicament', 'PHARMACIE']) || $service->pharmacie_id) && $service->pharmacie_id && $quantite > 0) {
                 $medicament = \App\Models\Pharmacie::find($service->pharmacie_id);
 
                 if ($medicament && $medicament->stockSuffisant($quantite)) {
@@ -326,22 +326,28 @@ class CaisseController extends Controller
             $typePaiement = 'espèces';
         }
 
-        // Créer l'état de caisse
+        // Calculer répartition patient/assurance
+        $montantTotal = $caisse->total;
+        $couverture = $caisse->couverture ?? 0;
+        $montantAssurance = $caisse->assurance_id ? ($montantTotal * ($couverture / 100)) : 0;
+        $montantPatient = $montantTotal - $montantAssurance;
+
+        // Créer l'état de caisse avec la recette côté patient (ce qui entre en caisse immédiatement)
         $etatCaisse = EtatCaisse::create([
             'caisse_id' => $caisse->id,
             'designation' => 'Facture N°' . $caisse->numero_facture,
-            'recette' => $caisse->total,
+            'recette' => $montantPatient,
             'part_medecin' => $part_medecin,
             'part_clinique' => $part_cabinet,
             'assurance_id' => $caisse->assurance_id,
             'medecin_id' => $caisse->medecin_id,
         ]);
 
-        // Créer le paiement
+        // Créer le paiement (uniquement la part patient)
         ModePaiement::create([
             'caisse_id' => $caisse->id,
             'type' => $typePaiement ?? 'espèces',
-            'montant' => $caisse->total,
+            'montant' => $montantPatient,
             'source' => 'caisse'
         ]);
 

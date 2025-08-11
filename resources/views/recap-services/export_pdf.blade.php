@@ -160,13 +160,19 @@
             $serviceModel = \App\Models\Service::find($recap->service_id);
             $badgeClass = 'badge-default';
             if ($serviceModel) {
-            $type = strtolower($serviceModel->type_service);
+            $type = $serviceModel->type_service;
             switch($type) {
-            case 'examen': $badgeClass = 'badge-examen'; break;
-            case 'medicament': $badgeClass = 'badge-medicament'; break;
-            case 'consultation': $badgeClass = 'badge-consultation'; break;
-            case 'pharmacie': $badgeClass = 'badge-pharmacie'; break;
-            case 'medecins': $badgeClass = 'badge-medecins'; break;
+            case 'LABORATOIRE': $badgeClass = 'badge-examen'; break;
+            case 'PHARMACIE': $badgeClass = 'badge-pharmacie'; break;
+            case 'MEDECINE DENTAIRE': $badgeClass = 'badge-medecins'; break;
+            case 'IMAGERIE MEDICALE': $badgeClass = 'badge-examen'; break;
+            case 'CONSULTATIONS EXTERNES': $badgeClass = 'badge-consultation'; break;
+            case 'HOSPITALISATION': $badgeClass = 'badge-default'; break;
+            case 'BLOC OPERATOIRE': $badgeClass = 'badge-default'; break;
+            case 'INFIRMERIE': $badgeClass = 'badge-default'; break;
+            case 'EXPLORATIONS FONCTIONNELLES': $badgeClass = 'badge-examen'; break;
+            case 'medicament': $badgeClass = 'badge-pharmacie'; break; // compat
+            case 'pharmacie': $badgeClass = 'badge-pharmacie'; break; // compat
             }
             }
             @endphp
@@ -175,7 +181,8 @@
                 <td>
                     <div class="service-name">{{ $services[$recap->service_id] ?? 'Service non assigné' }}</div>
                     @if($serviceModel)
-                    <span class="badge {{ $badgeClass }}">{{ ucfirst($serviceModel->type_service) }}</span>
+                    <span class="badge {{ $badgeClass }}">{{ $serviceModel->type_service === 'medicament' ? 'PHARMACIE'
+                        : $serviceModel->type_service }}</span>
                     @endif
                 </td>
                 <td style="text-align: center; font-weight: bold; color: #059669;">{{ $recap->nombre }}</td>
