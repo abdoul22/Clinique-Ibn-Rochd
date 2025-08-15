@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 py-8">
+<div class="min-h-screen bg-gradient-to-br from-gray-200 via-slate-100 to-blue-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 py-8">
     <div class="container mx-auto px-4">
         <div class="max-w-6xl mx-auto">
             <!-- En-tête moderne avec animation -->
@@ -30,7 +30,7 @@
 
             <!-- Formulaire moderne -->
             <form method="POST" action="{{ route('hospitalisations.store') }}" id="hospitalisationForm"
-                  class="bg-white dark:bg-gray-800 shadow-2xl rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                  class="bg-white dark:bg-gray-800 shadow-2xl rounded-3xl overflow-hidden border-2 border-gray-400 dark:border-gray-700 drop-shadow-2xl">
                 @csrf
 
                 <!-- Section 1: Informations Patient & Médecin -->
@@ -43,7 +43,7 @@
                         </div>
                         Informations Principales
                     </h2>
-                    <p class="text-blue-100 mt-2">Sélectionnez le patient et le médecin responsable</p>
+                    <p class="text-blue-100 dark:text-blue-100 text-white mt-2">Sélectionnez le patient et le médecin responsable</p>
                 </div>
 
                 <div class="p-8">
@@ -59,7 +59,7 @@
                                 Patient *
                             </label>
                             <select name="gestion_patient_id" required
-                                    class="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg">
+                                    class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg shadow-sm">
                                 <option value="">Sélectionner un patient</option>
                                 @foreach($patients as $patient)
                                 <option value="{{ $patient->id }}">{{ $patient->nom }} {{ $patient->prenom }}</option>
@@ -78,7 +78,7 @@
                                 Médecin Traitant *
                             </label>
                             <select name="medecin_id" required
-                                    class="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg">
+                                    class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg shadow-sm">
                                 <option value="">Sélectionner un médecin</option>
                                 @foreach($medecins as $medecin)
                                 <option value="{{ $medecin->id }}">Dr. {{ $medecin->nom }} {{ $medecin->prenom ?? '' }}</option>
@@ -97,7 +97,7 @@
                                 Service *
                             </label>
                             <select name="service_id" required
-                                    class="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-200 text-lg">
+                                    class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-200 text-lg shadow-sm">
                                 <option value="">Sélectionner un service</option>
                                 @foreach($services as $service)
                                 <option value="{{ $service->id }}" {{ $defaultServiceId == $service->id ? 'selected' : '' }}>{{ $service->nom }}</option>
@@ -116,7 +116,7 @@
                                 Statut *
                             </label>
                             <select name="statut" required
-                                    class="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/20 transition-all duration-200 text-lg">
+                                    class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/20 transition-all duration-200 text-lg shadow-sm">
                                 <option value="en cours">En cours</option>
                                 <option value="terminé">Terminé</option>
                                 <option value="annulé">Annulé</option>
@@ -135,7 +135,7 @@
                         </div>
                         Période d'Hospitalisation
                     </h2>
-                    <p class="text-indigo-100 mt-2">Définissez les dates d'entrée et de sortie</p>
+                    <p class="text-white mt-2">Définissez les dates d'entrée et de sortie</p>
                 </div>
 
                 <div class="p-8">
@@ -151,7 +151,7 @@
                                 Date d'entrée *
                             </label>
                             <input type="date" name="date_entree" id="date_entree" required
-                                   class="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg">
+                                   class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg shadow-sm">
                         </div>
 
                         <!-- Date de sortie -->
@@ -165,7 +165,7 @@
                                 Date de sortie (optionnelle)
                             </label>
                             <input type="date" name="date_sortie" id="date_sortie"
-                                   class="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg">
+                                   class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg shadow-sm">
                         </div>
 
                         <!-- Motif -->
@@ -179,7 +179,7 @@
                                 Motif
                             </label>
                             <input type="text" name="motif" placeholder="Motif de l'hospitalisation"
-                                   class="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-200 text-lg">
+                                   class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-200 text-lg shadow-sm">
                         </div>
                     </div>
 
@@ -209,7 +209,7 @@
                         </div>
                         Logement & Tarification
                     </h2>
-                    <p class="text-emerald-100 mt-2">Sélectionnez la chambre et le lit pour le patient</p>
+                    <p class="text-white mt-2">Sélectionnez la chambre et le lit pour le patient</p>
                 </div>
 
                 <div class="p-8">
@@ -225,7 +225,7 @@
                                 Chambre *
                             </label>
                             <select id="chambre-select" name="chambre_id" required
-                                    class="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-200 text-lg">
+                                    class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-200 text-lg shadow-sm">
                                 <option value="">Sélectionner une chambre</option>
                                 @foreach($chambres as $chambre)
                                 <option value="{{ $chambre->id }}" data-prix="{{ $chambre->tarif_journalier ?? 5000 }}" data-lits-count="{{ $chambre->lits->count() }}">
@@ -255,7 +255,7 @@
                                 Lit *
                             </label>
                             <select id="lit-select" name="lit_id" required disabled
-                                    class="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/20 transition-all duration-200 text-lg disabled:opacity-50">
+                                    class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/20 transition-all duration-200 text-lg shadow-sm disabled:opacity-50">
                                 <option value="">Sélectionner d'abord une chambre</option>
                             </select>
                         </div>
@@ -316,33 +316,35 @@
                         </div>
                         Observations Médicales
                     </h2>
-                    <p class="text-gray-100 mt-2">Notes et observations supplémentaires</p>
+                    <p class="text-white mt-2">Notes et observations supplémentaires</p>
                 </div>
 
                 <div class="p-8">
                     <div class="space-y-2">
                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Observations</label>
                         <textarea name="observation" rows="4" placeholder="Observations supplémentaires, notes médicales, instructions particulières..."
-                                  class="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-gray-500 focus:ring-4 focus:ring-gray-500/20 transition-all duration-200 text-lg resize-none"></textarea>
+                                  class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-gray-500 focus:ring-4 focus:ring-gray-500/20 transition-all duration-200 text-lg resize-none shadow-sm"></textarea>
                     </div>
                 </div>
 
                 <!-- Boutons d'action -->
-                <div class="bg-gray-50 dark:bg-gray-700 px-8 py-6 flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4">
-                    <a href="{{ route('hospitalisations.index') }}"
-                       class="inline-flex items-center justify-center px-8 py-4 bg-white dark:bg-gray-600 border-2 border-gray-300 dark:border-gray-500 rounded-xl font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-500 transition-all duration-200 text-lg">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                        Annuler
-                    </a>
-                    <button type="submit" id="submitBtn"
-                            class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:scale-105">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        <span id="submit-text">Créer l'Hospitalisation</span>
-                    </button>
+                <div class="bg-gray-50 dark:bg-gray-700 px-8 py-8">
+                    <div class="flex flex-col sm:flex-row justify-center sm:justify-end gap-4 max-w-md sm:max-w-none mx-auto sm:mx-0">
+                        <a href="{{ route('hospitalisations.index') }}"
+                           class="inline-flex items-center justify-center px-8 py-4 bg-white dark:bg-gray-600 border-2 border-gray-300 dark:border-gray-500 rounded-xl font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-500 transition-all duration-200 text-lg min-w-[180px]">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Annuler
+                        </a>
+                        <button type="submit" id="submitBtn"
+                                class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[220px]">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            <span id="submit-text">Créer l'Hospitalisation</span>
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
