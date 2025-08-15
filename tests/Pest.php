@@ -13,6 +13,10 @@
 
 pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->beforeEach(function () {
+        // Évite le mock du style console qui provoque des erreurs sur askQuestion() pendant migrate:fresh
+        $this->withoutMockingConsoleOutput();
+    })
     ->in('Feature');
 
 /*

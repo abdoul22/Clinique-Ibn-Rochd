@@ -23,9 +23,6 @@ class MedecinFactory extends Factory
             ]),
             'telephone' => $this->faker->phoneNumber,
             'email' => $this->faker->unique()->safeEmail,
-            'tarif_consultation' => $this->faker->numberBetween(1000, 10000),
-            'part_medecin' => $this->faker->numberBetween(500, 8000),
-            'date_embauche' => $this->faker->date(),
             'statut' => $this->faker->randomElement(['actif', 'inactif']),
         ];
     }

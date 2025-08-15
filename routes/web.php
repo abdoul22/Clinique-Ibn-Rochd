@@ -262,7 +262,11 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
 
     // Hospitalisations (protégées par auth et is.approved)
     Route::resource('hospitalisations', HospitalisationController::class);
+    Route::post('hospitalisations/{id}/facturer', [HospitalisationController::class, 'facturer'])->name('hospitalisations.facturer');
+    Route::patch('hospitalisations/{id}/status', [HospitalisationController::class, 'updateStatus'])->name('hospitalisations.updateStatus');
+    Route::post('hospitalisations/{id}/payer-tout', [HospitalisationController::class, 'payerTout'])->name('hospitalisations.payerTout');
     Route::get('/hospitalisations/lits-disponibles', [HospitalisationController::class, 'getLitsDisponibles'])->name('hospitalisations.lits.disponibles');
+    Route::post('hospitalisations/{id}/charges', [HospitalisationController::class, 'addCharge'])->name('hospitalisations.addCharge');
 
     // Chambres (protégées par auth et is.approved)
     Route::resource('chambres', ChambreController::class);

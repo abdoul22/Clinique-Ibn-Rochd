@@ -121,20 +121,28 @@ class EtatCaisse extends Model
         static::created(function ($etatCaisse) {
             // Ne créer le crédit que pour les entrées liées à une facture (caisse_id non null)
             if ($etatCaisse->assurance_id && $etatCaisse->caisse_id) {
-                Credit::create([
-                    'source_type' => \App\Models\Assurance::class,
-                    'source_id' => $etatCaisse->assurance_id,
-                    'montant' => $etatCaisse->recette,
-                    'montant_paye' => 0,
-                    'status' => 'non payé',
-                    'statut' => 'Non payé',
-                    'caisse_id' => $etatCaisse->caisse_id,
-                ]);
+                // Calculer le montant dû par l'assurance à partir de la facture liée
+                $caisse = $etatCaisse->caisse;
+                $montantTotal = $caisse->total ?? 0;
+                $couverture = $caisse->couverture ?? 0;
+                $montantAssurance = $montantTotal * ($couverture / 100);
 
-                // Mettre à jour le crédit de l'assurance
-                $assurance = $etatCaisse->assurance;
-                if ($assurance) {
-                    $assurance->updateCredit();
+                if ($montantAssurance > 0) {
+                    Credit::create([
+                        'source_type' => \App\Models\Assurance::class,
+                        'source_id' => $etatCaisse->assurance_id,
+                        'montant' => $montantAssurance,
+                        'montant_paye' => 0,
+                        'status' => 'non payé',
+                        'statut' => 'Non payé',
+                        'caisse_id' => $etatCaisse->caisse_id,
+                    ]);
+
+                    // Mettre à jour le crédit de l'assurance
+                    $assurance = $etatCaisse->assurance;
+                    if ($assurance) {
+                        $assurance->updateCredit();
+                    }
                 }
             }
 

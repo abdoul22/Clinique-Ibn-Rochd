@@ -29,9 +29,7 @@ class ChambreController extends Controller
             $query->where('etage', $request->etage);
         }
 
-        if ($request->filled('batiment')) {
-            $query->where('batiment', $request->batiment);
-        }
+        // Suppression du filtre batiment
 
         if ($request->filled('disponibilite')) {
             if ($request->disponibilite === 'libre') {
@@ -68,6 +66,7 @@ class ChambreController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255',
+            // Le champ batiment n'est plus supporté
             'type' => 'required|in:standard,simple,double,suite,VIP',
             'etage' => 'nullable|string|max:50',
             'capacite_lits' => 'required|integer|min:1|max:10',

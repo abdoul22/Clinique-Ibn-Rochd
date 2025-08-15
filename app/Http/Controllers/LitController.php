@@ -55,7 +55,7 @@ class LitController extends Controller
             'numero' => 'required|integer|min:1',
             'chambre_id' => 'required|exists:chambres,id',
             'type' => 'required|in:standard,medicalise,reanimation',
-            'statut' => 'required|in:libre,occupe,maintenance',
+            'statut' => 'required|in:libre,occupe,maintenance,reserve',
             'description' => 'nullable|string',
         ]);
 

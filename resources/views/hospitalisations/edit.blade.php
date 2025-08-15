@@ -106,7 +106,7 @@
                         </svg>
                         Statut *
                     </label>
-                    <select name="statut"
+                    <select id="statut-select" name="statut"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                         required>
                         <option value="en cours" @if($hospitalisation->statut == 'en cours') selected @endif>En cours
@@ -152,7 +152,7 @@
                         </svg>
                         Date de sortie
                     </label>
-                    <input type="date" name="date_sortie" value="{{ $hospitalisation->date_sortie }}"
+                    <input type="date" id="date-sortie" name="date_sortie" value="{{ $hospitalisation->date_sortie }}"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200">
                 </div>
 
@@ -331,6 +331,20 @@
     // Charger les lits de la chambre actuelle au chargement de la page
     if (chambreSelect.value) {
         chargerLits(chambreSelect.value, litActuelId);
+    }
+    // Auto-remplir la date de sortie quand le statut est "terminé"
+    const statutSelect = document.getElementById('statut-select');
+    const dateSortieInput = document.getElementById('date-sortie');
+    if (statutSelect && dateSortieInput) {
+        statutSelect.addEventListener('change', function() {
+            if (this.value === 'terminé' && !dateSortieInput.value) {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                dateSortieInput.value = `${yyyy}-${mm}-${dd}`;
+            }
+        });
     }
 });
 </script>

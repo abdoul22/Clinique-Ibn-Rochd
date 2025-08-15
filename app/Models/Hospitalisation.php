@@ -20,6 +20,12 @@ class Hospitalisation extends Model
         'statut',
         'montant_total',
         'observation',
+        // nouveaux champs
+        'assurance_id',
+        'couverture',
+        'admission_at',
+        'discharge_at',
+        'next_charge_due_at',
     ];
 
     public function patient()
@@ -45,5 +51,15 @@ class Hospitalisation extends Model
     public function chambre()
     {
         return $this->hasOneThrough(Chambre::class, Lit::class, 'id', 'id', 'lit_id', 'chambre_id');
+    }
+
+    public function roomStays()
+    {
+        return $this->hasMany(\App\Models\HospitalizationRoomStay::class, 'hospitalisation_id');
+    }
+
+    public function charges()
+    {
+        return $this->hasMany(\App\Models\HospitalisationCharge::class, 'hospitalisation_id');
     }
 }

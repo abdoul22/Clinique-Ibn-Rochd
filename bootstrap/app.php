@@ -27,6 +27,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'update.lastlogin' => \App\Http\Middleware\UpdateLastLoginAt::class,
         ]);
     })
+    ->booting(function (Application $app) {
+        if ($app->environment('testing')) {
+            // Empêcher les composants console d'afficher des confirmations en test
+            putenv('SHELL_VERBOSITY=0');
+        }
+    })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })

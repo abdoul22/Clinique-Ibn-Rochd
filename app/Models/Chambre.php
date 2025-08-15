@@ -13,7 +13,6 @@ class Chambre extends Model
         'nom',
         'type',
         'etage',
-        'batiment',
         'statut',
         'capacite_lits',
         'tarif_journalier',
@@ -58,9 +57,6 @@ class Chambre extends Model
     public function getNomCompletAttribute()
     {
         $nom = $this->nom;
-        if ($this->batiment) {
-            $nom = $this->batiment . ' - ' . $nom;
-        }
         if ($this->etage) {
             $nom .= ' (Étage ' . $this->etage . ')';
         }

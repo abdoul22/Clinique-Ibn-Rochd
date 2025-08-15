@@ -13,7 +13,8 @@
                 <!-- Title with Icon -->
                 <div class="flex items-center gap-3">
                     <div class="p-2 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1">
                             </path>
@@ -33,7 +34,7 @@
                 <div class="flex-shrink-0">
                     <a href="{{ route('credits.create') }}"
                         class="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium py-2.5 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
                             </path>
                         </svg>
@@ -53,7 +54,7 @@
                 <div class="flex items-center gap-3">
                     <div class="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                         <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
+                            viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z">
                             </path>
@@ -63,30 +64,7 @@
                 </div>
 
                 <!-- Active Filter Summary -->
-                @php
-                $period = request('period', 'day');
-                $summary = '';
-                if ($period === 'day' && request('date')) {
-                $summary = \Carbon\Carbon::parse(request('date'))->translatedFormat('d F Y');
-                } elseif ($period === 'week' && request('week')) {
-                $parts = explode('-W', request('week'));
-                if (count($parts) === 2) {
-                $start = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
-                $end = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
-                $summary = $start->translatedFormat('d F') . ' - ' . $end->translatedFormat('d F Y');
-                }
-                } elseif ($period === 'month' && request('month')) {
-                $parts = explode('-', request('month'));
-                if (count($parts) === 2) {
-                $summary = \Carbon\Carbon::create($parts[0], $parts[1])->translatedFormat('F Y');
-                }
-                } elseif ($period === 'year' && request('year')) {
-                $summary = 'Année ' . request('year');
-                } elseif ($period === 'range' && request('date_start') && request('date_end')) {
-                $summary = \Carbon\Carbon::parse(request('date_start'))->translatedFormat('d F') . ' - ' .
-                \Carbon\Carbon::parse(request('date_end'))->translatedFormat('d F Y');
-                }
-                @endphp
+                @php $summary = $summary ?? ''; @endphp
 
                 @if($summary || request('type') || request('status'))
                 <div class="mt-3 flex flex-wrap items-center gap-2">
@@ -95,7 +73,7 @@
                     @if($summary)
                     <span
                         class="inline-flex items-center gap-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-md text-xs font-medium">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                             </path>
@@ -107,7 +85,7 @@
                     @if(request('type'))
                     <span
                         class="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded-md text-xs font-medium">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
@@ -118,7 +96,7 @@
                     @if(request('status'))
                     <span
                         class="inline-flex items-center gap-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-md text-xs font-medium">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
@@ -128,7 +106,7 @@
 
                     <a href="{{ route('credits.index') }}"
                         class="inline-flex items-center gap-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-xs font-medium transition-colors">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -148,7 +126,7 @@
                     <div class="space-y-4">
                         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                             <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                                viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                 </path>
@@ -177,28 +155,32 @@
                             </div>
 
                             <!-- Dynamic Date Inputs -->
-                            <div id="input-day" class="period-input lg:col-span-2 transition-all duration-300">
+                            <div id="input-day"
+                                class="period-input lg:col-span-2 transition-all duration-300 transform">
                                 <label
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date</label>
                                 <input type="date" name="date" value="{{ request('date') }}"
                                     class="w-full px-4 py-3 text-sm border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 transition-colors">
                             </div>
 
-                            <div id="input-week" class="period-input lg:col-span-2 hidden transition-all duration-300">
+                            <div id="input-week"
+                                class="period-input lg:col-span-2 hidden transition-all duration-300 transform">
                                 <label
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Semaine</label>
                                 <input type="week" name="week" value="{{ request('week') }}"
                                     class="w-full px-4 py-3 text-sm border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 transition-colors">
                             </div>
 
-                            <div id="input-month" class="period-input lg:col-span-2 hidden transition-all duration-300">
+                            <div id="input-month"
+                                class="period-input lg:col-span-2 hidden transition-all duration-300 transform">
                                 <label
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mois</label>
                                 <input type="month" name="month" value="{{ request('month') }}"
                                     class="w-full px-4 py-3 text-sm border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 transition-colors">
                             </div>
 
-                            <div id="input-year" class="period-input lg:col-span-2 hidden transition-all duration-300">
+                            <div id="input-year"
+                                class="period-input lg:col-span-2 hidden transition-all duration-300 transform">
                                 <label
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Année</label>
                                 <input type="number" name="year" min="1900" max="2100" step="1"
@@ -206,7 +188,8 @@
                                     class="w-full px-4 py-3 text-sm border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 transition-colors">
                             </div>
 
-                            <div id="input-range" class="period-input lg:col-span-4 hidden transition-all duration-300">
+                            <div id="input-range"
+                                class="period-input lg:col-span-4 hidden transition-all duration-300 transform">
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Période
                                     personnalisée</label>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -225,7 +208,7 @@
                     <div class="space-y-4">
                         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                             <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                                viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z">
                                 </path>
@@ -269,7 +252,8 @@
                     <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
                         <button type="submit"
                             class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md text-sm">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
@@ -278,7 +262,8 @@
 
                         <a href="{{ route('credits.index') }}"
                             class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 font-medium py-2.5 px-6 rounded-lg transition-all duration-200 text-sm">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
                                 </path>
@@ -301,7 +286,7 @@
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                             <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                                viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
                                 </path>
@@ -340,7 +325,8 @@
                     <div class="p-8 sm:p-12 text-center">
                         <div
                             class="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                                 </path>
@@ -365,7 +351,7 @@
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
                             <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                                viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
                                 </path>
@@ -404,7 +390,8 @@
                     <div class="p-8 sm:p-12 text-center">
                         <div
                             class="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                                 </path>
@@ -435,22 +422,17 @@
     };
 
     function showInput(period) {
-        // Cacher tous les inputs avec animation fluide
         Object.values(inputs).forEach(input => {
             if (input) {
                 input.classList.add('hidden');
-                input.style.opacity = '0';
-                input.style.transform = 'translateY(-10px)';
+                input.classList.remove('opacity-100', 'translate-y-0');
+                input.classList.add('opacity-0', '-translate-y-2');
             }
         });
 
-        // Afficher l'input sélectionné avec animation
         if (inputs[period]) {
-            inputs[period].classList.remove('hidden');
-            setTimeout(() => {
-                inputs[period].style.opacity = '1';
-                inputs[period].style.transform = 'translateY(0)';
-            }, 50);
+            inputs[period].classList.remove('hidden', 'opacity-0', '-translate-y-2');
+            inputs[period].classList.add('opacity-100', 'translate-y-0');
         }
     }
 
@@ -469,26 +451,17 @@
         submitButton.addEventListener('click', function(e) {
             const form = this.closest('form');
 
-            // Valider qu'au moins un filtre est actif
-            const hasFilters = form.querySelector('[name="date"]')?.value ||
-                              form.querySelector('[name="week"]')?.value ||
-                              form.querySelector('[name="month"]')?.value ||
-                              form.querySelector('[name="year"]')?.value ||
-                              form.querySelector('[name="date_start"]')?.value ||
-                              form.querySelector('[name="type"]')?.value ||
-                              form.querySelector('[name="status"]')?.value;
-
-            if (!hasFilters && form.querySelector('[name="period"]')?.value === 'range') {
+            // Validation stricte pour la période personnalisée
+            const periodIsRange = form.querySelector('[name="period"]')?.value === 'range';
+            const start = form.querySelector('[name="date_start"]')?.value;
+            const end = form.querySelector('[name="date_end"]')?.value;
+            if (periodIsRange && (!start || !end)) {
                 e.preventDefault();
-                // Alerter l'utilisateur de sélectionner une période
                 const alert = document.createElement('div');
                 alert.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm';
-                alert.textContent = 'Veuillez sélectionner une période personnalisée.';
+                alert.textContent = 'Veuillez sélectionner une date de début et une date de fin.';
                 document.body.appendChild(alert);
-
-                setTimeout(() => {
-                    alert.remove();
-                }, 3000);
+                setTimeout(() => { alert.remove(); }, 3000);
                 return;
             }
 

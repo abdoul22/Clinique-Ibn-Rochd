@@ -8,8 +8,16 @@ use App\Models\Medecin;
 use App\Models\Service;
 use App\Models\Chambre;
 use App\Models\Lit;
+use App\Models\HospitalisationCharge;
+use App\Models\Examen;
+use App\Models\Caisse;
+use App\Models\EtatCaisse;
+use App\Models\ModePaiement;
+use App\Models\Pharmacie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class HospitalisationController extends Controller
 {
@@ -30,6 +38,18 @@ class HospitalisationController extends Controller
             $q->where('statut', 'libre')->orderBy('numero');
         }])->get();
 
+        // Trouver le service HOSPITALISATION par défaut
+        $serviceHospitalisation = Service::where('type_service', 'HOSPITALISATION')->first();
+        $defaultServiceId = $serviceHospitalisation ? $serviceHospitalisation->id : null;
+
+        // Récupérer les examens associés au service HOSPITALISATION
+        $examensHospitalisation = [];
+        if ($serviceHospitalisation) {
+            $examensHospitalisation = Examen::where('idsvc', $serviceHospitalisation->id)
+                ->orderBy('nom')
+                ->get();
+        }
+
         // Préparer les données des lits pour le JavaScript
         $litsParChambre = [];
         foreach ($chambres as $chambre) {
@@ -42,7 +62,27 @@ class HospitalisationController extends Controller
             })->toArray();
         }
 
-        return view('hospitalisations.create', compact('patients', 'medecins', 'services', 'chambres', 'litsParChambre'));
+        // Préparer les données des chambres avec prix pour le JavaScript
+        $chambresData = [];
+        foreach ($chambres as $chambre) {
+            $chambresData[$chambre->id] = [
+                'id' => $chambre->id,
+                'nom' => $chambre->nom,
+                'prix_par_jour' => $chambre->tarif_journalier ?? 5000,
+                'lits_count' => $chambre->lits->count()
+            ];
+        }
+
+        return view('hospitalisations.create', compact(
+            'patients',
+            'medecins',
+            'services',
+            'chambres',
+            'litsParChambre',
+            'chambresData',
+            'defaultServiceId',
+            'examensHospitalisation'
+        ));
     }
 
     public function store(Request $request)
@@ -51,37 +91,281 @@ class HospitalisationController extends Controller
             'gestion_patient_id' => 'required|exists:gestion_patients,id',
             'medecin_id' => 'required|exists:medecins,id',
             'service_id' => 'required|exists:services,id',
+            'chambre_id' => 'required|exists:chambres,id',
             'lit_id' => 'required|exists:lits,id',
-            'date_entree' => 'required|date',
+            'date_entree' => 'required|date|before_or_equal:today',
             'date_sortie' => 'nullable|date|after_or_equal:date_entree',
-            'motif' => 'nullable|string',
+            'motif' => 'nullable|string|max:500',
             'statut' => 'required|in:en cours,terminé,annulé',
-            'montant_total' => 'nullable|numeric',
-            'observation' => 'nullable|string',
+            'montant_total' => 'nullable|numeric|min:0',
+            'observation' => 'nullable|string|max:1000',
+            'couverture' => 'nullable|numeric|min:0|max:100',
+            'assurance_id' => 'nullable|exists:assurances,id',
         ]);
 
+        // Validation personnalisée pour vérifier que la chambre a des lits libres
+        $chambre = Chambre::with('lits')->findOrFail($request->chambre_id);
+        $litsLibres = $chambre->lits()->where('statut', 'libre')->count();
+
+        if ($litsLibres === 0) {
+            throw ValidationException::withMessages([
+                'chambre_id' => 'Cette chambre n\'a aucun lit libre disponible. Veuillez choisir une autre chambre.'
+            ]);
+        }
+
         DB::transaction(function () use ($request) {
-            // Vérifier que le lit est disponible
-            $lit = Lit::findOrFail($request->lit_id);
+            // Vérifier que le lit est disponible avec verrou pessimiste
+            $lit = Lit::lockForUpdate()->findOrFail($request->lit_id);
             if (!$lit->est_libre) {
-                throw new \Exception('Ce lit n\'est pas disponible.');
+                throw ValidationException::withMessages([
+                    'lit_id' => 'Ce lit n\'est pas disponible.'
+                ]);
             }
 
-            // Créer l'hospitalisation
-            $hospitalisation = Hospitalisation::create($request->all());
+            // Vérifier que le lit appartient bien à la chambre sélectionnée
+            if ($lit->chambre_id != $request->chambre_id) {
+                throw ValidationException::withMessages([
+                    'lit_id' => 'Le lit sélectionné n\'appartient pas à la chambre choisie.'
+                ]);
+            }
+
+            // Créer l'hospitalisation - utiliser uniquement date_entree
+            $data = $request->all();
+            $dateEntree = Carbon::parse($request->date_entree);
+            $data['date_entree'] = $dateEntree->toDateString();
+
+            // Supprimer les champs admission_at et next_charge_due_at pour standardiser sur date_entree
+            unset($data['admission_at'], $data['next_charge_due_at'], $data['chambre_id']);
+
+            $hospitalisation = Hospitalisation::create($data);
+
+            // Créer la période de chambre courante
+            $chambre = $lit->chambre;
+            if ($chambre) {
+                \App\Models\HospitalizationRoomStay::create([
+                    'hospitalisation_id' => $hospitalisation->id,
+                    'chambre_id' => $chambre->id,
+                    'start_at' => $dateEntree,
+                ]);
+            }
 
             // Marquer le lit comme occupé
             $lit->occuper();
         });
 
-        return redirect()->route('hospitalisations.index')->with('success', 'Hospitalisation ajoutée !');
+        return redirect()->route('hospitalisations.index')->with('success', 'Hospitalisation ajoutée avec succès !');
     }
 
     public function show($id)
     {
-        $hospitalisation = Hospitalisation::with(['patient', 'medecin', 'service', 'lit.chambre'])
-            ->findOrFail($id);
-        return view('hospitalisations.show', compact('hospitalisation'));
+        $hospitalisation = Hospitalisation::with([
+            'patient',
+            'medecin',
+            'service',
+            'lit.chambre',
+            'roomStays' => function ($q) {
+                $q->orderBy('start_at', 'desc');
+            },
+            'roomStays.chambre',
+            'charges' => function ($q) {
+                $q->orderBy('created_at', 'desc');
+            }
+        ])->findOrFail($id);
+
+        // Générer les charges de chambre automatiques si en cours
+        if ($hospitalisation->statut === 'en cours') {
+            $this->generateRoomCharges($hospitalisation);
+        }
+
+        $chargesNonFacturees = $hospitalisation->charges()->where('is_billed', false)->get();
+        $chargesFacturees = $hospitalisation->charges()->where('is_billed', true)->get();
+
+        $totaux = [
+            'room_day' => $chargesNonFacturees->where('type', 'room_day')->sum('total_price'),
+            'examens' => $chargesNonFacturees->where('type', 'examen')->sum('total_price'),
+            'services' => $chargesNonFacturees->where('type', 'service')->sum('total_price'),
+            'pharmacie' => $chargesNonFacturees->where('type', 'pharmacy')->sum('total_price'),
+            'part_medecin' => $chargesNonFacturees->sum('part_medecin'),
+            'part_cabinet' => $chargesNonFacturees->sum('part_cabinet'),
+            'total' => $chargesNonFacturees->sum('total_price'),
+            'facturees' => $chargesFacturees->sum('total_price'),
+            'montant_total' => $chargesNonFacturees->sum('total_price') + $chargesFacturees->sum('total_price'),
+        ];
+
+        // Calculer les jours d'hospitalisation - corriger le calcul pour éviter le problème de "2 jours"
+        $dateEntree = Carbon::parse($hospitalisation->date_entree);
+        $dateFin = $hospitalisation->date_sortie ? Carbon::parse($hospitalisation->date_sortie) : Carbon::now();
+
+        // Si l'hospitalisation vient d'être créée aujourd'hui, c'est 1 jour
+        if ($dateEntree->isToday() && !$hospitalisation->date_sortie) {
+            $joursHospitalisation = 1;
+        } else {
+            $joursHospitalisation = $dateEntree->diffInDays($dateFin) + 1;
+        }
+
+        // Ajouter les variables manquantes pour la vue
+        $examens = Examen::orderBy('nom')->get();
+        $medicaments = Pharmacie::where('statut', 'actif')
+            ->where('stock', '>', 0)
+            ->orderBy('nom_medicament')
+            ->get();
+
+        return view('hospitalisations.show', compact(
+            'hospitalisation',
+            'chargesNonFacturees',
+            'chargesFacturees',
+            'totaux',
+            'examens',
+            'medicaments',
+            'joursHospitalisation'
+        ));
+    }
+
+    private function generateRoomCharges($hospitalisation)
+    {
+        if (!$hospitalisation->lit || !$hospitalisation->lit->chambre) {
+            return;
+        }
+
+        $chambre = $hospitalisation->lit->chambre;
+        $dateEntree = Carbon::parse($hospitalisation->date_entree);
+        $maintenant = Carbon::now();
+
+        // Calculer le nombre de jours depuis l'entrée - corriger le calcul
+        // Si l'hospitalisation vient d'être créée aujourd'hui, c'est 0 jours écoulés (premier jour)
+        if ($dateEntree->isToday()) {
+            $joursEcoules = 0; // Premier jour = 0 jours écoulés
+        } else {
+            $joursEcoules = $dateEntree->diffInDays($maintenant);
+        }
+
+        // Vérifier combien de charges de chambre existent déjà
+        $chargesExistantes = HospitalisationCharge::where('hospitalisation_id', $hospitalisation->id)
+            ->where('type', 'room_day')
+            ->count();
+
+        // Créer les charges manquantes (une par jour)
+        for ($jour = $chargesExistantes; $jour <= $joursEcoules; $jour++) {
+            $dateCharge = $dateEntree->copy()->addDays($jour);
+
+            // Ne pas créer de charge pour le futur
+            if ($dateCharge->isAfter($maintenant)) {
+                break;
+            }
+
+            HospitalisationCharge::create([
+                'hospitalisation_id' => $hospitalisation->id,
+                'type' => 'room_day',
+                'source_id' => $chambre->id,
+                'description_snapshot' => "Chambre {$chambre->nom} - Jour " . ($jour + 1),
+                'unit_price' => $chambre->tarif_journalier ?? 5000, // Prix par défaut si non défini
+                'quantity' => 1,
+                'total_price' => $chambre->tarif_journalier ?? 5000,
+                'part_medecin' => 0,
+                'part_cabinet' => $chambre->tarif_journalier ?? 5000,
+                'is_pharmacy' => false,
+                'created_at' => $dateCharge,
+            ]);
+        }
+    }
+
+    public function facturer(Request $request, $id)
+    {
+        $hospitalisation = Hospitalisation::with(['patient', 'medecin', 'lit.chambre'])->findOrFail($id);
+
+        $request->validate([
+            'charge_ids' => 'required|array|min:1',
+            'charge_ids.*' => 'integer|exists:hospitalisation_charges,id',
+            'type' => 'required|string|in:espèces,bankily,masrivi,sedad,carte,virement',
+        ]);
+
+        $chargeIds = $request->charge_ids;
+
+        DB::transaction(function () use ($request, $hospitalisation, $chargeIds) {
+            // Récupérer les charges avec verrou
+            $charges = HospitalisationCharge::lockForUpdate()
+                ->whereIn('id', $chargeIds)
+                ->where('hospitalisation_id', $hospitalisation->id)
+                ->where('is_billed', false)
+                ->get();
+
+            if ($charges->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'charge_ids' => 'Aucune charge valide à facturer.'
+                ]);
+            }
+
+            $total = (float) $charges->sum('total_price');
+            $partCabinet = (float) $charges->sum('part_cabinet');
+            $partMedecin = (float) $charges->sum('part_medecin');
+
+            $assuranceId = $hospitalisation->assurance_id;
+            $couverture = (float) ($hospitalisation->couverture ?? 0);
+            $patientPart = $assuranceId ? $total * (1 - ($couverture / 100)) : $total;
+
+            // Préparer numeros
+            $dernierNumero = Caisse::max('numero_facture') ?? 0;
+            $prochainNumero = $dernierNumero + 1;
+            $medecinId = $hospitalisation->medecin_id;
+            $numeroEntree = (new CaisseController)->getNextNumeroEntree($medecinId);
+
+            // Créer un Examen placeholder si nécessaire
+            $serviceHosp = Service::where('type_service', 'HOSPITALISATION')->first() ?? Service::first();
+            $examen = Examen::create([
+                'nom' => 'Hospitalisation - Facture #' . $prochainNumero,
+                'idsvc' => $serviceHosp?->id,
+                'tarif' => $total,
+                'part_cabinet' => $partCabinet,
+                'part_medecin' => $partMedecin,
+            ]);
+
+            // Créer la caisse
+            $caisse = Caisse::create([
+                'numero_facture' => $prochainNumero,
+                'numero_entre' => $numeroEntree,
+                'gestion_patient_id' => $hospitalisation->gestion_patient_id,
+                'medecin_id' => $medecinId,
+                'prescripteur_id' => null,
+                'examen_id' => $examen->id,
+                'service_id' => $serviceHosp?->id ?? $examen->idsvc,
+                'date_examen' => Carbon::now()->toDateString(),
+                'total' => $total,
+                'nom_caissier' => \Illuminate\Support\Facades\Auth::user()->name,
+                'assurance_id' => $assuranceId,
+                'couverture' => $assuranceId ? (int) $couverture : null,
+            ]);
+
+            // Etat de caisse (recette = part patient)
+            EtatCaisse::create([
+                'caisse_id' => $caisse->id,
+                'designation' => 'Facture Hospitalisation N°' . $caisse->numero_facture,
+                'recette' => $patientPart,
+                'part_medecin' => $partMedecin,
+                'part_clinique' => $partCabinet,
+                'assurance_id' => $assuranceId,
+                'medecin_id' => $medecinId,
+            ]);
+
+            // Paiement (uniquement part patient)
+            ModePaiement::create([
+                'caisse_id' => $caisse->id,
+                'type' => $request->type,
+                'montant' => $patientPart,
+                'source' => 'caisse',
+            ]);
+
+            // Marquer charges comme facturées
+            $charges->each(function ($charge) use ($caisse) {
+                $charge->update([
+                    'is_billed' => true,
+                    'billed_at' => Carbon::now(),
+                    'caisse_id' => $caisse->id,
+                ]);
+            });
+        });
+
+        return redirect()->route('hospitalisations.show', $hospitalisation->id)
+            ->with('success', 'Facture créée avec succès !');
     }
 
     public function edit($id)
@@ -116,12 +400,14 @@ class HospitalisationController extends Controller
             'medecin_id' => 'required|exists:medecins,id',
             'service_id' => 'required|exists:services,id',
             'lit_id' => 'required|exists:lits,id',
-            'date_entree' => 'required|date',
+            'date_entree' => 'required|date|before_or_equal:today',
             'date_sortie' => 'nullable|date|after_or_equal:date_entree',
-            'motif' => 'nullable|string',
+            'motif' => 'nullable|string|max:500',
             'statut' => 'required|in:en cours,terminé,annulé',
-            'montant_total' => 'nullable|numeric',
-            'observation' => 'nullable|string',
+            'montant_total' => 'nullable|numeric|min:0',
+            'observation' => 'nullable|string|max:1000',
+            'couverture' => 'nullable|numeric|min:0|max:100',
+            'assurance_id' => 'nullable|exists:assurances,id',
         ]);
 
         DB::transaction(function () use ($request, $hospitalisation) {
@@ -133,30 +419,69 @@ class HospitalisationController extends Controller
                 // Libérer l'ancien lit
                 if ($ancienLitId) {
                     $ancienLit = Lit::find($ancienLitId);
-                    $ancienLit->liberer();
+                    if ($ancienLit) {
+                        $ancienLit->liberer();
+                    }
+                    // Clôturer le séjour de chambre en cours
+                    $currentStay = \App\Models\HospitalizationRoomStay::where('hospitalisation_id', $hospitalisation->id)
+                        ->whereNull('end_at')
+                        ->latest('start_at')
+                        ->first();
+                    if ($currentStay) {
+                        $currentStay->update(['end_at' => Carbon::now()]);
+                    }
                 }
 
-                // Vérifier que le nouveau lit est disponible
-                $nouveauLit = Lit::findOrFail($nouveauLitId);
+                // Vérifier que le nouveau lit est disponible avec verrou
+                $nouveauLit = Lit::lockForUpdate()->findOrFail($nouveauLitId);
                 if (!$nouveauLit->est_libre) {
-                    throw new \Exception('Ce lit n\'est pas disponible.');
+                    throw ValidationException::withMessages([
+                        'lit_id' => 'Ce lit n\'est pas disponible.'
+                    ]);
                 }
 
                 // Occuper le nouveau lit
                 $nouveauLit->occuper();
+
+                // Démarrer un nouveau séjour pour la nouvelle chambre
+                $chambre = $nouveauLit->chambre;
+                if ($chambre) {
+                    \App\Models\HospitalizationRoomStay::create([
+                        'hospitalisation_id' => $hospitalisation->id,
+                        'chambre_id' => $chambre->id,
+                        'start_at' => Carbon::now(),
+                    ]);
+                }
             }
 
-            // Mettre à jour l'hospitalisation
-            $hospitalisation->update($request->all());
+            // Mettre à jour l'hospitalisation - standardiser sur date_entree
+            $data = $request->all();
+            $data['date_entree'] = Carbon::parse($request->date_entree)->toDateString();
+            if ($request->date_sortie) {
+                $data['date_sortie'] = Carbon::parse($request->date_sortie)->toDateString();
+            }
+
+            $hospitalisation->update($data);
 
             // Si l'hospitalisation est terminée ou annulée, libérer le lit
             if (in_array($request->statut, ['terminé', 'annulé']) && $nouveauLitId) {
                 $lit = Lit::find($nouveauLitId);
-                $lit->liberer();
+                if ($lit) {
+                    $lit->liberer();
+                }
+                // Clôturer le séjour en cours
+                $currentStay = \App\Models\HospitalizationRoomStay::where('hospitalisation_id', $hospitalisation->id)
+                    ->whereNull('end_at')
+                    ->latest('start_at')
+                    ->first();
+                if ($currentStay) {
+                    $currentStay->update(['end_at' => Carbon::now()]);
+                }
             }
         });
 
-        return redirect()->route('hospitalisations.show', $hospitalisation->id)->with('success', 'Hospitalisation modifiée !');
+        return redirect()->route('hospitalisations.show', $hospitalisation->id)
+            ->with('success', 'Hospitalisation modifiée avec succès !');
     }
 
     public function destroy($id)
@@ -164,24 +489,46 @@ class HospitalisationController extends Controller
         $hospitalisation = Hospitalisation::findOrFail($id);
 
         DB::transaction(function () use ($hospitalisation) {
+            // Vérifier qu'il n'y a pas de charges facturées
+            $chargesFacturees = $hospitalisation->charges()->where('is_billed', true)->count();
+            if ($chargesFacturees > 0) {
+                throw ValidationException::withMessages([
+                    'hospitalisation' => 'Impossible de supprimer une hospitalisation avec des charges facturées.'
+                ]);
+            }
+
+            // Supprimer les charges non facturées
+            $hospitalisation->charges()->where('is_billed', false)->delete();
+
             // Libérer le lit si il y en a un
             if ($hospitalisation->lit_id) {
                 $lit = Lit::find($hospitalisation->lit_id);
-                $lit->liberer();
+                if ($lit) {
+                    $lit->liberer();
+                }
             }
+
+            // Supprimer les séjours de chambre
+            $hospitalisation->roomStays()->delete();
 
             $hospitalisation->delete();
         });
 
-        return redirect()->route('hospitalisations.index')->with('success', 'Hospitalisation supprimée !');
+        return redirect()->route('hospitalisations.index')
+            ->with('success', 'Hospitalisation supprimée avec succès !');
     }
 
     // API pour obtenir les lits disponibles d'une chambre
     public function getLitsDisponibles(Request $request)
     {
+        $request->validate([
+            'chambre_id' => 'required|exists:chambres,id'
+        ]);
+
         $chambreId = $request->chambre_id;
         $lits = Lit::where('chambre_id', $chambreId)
             ->where('statut', 'libre')
+            ->orderBy('numero')
             ->get()
             ->map(function ($lit) {
                 return [
@@ -192,5 +539,228 @@ class HospitalisationController extends Controller
             });
 
         return response()->json($lits);
+    }
+
+    public function addCharge(Request $request, $id)
+    {
+        $hospitalisation = Hospitalisation::with('lit.chambre')->findOrFail($id);
+
+        $request->validate([
+            'charge_type' => 'required|in:examen,service,pharmacy',
+            'examen_id' => 'required_if:charge_type,examen,service|nullable|exists:examens,id',
+            'medicament_id' => 'required_if:charge_type,pharmacy|nullable|exists:pharmacies,id',
+            'quantity' => 'required|integer|min:1|max:999',
+        ]);
+
+        DB::transaction(function () use ($request, $hospitalisation) {
+            if ($request->charge_type === 'pharmacy') {
+                $med = Pharmacie::lockForUpdate()->findOrFail($request->medicament_id);
+                $qty = (int) $request->quantity;
+
+                // Vérifier le stock
+                if (!$med->stockSuffisant($qty)) {
+                    throw ValidationException::withMessages([
+                        'quantity' => 'Stock insuffisant pour ' . $med->nom_medicament . '. Stock disponible: ' . $med->stock
+                    ]);
+                }
+
+                // Déduire le stock
+                $med->deduireStock($qty);
+
+                HospitalisationCharge::create([
+                    'hospitalisation_id' => $hospitalisation->id,
+                    'type' => 'pharmacy',
+                    'source_id' => $med->id,
+                    'description_snapshot' => $med->nom_medicament,
+                    'unit_price' => $med->prix_vente,
+                    'quantity' => $qty,
+                    'total_price' => $med->prix_vente * $qty,
+                    'part_medecin' => 0,
+                    'part_cabinet' => $med->prix_vente * $qty,
+                    'is_pharmacy' => true,
+                ]);
+            } else {
+                $ex = Examen::findOrFail($request->examen_id);
+                $qty = (int) $request->quantity;
+
+                HospitalisationCharge::create([
+                    'hospitalisation_id' => $hospitalisation->id,
+                    'type' => $request->charge_type,
+                    'source_id' => $ex->id,
+                    'description_snapshot' => $ex->nom,
+                    'unit_price' => $ex->tarif,
+                    'quantity' => $qty,
+                    'total_price' => $ex->tarif * $qty,
+                    'part_medecin' => ($ex->part_medecin ?? 0) * $qty,
+                    'part_cabinet' => ($ex->part_cabinet ?? 0) * $qty,
+                    'is_pharmacy' => false,
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Charge ajoutée avec succès.');
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $hospitalisation = Hospitalisation::findOrFail($id);
+
+        $request->validate([
+            'statut' => 'required|in:en cours,terminé,annulé',
+        ]);
+
+        DB::transaction(function () use ($request, $hospitalisation) {
+            $ancienStatut = $hospitalisation->statut;
+            $nouveauStatut = $request->statut;
+
+            // Mettre à jour le statut
+            $hospitalisation->update(['statut' => $nouveauStatut]);
+
+            // Si l'hospitalisation est terminée ou annulée, libérer le lit et clôturer le séjour
+            if (in_array($nouveauStatut, ['terminé', 'annulé']) && $ancienStatut === 'en cours') {
+                if ($hospitalisation->lit_id) {
+                    $lit = Lit::find($hospitalisation->lit_id);
+                    if ($lit) {
+                        $lit->liberer();
+                    }
+                }
+
+                // Clôturer le séjour en cours
+                $currentStay = \App\Models\HospitalizationRoomStay::where('hospitalisation_id', $hospitalisation->id)
+                    ->whereNull('end_at')
+                    ->latest('start_at')
+                    ->first();
+                if ($currentStay) {
+                    $currentStay->update(['end_at' => Carbon::now()]);
+                }
+
+                // Si terminé, définir la date de sortie si elle n'existe pas
+                if ($nouveauStatut === 'terminé' && !$hospitalisation->date_sortie) {
+                    $hospitalisation->update(['date_sortie' => Carbon::now()->toDateString()]);
+                }
+            }
+
+            // Si on remet en cours depuis terminé/annulé, réoccuper le lit
+            if ($nouveauStatut === 'en cours' && in_array($ancienStatut, ['terminé', 'annulé'])) {
+                if ($hospitalisation->lit_id) {
+                    $lit = Lit::lockForUpdate()->find($hospitalisation->lit_id);
+                    if ($lit && $lit->est_libre) {
+                        $lit->occuper();
+
+                        // Redémarrer un séjour
+                        $chambre = $lit->chambre;
+                        if ($chambre) {
+                            \App\Models\HospitalizationRoomStay::create([
+                                'hospitalisation_id' => $hospitalisation->id,
+                                'chambre_id' => $chambre->id,
+                                'start_at' => Carbon::now(),
+                            ]);
+                        }
+                    }
+                }
+
+                // Supprimer la date de sortie si on remet en cours
+                $hospitalisation->update(['date_sortie' => null]);
+            }
+        });
+
+        return back()->with('success', 'Statut mis à jour avec succès.');
+    }
+
+    public function payerTout(Request $request, $id)
+    {
+        $hospitalisation = Hospitalisation::with(['patient', 'medecin', 'lit.chambre'])->findOrFail($id);
+
+        $request->validate([
+            'type' => 'required|string|in:espèces,bankily,masrivi,sedad,carte,virement',
+        ]);
+
+        $numeroFacture = null;
+
+        DB::transaction(function () use ($request, $hospitalisation, &$numeroFacture) {
+            // Récupérer toutes les charges non facturées
+            $charges = HospitalisationCharge::lockForUpdate()
+                ->where('hospitalisation_id', $hospitalisation->id)
+                ->where('is_billed', false)
+                ->get();
+
+            if ($charges->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'charges' => 'Aucune charge à facturer.'
+                ]);
+            }
+
+            $total = (float) $charges->sum('total_price');
+            $partCabinet = (float) $charges->sum('part_cabinet');
+            $partMedecin = (float) $charges->sum('part_medecin');
+
+            $assuranceId = $hospitalisation->assurance_id;
+            $couverture = (float) ($hospitalisation->couverture ?? 0);
+            $patientPart = $assuranceId ? $total * (1 - ($couverture / 100)) : $total;
+
+            // Préparer numeros
+            $dernierNumero = Caisse::max('numero_facture') ?? 0;
+            $prochainNumero = $dernierNumero + 1;
+            $numeroFacture = $prochainNumero; // Stocker pour utilisation en dehors de la transaction
+            $medecinId = $hospitalisation->medecin_id;
+            $numeroEntree = (new CaisseController)->getNextNumeroEntree($medecinId);
+
+            // Créer un Examen placeholder
+            $serviceHosp = Service::where('type_service', 'HOSPITALISATION')->first() ?? Service::first();
+            $examen = Examen::create([
+                'nom' => 'Hospitalisation - Paiement Total #' . $prochainNumero,
+                'idsvc' => $serviceHosp?->id,
+                'tarif' => $total,
+                'part_cabinet' => $partCabinet,
+                'part_medecin' => $partMedecin,
+            ]);
+
+            // Créer la caisse
+            $caisse = Caisse::create([
+                'numero_facture' => $prochainNumero,
+                'numero_entre' => $numeroEntree,
+                'gestion_patient_id' => $hospitalisation->gestion_patient_id,
+                'medecin_id' => $medecinId,
+                'prescripteur_id' => null,
+                'examen_id' => $examen->id,
+                'service_id' => $serviceHosp?->id ?? $examen->idsvc,
+                'date_examen' => Carbon::now()->toDateString(),
+                'total' => $total,
+                'nom_caissier' => \Illuminate\Support\Facades\Auth::user()->name,
+                'assurance_id' => $assuranceId,
+                'couverture' => $assuranceId ? (int) $couverture : null,
+            ]);
+
+            // Etat de caisse
+            EtatCaisse::create([
+                'caisse_id' => $caisse->id,
+                'designation' => 'Paiement Total Hospitalisation N°' . $caisse->numero_facture,
+                'recette' => $patientPart,
+                'part_medecin' => $partMedecin,
+                'part_clinique' => $partCabinet,
+                'assurance_id' => $assuranceId,
+                'medecin_id' => $medecinId,
+            ]);
+
+            // Paiement
+            ModePaiement::create([
+                'caisse_id' => $caisse->id,
+                'type' => $request->type,
+                'montant' => $patientPart,
+                'source' => 'caisse',
+            ]);
+
+            // Marquer toutes les charges comme facturées
+            $charges->each(function ($charge) use ($caisse) {
+                $charge->update([
+                    'is_billed' => true,
+                    'billed_at' => Carbon::now(),
+                    'caisse_id' => $caisse->id,
+                ]);
+            });
+        });
+
+        return redirect()->route('hospitalisations.show', $hospitalisation->id)
+            ->with('success', 'Paiement effectué avec succès ! Facture #' . $numeroFacture . ' créée.');
     }
 }

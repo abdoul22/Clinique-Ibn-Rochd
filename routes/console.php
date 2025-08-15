@@ -8,6 +8,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Planifier la déduction automatique des crédits du personnel chaque jour à 23:50
-// Si 'auto_deduct' est désactivé, la commande sortira immédiatement sans action
-Schedule::command('credits:deduire-personnel')->dailyAt('23:50');
+if (!app()->environment('testing')) {
+    // Planifier la déduction automatique des crédits du personnel chaque jour à 23:50
+    Schedule::command('credits:deduire-personnel')->dailyAt('23:50');
+}

@@ -26,6 +26,28 @@ class CreditController extends Controller
         $dateEnd = $request->input('date_end');
         $type = $request->input('type'); // 'personnel', 'assurance' ou null
 
+        // Construire un résumé lisible des filtres de période (pour alléger la vue)
+        $summary = '';
+        if ($period === 'day' && $date) {
+            $summary = \Carbon\Carbon::parse($date)->translatedFormat('d F Y');
+        } elseif ($period === 'week' && $week) {
+            $parts = explode('-W', $week);
+            if (count($parts) === 2) {
+                $start = \Carbon\Carbon::now()->setISODate((int) $parts[0], (int) $parts[1])->startOfWeek();
+                $end = \Carbon\Carbon::now()->setISODate((int) $parts[0], (int) $parts[1])->endOfWeek();
+                $summary = $start->translatedFormat('d F') . ' - ' . $end->translatedFormat('d F Y');
+            }
+        } elseif ($period === 'month' && $month) {
+            $parts = explode('-', $month);
+            if (count($parts) === 2) {
+                $summary = \Carbon\Carbon::create((int) $parts[0], (int) $parts[1])->translatedFormat('F Y');
+            }
+        } elseif ($period === 'year' && $year) {
+            $summary = 'Année ' . $year;
+        } elseif ($period === 'range' && $dateStart && $dateEnd) {
+            $summary = \Carbon\Carbon::parse($dateStart)->translatedFormat('d F') . ' - ' . \Carbon\Carbon::parse($dateEnd)->translatedFormat('d F Y');
+        }
+
         // Query de base pour les crédits personnel
         $queryPersonnel = Credit::where('source_type', \App\Models\Personnel::class)
             ->with('source');
@@ -89,7 +111,7 @@ class CreditController extends Controller
             $creditsAssurance = $queryAssurance->latest()->paginate(10, ['*'], 'assurances');
         }
 
-        return view('credits.index', compact('creditsPersonnel', 'creditsAssurance'));
+        return view('credits.index', compact('creditsPersonnel', 'creditsAssurance', 'summary'));
     }
 
     public function marquerComme($id, $statut)

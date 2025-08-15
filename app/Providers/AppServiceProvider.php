@@ -45,5 +45,11 @@ class AppServiceProvider extends ServiceProvider
         config([
             'database.redis.options.prefix' => env('APP_NAME') . ':medical:'
         ]);
+
+        if ($this->app->runningInConsole() && !app()->environment('testing')) {
+            $this->commands([
+                \App\Console\Commands\GenerateRoomDayCharges::class,
+            ]);
+        }
     }
 }
