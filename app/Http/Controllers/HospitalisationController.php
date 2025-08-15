@@ -782,6 +782,21 @@ class HospitalisationController extends Controller
                 $updateData['date_sortie'] = Carbon::now()->toDateString();
             }
             $hospitalisation->update($updateData);
+
+            // Libérer le lit et clôturer le séjour de chambre
+            if ($hospitalisation->lit_id) {
+                $lit = \App\Models\Lit::find($hospitalisation->lit_id);
+                if ($lit) {
+                    $lit->liberer();
+                }
+            }
+            $currentStay = \App\Models\HospitalizationRoomStay::where('hospitalisation_id', $hospitalisation->id)
+                ->whereNull('end_at')
+                ->latest('start_at')
+                ->first();
+            if ($currentStay) {
+                $currentStay->update(['end_at' => Carbon::now()]);
+            }
         });
 
         return redirect()->route('hospitalisations.show', $hospitalisation->id)

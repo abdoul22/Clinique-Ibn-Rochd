@@ -88,7 +88,7 @@
                             </div>
                         </div>
                     </div>
-                    @if($totaux['total'] > 0)
+                    @if($totaux['total'] > 0 && $hospitalisation->statut !== 'annulé')
                     <div>
                         <button onclick="document.getElementById('paiement-modal').classList.remove('hidden')"
                             class="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 shadow-lg">
