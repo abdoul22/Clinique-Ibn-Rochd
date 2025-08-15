@@ -47,15 +47,15 @@
                     </span>
                     @endif
 
-                    @if($hospitalisation->statut !== 'annulé')
-                    <form method="POST" action="{{ route('hospitalisations.updateStatus', $hospitalisation->id) }}" class="inline">
+                    @if($hospitalisation->statut === 'en cours')
+                    <form method="POST" action="{{ route('hospitalisations.updateStatus', $hospitalisation->id) }}" class="inline" id="statut-form">
                         @csrf
                         @method('PATCH')
-                        <select name="statut" onchange="this.form.submit()"
+                        <select name="statut" onchange="handleStatutChange(this)"
                             class="form-select border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm rounded-lg shadow-sm">
                             <option value="en cours" {{ $hospitalisation->statut === 'en cours' ? 'selected' : '' }}>En Cours</option>
-                            <option value="terminé" {{ $hospitalisation->statut === 'terminé' ? 'selected' : '' }}>Terminé</option>
                             <option value="annulé" {{ $hospitalisation->statut === 'annulé' ? 'selected' : '' }}>Annulé</option>
+                            <option value="terminé" disabled style="color:gray;">Terminé (payer d'abord)</option>
                         </select>
                     </form>
                     @endif
@@ -271,7 +271,7 @@
                 <!-- Liste des charges -->
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                     <h3 class="text-lg font-semibold mb-6 text-gray-900 dark:text-white">Charges en attente</h3>
-                    
+
                     @if($chargesNonFacturees->count() > 0)
                     <div class="overflow-x-auto">
                         <table class="w-full">
@@ -367,7 +367,7 @@
                         <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <p class="font-medium text-gray-900 dark:text-white">{{ $stay->chambre->nom ?? '—' }}</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ optional($stay->start_at)->format('d/m/Y H:i') }} - 
+                                {{ optional($stay->start_at)->format('d/m/Y H:i') }} -
                                 {{ optional($stay->end_at)->format('d/m/Y H:i') ?? 'En cours' }}
                             </p>
                         </div>
@@ -418,8 +418,6 @@
                         <option value="bankily">Bankily</option>
                         <option value="masrivi">Masrivi</option>
                         <option value="sedad">Sedad</option>
-                        <option value="carte">Carte bancaire</option>
-                        <option value="virement">Virement</option>
                     </select>
                 </div>
 
@@ -464,6 +462,16 @@
             this.classList.add('hidden');
         }
     });
+
+    // Empêcher la sélection manuelle de "Terminé"
+    function handleStatutChange(select) {
+        if (select.value === 'terminé') {
+            alert('Vous devez payer la facture pour terminer l\'hospitalisation.');
+            select.value = 'en cours';
+            return false;
+        }
+        document.getElementById('statut-form').submit();
+    }
 </script>
 @endpush
 @endsection

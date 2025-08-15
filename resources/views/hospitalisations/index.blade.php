@@ -185,6 +185,9 @@
                         <span
                             class="inline-flex items-center gap-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-1 rounded-full font-medium">
                             Annulé
+                            @if($hosp->annulator)
+                                <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">(par {{ $hosp->annulator->name }})</span>
+                            @endif
                         </span>
                         @endif
                     </td>

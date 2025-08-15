@@ -26,6 +26,7 @@ class Hospitalisation extends Model
         'admission_at',
         'discharge_at',
         'next_charge_due_at',
+        'annulated_by', // utilisateur qui a annulé
     ];
 
     public function patient()
@@ -56,6 +57,11 @@ class Hospitalisation extends Model
     public function roomStays()
     {
         return $this->hasMany(\App\Models\HospitalizationRoomStay::class, 'hospitalisation_id');
+    }
+
+    public function annulator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'annulated_by');
     }
 
     public function charges()

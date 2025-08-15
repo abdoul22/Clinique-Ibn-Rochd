@@ -613,8 +613,21 @@ class HospitalisationController extends Controller
             $ancienStatut = $hospitalisation->statut;
             $nouveauStatut = $request->statut;
 
-            // Mettre à jour le statut
-            $hospitalisation->update(['statut' => $nouveauStatut]);
+            // Si on annule, enregistrer l'utilisateur qui annule
+            if ($nouveauStatut === 'annulé' && $hospitalisation->statut !== 'annulé') {
+                $hospitalisation->update([
+                    'statut' => $nouveauStatut,
+                    'annulated_by' => auth()->id(),
+                ]);
+            } else {
+                // Interdire tout changement de statut si déjà annulé
+                if ($hospitalisation->statut === 'annulé') {
+                    throw ValidationException::withMessages([
+                        'statut' => 'Le statut "annulé" est définitif et ne peut plus être modifié.'
+                    ]);
+                }
+                $hospitalisation->update(['statut' => $nouveauStatut]);
+            }
 
             // Si l'hospitalisation est terminée ou annulée, libérer le lit et clôturer le séjour
             if (in_array($nouveauStatut, ['terminé', 'annulé']) && $ancienStatut === 'en cours') {
@@ -641,6 +654,10 @@ class HospitalisationController extends Controller
             }
 
             // Si on remet en cours depuis terminé/annulé, réoccuper le lit
+            // Désormais, on interdit tout changement de statut si déjà annulé
+            if ($hospitalisation->statut === 'annulé') {
+                return;
+            }
             if ($nouveauStatut === 'en cours' && in_array($ancienStatut, ['terminé', 'annulé'])) {
                 if ($hospitalisation->lit_id) {
                     $lit = Lit::lockForUpdate()->find($hospitalisation->lit_id);
@@ -758,9 +775,16 @@ class HospitalisationController extends Controller
                     'caisse_id' => $caisse->id,
                 ]);
             });
+
+            // Mettre le statut à "terminé" et le rendre non modifiable
+            $updateData = ['statut' => 'terminé'];
+            if (!$hospitalisation->date_sortie) {
+                $updateData['date_sortie'] = Carbon::now()->toDateString();
+            }
+            $hospitalisation->update($updateData);
         });
 
         return redirect()->route('hospitalisations.show', $hospitalisation->id)
-            ->with('success', 'Paiement effectué avec succès ! Facture #' . $numeroFacture . ' créée.');
+            ->with('success', 'Paiement effectué avec succès ! Facture #' . $numeroFacture . ' créée. Statut hospitalisation : Terminé.');
     }
 }
