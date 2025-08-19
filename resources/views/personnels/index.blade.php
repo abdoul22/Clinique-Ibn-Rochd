@@ -94,7 +94,9 @@
                     </td>
                     <td class="table-cell table-actions">
                         <div class="flex space-x-2">
-                            @if($personnel['type'] === 'personnel')
+                            @if($personnel['type'] === 'personnel' || ($personnel['type'] === 'user' &&
+                            is_numeric($personnel['id'])))
+                            {{-- Personnel normal OU personnel lié à un utilisateur (avec ID numérique) --}}
                             <script>
                                 document.addEventListener('DOMContentLoaded', function(){
                                   const row = document.currentScript.closest('tr');
@@ -116,9 +118,11 @@
                             </a>
                             <a href="{{ route('personnels.edit', $personnel['id']) }}"
                                 class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1"
-                                title="Modifier">
+                                title="@if($personnel['type'] === 'user' && is_numeric($personnel['id']))Modifier (édition limitée)@else Modifier @endif">
                                 <i class="fas fa-edit"></i>
                             </a>
+                            @if($personnel['type'] === 'personnel')
+                            {{-- Bouton de suppression uniquement pour le personnel normal --}}
                             <form action="{{ route('personnels.destroy', $personnel['id']) }}" method="POST"
                                 class="inline" onsubmit="return confirm('Supprimer ce personnel ?')">
                                 @csrf
@@ -130,6 +134,15 @@
                                 </button>
                             </form>
                             @else
+                            {{-- Pour personnel lié aux utilisateurs, lien vers suppression utilisateur --}}
+                            <a href="{{ route('superadmin.admins.index') }}"
+                                class="text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300 p-1"
+                                title="Supprimer via module utilisateurs">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            @endif
+                            @else
+                            {{-- Entrées virtuelles user_X (non créées) --}}
                             <span class="text-gray-400 text-xs italic">Géré depuis les utilisateurs</span>
                             @endif
                         </div>

@@ -16,6 +16,7 @@ use App\Models\ModePaiement;
 use App\Models\Pharmacie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
@@ -203,8 +204,10 @@ class HospitalisationController extends Controller
             $joursHospitalisation = $dateEntree->diffInDays($dateFin) + 1;
         }
 
-        // Ajouter les variables manquantes pour la vue
-        $examens = Examen::orderBy('nom')->get();
+        // Ajouter les variables manquantes pour la vue - Exclure les examens d'hospitalisation automatiques
+        $examens = Examen::where('nom', 'NOT LIKE', 'Hospitalisation - %')
+            ->orderBy('nom')
+            ->get();
         $medicaments = Pharmacie::where('statut', 'actif')
             ->where('stock', '>', 0)
             ->orderBy('nom_medicament')
@@ -309,15 +312,21 @@ class HospitalisationController extends Controller
             $medecinId = $hospitalisation->medecin_id;
             $numeroEntree = (new CaisseController)->getNextNumeroEntree($medecinId);
 
-            // Créer un Examen placeholder si nécessaire
+            // Utiliser ou créer un examen générique d'hospitalisation
             $serviceHosp = Service::where('type_service', 'HOSPITALISATION')->first() ?? Service::first();
-            $examen = Examen::create([
-                'nom' => 'Hospitalisation - Facture #' . $prochainNumero,
-                'idsvc' => $serviceHosp?->id,
-                'tarif' => $total,
-                'part_cabinet' => $partCabinet,
-                'part_medecin' => $partMedecin,
-            ]);
+            $examen = Examen::where('idsvc', $serviceHosp?->id)
+                ->where('nom', 'Hospitalisation')
+                ->first();
+
+            if (!$examen) {
+                $examen = Examen::create([
+                    'nom' => 'Hospitalisation',
+                    'idsvc' => $serviceHosp?->id,
+                    'tarif' => 0, // Tarif dynamique selon les charges
+                    'part_cabinet' => 0,
+                    'part_medecin' => 0,
+                ]);
+            }
 
             // Créer la caisse
             $caisse = Caisse::create([
@@ -617,7 +626,7 @@ class HospitalisationController extends Controller
             if ($nouveauStatut === 'annulé' && $hospitalisation->statut !== 'annulé') {
                 $hospitalisation->update([
                     'statut' => $nouveauStatut,
-                    'annulated_by' => auth()->id(),
+                    'annulated_by' => Auth::id(),
                 ]);
             } else {
                 // Interdire tout changement de statut si déjà annulé
@@ -722,15 +731,21 @@ class HospitalisationController extends Controller
             $medecinId = $hospitalisation->medecin_id;
             $numeroEntree = (new CaisseController)->getNextNumeroEntree($medecinId);
 
-            // Créer un Examen placeholder
+            // Utiliser ou créer un examen générique d'hospitalisation
             $serviceHosp = Service::where('type_service', 'HOSPITALISATION')->first() ?? Service::first();
-            $examen = Examen::create([
-                'nom' => 'Hospitalisation - Paiement Total #' . $prochainNumero,
-                'idsvc' => $serviceHosp?->id,
-                'tarif' => $total,
-                'part_cabinet' => $partCabinet,
-                'part_medecin' => $partMedecin,
-            ]);
+            $examen = Examen::where('idsvc', $serviceHosp?->id)
+                ->where('nom', 'Hospitalisation')
+                ->first();
+
+            if (!$examen) {
+                $examen = Examen::create([
+                    'nom' => 'Hospitalisation',
+                    'idsvc' => $serviceHosp?->id,
+                    'tarif' => 0, // Tarif dynamique selon les charges
+                    'part_cabinet' => 0,
+                    'part_medecin' => 0,
+                ]);
+            }
 
             // Créer la caisse
             $caisse = Caisse::create([

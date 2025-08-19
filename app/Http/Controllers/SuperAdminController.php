@@ -27,9 +27,9 @@ class SuperAdminController extends Controller
         $admin->is_approved = true;
         $admin->save();
 
-        // Créer automatiquement un personnel si l'utilisateur a une fonction
+        // Synchroniser avec le personnel existant ou créer un nouveau personnel si l'utilisateur a une fonction
         if ($admin->fonction) {
-            $this->createPersonnelFromUser($admin);
+            $this->syncWithPersonnel($admin, $admin->fonction);
         }
 
         return redirect()->back()->with('success', 'Administrateur approuvé avec succès.');
@@ -52,14 +52,8 @@ class SuperAdminController extends Controller
         $admin->fonction = $fonction;
         $admin->save();
 
-        // Synchroniser avec le module personnel
+        // Synchroniser avec le module personnel (crée ou met à jour selon l'état d'approbation)
         $this->syncWithPersonnel($admin, $fonction);
-
-        // Si l'utilisateur est approuvé et qu'on vient de lui attribuer une fonction,
-        // créer automatiquement un personnel
-        if ($admin->is_approved && $fonction) {
-            $this->createPersonnelFromUser($admin);
-        }
 
         return redirect()->back()->with('success', 'Fonction attribuée avec succès.');
     }
@@ -69,27 +63,41 @@ class SuperAdminController extends Controller
      */
     private function syncWithPersonnel(User $user, string $fonction)
     {
-        // Chercher si un personnel existe déjà avec ce nom
-        $personnel = \App\Models\Personnel::where('nom', $user->name)->first();
+        // Chercher si un personnel existe déjà lié à cet utilisateur
+        $personnel = \App\Models\Personnel::where('user_id', $user->id)->first();
+
+        // Si pas trouvé par user_id, chercher par nom (pour la compatibilité avec les anciens enregistrements)
+        if (!$personnel) {
+            $personnel = \App\Models\Personnel::where('nom', $user->name)->whereNull('user_id')->first();
+        }
 
         if ($personnel) {
-            // Mettre à jour la fonction du personnel existant
-            $personnel->update(['fonction' => $fonction]);
-        } else {
-            // Créer un nouveau personnel
+            // Mettre à jour la fonction et le statut du personnel existant
+            $personnel->update([
+                'fonction' => $fonction,
+                'is_approved' => $user->is_approved,
+                'user_id' => $user->id // Lier à l'utilisateur si ce n'était pas déjà fait
+            ]);
+        } elseif ($user->is_approved) {
+            // Créer un nouveau personnel SEULEMENT si l'utilisateur est approuvé
             \App\Models\Personnel::create([
                 'nom' => $user->name,
                 'fonction' => $fonction,
                 'telephone' => null, // À remplir manuellement si nécessaire
                 'salaire' => 0, // À définir selon la fonction
                 'is_approved' => $user->is_approved,
-                'created_by' => \Illuminate\Support\Facades\Auth::id()
+                'created_by' => \Illuminate\Support\Facades\Auth::id(),
+                'user_id' => $user->id // Lier directement à l'utilisateur
             ]);
         }
+        // Si l'utilisateur n'est pas approuvé et qu'il n'y a pas de personnel existant,
+        // on ne fait rien - le personnel sera créé lors de l'approbation
     }
 
     /**
      * Créer un personnel à partir d'un utilisateur approuvé
+     * NOTE: Flux inversé pour les admins - ils s'inscrivent via /register,
+     * puis un personnel est créé automatiquement après approbation
      */
     private function createPersonnelFromUser(User $user)
     {

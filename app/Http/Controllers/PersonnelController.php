@@ -32,15 +32,20 @@ class PersonnelController extends Controller
                 'adresse' => $personnel->adresse,
                 'is_approved' => $personnel->is_approved,
                 'credit' => $personnel->credit,
-                'type' => 'personnel',
-                'user_id' => null
+                'type' => $personnel->user_id ? 'user' : 'personnel', // Détecter si lié à un utilisateur
+                'user_id' => $personnel->user_id
             ]);
         }
 
-        // Ajouter les utilisateurs avec fonction
+        // Ajouter les utilisateurs avec fonction qui n'ont pas encore de personnel créé
         foreach ($usersWithFunction as $user) {
-            // Vérifier si un personnel existe déjà avec ce nom
-            $existingPersonnel = $personnels->where('nom', $user->name)->first();
+            // Vérifier si un personnel existe déjà lié à cet utilisateur
+            $existingPersonnel = $personnels->where('user_id', $user->id)->first();
+
+            // Si pas trouvé par user_id, vérifier par nom (compatibilité)
+            if (!$existingPersonnel) {
+                $existingPersonnel = $personnels->where('nom', $user->name)->first();
+            }
 
             if (!$existingPersonnel) {
                 $allPersonnel->push([
@@ -101,48 +106,107 @@ class PersonnelController extends Controller
 
     public function show(Personnel $personnel, $id)
     {
-        $personnel = Personnel::findorfail($id);
+        // Gestion des entrées de type 'user_X'
+        if (str_starts_with($id, 'user_')) {
+            $userId = str_replace('user_', '', $id);
+            $user = \App\Models\User::findOrFail($userId);
 
-        return view('personnels.show', compact('personnel'));
+            // Rediriger vers la gestion des utilisateurs pour les entrées user
+            return redirect()->route('superadmin.admins.show', $userId)
+                ->with('info', 'Cette entrée est gérée depuis le module utilisateurs.');
+        }
+
+        $personnel = Personnel::findOrFail($id);
+        $isLinkedToUser = (bool) $personnel->user_id;
+
+        return view('personnels.show', compact('personnel', 'isLinkedToUser'));
     }
 
     public function edit(Personnel $personnel, $id)
     {
-        $personnel = Personnel::findorfail($id);
-        return view('personnels.edit', compact('personnel'));
+        // Gestion des entrées de type 'user_X'
+        if (str_starts_with($id, 'user_')) {
+            $userId = str_replace('user_', '', $id);
+            $user = \App\Models\User::findOrFail($userId);
+
+            // Rediriger vers la gestion des utilisateurs pour les entrées user
+            return redirect()->route('superadmin.admins.edit', $userId)
+                ->with('info', 'Cette entrée est gérée depuis le module utilisateurs.');
+        }
+
+        $personnel = Personnel::findOrFail($id);
+
+        // Permettre l'édition partielle des personnels liés aux utilisateurs
+        $isLinkedToUser = (bool) $personnel->user_id;
+
+        return view('personnels.edit', compact('personnel', 'isLinkedToUser'));
     }
 
     public function update(Request $request, $id)
     {
-        $personnel = Personnel::findOrFail($id);
-        $request->validate([
-            'nom' => 'required',
-            'fonction' => 'required',
-            'salaire' => 'required|numeric',
-            'telephone' => 'nullable',
-            'adresse' => 'nullable',
-            'is_approved' => 'boolean',
-        ]);
-
-        $data = $request->all();
-
-        // Gérer le statut d'approbation
-        $data['is_approved'] = $request->has('is_approved');
-
-        // Si le personnel est approuvé et qu'il a une fonction, synchroniser avec l'utilisateur
-        if ($data['is_approved'] && $data['fonction']) {
-            $this->syncWithUser($personnel, $data);
+        // Gestion des entrées de type 'user' - ne devrait pas arriver grâce aux redirections
+        if (str_starts_with($id, 'user_')) {
+            return redirect()->route('personnels.index')
+                ->with('error', 'Les entrées gérées par les utilisateurs ne peuvent pas être modifiées depuis ce module.');
         }
 
-        $personnel->update($data);
+        $personnel = Personnel::findOrFail($id);
+        $isLinkedToUser = (bool) $personnel->user_id;
 
-        $message = $data['is_approved'] ? 'Personnel mis à jour et approuvé.' : 'Personnel mis à jour.';
-        return redirect()->route('personnels.show', $personnel)->with('success', $message);
+        if ($isLinkedToUser) {
+            // Édition partielle pour personnel lié à un utilisateur
+            $request->validate([
+                'salaire' => 'required|numeric',
+                'telephone' => 'nullable',
+                'adresse' => 'nullable',
+            ]);
+
+            // Mettre à jour uniquement les champs autorisés
+            $personnel->update([
+                'salaire' => $request->salaire,
+                'telephone' => $request->telephone,
+                'adresse' => $request->adresse,
+            ]);
+
+            return redirect()->route('personnels.show', $personnel)
+                ->with('success', 'Informations personnel mises à jour (salaire, téléphone, adresse).');
+        } else {
+            // Édition complète pour personnel normal
+            $request->validate([
+                'nom' => 'required',
+                'fonction' => 'required',
+                'salaire' => 'required|numeric',
+                'telephone' => 'nullable',
+                'adresse' => 'nullable',
+                'is_approved' => 'boolean',
+            ]);
+
+            $data = $request->all();
+
+            // Gérer le statut d'approbation
+            $data['is_approved'] = $request->has('is_approved');
+
+            // Si le personnel est approuvé et qu'il a une fonction, synchroniser avec l'utilisateur
+            if ($data['is_approved'] && $data['fonction']) {
+                $this->syncWithUser($personnel, $data);
+            }
+
+            $personnel->update($data);
+
+            $message = $data['is_approved'] ? 'Personnel mis à jour et approuvé.' : 'Personnel mis à jour.';
+            return redirect()->route('personnels.show', $personnel)->with('success', $message);
+        }
     }
 
     public function destroy(Personnel $personnel, $id)
     {
-        $personnel = Personnel::findorfail($id);
+        // Gestion des entrées de type 'user'
+        if (str_starts_with($id, 'user_')) {
+            return redirect()->route('personnels.index')
+                ->with('error', 'Les entrées gérées par les utilisateurs ne peuvent pas être supprimées depuis ce module. Supprimez l\'utilisateur depuis le module utilisateurs.');
+        }
+
+        $personnel = Personnel::findOrFail($id);
         $personnel->delete();
         return redirect()->route('personnels.index')->with('success', 'Personnel supprimé.');
     }
@@ -161,16 +225,8 @@ class PersonnelController extends Controller
                 'fonction' => $data['fonction'],
                 'is_approved' => $data['is_approved']
             ]);
-        } else {
-            // Créer un nouvel utilisateur si nécessaire
-            \App\Models\User::create([
-                'name' => $personnel->nom,
-                'email' => strtolower(str_replace(' ', '.', $personnel->nom)) . '@clinique.com',
-                'password' => bcrypt('password123'), // Mot de passe temporaire
-                'role_id' => 2, // ID par défaut pour admin
-                'fonction' => $data['fonction'],
-                'is_approved' => $data['is_approved']
-            ]);
         }
+        // Note: La création automatique d'utilisateurs admin depuis le module personnel est désactivée.
+        // Les utilisateurs admin doivent créer leur compte via /register et être approuvés par le superadmin.
     }
 }

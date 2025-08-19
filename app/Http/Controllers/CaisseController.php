@@ -113,7 +113,10 @@ class CaisseController extends Controller
             });
         $prescripteurs = Prescripteur::all();
         $services = Service::all();
-        $exam_types = Examen::with('service.pharmacie')->get();
+        // Exclure les examens d'hospitalisation automatiques des listes de sélection
+        $exam_types = Examen::with('service.pharmacie')
+            ->where('nom', 'NOT LIKE', 'Hospitalisation - %')
+            ->get();
         $assurances = \App\Models\Assurance::all();
 
         // Variables pour pré-remplissage depuis un rendez-vous
@@ -371,7 +374,10 @@ class CaisseController extends Controller
         $patients = GestionPatient::all();
         $medecins = Medecin::all();
         $prescripteurs = Prescripteur::all();
-        $exam_types = Examen::with('service.pharmacie')->get();
+        // Exclure les examens d'hospitalisation automatiques des listes de sélection
+        $exam_types = Examen::with('service.pharmacie')
+            ->where('nom', 'NOT LIKE', 'Hospitalisation - %')
+            ->get();
         $assurances = \App\Models\Assurance::all();
 
         return view('caisses.edit', compact(

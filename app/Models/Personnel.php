@@ -17,8 +17,14 @@ class Personnel extends Model
         'telephone',
         'salaire',
         'is_approved',
-        'created_by'
+        'created_by',
+        'user_id'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
 
     public function etatsDeCaisseCredit()
     {
