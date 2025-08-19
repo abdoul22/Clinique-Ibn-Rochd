@@ -491,8 +491,10 @@ class CaisseController extends Controller
 
     public function exportPdf(Caisse $caisse)
     {
-        $caisses = Caisse::all();
-        $pdf = PDF::loadView('caisses.export', compact('caisse'));
+        // Charger les relations nécessaires
+        $caisse->load(['patient', 'medecin', 'prescripteur', 'examen', 'service']);
+
+        $pdf = Pdf::loadView('caisses.export', compact('caisse'));
         return $pdf->download('examen-' . $caisse->numero_entre . '.pdf');
     }
 

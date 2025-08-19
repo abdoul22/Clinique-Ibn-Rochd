@@ -99,7 +99,7 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmi
     Route::get('assurances/print', [AssuranceController::class, 'print'])->name('assurances.print');
     // Caisse
     Route::resource('caisses', CaisseController::class)->parameters(['caisses' => 'caisse']);
-    Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
+    Route::get('/caisses/{caisse}/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
     Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
     // API pour numéro d'entrée
     Route::get('/api/caisses/numero-entree/{medecin_id}', [CaisseController::class, 'getNextNumeroEntree'])->name('caisses.getNextNumeroEntree');
@@ -141,7 +141,7 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     Route::resource('caisses', CaisseController::class);
     Route::resource('dossiers', DossierMedicalController::class)->parameters(['dossiers' => 'dossier']);
     // Caisse
-    Route::get('/caisses/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
+    Route::get('/caisses/{caisse}/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
     Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
 });
 
@@ -150,7 +150,7 @@ Route::middleware(['auth', 'is.approved'])->group(function () {
     Route::get('/patients', [GestionPatientController::class, 'index'])->name('patients.index');
     //Caisse
     Route::resource('caisses', CaisseController::class);
-    Route::get('caisses-export-pdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
+    Route::get('caisses/{caisse}/export-pdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
     Route::get('caisses-print', [CaisseController::class, 'print'])->name('caisses.print');
     Route::get('caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
 });

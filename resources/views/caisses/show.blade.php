@@ -2,17 +2,42 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-6">
-    <!-- En-tête de la clinique -->
-    <div
-        class="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-blue-950 text-white p-6 text-center">
-        <div class="flex justify-center mb-4">
-            <div class=" rounded-xl w-20 h-20">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo Clinique">
+    <!-- En-tête bilingue -->
+    <div class="p-6 bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-blue-950 text-white">
+        <div class="flex justify-between text-sm mb-4">
+            <div class="text-left">
+                <div class="font-semibold">CENTRE IBN ROCHD</div>
+                <div>Dr Brahim Ould Ntaghry</div>
+                <div>Spécialiste en Imagerie Médicale</div>
+                <div class="text-xs text-blue-200 mt-1">Centre Imagerie Médicale</div>
+                <div class="text-xs text-blue-200">Scanner – Echographie – Radiologie Générale – Mammographie –
+                    Panoramique Dentaire</div>
+            </div>
+            <div class="text-right" style="direction: rtl;">
+                <div class="font-semibold">مركز ابن رشد</div>
+                <div>الدكتور إبراهيم ولد نْتَغري</div>
+                <div>اختصاصي في التشخيص الطبي والأشعة</div>
+                <div class="text-xs text-blue-200 mt-1">مركز التشخيص الطبي</div>
+                <div class="text-xs text-blue-200">فحص بالأشعة – تصوير بالموجات فوق الصوتية – أشعة عامة – تصوير الثدي –
+                    أشعة الأسنان البانورامية</div>
             </div>
         </div>
-        <h1 class="text-2xl font-bold">{{ config('app.name', 'Clinique Médicale') }}</h1>
-        <p class="mt-1">Reçu d'examen médical</p>
-        <p class="text-sm opacity-80 mt-2">Date d'émission: {{ now()->format('d/m/Y H:i') }}</p>
+
+        <div class="text-center">
+            <div class="mb-4">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo IBN ROCHD" class="h-16 mx-auto">
+            </div>
+
+            <div class="text-xs text-blue-200">
+                Urgences Tél. 26 38 24 84 – 22 30 56 26 <br>
+                Avenue John Kennedy, en face de la Polyclinique – Nouakchott
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <p class="text-sm">Reçu d'examen médical</p>
+            <p class="text-xs opacity-80 mt-2">Date d'émission: {{ now()->format('d/m/Y H:i') }}</p>
+        </div>
     </div>
 
     <!-- Corps du document -->
@@ -111,7 +136,7 @@
 <!-- Actions -->
 <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-center gap-4 mb-8 print:hidden">
 
-    <a href="{{ route(auth()->user()->role->name . '.caisses.exportPdf') }}"
+    <a href="{{ route(auth()->user()->role->name . '.caisses.exportPdf', $caisse) }}"
         class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
