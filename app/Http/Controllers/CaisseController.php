@@ -190,7 +190,7 @@ class CaisseController extends Controller
         $rules = [
             'gestion_patient_id' => 'required|exists:gestion_patients,id',
             'medecin_id' => 'required|exists:medecins,id',
-            'prescripteur_id' => 'nullable|exists:prescripteurs,id',
+            'prescripteur_id' => 'nullable|string',
             'date_examen' => 'required|date',
             'total' => 'required|numeric',
             // accepter temporairement 'especes' puis normaliser
@@ -243,6 +243,11 @@ class CaisseController extends Controller
         $data['numero_facture'] = $prochainNumero;
         $data['couverture'] = $request->couverture ?? 0;
         $data['assurance_id'] = $request->filled('assurance_id') ? $request->assurance_id : null;
+
+        // Gérer la valeur "extern" pour prescripteur_id
+        if ($request->prescripteur_id === 'extern') {
+            $data['prescripteur_id'] = null; // Stocker comme null dans la DB
+        }
 
         // Gérer les examens (simple ou multiple)
         if ($request->examens_multiple === 'true' && $request->filled('examens_data')) {

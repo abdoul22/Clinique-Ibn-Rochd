@@ -126,6 +126,7 @@
                     <select name="prescripteur_id"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                         <option value="">Sélectionner un prescripteur</option>
+                        <option value="extern" selected>Extern</option>
                         @foreach($prescripteurs as $prescripteur)
                         <option value="{{ $prescripteur->id }}">{{ $prescripteur->nom }}{{ $prescripteur->specialite ? '
                             - ' . $prescripteur->specialite : '' }}</option>
@@ -615,7 +616,7 @@
 
 
 
-        
+
 
                 // Fonction pour afficher les informations de stock des médicaments
         function afficherInfosStock(examenId) {
@@ -680,10 +681,10 @@ const numerosParMedecin = @json($numeros_par_medecin);
 function updateNumeroEntreeSimple() {
     const medecinSelect = document.getElementById('medecin_select');
     const numeroEntreeDisplay = document.getElementById('numero_entree_display');
-    
+
     if (medecinSelect && numeroEntreeDisplay) {
         const medecinId = medecinSelect.value;
-        
+
         if (medecinId && numerosParMedecin[medecinId]) {
             numeroEntreeDisplay.value = numerosParMedecin[medecinId];
         } else {

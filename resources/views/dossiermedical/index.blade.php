@@ -197,11 +197,7 @@
                             <div class="flex flex-col sm:flex-row gap-2">
                                 <a href="{{ route('dossiers.show', $dossier->id) }}"
                                     class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
-                                    <i class="fas fa-eye"></i> <span class="hidden sm:inline">Voir</span>
-                                </a>
-                                <a href="{{ route('dossiers.edit', $dossier->id) }}"
-                                    class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1">
-                                    <i class="fas fa-edit"></i> <span class="hidden sm:inline">Modifier</span>
+                                    <i class="fas fa-eye"></i>
                                 </a>
                             </div>
                         </td>
