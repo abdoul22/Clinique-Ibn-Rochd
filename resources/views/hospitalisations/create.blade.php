@@ -276,8 +276,7 @@
                                 <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
                                     MRU
                                 </div>
-                            </div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 text-center">Calculé automatiquement selon la durée</p>
+                            </div>                            
                         </div>
                     </div>
 

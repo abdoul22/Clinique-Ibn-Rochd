@@ -114,6 +114,61 @@ class CreditController extends Controller
         return view('credits.index', compact('creditsPersonnel', 'creditsAssurance', 'summary'));
     }
 
+    public function show($id)
+    {
+        $credit = Credit::with('source')->findOrFail($id);
+
+        // Calculer les informations de paiement
+        $montantRestant = $credit->montant - $credit->montant_paye;
+        $pourcentagePaye = $credit->montant > 0 ? ($credit->montant_paye / $credit->montant) * 100 : 0;
+
+        // Récupérer l'historique des paiements si disponible
+        $historiquePaiements = \App\Models\ModePaiement::where('source', 'credit_personnel')
+            ->orWhere('source', 'credit_assurance')
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        return view('credits.show', compact('credit', 'montantRestant', 'pourcentagePaye', 'historiquePaiements'));
+    }
+
+    public function edit($id)
+    {
+        $credit = Credit::with('source')->findOrFail($id);
+        $personnels = Personnel::all();
+        $assurances = Assurance::all();
+        $modes = \App\Models\ModePaiement::getTypes();
+
+        return view('credits.edit', compact('credit', 'personnels', 'assurances', 'modes'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $credit = Credit::findOrFail($id);
+
+        $request->validate([
+            'montant' => 'required|numeric|min:1',
+            'status' => 'required|in:payé,partiellement payé,non payé',
+            'montant_paye' => 'required|numeric|min:0|max:' . $request->montant,
+        ]);
+
+        $credit->update([
+            'montant' => $request->montant,
+            'status' => $request->status,
+            'statut' => $request->status,
+            'montant_paye' => $request->montant_paye,
+        ]);
+
+        // Mettre à jour le crédit de la source
+        if ($credit->source_type === \App\Models\Personnel::class) {
+            $credit->source->updateCredit();
+        } elseif ($credit->source_type === \App\Models\Assurance::class) {
+            $credit->source->updateCredit();
+        }
+
+        return redirect()->route('credits.index')->with('success', 'Crédit mis à jour avec succès.');
+    }
+
     public function marquerComme($id, $statut)
     {
         $credit = Credit::findOrFail($id);

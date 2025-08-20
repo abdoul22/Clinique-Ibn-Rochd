@@ -110,19 +110,30 @@
 
     <td class="table-cell py-2 px-2">
         @if(!$etat->validated)
-        <form method="POST" action="{{ route('etatcaisse.valider', $etat->id) }}">
-            @csrf
-            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded shadow">
-                Valider
-            </button>
-        </form>
+        <button type="button" onclick="openPaymentModal({{ $etat->id }}, {{ $etat->part_medecin }})"
+            class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Valider
+        </button>
         @else
-        <form method="POST" action="{{ route('etatcaisse.unvalider', $etat->id) }}">
-            @csrf
-            <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-2 py-1 rounded shadow">
-                Annuler
-            </button>
-        </form>
+        <div class="flex flex-col items-center space-y-1">
+            <span
+                class="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Validé
+            </span>
+            <form method="POST" action="{{ route('etatcaisse.unvalider', $etat->id) }}" class="inline">
+                @csrf
+                <button type="submit"
+                    class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-2 py-1 rounded shadow">
+                    Annuler
+                </button>
+            </form>
+        </div>
         @endif
     </td>
     {{-- Assurance --}}

@@ -159,6 +159,9 @@
                 <div class="muted">Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire
                 </div>
             </div>
+            <div class="logo-container">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo IBN ROCHD">
+            </div>
             <div class="ar">
                 <div>مركز ابن رشد</div>
                 <div>الدكتور إبراهيم ولد نْتَغري</div>
@@ -169,9 +172,7 @@
             </div>
         </div>
 
-        <div class="logo-container">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo IBN ROCHD">
-        </div>
+
 
         <div class="muted" style="text-align:center;">
             Urgences Tél. 26 38 24 84 – 22 30 56 26 <br>
@@ -197,7 +198,8 @@
                     }}</span></div>
             <div><span class="label">Date de l'examen</span> :
                 <span class="value">
-                    {{ $caisse->date_examen ? \Carbon\Carbon::parse($caisse->date_examen)->format('d/m/Y H:i') :
+                    {{ $caisse->date_examen ? \Carbon\Carbon::parse($caisse->date_examen)->format('d/m/Y') . ' ' .
+                    \Carbon\Carbon::now()->format('H:i') :
                     \Carbon\Carbon::now()->format('d/m/Y H:i') }}
                 </span>
             </div>

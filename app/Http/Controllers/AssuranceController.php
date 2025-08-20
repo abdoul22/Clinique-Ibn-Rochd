@@ -48,8 +48,17 @@ class AssuranceController extends Controller
 
     public function show($id)
     {
-        $assurance = Assurance::findOrFail($id);
-        return view('assurances.show', compact('assurance'));
+        $assurance = Assurance::with(['credits' => function ($query) {
+            $query->orderBy('created_at', 'desc');
+        }])->findOrFail($id);
+
+        // Calculer les statistiques des crédits
+        $totalCredits = $assurance->credits->sum('montant');
+        $totalPaye = $assurance->credits->sum('montant_paye');
+        $creditRestant = $totalCredits - $totalPaye;
+        $nombreCredits = $assurance->credits->count();
+
+        return view('assurances.show', compact('assurance', 'totalCredits', 'totalPaye', 'creditRestant', 'nombreCredits'));
     }
 
     public function edit($id)

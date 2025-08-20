@@ -274,7 +274,7 @@ class EtatCaisseController extends Controller
         return back()->with('success', 'Part validée avec succès.');
     }
 
-    public function valider($id)
+    public function valider(Request $request, $id)
     {
         $etat = EtatCaisse::findOrFail($id);
 
@@ -282,12 +282,16 @@ class EtatCaisseController extends Controller
             return back()->with('error', 'Part déjà validée.');
         }
 
-        // Chercher le mode de paiement utilisé par le patient à la caisse
-        $modePaiement = $etat->caisse?->mode_paiements()->latest()->first();
-        $modePaiementType = $modePaiement?->type ?? 'espèces';
+        // Valider le mode de paiement sélectionné
+        $request->validate([
+            'mode_paiement' => 'required|in:especes,bankily,masrivi,sedad'
+        ]);
+
+        // Utiliser le mode de paiement sélectionné depuis la modale
+        $modePaiementType = $request->mode_paiement;
 
         $depense = Depense::create([
-            'nom' => 'Part médecin - ' . $etat->medecin?->nom,
+            'nom' => 'Part médecin - ' . $etat->medecin?->nom . ' (' . ucfirst($modePaiementType) . ')',
             'montant' => $etat->part_medecin,
             'etat_caisse_id' => $etat->id, // Lien direct
             'source' => 'générée', // pour le filtre
@@ -297,7 +301,7 @@ class EtatCaisseController extends Controller
         $etat->validated = true;
         $etat->save();
 
-        return back()->with('success', 'Part médecin validée et dépense créée.');
+        return back()->with('success', 'Part médecin validée et dépense créée avec le mode de paiement: ' . ucfirst($modePaiementType));
     }
     public function annulerValidation($id)
     {
@@ -507,16 +511,211 @@ class EtatCaisseController extends Controller
         return redirect()->route('etatcaisse.index')->with('success', 'État de caisse supprimé.');
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $etatcaisses = EtatCaisse::with(['personnel', 'assurance'])->get();
-        $pdf = Pdf::loadView('etatcaisse.export_pdf', compact('etatcaisses'));
-        return $pdf->download('etat_de_caisse.pdf');
+        // Appliquer les mêmes filtres que la méthode index
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
+        $etatcaisses = EtatCaisse::with(['caisse', 'caisse.paiements', 'personnel', 'assurance', 'medecin'])
+            ->when($period === 'day' && $date, fn($q) => $q->whereDate('created_at', $date))
+            ->when($period === 'week' && $week, function ($q) use ($week) {
+                $parts = explode('-W', $week);
+                if (count($parts) === 2) {
+                    $yearW = (int)$parts[0];
+                    $weekW = (int)$parts[1];
+                    $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
+                    $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+                    $q->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+                }
+            })
+            ->when($period === 'month' && $month, function ($q) use ($month) {
+                $parts = explode('-', $month);
+                if (count($parts) === 2) {
+                    $yearM = (int)$parts[0];
+                    $monthM = (int)$parts[1];
+                    $q->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+                }
+            })
+            ->when($period === 'year' && $year, fn($q) => $q->whereYear('created_at', $year))
+            ->when($period === 'range' && $dateStart && $dateEnd, fn($q) => $q->whereBetween('created_at', [$dateStart, $dateEnd]))
+            ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
+            ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
+            ->latest()->get(); // Pas de pagination pour le PDF
+
+        // Calculer les résumés avec filtres
+        $resumeFiltre = $this->calculateResumeForPeriod($request);
+
+        // Générer la description de la période filtrée
+        $periodDescription = $this->generatePeriodDescription($request);
+
+        $pdf = Pdf::loadView('etatcaisse.export_pdf', compact('etatcaisses', 'resumeFiltre', 'periodDescription'));
+
+        $filename = 'etat_de_caisse';
+        if ($date) {
+            $filename .= '_' . \Carbon\Carbon::parse($date)->format('Y-m-d');
+        } elseif ($period !== 'day') {
+            $filename .= '_' . $period;
+        }
+
+        return $pdf->download($filename . '.pdf');
     }
 
-    public function print()
+    public function print(Request $request)
     {
-        $etatcaisses = EtatCaisse::with(['personnel', 'assurance'])->get();
-        return view('etatcaisse.print', compact('etatcaisses'));
+        // Appliquer les mêmes filtres que la méthode index
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
+        $etatcaisses = EtatCaisse::with(['caisse', 'caisse.paiements', 'personnel', 'assurance', 'medecin'])
+            ->when($period === 'day' && $date, fn($q) => $q->whereDate('created_at', $date))
+            ->when($period === 'week' && $week, function ($q) use ($week) {
+                $parts = explode('-W', $week);
+                if (count($parts) === 2) {
+                    $yearW = (int)$parts[0];
+                    $weekW = (int)$parts[1];
+                    $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
+                    $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+                    $q->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+                }
+            })
+            ->when($period === 'month' && $month, function ($q) use ($month) {
+                $parts = explode('-', $month);
+                if (count($parts) === 2) {
+                    $yearM = (int)$parts[0];
+                    $monthM = (int)$parts[1];
+                    $q->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+                }
+            })
+            ->when($period === 'year' && $year, fn($q) => $q->whereYear('created_at', $year))
+            ->when($period === 'range' && $dateStart && $dateEnd, fn($q) => $q->whereBetween('created_at', [$dateStart, $dateEnd]))
+            ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
+            ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
+            ->latest()->get(); // Pas de pagination pour l'impression
+
+        // Calculer les résumés avec filtres
+        $resumeFiltre = $this->calculateResumeForPeriod($request);
+
+        // Générer la description de la période filtrée
+        $periodDescription = $this->generatePeriodDescription($request);
+
+        return view('etatcaisse.print', compact('etatcaisses', 'resumeFiltre', 'periodDescription'));
+    }
+
+    private function calculateResumeForPeriod(Request $request)
+    {
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
+        // Construire la requête de base pour les résumés
+        $etatCaisseQuery = EtatCaisse::query();
+        $depenseQuery = Depense::query();
+        $creditPersonnelQuery = Credit::where('source_type', \App\Models\Personnel::class);
+        $creditAssuranceQuery = Credit::where('source_type', \App\Models\Assurance::class);
+
+        // Appliquer les filtres de date
+        if ($period === 'day' && $date) {
+            $etatCaisseQuery->whereDate('created_at', $date);
+            $depenseQuery->whereDate('created_at', $date);
+            $creditPersonnelQuery->whereDate('created_at', $date);
+            $creditAssuranceQuery->whereDate('created_at', $date);
+        } elseif ($period === 'week' && $week) {
+            $parts = explode('-W', $week);
+            if (count($parts) === 2) {
+                $yearW = (int)$parts[0];
+                $weekW = (int)$parts[1];
+                $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
+                $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+                $etatCaisseQuery->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+                $depenseQuery->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+                $creditPersonnelQuery->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+                $creditAssuranceQuery->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+            }
+        } elseif ($period === 'month' && $month) {
+            $parts = explode('-', $month);
+            if (count($parts) === 2) {
+                $yearM = (int)$parts[0];
+                $monthM = (int)$parts[1];
+                $etatCaisseQuery->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+                $depenseQuery->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+                $creditPersonnelQuery->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+                $creditAssuranceQuery->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+            }
+        } elseif ($period === 'year' && $year) {
+            $etatCaisseQuery->whereYear('created_at', $year);
+            $depenseQuery->whereYear('created_at', $year);
+            $creditPersonnelQuery->whereYear('created_at', $year);
+            $creditAssuranceQuery->whereYear('created_at', $year);
+        } elseif ($period === 'range' && $dateStart && $dateEnd) {
+            $etatCaisseQuery->whereBetween('created_at', [$dateStart, $dateEnd]);
+            $depenseQuery->whereBetween('created_at', [$dateStart, $dateEnd]);
+            $creditPersonnelQuery->whereBetween('created_at', [$dateStart, $dateEnd]);
+            $creditAssuranceQuery->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        // Calculer les totaux
+        $recette = $etatCaisseQuery->sum('recette');
+        $partMedecin = $etatCaisseQuery->where('validated', true)->sum('part_medecin');
+        $partCabinet = $recette - $partMedecin;
+        $depense = $depenseQuery->where('rembourse', false)->sum('montant');
+        $creditPersonnel = max($creditPersonnelQuery->sum('montant') - $creditPersonnelQuery->sum('montant_paye'), 0);
+        $creditAssurance = max($creditAssuranceQuery->sum('montant') - $creditAssuranceQuery->sum('montant_paye'), 0);
+
+        return [
+            'recette' => $recette,
+            'part_medecin' => $partMedecin,
+            'part_cabinet' => $partCabinet,
+            'depense' => $depense,
+            'credit_personnel' => $creditPersonnel,
+            'credit_assurance' => $creditAssurance,
+        ];
+    }
+
+    private function generatePeriodDescription(Request $request)
+    {
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
+        if ($period === 'day' && $date) {
+            return 'Filtré sur le jour du ' . \Carbon\Carbon::parse($date)->translatedFormat('d F Y');
+        } elseif ($period === 'week' && $week) {
+            $parts = explode('-W', $week);
+            if (count($parts) === 2) {
+                $start = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
+                $end = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
+                return 'Filtré sur la semaine du ' . $start->translatedFormat('d F Y') . ' au ' . $end->translatedFormat('d F Y');
+            }
+        } elseif ($period === 'month' && $month) {
+            $parts = explode('-', $month);
+            if (count($parts) === 2) {
+                return 'Filtré sur le mois de ' . \Carbon\Carbon::create($parts[0], $parts[1])->translatedFormat('F Y');
+            }
+        } elseif ($period === 'year' && $year) {
+            return 'Filtré sur l\'année ' . $year;
+        } elseif ($period === 'range' && $dateStart && $dateEnd) {
+            return 'Filtré sur la période du ' . \Carbon\Carbon::parse($dateStart)->translatedFormat('d F Y') . ' au ' . \Carbon\Carbon::parse($dateEnd)->translatedFormat('d F Y');
+        }
+
+        return 'Toutes les données';
     }
 }

@@ -4,8 +4,9 @@
 <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-6">
     <!-- En-tête bilingue -->
     <div class="p-6 bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-blue-950 text-white">
-        <div class="flex justify-between text-sm mb-4">
-            <div class="text-left">
+        <div class="flex items-start justify-between text-sm mb-4">
+            <!-- Section française -->
+            <div class="text-left flex-1">
                 <div class="font-semibold">CENTRE IBN ROCHD</div>
                 <div>Dr Brahim Ould Ntaghry</div>
                 <div>Spécialiste en Imagerie Médicale</div>
@@ -13,7 +14,14 @@
                 <div class="text-xs text-blue-200">Scanner – Echographie – Radiologie Générale – Mammographie –
                     Panoramique Dentaire</div>
             </div>
-            <div class="text-right" style="direction: rtl;">
+
+            <!-- Logo centré -->
+            <div class="flex-shrink-0 mx-6">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo IBN ROCHD" class="h-16 w-auto">
+            </div>
+
+            <!-- Section arabe -->
+            <div class="text-right flex-1" style="direction: rtl;">
                 <div class="font-semibold">مركز ابن رشد</div>
                 <div>الدكتور إبراهيم ولد نْتَغري</div>
                 <div>اختصاصي في التشخيص الطبي والأشعة</div>
@@ -23,11 +31,7 @@
             </div>
         </div>
 
-        <div class="text-center">
-            <div class="mb-4">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo IBN ROCHD" class="h-16 mx-auto">
-            </div>
-
+        <div class="text-center mt-4">
             <div class="text-xs text-blue-200">
                 Urgences Tél. 26 38 24 84 – 22 30 56 26 <br>
                 Avenue John Kennedy, en face de la Polyclinique – Nouakchott

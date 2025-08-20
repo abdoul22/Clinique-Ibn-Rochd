@@ -193,16 +193,44 @@ class HospitalisationController extends Controller
             'montant_total' => $chargesNonFacturees->sum('total_price') + $chargesFacturees->sum('total_price'),
         ];
 
-        // Calculer les jours d'hospitalisation - corriger le calcul pour éviter le problème de "2 jours"
+        // Calculer la durée d'hospitalisation en format lisible
         $dateEntree = Carbon::parse($hospitalisation->date_entree);
         $dateFin = $hospitalisation->date_sortie ? Carbon::parse($hospitalisation->date_sortie) : Carbon::now();
 
-        // Si l'hospitalisation vient d'être créée aujourd'hui, c'est 1 jour
-        if ($dateEntree->isToday() && !$hospitalisation->date_sortie) {
-            $joursHospitalisation = 1;
+        // Utiliser la même logique que generateRoomCharges pour cohérence
+        if ($dateEntree->isToday()) {
+            $joursEcoules = 0; // Premier jour = 0 jours écoulés
         } else {
-            $joursHospitalisation = $dateEntree->diffInDays($dateFin) + 1;
+            $joursEcoules = intval($dateEntree->diffInDays($dateFin));
         }
+
+        // Le nombre de jours d'hospitalisation = jours écoulés + 1 (jour d'entrée)
+        $jours = $joursEcoules + 1;
+
+        // Calculer les heures et minutes restantes
+        $diffInSeconds = $dateFin->diffInSeconds($dateEntree);
+        $heures = floor(($diffInSeconds % 86400) / 3600);
+        $minutes = floor(($diffInSeconds % 3600) / 60);
+
+        // Formatter la durée
+        $dureeSejour = '';
+        if ($jours > 0) {
+            $dureeSejour .= $jours . ' jour' . ($jours > 1 ? 's' : '');
+        }
+        if ($heures > 0) {
+            $dureeSejour .= ($dureeSejour ? ' ' : '') . $heures . 'h';
+        }
+        if ($minutes > 0) {
+            $dureeSejour .= ($dureeSejour ? ' ' : '') . $minutes . 'mn';
+        }
+
+        // Si aucune durée calculée, afficher au minimum 1 jour
+        if (empty($dureeSejour)) {
+            $dureeSejour = '1 jour';
+        }
+
+        // Garder aussi la valeur numérique pour la compatibilité
+        $joursHospitalisation = max(1, $jours);
 
         // Ajouter les variables manquantes pour la vue - Exclure les examens d'hospitalisation automatiques
         $examens = Examen::where('nom', 'NOT LIKE', 'Hospitalisation - %')
@@ -220,7 +248,8 @@ class HospitalisationController extends Controller
             'totaux',
             'examens',
             'medicaments',
-            'joursHospitalisation'
+            'joursHospitalisation',
+            'dureeSejour'
         ));
     }
 

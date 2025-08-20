@@ -40,10 +40,12 @@
                         <select name="type" id="type" required
                             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">Sélectionnez un type</option>
-                            <option value="standard" {{ old('type')=='standard' ? 'selected' : '' }}>Standard</option>
-                            <option value="simple" {{ old('type')=='simple' ? 'selected' : '' }}>Simple</option>
-                            <option value="double" {{ old('type')=='double' ? 'selected' : '' }}>Double</option>
-                            <option value="suite" {{ old('type')=='suite' ? 'selected' : '' }}>Suite</option>
+                            <option value="Mise en observation" {{ old('type')=='Mise en observation' ? 'selected' : ''
+                                }}>Mise en observation</option>
+                            <option value="Commune" {{ old('type')=='Commune' ? 'selected' : '' }}>Commune</option>
+                            <option value="Double" {{ old('type')=='Double' ? 'selected' : '' }}>Double</option>
+                            <option value="Individuelle" {{ old('type')=='Individuelle' ? 'selected' : '' }}>
+                                Individuelle</option>
                             <option value="VIP" {{ old('type')=='VIP' ? 'selected' : '' }}>VIP</option>
                         </select>
                         @error('type')
