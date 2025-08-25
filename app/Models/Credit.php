@@ -16,8 +16,9 @@ class Credit extends Model
         'montant',
         'montant_paye',
         'status',
-        'statut', // <- tu l'as oublié ici alors qu'il est utilisé dans marquerComme()
+        'statut',
         'mode_paiement_id',
+        'description',
     ];
 
     public function getStatusColorAttribute()

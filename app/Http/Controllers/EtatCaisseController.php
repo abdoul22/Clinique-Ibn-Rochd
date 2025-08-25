@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Models\Personnel;
 use App\Models\Assurance;
 use Illuminate\Http\Request;
@@ -169,16 +170,16 @@ class EtatCaisseController extends Controller
         ));
     }
 
+
     public function create()
     {
         $personnels = Personnel::all();
         $assurances = Assurance::all();
 
-        $totaux = Examen::getTotaux();
+        $totaux = Examen::getTotaux(); // <--- Ici
 
         return view('etatcaisse.create', compact('personnels', 'assurances', 'totaux'));
     }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -198,6 +199,7 @@ class EtatCaisseController extends Controller
             $caisse = \App\Models\Caisse::with('examen')->find($validated['caisse_id']);
             $examen = $caisse?->examen;
 
+            // On récupère les parts automatiquement si un examen est lié
             if ($examen) {
                 $validated['part_medecin'] = $examen->part_medecin;
                 $validated['part_clinique'] = $examen->part_cabinet;
@@ -217,8 +219,12 @@ class EtatCaisseController extends Controller
             'examen_id'      => $caisse?->examen_id ?? null,
         ]);
 
+
         $etat->load('personnel', 'assurance', 'medecin', 'caisse.paiements');
 
+        // Suppression: la création du crédit assurance est gérée par l'observer d' EtatCaisse (Model)
+
+        // Validation automatique si la part médecin est 0
         if ($etat->part_medecin == 0) {
             $etat->validated = true;
             $etat->save();
@@ -229,22 +235,25 @@ class EtatCaisseController extends Controller
             'view' => view('etatcaisse.partials.row', compact('etat'))->render()
         ]);
     }
-
     public function validerPartMedecin($id)
     {
         $etat = EtatCaisse::findOrFail($id);
 
+        // Vérifie si déjà validé
         if ($etat->validated) {
             return back()->with('info', 'Part déjà validée.');
         }
 
+        // Récupérer le mode de paiement de la caisse
         $modePaiement = $etat->caisse?->mode_paiements()->latest()->first();
         $modePaiementType = $modePaiement?->type ?? 'espèces';
 
+        // Vérifier si le mode de paiement a suffisamment de fonds
         if ($modePaiement && $modePaiement->montant < $etat->part_medecin) {
             return back()->with('error', "Fonds insuffisants dans le mode de paiement {$modePaiementType}. Solde disponible : {$modePaiement->montant} MRU");
         }
 
+        // Déduire le montant du mode de paiement
         if ($modePaiement) {
             $modePaiement->decrement('montant', $etat->part_medecin);
         }
@@ -253,12 +262,13 @@ class EtatCaisseController extends Controller
         $etat->depense = $etat->part_medecin;
         $etat->save();
 
+        // Créer la dépense avec le bon mode de paiement
         \App\Models\Depense::create([
             'nom' => 'Part médecin - ' . ($etat->medecin?->nom ?? 'N/A'),
             'montant' => $etat->part_medecin,
             'source' => 'automatique',
             'etat_caisse_id' => $etat->id,
-            'mode_paiement_id' => $modePaiementType,
+            'mode_paiement_id' => $modePaiementType, // Utiliser le type, pas l'ID
         ]);
 
         return back()->with('success', 'Part validée avec succès.');
@@ -272,17 +282,19 @@ class EtatCaisseController extends Controller
             return back()->with('error', 'Part déjà validée.');
         }
 
+        // Valider le mode de paiement sélectionné
         $request->validate([
             'mode_paiement' => 'required|in:especes,bankily,masrivi,sedad'
         ]);
 
+        // Utiliser le mode de paiement sélectionné depuis la modale
         $modePaiementType = $request->mode_paiement;
 
         $depense = Depense::create([
             'nom' => 'Part médecin - ' . $etat->medecin?->nom . ' (' . ucfirst($modePaiementType) . ')',
             'montant' => $etat->part_medecin,
-            'etat_caisse_id' => $etat->id,
-            'source' => 'générée',
+            'etat_caisse_id' => $etat->id, // Lien direct
+            'source' => 'générée', // pour le filtre
             'mode_paiement_id' => $modePaiementType,
         ]);
 
@@ -291,7 +303,6 @@ class EtatCaisseController extends Controller
 
         return back()->with('success', 'Part médecin validée et dépense créée avec le mode de paiement: ' . ucfirst($modePaiementType));
     }
-
     public function annulerValidation($id)
     {
         $etat = EtatCaisse::findOrFail($id);
@@ -300,6 +311,7 @@ class EtatCaisseController extends Controller
             return back()->with('error', 'Cette part n\'est pas validée.');
         }
 
+        // Supprimer uniquement la dépense liée à cette validation
         if ($etat->depense) {
             $etat->depense->delete();
         }
@@ -318,6 +330,7 @@ class EtatCaisseController extends Controller
             return back()->with('error', 'Part non encore validée.');
         }
 
+        // Supprimer la dépense liée si elle existe
         $nom = 'Part médecin - ' . $etat->medecin?->nom;
         Depense::where('nom', $nom)->where('montant', $etat->part_medecin)->delete();
 
@@ -326,6 +339,7 @@ class EtatCaisseController extends Controller
 
         return back()->with('success', 'Validation annulée avec succès.');
     }
+
 
     public function generateForPersonnel($id)
     {
@@ -362,7 +376,6 @@ class EtatCaisseController extends Controller
 
         return back()->with('success', 'États de crédit pour tout le personnel générés avec succès.');
     }
-
     public function generateFromAssurance($id)
     {
         $assurance = Assurance::findOrFail($id);
@@ -400,13 +413,14 @@ class EtatCaisseController extends Controller
         return back()->with('success', 'États pour toutes les assurances générés avec succès.');
     }
 
+
     public function genererEtatGeneral()
     {
         $etat = EtatCaisse::create([
             'designation' => 'État Général du ' . now()->format('d/m/Y'),
             'recette' => Caisse::sum('total'),
-            'part_medecin' => 0,
-            'part_clinique' => 0,
+            'part_medecin' => 0, // À entrer manuellement dans ton form
+            'part_clinique' => 0, // idem
             'depense' => Depense::sum('montant'),
             'assurance_id' => null,
             'personnel_id' => null,
@@ -415,17 +429,27 @@ class EtatCaisseController extends Controller
         return redirect()->route('etatcaisse.index')->with('success', 'État général généré avec succès.');
     }
 
+
     public function generateGeneral()
     {
+        // Récupération des recettes totales (caisse)
         $recette = Caisse::sum('total');
+
+        // Récupération de la part médecin (calculée à partir de la caisse)
         $part_medecin = Caisse::sum('total');
+
+        // Récupération de la part clinique
         $part_clinique = Examen::sum('part_cabinet');
+
+        // Dépenses totales (exclure les crédits personnel)
         $depense = Depense::where(function ($q) {
             $q->whereNull('credit_id')
                 ->orWhereHas('credit', function ($creditQuery) {
                     $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
                 });
         })->sum('montant');
+
+        // Total des crédits du personnel
         $credit_personnel = Personnel::sum('credit');
 
         $totaux = [
@@ -433,7 +457,7 @@ class EtatCaisseController extends Controller
             'part_cabinet_total' => Examen::sum('part_cabinet'),
             'part_medecin_total' => Examen::sum('part_medecin'),
         ];
-
+        // Création d'un nouvel état de caisse
         $etat = EtatCaisse::create([
             'designation'       => 'État général',
             'recette'           => $recette,
@@ -446,6 +470,7 @@ class EtatCaisseController extends Controller
 
         return redirect()->route('etatcaisse.index')->with('success', 'État général généré avec succès.');
     }
+
 
     public function show($id)
     {
@@ -468,7 +493,7 @@ class EtatCaisseController extends Controller
             'recette' => 'required|numeric',
             'part_medecin' => 'required|numeric',
             'part_clinique' => 'required|numeric',
-            'depense' => 'required|numeric',
+            'depense' => 'required|numeric', // Soit le supprimer complètement :
             'personnel_id' => 'nullable|exists:personnels,id',
             'assurance_id' => 'nullable|exists:assurances,id',
         ]);
@@ -488,6 +513,7 @@ class EtatCaisseController extends Controller
 
     public function exportPdf(Request $request)
     {
+        // Appliquer les mêmes filtres que la méthode index
         $period = $request->input('period', 'day');
         $date = $request->input('date');
         $week = $request->input('week');
@@ -520,9 +546,12 @@ class EtatCaisseController extends Controller
             ->when($period === 'range' && $dateStart && $dateEnd, fn($q) => $q->whereBetween('created_at', [$dateStart, $dateEnd]))
             ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
             ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
-            ->latest()->get();
+            ->latest()->get(); // Pas de pagination pour le PDF
 
+        // Calculer les résumés avec filtres
         $resumeFiltre = $this->calculateResumeForPeriod($request);
+
+        // Générer la description de la période filtrée
         $periodDescription = $this->generatePeriodDescription($request);
 
         $pdf = Pdf::loadView('etatcaisse.export_pdf', compact('etatcaisses', 'resumeFiltre', 'periodDescription'));
@@ -539,6 +568,7 @@ class EtatCaisseController extends Controller
 
     public function print(Request $request)
     {
+        // Appliquer les mêmes filtres que la méthode index
         $period = $request->input('period', 'day');
         $date = $request->input('date');
         $week = $request->input('week');
@@ -571,9 +601,12 @@ class EtatCaisseController extends Controller
             ->when($period === 'range' && $dateStart && $dateEnd, fn($q) => $q->whereBetween('created_at', [$dateStart, $dateEnd]))
             ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
             ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
-            ->latest()->get();
+            ->latest()->get(); // Pas de pagination pour l'impression
 
+        // Calculer les résumés avec filtres
         $resumeFiltre = $this->calculateResumeForPeriod($request);
+
+        // Générer la description de la période filtrée
         $periodDescription = $this->generatePeriodDescription($request);
 
         return view('etatcaisse.print', compact('etatcaisses', 'resumeFiltre', 'periodDescription'));
@@ -589,11 +622,13 @@ class EtatCaisseController extends Controller
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
 
+        // Construire la requête de base pour les résumés
         $etatCaisseQuery = EtatCaisse::query();
         $depenseQuery = Depense::query();
         $creditPersonnelQuery = Credit::where('source_type', \App\Models\Personnel::class);
         $creditAssuranceQuery = Credit::where('source_type', \App\Models\Assurance::class);
 
+        // Appliquer les filtres de date
         if ($period === 'day' && $date) {
             $etatCaisseQuery->whereDate('created_at', $date);
             $depenseQuery->whereDate('created_at', $date);
@@ -633,6 +668,7 @@ class EtatCaisseController extends Controller
             $creditAssuranceQuery->whereBetween('created_at', [$dateStart, $dateEnd]);
         }
 
+        // Calculer les totaux
         $recette = $etatCaisseQuery->sum('recette');
         $partMedecin = $etatCaisseQuery->where('validated', true)->sum('part_medecin');
         $partCabinet = $recette - $partMedecin;
