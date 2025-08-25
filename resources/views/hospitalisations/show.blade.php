@@ -542,3 +542,63 @@
 </script>
 @endpush
 @endsection
+                        <option value="bankily">Bankily</option>
+                        <option value="masrivi">Masrivi</option>
+                        <option value="sedad">Sedad</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="document.getElementById('paiement-modal').classList.add('hidden')"
+                        class="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors">
+                        Annuler
+                    </button>
+                    <button type="submit"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                        Confirmer le paiement
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    // Gestion du changement de type de charge
+    document.getElementById('charge_type')?.addEventListener('change', function(){
+        const examenField = document.getElementById('examen_field');
+        const medicamentField = document.getElementById('medicament_field');
+
+        if (this.value === 'pharmacy') {
+            examenField.style.display = 'none';
+            medicamentField.style.display = 'block';
+            // Réinitialiser le champ examen
+            document.querySelector('select[name="examen_id"]').value = '';
+        } else {
+            examenField.style.display = 'block';
+            medicamentField.style.display = 'none';
+            // Réinitialiser le champ médicament
+            document.querySelector('select[name="medicament_id"]').value = '';
+        }
+    });
+
+    // Fermer le modal en cliquant à l'extérieur
+    document.getElementById('paiement-modal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.add('hidden');
+        }
+    });
+
+    // Empêcher la sélection manuelle de "Terminé"
+    function handleStatutChange(select) {
+        if (select.value === 'terminé') {
+            alert('Vous devez payer la facture pour terminer l\'hospitalisation.');
+            select.value = 'en cours';
+            return false;
+        }
+        document.getElementById('statut-form').submit();
+    }
+</script>
+@endpush
+@endsection

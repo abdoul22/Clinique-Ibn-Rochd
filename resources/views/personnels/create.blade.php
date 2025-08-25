@@ -58,3 +58,22 @@
     </form>
 </div>
 @endsection
+
+            <label class="block font-semibold">Téléphone :</label>
+            <input type="text" name="telephone" value="{{ old('telephone') }}" class="form-input">
+        </div>
+
+        <div>
+            <label class="block font-semibold">Adresse :</label>
+            <input type="text" name="adresse" value="{{ old('adresse') }}" class="form-input">
+        </div>
+
+        <div class="text-right">
+            <button type="submit" id="submitBtn" class="form-button"
+                onclick="this.disabled=true; this.innerHTML='<span class=\'inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2\'></span>Ajout en cours...'; this.form.submit();">
+                Enregistrer
+            </button>
+        </div>
+    </form>
+</div>
+@endsection

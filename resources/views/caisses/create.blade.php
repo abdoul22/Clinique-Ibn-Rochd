@@ -705,3 +705,5 @@ function updateNumeroEntreeSimple() {
 </script>
 
 @endsection
+
+@endsection

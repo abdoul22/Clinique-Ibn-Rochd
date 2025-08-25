@@ -206,3 +206,138 @@
 </body>
 
 </html>
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .print-date {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="title">État de Caisse - Impression</div>
+        @if(isset($periodDescription))
+        <div class="period-info">{{ $periodDescription }}</div>
+        @endif
+        <div class="period-info">Imprimé le {{ \Carbon\Carbon::now()->format('d/m/Y à H:i') }}</div>
+    </div>
+
+    @if(isset($resumeFiltre))
+    <div class="summary">
+        <div class="summary-title">Résumé de la période</div>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-label">Recette Caisse</div>
+                <div class="summary-value">{{ number_format($resumeFiltre['recette'], 0, ',', ' ') }} MRU</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Part Médecin</div>
+                <div class="summary-value">{{ number_format($resumeFiltre['part_medecin'], 0, ',', ' ') }} MRU</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Part Clinique</div>
+                <div class="summary-value">{{ number_format($resumeFiltre['part_cabinet'], 0, ',', ' ') }} MRU</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Dépense</div>
+                <div class="summary-value">{{ number_format($resumeFiltre['depense'], 0, ',', ' ') }} MRU</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Crédit Personnel</div>
+                <div class="summary-value">{{ number_format($resumeFiltre['credit_personnel'], 0, ',', ' ') }} MRU</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Crédit Assurance</div>
+                <div class="summary-value">{{ number_format($resumeFiltre['credit_assurance'], 0, ',', ' ') }} MRU</div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($etatcaisses->count() > 0)
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Désignation</th>
+                <th>Recette</th>
+                <th>Part Médecin</th>
+                <th>Part Clinique</th>
+                <th>Paiement</th>
+                <th>Validation</th>
+                <th>Assurance</th>
+                <th>Médecin</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($etatcaisses as $etat)
+            <tr>
+                <td class="text-center">{{ $etat->id }}</td>
+                <td>{{ $etat->designation }}</td>
+                <td class="text-right">{{ number_format($etat->recette, 0, ',', ' ') }} MRU</td>
+                <td class="text-right">{{ number_format($etat->part_medecin, 0, ',', ' ') }} MRU</td>
+                <td class="text-right">{{ number_format($etat->part_clinique, 0, ',', ' ') }} MRU</td>
+                <td class="text-center">
+                    @php $paiement = optional($etat->caisse)->paiements; @endphp
+                    @if($paiement)
+                    {{ $paiement->type }} ({{ number_format($paiement->montant, 0, ',', ' ') }} MRU)
+                    @else
+                    Assuré
+                    @endif
+                </td>
+                <td class="text-center">
+                    @if($etat->validated)
+                    <span style="color: green;">✓ Validé</span>
+                    @else
+                    <span style="color: red;">✗ Non validé</span>
+                    @endif
+                </td>
+                <td>{{ $etat->assurance?->nom ?? '—' }}</td>
+                <td>{{ $etat->medecin?->nom ?? '—' }}</td>
+                <td class="text-center">{{ $etat->created_at ? $etat->created_at->format('d/m/Y') : '—' }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    @else
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <p>Aucune donnée trouvée pour la période sélectionnée.</p>
+    </div>
+    @endif
+
+    <div class="print-date">
+        Total des entrées: {{ $etatcaisses->count() }}
+    </div>
+</body>
+
+</html>

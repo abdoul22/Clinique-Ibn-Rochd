@@ -32,17 +32,14 @@ class PersonnelController extends Controller
                 'adresse' => $personnel->adresse,
                 'is_approved' => $personnel->is_approved,
                 'credit' => $personnel->credit,
-                'type' => $personnel->user_id ? 'user' : 'personnel', // Détecter si lié à un utilisateur
+                'type' => $personnel->user_id ? 'user' : 'personnel',
                 'user_id' => $personnel->user_id
             ]);
         }
 
         // Ajouter les utilisateurs avec fonction qui n'ont pas encore de personnel créé
         foreach ($usersWithFunction as $user) {
-            // Vérifier si un personnel existe déjà lié à cet utilisateur
             $existingPersonnel = $personnels->where('user_id', $user->id)->first();
-
-            // Si pas trouvé par user_id, vérifier par nom (compatibilité)
             if (!$existingPersonnel) {
                 $existingPersonnel = $personnels->where('nom', $user->name)->first();
             }
@@ -52,24 +49,22 @@ class PersonnelController extends Controller
                     'id' => 'user_' . $user->id,
                     'nom' => $user->name,
                     'fonction' => $user->fonction,
-                    'salaire' => 0, // Par défaut, à modifier manuellement
-                    'telephone' => null, // À remplir manuellement
-                    'adresse' => null, // À remplir manuellement
+                    'salaire' => 0,
+                    'telephone' => null,
+                    'adresse' => null,
                     'is_approved' => $user->is_approved,
-                    'credit' => 0, // Pas de crédit par défaut
+                    'credit' => 0,
                     'type' => 'user',
                     'user_id' => $user->id
                 ]);
             }
         }
 
-        // Paginer manuellement
         $perPage = 10;
         $currentPage = request()->get('page', 1);
         $offset = ($currentPage - 1) * $perPage;
         $paginatedPersonnel = $allPersonnel->slice($offset, $perPage);
 
-        // Créer un objet de pagination personnalisé
         $personnels = new \Illuminate\Pagination\LengthAwarePaginator(
             $paginatedPersonnel,
             $allPersonnel->count(),
@@ -96,9 +91,8 @@ class PersonnelController extends Controller
             'adresse' => 'nullable',
         ]);
 
-        // Le personnel créé manuellement est automatiquement approuvé
         $data = $request->all();
-        $data['is_approved'] = true; // Personnel créé manuellement = automatiquement approuvé
+        $data['is_approved'] = true;
 
         Personnel::create($data);
         return redirect()->route('personnels.index')->with('success', 'Personnel ajouté et approuvé automatiquement.');
@@ -106,12 +100,10 @@ class PersonnelController extends Controller
 
     public function show(Personnel $personnel, $id)
     {
-        // Gestion des entrées de type 'user_X'
         if (str_starts_with($id, 'user_')) {
             $userId = str_replace('user_', '', $id);
             $user = \App\Models\User::findOrFail($userId);
 
-            // Rediriger vers la gestion des utilisateurs pour les entrées user
             return redirect()->route('superadmin.admins.show', $userId)
                 ->with('info', 'Cette entrée est gérée depuis le module utilisateurs.');
         }
@@ -124,19 +116,15 @@ class PersonnelController extends Controller
 
     public function edit(Personnel $personnel, $id)
     {
-        // Gestion des entrées de type 'user_X'
         if (str_starts_with($id, 'user_')) {
             $userId = str_replace('user_', '', $id);
             $user = \App\Models\User::findOrFail($userId);
 
-            // Rediriger vers la gestion des utilisateurs pour les entrées user
             return redirect()->route('superadmin.admins.edit', $userId)
                 ->with('info', 'Cette entrée est gérée depuis le module utilisateurs.');
         }
 
         $personnel = Personnel::findOrFail($id);
-
-        // Permettre l'édition partielle des personnels liés aux utilisateurs
         $isLinkedToUser = (bool) $personnel->user_id;
 
         return view('personnels.edit', compact('personnel', 'isLinkedToUser'));
@@ -144,7 +132,6 @@ class PersonnelController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Gestion des entrées de type 'user' - ne devrait pas arriver grâce aux redirections
         if (str_starts_with($id, 'user_')) {
             return redirect()->route('personnels.index')
                 ->with('error', 'Les entrées gérées par les utilisateurs ne peuvent pas être modifiées depuis ce module.');
@@ -154,14 +141,12 @@ class PersonnelController extends Controller
         $isLinkedToUser = (bool) $personnel->user_id;
 
         if ($isLinkedToUser) {
-            // Édition partielle pour personnel lié à un utilisateur
             $request->validate([
                 'salaire' => 'required|numeric',
                 'telephone' => 'nullable',
                 'adresse' => 'nullable',
             ]);
 
-            // Mettre à jour uniquement les champs autorisés
             $personnel->update([
                 'salaire' => $request->salaire,
                 'telephone' => $request->telephone,
@@ -171,7 +156,6 @@ class PersonnelController extends Controller
             return redirect()->route('personnels.show', $personnel)
                 ->with('success', 'Informations personnel mises à jour (salaire, téléphone, adresse).');
         } else {
-            // Édition complète pour personnel normal
             $request->validate([
                 'nom' => 'required',
                 'fonction' => 'required',
@@ -182,11 +166,8 @@ class PersonnelController extends Controller
             ]);
 
             $data = $request->all();
-
-            // Gérer le statut d'approbation
             $data['is_approved'] = $request->has('is_approved');
 
-            // Si le personnel est approuvé et qu'il a une fonction, synchroniser avec l'utilisateur
             if ($data['is_approved'] && $data['fonction']) {
                 $this->syncWithUser($personnel, $data);
             }
@@ -200,7 +181,6 @@ class PersonnelController extends Controller
 
     public function destroy(Personnel $personnel, $id)
     {
-        // Gestion des entrées de type 'user'
         if (str_starts_with($id, 'user_')) {
             return redirect()->route('personnels.index')
                 ->with('error', 'Les entrées gérées par les utilisateurs ne peuvent pas être supprimées depuis ce module. Supprimez l\'utilisateur depuis le module utilisateurs.');
@@ -211,22 +191,15 @@ class PersonnelController extends Controller
         return redirect()->route('personnels.index')->with('success', 'Personnel supprimé.');
     }
 
-    /**
-     * Synchroniser le personnel avec un utilisateur existant
-     */
     private function syncWithUser(Personnel $personnel, array $data)
     {
-        // Chercher un utilisateur avec le même nom
         $user = \App\Models\User::where('name', $personnel->nom)->first();
 
         if ($user) {
-            // Mettre à jour l'utilisateur avec la fonction et le statut d'approbation
             $user->update([
                 'fonction' => $data['fonction'],
                 'is_approved' => $data['is_approved']
             ]);
         }
-        // Note: La création automatique d'utilisateurs admin depuis le module personnel est désactivée.
-        // Les utilisateurs admin doivent créer leur compte via /register et être approuvés par le superadmin.
     }
 }
