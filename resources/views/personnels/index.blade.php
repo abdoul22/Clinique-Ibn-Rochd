@@ -165,16 +165,3 @@
     </div>
 </div>
 @endsection
-
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    <div class="mt-4">
-        {{ $personnels->links() }}
-    </div>
-</div>
-@endsection
