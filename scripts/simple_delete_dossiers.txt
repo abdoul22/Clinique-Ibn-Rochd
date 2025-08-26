@@ -1,0 +1,22 @@
+// =================================================================
+// SCRIPT TINKER SIMPLE - Suppression dossiers médicaux
+// Copiez-collez directement dans: php artisan tinker
+// ATTENTION: Sauvegardez votre BDD avant d'exécuter !
+// =================================================================
+
+// Voir combien de dossiers avant suppression
+echo "Dossiers avant: " . \App\Models\DossierMedical::count();
+
+// OPTION 1: Suppression SÉCURISÉE (sans relations)
+$deleted = \App\Models\DossierMedical::whereDoesntHave('caisses')->whereDoesntHave('hospitalisations')->whereDoesntHave('rendezVous')->delete();
+echo "\nSupprimés en sécurité: " . $deleted;
+
+// OPTION 2: Suppression TOTALE (décommentez si nécessaire)
+// \App\Models\DossierMedical::truncate();
+// echo "\nTOUS les dossiers supprimés !";
+
+// Vérification finale
+echo "\nDossiers après: " . \App\Models\DossierMedical::count();
+echo "\nPatients préservés: " . \App\Models\GestionPatient::count();
+echo "\nFini ✅";
+

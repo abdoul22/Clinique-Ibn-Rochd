@@ -1,0 +1,43 @@
+// =================================================================
+// SCRIPT TINKER - Suppression TOTALE des crédits
+// Copiez-collez directement dans: php artisan tinker
+// ATTENTION: Supprime TOUS les crédits et leurs dépenses liées !
+// =================================================================
+
+echo "=== AVANT SUPPRESSION ===";
+echo "\nCrédits: " . \App\Models\Credit::count();
+echo "\nDépenses liées aux crédits: " . \App\Models\Depense::whereNotNull('credit_id')->count();
+
+// Récupérer les statistiques par type
+$creditsPersonnel = \App\Models\Credit::where('source_type', 'App\Models\Personnel')->count();
+$creditsAssurance = \App\Models\Credit::where('source_type', 'App\Models\Assurance')->count();
+
+echo "\nCrédits personnel: " . $creditsPersonnel;
+echo "\nCrédits assurance: " . $creditsAssurance;
+
+// Étape 1: Supprimer toutes les dépenses liées aux crédits
+$depensesDeleted = \App\Models\Depense::whereNotNull('credit_id')->count();
+\App\Models\Depense::whereNotNull('credit_id')->delete();
+echo "\n🗑️ Dépenses liées supprimées: " . $depensesDeleted;
+
+// Étape 2: Supprimer tous les crédits
+$creditsDeleted = \App\Models\Credit::count();
+\App\Models\Credit::query()->delete();
+echo "\n🗑️ Crédits supprimés: " . $creditsDeleted;
+
+echo "\n=== APRÈS SUPPRESSION ===";
+echo "\nCrédits: " . \App\Models\Credit::count();
+echo "\nDépenses liées aux crédits: " . \App\Models\Depense::whereNotNull('credit_id')->count();
+
+// Vérifier que les autres modules sont préservés
+echo "\n=== MODULES PRÉSERVÉS ===";
+echo "\nPersonnels: " . \App\Models\Personnel::count();
+echo "\nAssurances: " . \App\Models\Assurance::count();
+echo "\nPatients: " . \App\Models\GestionPatient::count();
+echo "\nAutres dépenses: " . \App\Models\Depense::whereNull('credit_id')->count();
+
+echo "\n✅ SUPPRESSION TERMINÉE !";
+
+// Note: Les crédits des personnels et assurances seront recalculés automatiquement
+echo "\n📝 Note: Les montants de crédit seront recalculés au prochain accès aux profils";
+

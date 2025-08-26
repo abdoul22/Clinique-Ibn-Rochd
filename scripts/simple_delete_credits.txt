@@ -1,0 +1,18 @@
+// Script simple - Suppression TOTALE des crédits
+// À copier-coller dans: php artisan tinker
+
+echo "Crédits avant: " . \App\Models\Credit::count();
+echo "\nDépenses liées avant: " . \App\Models\Depense::whereNotNull('credit_id')->count();
+
+// Supprimer d'abord les dépenses liées aux crédits
+\App\Models\Depense::whereNotNull('credit_id')->delete();
+
+// Puis supprimer tous les crédits
+\App\Models\Credit::query()->delete();
+
+echo "\nCrédits après: " . \App\Models\Credit::count();
+echo "\nDépenses liées après: " . \App\Models\Depense::whereNotNull('credit_id')->count();
+echo "\nPersonnels préservés: " . \App\Models\Personnel::count();
+echo "\nAssurances préservées: " . \App\Models\Assurance::count();
+echo "\nFini ✅";
+

@@ -1,0 +1,18 @@
+// Script simple - Suppression TOTALE des hospitalisations
+// À copier-coller dans: php artisan tinker
+
+echo "Hospitalisations avant: " . \App\Models\Hospitalisation::count();
+echo "\nCharges avant: " . \App\Models\HospitalisationCharge::count();
+
+// Supprimer tout
+\App\Models\HospitalisationCharge::truncate();
+\App\Models\HospitalizationRoomStay::truncate();
+\App\Models\Lit::where('statut', 'occupé')->update(['statut' => 'libre']);
+\App\Models\Hospitalisation::truncate();
+
+echo "\nHospitalisations après: " . \App\Models\Hospitalisation::count();
+echo "\nCharges après: " . \App\Models\HospitalisationCharge::count();
+echo "\nLits libérés ✅";
+echo "\nPatients préservés: " . \App\Models\GestionPatient::count();
+echo "\nFini ✅";
+

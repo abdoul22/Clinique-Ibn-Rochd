@@ -1,0 +1,50 @@
+// =================================================================
+// SCRIPT TINKER - Suppression TOTALE des hospitalisations
+// Copiez-collez directement dans: php artisan tinker
+// ATTENTION: Supprime TOUTES les hospitalisations et leurs charges !
+// =================================================================
+
+// Voir statistiques avant suppression
+echo "=== AVANT SUPPRESSION ===\n";
+echo "Hospitalisations: " . \App\Models\Hospitalisation::count() . "\n";
+echo "Charges hospitalières: " . \App\Models\HospitalisationCharge::count() . "\n";
+echo "Séjours en chambre: " . \App\Models\HospitalizationRoomStay::count() . "\n";
+echo "Lits occupés: " . \App\Models\Lit::where('statut', 'occupé')->count() . "\n";
+
+// Étape 1: Supprimer les charges d'hospitalisation
+$chargesDeleted = \App\Models\HospitalisationCharge::count();
+\App\Models\HospitalisationCharge::truncate();
+echo "\n🗑️ Charges supprimées: " . $chargesDeleted . "\n";
+
+// Étape 2: Supprimer les séjours en chambre
+$roomStaysDeleted = \App\Models\HospitalizationRoomStay::count();
+\App\Models\HospitalizationRoomStay::truncate();
+echo "🗑️ Séjours supprimés: " . $roomStaysDeleted . "\n";
+
+// Étape 3: Libérer tous les lits occupés
+$litsLiberes = \App\Models\Lit::where('statut', 'occupé')->update(['statut' => 'libre']);
+echo "🛏️ Lits libérés: " . $litsLiberes . "\n";
+
+// Étape 4: Supprimer toutes les hospitalisations
+$hospitalisationsDeleted = \App\Models\Hospitalisation::count();
+\App\Models\Hospitalisation::truncate();
+echo "🗑️ Hospitalisations supprimées: " . $hospitalisationsDeleted . "\n";
+
+// Statistiques finales
+echo "\n=== APRÈS SUPPRESSION ===\n";
+echo "Hospitalisations: " . \App\Models\Hospitalisation::count() . "\n";
+echo "Charges hospitalières: " . \App\Models\HospitalisationCharge::count() . "\n";
+echo "Séjours en chambre: " . \App\Models\HospitalizationRoomStay::count() . "\n";
+echo "Lits occupés: " . \App\Models\Lit::where('statut', 'occupé')->count() . "\n";
+
+// Vérifier que les autres modules sont préservés
+echo "\n=== MODULES PRÉSERVÉS ===\n";
+echo "Patients: " . \App\Models\GestionPatient::count() . "\n";
+echo "Médecins: " . \App\Models\Medecin::count() . "\n";
+echo "Services: " . \App\Models\Service::count() . "\n";
+echo "Chambres: " . \App\Models\Chambre::count() . "\n";
+echo "Lits: " . \App\Models\Lit::count() . "\n";
+echo "Factures: " . \App\Models\Caisse::count() . "\n";
+
+echo "\n✅ SUPPRESSION TERMINÉE !\n";
+
