@@ -171,7 +171,11 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {{ $hospitalisation->medecin->nom ?? 'N/A' }}
+                            @if($hospitalisation->medecin)
+                            {{ $hospitalisation->medecin->nom_complet }} {{ $hospitalisation->medecin->prenom }}
+                            @else
+                            N/A
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span

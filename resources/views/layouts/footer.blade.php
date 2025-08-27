@@ -13,10 +13,14 @@
             @auth
             @if(Auth::user()->role?->name === 'superadmin')
             <div class="flex space-x-6 text-sm">
-                <a href="#" class="hover:text-blue-600 dark:hover:text-blue-300 transition">Accueil</a>
-                <a href="#" class="hover:text-blue-600 dark:hover:text-blue-300 transition">À propos</a>
-                <a href="#" class="hover:text-blue-600 dark:hover:text-blue-300 transition">Contact</a>
-                <a href="#" class="hover:text-blue-600 dark:hover:text-blue-300 transition">Mentions légales</a>
+                <a href="{{ route('etatcaisse.index') }}"
+                    class="hover:text-blue-600 dark:hover:text-blue-300 transition">État de Caisse</a>
+                <a href="{{ route('recap-services.index') }}"
+                    class="hover:text-blue-600 dark:hover:text-blue-300 transition">Récap. Services</a>
+                <a href="{{ route('recap-operateurs.index') }}"
+                    class="hover:text-blue-600 dark:hover:text-blue-300 transition">Récap. Opérateurs</a>
+                <a href="{{ route('credits.index') }}"
+                    class="hover:text-blue-600 dark:hover:text-blue-300 transition">Suivi du Crédit</a>
             </div>
             @endif
             @endauth
