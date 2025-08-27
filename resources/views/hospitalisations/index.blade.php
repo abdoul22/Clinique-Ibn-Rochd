@@ -172,7 +172,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             @if($hospitalisation->medecin)
-                            {{ $hospitalisation->medecin->nom_complet }} {{ $hospitalisation->medecin->prenom }}
+                            {{ $hospitalisation->medecin->nom_complet_avec_prenom }}
                             @else
                             N/A
                             @endif

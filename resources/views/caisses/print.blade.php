@@ -194,8 +194,13 @@
                     }}</span></div>
             <div><span class="label">Prescripteur</span> : <span class="value">{{ $caisse->prescripteur->nom ??
                     'Externe' }}</span></div>
-            <div><span class="label">Examinateur</span> : <span class="value">{{ $caisse->medecin->nom ?? 'N/A'
-                    }}</span></div>
+            <div><span class="label">Examinateur</span> : <span class="value">
+                    @if($caisse->medecin)
+                    {{ $caisse->medecin->nom_complet_avec_specialite }}
+                    @else
+                    N/A
+                    @endif
+                </span></div>
             <div><span class="label">Date de l'examen</span> :
                 <span class="value">
                     {{ $caisse->date_examen ? \Carbon\Carbon::parse($caisse->date_examen)->format('d/m/Y') . ' ' .

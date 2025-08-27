@@ -213,7 +213,7 @@
                                 </div>
                                 <div class="ml-3 min-w-0 flex-1">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                        {{ $medecin->nom_complet }} {{ $medecin->prenom }}
+                                        {{ $medecin->nom_complet_avec_prenom }}
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400 lg:hidden">
                                         {{ $medecin->specialite }}
@@ -331,7 +331,8 @@
 
 @endsection
 
-@push('styles')
+@push('s
+tyles')
 <style>
     /* Optimisation pour éviter le scroll horizontal */
     .table-responsive {

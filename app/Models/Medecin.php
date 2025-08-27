@@ -56,6 +56,46 @@ class Medecin extends Model
         return $fonctions[$this->fonction] ?? 'Docteur';
     }
 
+    /**
+     * Accesseur pour obtenir le nom complet avec prénom en premier
+     */
+    public function getNomCompletAvecPrenomAttribute()
+    {
+        $fonctions = [
+            'Pr' => 'Pr.',
+            'Dr' => 'Dr.',
+            'Tss' => 'Tss.',
+            'SGF' => 'SGF.',
+            'IDE' => 'IDE.'
+        ];
+
+        $prefix = $fonctions[$this->fonction] ?? 'Dr.';
+        return $prefix . ' ' . $this->prenom . ' ' . $this->nom;
+    }
+
+    /**
+     * Accesseur pour obtenir le nom complet avec spécialité pour les selects
+     */
+    public function getNomCompletAvecSpecialiteAttribute()
+    {
+        $fonctions = [
+            'Pr' => 'Pr.',
+            'Dr' => 'Dr.',
+            'Tss' => 'Tss.',
+            'SGF' => 'SGF.',
+            'IDE' => 'IDE.'
+        ];
+
+        $prefix = $fonctions[$this->fonction] ?? 'Dr.';
+        $nomComplet = $prefix . ' ' . $this->prenom . ' ' . $this->nom;
+
+        if ($this->specialite) {
+            return $nomComplet . ' - ' . $this->specialite;
+        }
+
+        return $nomComplet;
+    }
+
     public function recapitulatifOperateurs()
     {
         return $this->hasMany(RecapitulatifOperateur::class);

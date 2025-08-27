@@ -79,7 +79,7 @@
                                 @foreach($medecinsParFonction[$fonction] as $medecin)
                                 <option value="{{ $medecin->id }}" {{ old('medecin_id', $rendezVous->medecin_id) ==
                                     $medecin->id ? 'selected' : '' }}>
-                                    {{ $medecin->nom_complet }} {{ $medecin->prenom }} - {{ $medecin->specialite }}
+                                    {{ $medecin->nom_complet_avec_specialite }}
                                 </option>
                                 @endforeach
                             </optgroup>

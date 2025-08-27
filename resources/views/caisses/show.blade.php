@@ -105,12 +105,20 @@
             <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <h3 class="text-lg font-semibold mb-3 border-b pb-2 text-gray-900 dark:text-white">Personnel médical
                 </h3>
-                <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Médecin:</span> {{
-                    $caisse->medecin->nom ?? 'N/A' }}</p>
-                @if($caisse->prescripteur)
-                <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Prescripteur:</span> {{
-                    $caisse->prescripteur->nom }}</p>
-                @endif
+                <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Médecin:</span>
+                    @if($caisse->medecin)
+                    {{ $caisse->medecin->nom_complet_avec_prenom }}
+                    @else
+                    N/A
+                    @endif
+                </p>
+                <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Prescripteur:</span>
+                    @if($caisse->prescripteur)
+                    {{ $caisse->prescripteur->nom }}
+                    @else
+                    Externe
+                    @endif
+                </p>
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Caissier:</span> {{
                     $caisse->nom_caissier }}</p>
             </div>

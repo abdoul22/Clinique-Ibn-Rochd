@@ -17,8 +17,7 @@
                         <i class="fas fa-user-md mr-3"></i>Détails du Médecin
                     </h1>
                 </div>
-                <p class="text-blue-100 text-lg">Informations complètes du Dr. {{ $medecin->prenom }} {{ $medecin->nom
-                    }}</p>
+                <p class="text-blue-100 text-lg">Informations complètes de {{ $medecin->nom_complet_avec_prenom }}</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-3">
                 <a href="{{ route(auth()->user()->role->name . '.medecins.edit', $medecin->id) }}"
@@ -50,7 +49,7 @@
                             </div>
                         </div>
                         <div class="ml-4">
-                            <h2 class="text-2xl font-bold text-white">Dr. {{ $medecin->prenom }} {{ $medecin->nom }}
+                            <h2 class="text-2xl font-bold text-white">{{ $medecin->nom_complet_avec_prenom }}
                             </h2>
                             <p class="text-blue-100">{{ $medecin->specialite }}</p>
                         </div>

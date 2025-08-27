@@ -209,7 +209,11 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                            {{ $examen->medecin->prenom ?? '' }} {{ $examen->medecin->nom ?? 'N/A' }}
+                            @if($examen->medecin)
+                            {{ $examen->medecin->nom_complet_avec_prenom }}
+                            @else
+                            N/A
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
                             {{ $examen->prescripteur->nom ?? 'N/A' }} {{ $examen->prescripteur->prenom ?? '' }}
@@ -291,7 +295,11 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                            {{ $rdv->medecin->prenom ?? '' }} {{ $rdv->medecin->nom ?? 'N/A' }}
+                            @if($rdv->medecin)
+                            {{ $rdv->medecin->nom_complet_avec_prenom }}
+                            @else
+                            N/A
+                            @endif
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">
                             {{ Str::limit($rdv->motif, 50) }}

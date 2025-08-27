@@ -179,7 +179,7 @@
         @if($etat->medecin)
         <a href="{{ route('medecins.stats', $etat->medecin->id) }}"
             class="text-blue-600 dark:text-blue-400 hover:underline text-sm">
-            {{ $etat->medecin->nom }}
+            {{ $etat->medecin->nom_complet_avec_prenom }}
         </a>
         @else
         —

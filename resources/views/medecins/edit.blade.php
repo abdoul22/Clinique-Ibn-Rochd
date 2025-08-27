@@ -17,8 +17,8 @@
                         <i class="fas fa-edit mr-3"></i>Modifier le Médecin
                     </h1>
                 </div>
-                <p class="text-blue-100 text-lg">Modifiez les informations du Dr. {{ $medecin->prenom }} {{
-                    $medecin->nom }}</p>
+                <p class="text-blue-100 text-lg">Modifiez les informations de {{ $medecin->nom_complet_avec_prenom }}
+                </p>
             </div>
             <div class="flex flex-col sm:flex-row gap-3">
                 <a href="{{ route(auth()->user()->role->name . '.medecins.show', $medecin->id) }}"

@@ -6,8 +6,8 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Statistiques du médecin</h1>
-            <p class="text-xl font-extrabold text-indigo-600 dark:text-indigo-300 mt-2">Dr. {{ $medecin->prenom }} {{
-                $medecin->nom }}</p>
+            <p class="text-xl font-extrabold text-indigo-600 dark:text-indigo-300 mt-2">{{
+                $medecin->nom_complet_avec_prenom }}</p>
         </div>
 
         <!-- Filtre Date -->
@@ -130,7 +130,7 @@
             partsBg: isDark ? 'rgba(52, 211, 153, 0.1)' : 'rgba(16, 185, 129, 0.1)',
         };
     }
-    
+
     function renderChart() {
         const colors = getChartColors();
         new Chart(ctx, {
@@ -169,8 +169,8 @@
                 },
                 plugins: {
                     legend: {
-                        labels: { 
-                            font: { size: 12 }, 
+                        labels: {
+                            font: { size: 12 },
                             color: colors.text,
                             usePointStyle: true,
                             padding: 20
@@ -195,7 +195,7 @@
                             color: colors.text
                         },
                         grid: { color: colors.grid },
-                        ticks: { 
+                        ticks: {
                             color: colors.text,
                             maxRotation: 45,
                             minRotation: 45
@@ -216,15 +216,15 @@
             }
         });
     }
-    
+
     renderChart();
-    
+
     // Re-render on dark mode toggle
     window.addEventListener('darkmode:toggle', () => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         renderChart();
     });
-    
+
     // Re-render on window resize for better mobile responsiveness
     window.addEventListener('resize', () => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
