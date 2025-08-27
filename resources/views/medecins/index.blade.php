@@ -170,110 +170,114 @@
     @if($medecins->count() > 0)
     <div
         class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
+        <div class="overflow-x-auto table-responsive">
+            <table class="w-full medecins-table">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
                         <th
-                            class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            class="px-3 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">
                             ID</th>
                         <th
-                            class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            class="px-3 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-0">
                             Médecin</th>
                         <th
-                            class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            class="px-3 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">
                             Fonction</th>
                         <th
-                            class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            class="px-3 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-40 hidden lg:table-cell">
                             Spécialité</th>
                         <th
-                            class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            class="px-3 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-48 hidden xl:table-cell">
                             Contact</th>
                         <th
-                            class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            class="px-3 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-24">
                             Statut</th>
                         <th
-                            class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            class="px-3 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">
                             Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     @foreach($medecins as $medecin)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                        <td class="px-3 py-3 text-sm font-medium text-gray-900 dark:text-white">
                             #{{ $medecin->id }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10">
+                        <td class="px-3 py-3 medecin-info">
+                            <div class="flex items-center min-w-0">
+                                <div class="flex-shrink-0 h-8 w-8">
                                     <div
-                                        class="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                                        <i class="fas fa-user-md text-green-600 dark:text-green-400"></i>
+                                        class="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                                        <i class="fas fa-user-md text-green-600 dark:text-green-400 text-xs"></i>
                                     </div>
                                 </div>
-                                <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                <div class="ml-3 min-w-0 flex-1">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
                                         {{ $medecin->nom_complet }} {{ $medecin->prenom }}
                                     </div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400">
-                                        ID: {{ $medecin->id }}
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 lg:hidden">
+                                        {{ $medecin->specialite }}
+                                        @if($medecin->telephone)
+                                        • {{ $medecin->telephone }}
+                                        @endif
                                     </div>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-3 py-3">
                             <div class="flex items-center">
-                                <i class="fas fa-user-tie text-blue-400 mr-2"></i>
+                                <i class="fas fa-user-tie text-blue-400 mr-1 text-xs"></i>
                                 <span class="text-sm text-gray-900 dark:text-white">{{ $medecin->fonction_complet
                                     }}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <i class="fas fa-stethoscope text-gray-400 mr-2"></i>
-                                <span class="text-sm text-gray-900 dark:text-white">{{ $medecin->specialite }}</span>
+                        <td class="px-3 py-3 hidden lg:table-cell">
+                            <div class="text-sm text-gray-900 dark:text-white truncate"
+                                title="{{ $medecin->specialite }}">
+                                {{ $medecin->specialite }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="space-y-1">
+                        <td class="px-3 py-3 hidden xl:table-cell">
+                            <div class="space-y-1 text-xs">
                                 @if($medecin->telephone)
-                                <div class="flex items-center text-sm text-gray-900 dark:text-white">
-                                    <i class="fas fa-phone text-gray-400 mr-2"></i>
-                                    {{ $medecin->telephone }}
+                                <div class="flex items-center text-gray-900 dark:text-white">
+                                    <i class="fas fa-phone text-gray-400 mr-1"></i>
+                                    <span class="truncate">{{ $medecin->telephone }}</span>
                                 </div>
                                 @endif
                                 @if($medecin->email)
-                                <div class="flex items-center text-sm text-gray-900 dark:text-white">
-                                    <i class="fas fa-envelope text-gray-400 mr-2"></i>
-                                    {{ $medecin->email }}
+                                <div class="flex items-center text-gray-900 dark:text-white">
+                                    <i class="fas fa-envelope text-gray-400 mr-1"></i>
+                                    <span class="email-truncate" title="{{ $medecin->email }}">{{ $medecin->email
+                                        }}</span>
                                 </div>
                                 @endif
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-3 py-3">
                             <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $medecin->statut == 'actif' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $medecin->statut == 'actif' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
                                 <i
                                     class="fas {{ $medecin->statut == 'actif' ? 'fa-check-circle' : 'fa-times-circle' }} mr-1"></i>
                                 {{ ucfirst($medecin->statut ?? 'actif') }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex items-center space-x-2">
+                        <td class="px-3 py-3 text-sm font-medium actions-column">
+                            <div class="flex items-center space-x-1">
                                 <a href="{{ route(auth()->user()->role->name . '.medecins.show', $medecin->id) }}"
                                     class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1 transition-colors duration-200"
-                                    title="Voir les détails">
-                                    <i class="fas fa-eye"></i>
+                                    title="Voir">
+                                    <i class="fas fa-eye text-xs"></i>
                                 </a>
                                 <a href="{{ route(auth()->user()->role->name . '.medecins.edit', $medecin->id) }}"
                                     class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1 transition-colors duration-200"
                                     title="Modifier">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="fas fa-edit text-xs"></i>
                                 </a>
                                 <a href="{{ route('medecins.stats', $medecin->id) }}"
                                     class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 p-1 transition-colors duration-200"
-                                    title="Statistiques">
-                                    <i class="fas fa-chart-bar"></i>
+                                    title="Stats">
+                                    <i class="fas fa-chart-bar text-xs"></i>
                                 </a>
                                 <form
                                     action="{{ route(auth()->user()->role->name . '.medecins.destroy', $medecin->id) }}"
@@ -285,7 +289,7 @@
                                     <button type="submit"
                                         class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1 transition-colors duration-200"
                                         title="Supprimer">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash text-xs"></i>
                                     </button>
                                 </form>
                             </div>
@@ -326,6 +330,47 @@
 </div>
 
 @endsection
+
+@push('styles')
+<style>
+    /* Optimisation pour éviter le scroll horizontal */
+    .table-responsive {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    /* Limiter la largeur des emails trop longs */
+    .email-truncate {
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Optimiser l'affichage des actions sur mobile */
+    @media (max-width: 768px) {
+        .actions-column {
+            min-width: 100px;
+        }
+
+        .medecin-info {
+            min-width: 200px;
+        }
+    }
+
+    /* Optimisation pour la production - éviter les largeurs fixes trop grandes */
+    .medecins-table {
+        table-layout: auto;
+        width: 100%;
+    }
+
+    .medecins-table th,
+    .medecins-table td {
+        word-wrap: break-word;
+        max-width: 0;
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>
