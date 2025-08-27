@@ -1,0 +1,28 @@
+# Script Tinker pour Suppression des Caisses
+
+# 1. Lancer Tinker
+php artisan tinker
+
+# 2. Copier-coller ces commandes :
+echo "Caisses avant: " . \App\Models\Caisse::count();
+
+# Nettoyer les références dans les autres tables
+# Supprimer les modes de paiement liés aux caisses
+\App\Models\ModePaiement::whereNotNull('caisse_id')->delete();
+
+# Réinitialiser les états de caisse qui référencent des caisses
+\App\Models\EtatCaisse::whereNotNull('caisse_id')->update(['caisse_id' => null]);
+
+# Réinitialiser les charges d'hospitalisation qui référencent des caisses
+\App\Models\HospitalisationCharge::whereNotNull('caisse_id')->update(['caisse_id' => null]);
+
+# Supprimer toutes les caisses
+\App\Models\Caisse::query()->delete();
+
+echo "\nCaisses après: " . \App\Models\Caisse::count();
+echo "\nModes de paiement liés supprimés";
+echo "\nÉtats de caisse préservés: " . \App\Models\EtatCaisse::count();
+echo "\nPatients préservés: " . \App\Models\GestionPatient::count();
+echo "\nMédecins préservés: " . \App\Models\Medecin::count();
+echo "\nExamens préservés: " . \App\Models\Examen::count();
+echo "\nFini ✅";

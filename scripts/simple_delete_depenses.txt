@@ -1,0 +1,7 @@
+echo "Dépenses avant: " . \App\Models\Depense::count();
+\App\Models\Credit::whereHas('depense')->update(['status' => 'non payé', 'montant_paye' => 0]);
+\App\Models\Depense::query()->delete();
+echo "\nDépenses après: " . \App\Models\Depense::count();
+echo "\nCrédits préservés: " . \App\Models\Credit::count();
+echo "\nÉtats de caisse préservés: " . \App\Models\EtatCaisse::count();
+echo "\nFini ✅";

@@ -1,0 +1,6 @@
+echo "Modes de paiement avant: " . \App\Models\ModePaiement::count();
+\App\Models\Depense::whereNotNull('mode_paiement_id')->update(['mode_paiement_id' => null]);
+\App\Models\Credit::whereNotNull('mode_paiement_id')->update(['mode_paiement_id' => null]);
+\App\Models\ModePaiement::query()->delete();
+echo "\nModes de paiement après: " . \App\Models\ModePaiement::count();
+echo "\nFini ✅";

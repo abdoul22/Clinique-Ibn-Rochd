@@ -668,7 +668,8 @@ function openPaymentModal(etatId, partMedecin) {
     document.getElementById('partMedecinAmount').textContent = new Intl.NumberFormat('fr-FR').format(partMedecin) + ' MRU';
 
     // Mettre à jour l'action du formulaire
-    document.getElementById('paymentForm').action = `/etatcaisse/${etatId}/valider`;
+    const baseUrl = '{{ route("etatcaisse.valider", ":id") }}';
+    document.getElementById('paymentForm').action = baseUrl.replace(':id', etatId);
 
     // Afficher la modale avec animation
     const modal = document.getElementById('paymentModal');

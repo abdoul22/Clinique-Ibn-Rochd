@@ -1,0 +1,21 @@
+# Script Tinker pour Suppression des États de Caisse
+
+# 1. Lancer Tinker
+php artisan tinker
+
+# 2. Copier-coller ces commandes :
+echo "États de caisse avant: " . \App\Models\EtatCaisse::count();
+
+# Nettoyer les références dans les autres tables
+# Réinitialiser les dépenses qui référencent des états de caisse
+\App\Models\Depense::whereNotNull('etat_caisse_id')->update(['etat_caisse_id' => null]);
+
+# Supprimer tous les états de caisse
+\App\Models\EtatCaisse::query()->delete();
+
+echo "\nÉtats de caisse après: " . \App\Models\EtatCaisse::count();
+echo "\nDépenses préservées: " . \App\Models\Depense::count();
+echo "\nPersonnels préservés: " . \App\Models\Personnel::count();
+echo "\nAssurances préservées: " . \App\Models\Assurance::count();
+echo "\nMédecins préservés: " . \App\Models\Medecin::count();
+echo "\nFini ✅";

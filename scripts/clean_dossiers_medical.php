@@ -117,4 +117,3 @@ echo "   3. Si des erreurs apparaissent, restaurez la sauvegarde\n";
 echo "   4. Lancez une optimisation de la base de données si nécessaire\n";
 
 echo "\n✨ Script terminé.\n";
-

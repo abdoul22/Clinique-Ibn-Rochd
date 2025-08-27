@@ -1,0 +1,5 @@
+echo "États de caisse avant: " . \App\Models\EtatCaisse::count();
+\App\Models\Depense::whereNotNull('etat_caisse_id')->update(['etat_caisse_id' => null]);
+\App\Models\EtatCaisse::query()->delete();
+echo "\nÉtats de caisse après: " . \App\Models\EtatCaisse::count();
+echo "\nFini ✅";

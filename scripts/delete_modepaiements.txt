@@ -1,0 +1,23 @@
+# Script Tinker pour Suppression des Modes de Paiement
+
+# 1. Lancer Tinker
+php artisan tinker
+
+# 2. Copier-coller ces commandes :
+echo "Modes de paiement avant: " . \App\Models\ModePaiement::count();
+
+# Nettoyer les références dans les autres tables
+# Réinitialiser les dépenses qui référencent des modes de paiement
+\App\Models\Depense::whereNotNull('mode_paiement_id')->update(['mode_paiement_id' => null]);
+
+# Réinitialiser les crédits qui référencent des modes de paiement
+\App\Models\Credit::whereNotNull('mode_paiement_id')->update(['mode_paiement_id' => null]);
+
+# Supprimer tous les modes de paiement
+\App\Models\ModePaiement::query()->delete();
+
+echo "\nModes de paiement après: " . \App\Models\ModePaiement::count();
+echo "\nDépenses préservées: " . \App\Models\Depense::count();
+echo "\nCrédits préservés: " . \App\Models\Credit::count();
+echo "\nCaisses préservées: " . \App\Models\Caisse::count();
+echo "\nFini ✅";
