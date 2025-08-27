@@ -15,14 +15,14 @@
         }
 
         .sheet {
-            width: 148mm;
-            min-height: 210mm;
+            width: 210mm;
+            min-height: 297mm;
             margin: 0 auto;
-            padding: 10mm;
+            padding: 15mm;
             background: #fff;
             color: #000;
             font-family: system-ui, Arial, "Helvetica Neue", sans-serif;
-            line-height: 1.3;
+            line-height: 1.4;
             box-sizing: border-box;
         }
 
@@ -117,8 +117,8 @@
 
         @media print {
             @page {
-                size: A5 portrait;
-                margin: 8mm;
+                size: A4 portrait;
+                margin: 10mm;
             }
 
             body {
@@ -229,10 +229,22 @@
                 @endif
             </tbody>
             <tfoot>
+                @php
+                $couverture = $caisse->couverture ?? 0;
+                $montantAssurance = $caisse->assurance_id ? ($caisse->total * ($couverture / 100)) : 0;
+                $montantPatient = $caisse->total - $montantAssurance;
+                @endphp
                 <tr>
                     <th class="right">Total</th>
-                    <th class="right">{{ number_format($caisse->total, 0) }}</th>
+                    <th class="right">{{ number_format($montantPatient, 0) }}</th>
                 </tr>
+                @if($caisse->assurance && $couverture > 0)
+                <tr>
+                    <td colspan="2" style="font-size: var(--fs-xs); text-align: center; color: #666;">
+                        ({{ $couverture }}% pris en charge par {{ $caisse->assurance->nom }})
+                    </td>
+                </tr>
+                @endif
             </tfoot>
         </table>
 
@@ -244,4 +256,5 @@
 </body>
 
 </html>
+
 </html>

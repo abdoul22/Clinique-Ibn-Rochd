@@ -341,12 +341,13 @@ class CaisseController extends Controller
         $montantPatient = $montantTotal - $montantAssurance;
 
         // Créer l'état de caisse avec la recette côté patient (ce qui entre en caisse immédiatement)
+        // Les parts médecin et clinique restent toujours selon l'examen, peu importe l'assurance
         $etatCaisse = EtatCaisse::create([
             'caisse_id' => $caisse->id,
             'designation' => 'Facture N°' . $caisse->numero_facture,
-            'recette' => $montantPatient,
-            'part_medecin' => $part_medecin,
-            'part_clinique' => $montantPatient, // Part clinique = montant payé par le patient (pas le total)
+            'recette' => $montantPatient, // Seule la recette change selon l'assurance
+            'part_medecin' => $part_medecin, // Part médecin selon l'examen
+            'part_clinique' => $part_cabinet, // Part clinique selon l'examen
             'assurance_id' => $caisse->assurance_id,
             'medecin_id' => $caisse->medecin_id,
         ]);
