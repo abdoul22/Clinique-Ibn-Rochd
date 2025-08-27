@@ -50,7 +50,10 @@ class RendezVousController extends Controller
             ->orderBy('heure_rdv', 'desc')
             ->paginate(15);
 
-        $medecins = Medecin::where('statut', 'actif')->get();
+        $medecins = Medecin::where('statut', 'actif')
+            ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
+            ->orderBy('nom')
+            ->get();
         $patients = GestionPatient::all();
 
         // Données pour le calendrier
@@ -67,7 +70,10 @@ class RendezVousController extends Controller
      */
     public function create()
     {
-        $medecins = Medecin::where('statut', 'actif')->get();
+        $medecins = Medecin::where('statut', 'actif')
+            ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
+            ->orderBy('nom')
+            ->get();
         $patients = GestionPatient::all();
         $motifs = Motif::actifs()->orderBy('nom')->get();
 
@@ -188,7 +194,10 @@ class RendezVousController extends Controller
     public function edit($id)
     {
         $rendezVous = RendezVous::findOrFail($id);
-        $medecins = Medecin::where('statut', 'actif')->get();
+        $medecins = Medecin::where('statut', 'actif')
+            ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
+            ->orderBy('nom')
+            ->get();
         $patients = GestionPatient::all();
         $motifs = Motif::actifs()->orderBy('nom')->get();
 

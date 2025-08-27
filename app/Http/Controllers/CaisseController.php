@@ -103,14 +103,12 @@ class CaisseController extends Controller
     public function create(Request $request)
     {
         $patients = GestionPatient::all();
-        // Récupérer seulement les médecins actifs avec noms complets
+        // Récupérer seulement les médecins actifs organisés par fonction
         $medecins = Medecin::where('statut', 'actif')
-            ->select('id', 'nom', 'prenom', 'specialite')
-            ->get()
-            ->map(function ($medecin) {
-                $medecin->nom_complet = trim($medecin->prenom . ' ' . $medecin->nom);
-                return $medecin;
-            });
+            ->select('id', 'nom', 'fonction', 'prenom', 'specialite')
+            ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
+            ->orderBy('nom')
+            ->get();
         $prescripteurs = Prescripteur::all();
         $services = Service::all();
         // Exclure les examens d'hospitalisation automatiques des listes de sélection

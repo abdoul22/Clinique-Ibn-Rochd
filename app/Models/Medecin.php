@@ -15,12 +15,46 @@ class Medecin extends Model
 
     protected $fillable = [
         'nom',
+        'fonction',
         'prenom',
         'specialite',
         'telephone',
         'email',
         'statut',
     ];
+
+    /**
+     * Accesseur pour obtenir le nom complet avec la fonction
+     */
+    public function getNomCompletAttribute()
+    {
+        $fonctions = [
+            'Pr' => 'Pr.',
+            'Dr' => 'Dr.',
+            'Tss' => 'Tss.',
+            'SGF' => 'SGF.',
+            'IDE' => 'IDE.'
+        ];
+
+        $prefix = $fonctions[$this->fonction] ?? 'Dr.';
+        return $prefix . ' ' . $this->nom;
+    }
+
+    /**
+     * Accesseur pour obtenir le libellé complet de la fonction
+     */
+    public function getFonctionCompletAttribute()
+    {
+        $fonctions = [
+            'Pr' => 'Professeur',
+            'Dr' => 'Docteur',
+            'Tss' => 'Technicien Supérieur',
+            'SGF' => 'Sage femme',
+            'IDE' => 'Infirmier d\'état'
+        ];
+
+        return $fonctions[$this->fonction] ?? 'Docteur';
+    }
 
     public function recapitulatifOperateurs()
     {

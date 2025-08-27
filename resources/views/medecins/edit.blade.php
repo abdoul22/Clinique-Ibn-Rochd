@@ -115,8 +115,34 @@
                             @enderror
                         </div>
 
+                        <!-- Fonction -->
+                        <div>
+                            <label for="fonction"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Fonction * <span class="text-red-500">*</span>
+                            </label>
+                            <select id="fonction" name="fonction"
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200 @error('fonction') border-red-500 @enderror"
+                                required>
+                                <option value="">Sélectionner une fonction</option>
+                                <option value="Pr" {{ old('fonction', $medecin->fonction) == 'Pr' ? 'selected' : ''
+                                    }}>Professeur</option>
+                                <option value="Dr" {{ old('fonction', $medecin->fonction) == 'Dr' ? 'selected' : ''
+                                    }}>Docteur</option>
+                                <option value="Tss" {{ old('fonction', $medecin->fonction) == 'Tss' ? 'selected' : ''
+                                    }}>Technicien Supérieur</option>
+                                <option value="SGF" {{ old('fonction', $medecin->fonction) == 'SGF' ? 'selected' : ''
+                                    }}>Sage femme</option>
+                                <option value="IDE" {{ old('fonction', $medecin->fonction) == 'IDE' ? 'selected' : ''
+                                    }}>Infirmier d'état</option>
+                            </select>
+                            @error('fonction')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <!-- Spécialité -->
-                        <div class="md:col-span-2">
+                        <div>
                             <label for="specialite"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Spécialité * <span class="text-red-500">*</span>

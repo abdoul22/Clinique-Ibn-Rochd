@@ -182,6 +182,9 @@
                             Médecin</th>
                         <th
                             class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Fonction</th>
+                        <th
+                            class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Spécialité</th>
                         <th
                             class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -210,12 +213,19 @@
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                        Dr. {{ $medecin->prenom }} {{ $medecin->nom }}
+                                        {{ $medecin->nom_complet }} {{ $medecin->prenom }}
                                     </div>
                                     <div class="text-sm text-gray-500 dark:text-gray-400">
                                         ID: {{ $medecin->id }}
                                     </div>
                                 </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="fas fa-user-tie text-blue-400 mr-2"></i>
+                                <span class="text-sm text-gray-900 dark:text-white">{{ $medecin->fonction_complet
+                                    }}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

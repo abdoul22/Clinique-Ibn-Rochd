@@ -37,7 +37,10 @@ class HospitalisationController extends Controller
     public function create()
     {
         $patients = GestionPatient::all();
-        $medecins = Medecin::all();
+        // Organiser les médecins par fonction : Pr, Dr, Tss, SGF, IDE
+        $medecins = Medecin::orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
+            ->orderBy('nom')
+            ->get();
         $services = Service::all();
         $chambres = Chambre::active()->with(['lits' => function ($q) {
             $q->where('statut', 'libre')->orderBy('numero');

@@ -108,11 +108,22 @@
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                         onchange="updateNumeroEntreeSimple();">
                         <option value="">Sélectionner un médecin</option>
-                        @foreach($medecins as $medecin)
-                        <option value="{{ $medecin->id }}" {{ $fromRdv && $prefilledMedecin && $medecin->id ==
-                            $prefilledMedecin->id ? 'selected' : '' }}>
-                            {{ $medecin->nom_complet }}{{ $medecin->specialite ? ' - ' . $medecin->specialite : '' }}
-                        </option>
+                        @php
+                        $medecinsParFonction = $medecins->groupBy('fonction');
+                        $ordrefonctions = ['Pr', 'Dr', 'Tss', 'SGF', 'IDE'];
+                        @endphp
+                        @foreach($ordrefonctions as $fonction)
+                        @if(isset($medecinsParFonction[$fonction]) && $medecinsParFonction[$fonction]->count() > 0)
+                        <optgroup label="{{ $medecinsParFonction[$fonction]->first()->fonction_complet }}s">
+                            @foreach($medecinsParFonction[$fonction] as $medecin)
+                            <option value="{{ $medecin->id }}" {{ $fromRdv && $prefilledMedecin && $medecin->id ==
+                                $prefilledMedecin->id ? 'selected' : '' }}>
+                                {{ $medecin->nom_complet }}{{ $medecin->specialite ? ' - ' . $medecin->specialite : ''
+                                }}
+                            </option>
+                            @endforeach
+                        </optgroup>
+                        @endif
                         @endforeach
                     </select>
 

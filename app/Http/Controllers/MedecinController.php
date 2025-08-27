@@ -79,6 +79,7 @@ class MedecinController extends Controller
     {
         $request->validate([
             'nom' => 'required',
+            'fonction' => 'required|in:Pr,Dr,Tss,SGF,IDE',
             'prenom' => 'required',
             'specialite' => 'required',
             'email' => 'nullable|email|unique:medecins,email',
@@ -86,6 +87,7 @@ class MedecinController extends Controller
 
         $medecin = Medecin::create($request->only([
             'nom',
+            'fonction',
             'prenom',
             'specialite',
             'telephone',
@@ -249,6 +251,7 @@ class MedecinController extends Controller
 
         $request->validate([
             'nom' => 'required',
+            'fonction' => 'required|in:Pr,Dr,Tss,SGF,IDE',
             'prenom' => 'required',
             'specialite' => 'required',
             'email' => 'nullable|email|unique:medecins,email,' . $medecin->id,
@@ -256,6 +259,7 @@ class MedecinController extends Controller
 
         $medecin->update($request->only([
             'nom',
+            'fonction',
             'prenom',
             'specialite',
             'telephone',
