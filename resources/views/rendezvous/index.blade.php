@@ -6,7 +6,7 @@
 <div class="w-full px-0 sm:px-2 lg:px-4 py-4 sm:py-8">
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 sm:mb-6 gap-4">
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-200">Gestion des Rendez-vous</h1>
-        <a href="{{ route('rendezvous.create') }}"
+        <a href="{{ auth()->user()->role->name === 'admin' ? route('admin.rendezvous.create') : route('rendezvous.create') }}"
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-base w-full sm:w-auto text-center lg:w-auto">
             <i class="fas fa-plus mr-2"></i>Nouveau Rendez-vous
         </a>
@@ -196,6 +196,12 @@
                             </div>
                         </td>
                         <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
+                            @if($rdv->isPaid())
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                                <i class="fas fa-check-circle mr-1"></i>Terminé(payé)
+                            </span>
+                            @else
                             @switch($rdv->statut)
                             @case('confirme')
                             <span
@@ -207,9 +213,13 @@
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
                                 Annulé
+                                @if($rdv->annulator)
+                                (par {{ $rdv->annulator->name }})
+                                @endif
                             </span>
                             @break
                             @endswitch
+                            @endif
                         </td>
                         <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">{{ $rdv->date_rdv->format('d/m') }}</td>
                         <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">

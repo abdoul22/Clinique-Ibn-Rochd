@@ -5,7 +5,7 @@
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center">
-            <a href="{{ route('hospitalisations.show', $hospitalisation->id) }}"
+            <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.index') : route('hospitalisations.index') }}"
                 class="mr-4 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors duration-200">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -26,7 +26,8 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('hospitalisations.update', $hospitalisation->id) }}"
+    <form method="POST"
+        action="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.update', $hospitalisation->id) : route('hospitalisations.update', $hospitalisation->id) }}"
         class="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
         @csrf
         @method('PUT')
@@ -139,7 +140,7 @@
                         </svg>
                         Date d'entrée *
                     </label>
-                    <input type="date" name="date_entree" value="{{ $hospitalisation->date_entree }}"
+                    <input type="date" name="date_entree" id="date_entree" value="{{ $hospitalisation->date_entree }}"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                         required>
                 </div>
@@ -152,7 +153,7 @@
                         </svg>
                         Date de sortie
                     </label>
-                    <input type="date" id="date-sortie" name="date_sortie" value="{{ $hospitalisation->date_sortie }}"
+                    <input type="date" id="date_sortie" name="date_sortie" value="{{ $hospitalisation->date_sortie }}"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200">
                 </div>
 
@@ -207,6 +208,20 @@
                         </option>
                         @endforeach
                     </select>
+                    <!-- Alerte pour chambre sans lits libres -->
+                    <div id="chambre-alert"
+                        class="hidden mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
+                                </path>
+                            </svg>
+                            <p class="text-red-700 dark:text-red-300 font-medium">Cette chambre n'a aucun lit libre
+                                disponible. Veuillez choisir une autre chambre.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -244,7 +259,8 @@
                         </svg>
                         Montant total
                     </label>
-                    <input type="number" step="0.01" name="montant_total" value="{{ $hospitalisation->montant_total }}"
+                    <input type="number" step="0.01" name="montant_total" id="montant_total"
+                        value="{{ $hospitalisation->montant_total }}"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                         placeholder="0.00">
                 </div>
@@ -272,7 +288,7 @@
 
         <!-- Actions -->
         <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex justify-end space-x-4">
-            <a href="{{ route('hospitalisations.show', $hospitalisation->id) }}"
+            <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.index') : route('hospitalisations.index') }}"
                 class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors duration-200">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
@@ -295,9 +311,11 @@
     document.addEventListener('DOMContentLoaded', function() {
     const chambreSelect = document.getElementById('chambre-select');
     const litSelect = document.getElementById('lit-select');
+    const montantTotal = document.getElementById('montant_total');
 
-    // Données des lits préchargées depuis le serveur
+    // Données des lits et chambres préchargées depuis le serveur
     const litsParChambre = @json($litsParChambre);
+    const chambresData = @json($chambresData);
 
     // Récupérer le lit actuel de l'hospitalisation
     const litActuelId = @json($hospitalisation->lit_id ?? null);
@@ -306,7 +324,27 @@
         // Vider le select des lits
         litSelect.innerHTML = '<option value="" class="text-gray-500 dark:text-gray-400">Sélectionner un lit</option>';
 
+        // Récupérer l'élément d'alerte
+        const chambreAlert = document.getElementById('chambre-alert');
+
         if (chambreId && litsParChambre[chambreId]) {
+            // Vérifier s'il y a des lits libres (ou le lit actuel)
+            const litsDisponibles = litsParChambre[chambreId].filter(lit =>
+                lit.statut === 'libre' || lit.id == litIdASelectionner
+            );
+
+            if (litsDisponibles.length === 0) {
+                // Aucun lit libre disponible
+                chambreAlert.classList.remove('hidden');
+                litSelect.disabled = true;
+                litSelect.innerHTML = '<option value="">Aucun lit libre disponible</option>';
+                return;
+            } else {
+                // Il y a des lits libres
+                chambreAlert.classList.add('hidden');
+                litSelect.disabled = false;
+            }
+
             litsParChambre[chambreId].forEach(lit => {
                 const option = document.createElement('option');
                 option.value = lit.id;
@@ -320,36 +358,82 @@
 
                 litSelect.appendChild(option);
             });
+        } else {
+            // Pas de chambre sélectionnée ou pas de données
+            chambreAlert.classList.add('hidden');
+            litSelect.disabled = true;
+        }
+    }
+
+    // Fonction pour calculer le montant total
+    function calculerMontantTotal(chambreId) {
+        if (!chambreId || !chambresData[chambreId]) {
+            return;
+        }
+
+        // Récupérer les dates d'entrée et de sortie
+        const dateEntree = document.getElementById('date_entree')?.value;
+        const dateSortie = document.getElementById('date_sortie')?.value;
+
+        if (!dateEntree) {
+            return;
+        }
+
+        // Calculer le nombre de jours
+        let nombreJours = 1; // Au minimum 1 jour
+        if (dateSortie && dateEntree) {
+            const entree = new Date(dateEntree);
+            const sortie = new Date(dateSortie);
+            if (sortie > entree) {
+                nombreJours = Math.ceil((sortie - entree) / (1000 * 60 * 60 * 24));
+            }
+        }
+
+        // Calculer le montant total
+        const prixParJour = chambresData[chambreId].prix_par_jour || 5000;
+        const total = prixParJour * nombreJours;
+
+        // Mettre à jour l'input du montant
+        if (montantTotal) {
+            montantTotal.value = total.toFixed(2);
         }
     }
 
     // Écouter les changements de chambre
     chambreSelect.addEventListener('change', function() {
         chargerLits(this.value);
+        calculerMontantTotal(this.value);
     });
 
     // Charger les lits de la chambre actuelle au chargement de la page
     if (chambreSelect.value) {
         chargerLits(chambreSelect.value, litActuelId);
+        calculerMontantTotal(chambreSelect.value);
+    }
+
+    // Écouter les changements de dates pour recalculer le montant
+    const dateEntree = document.getElementById('date_entree');
+    const dateSortie = document.getElementById('date_sortie');
+
+    if (dateEntree) {
+        dateEntree.addEventListener('change', function() {
+            if (chambreSelect.value) {
+                calculerMontantTotal(chambreSelect.value);
+            }
+        });
+    }
+
+    if (dateSortie) {
+        dateSortie.addEventListener('change', function() {
+            if (chambreSelect.value) {
+                calculerMontantTotal(chambreSelect.value);
+            }
+        });
     }
     // Auto-remplir la date de sortie quand le statut est "terminé"
     const statutSelect = document.getElementById('statut-select');
     const dateSortieInput = document.getElementById('date-sortie');
     if (statutSelect && dateSortieInput) {
-        statutSelect.addEventListener('change', function() {
-            if (this.value === 'terminé' && !dateSortieInput.value) {
-                const today = new Date();
-                const yyyy = today.getFullYear();
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const dd = String(today.getDate()).padStart(2, '0');
-                dateSortieInput.value = `${yyyy}-${mm}-${dd}`;
-            }
-        });
-    }
-});
-</script>
-@endsection
-
         statutSelect.addEventListener('change', function() {
             if (this.value === 'terminé' && !dateSortieInput.value) {
                 const today = new Date();

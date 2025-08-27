@@ -7,46 +7,53 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        {{-- Patients --}}
+        {{-- Gestion des patients --}}
         <a href="{{ route('admin.patients.index') }}"
-            class="bg-purple-600 dark:bg-purple-800 text-white rounded-2xl p-6 shadow hover:bg-purple-700 dark:hover:bg-purple-900 transition">
-            <h2 class="text-xl font-semibold mb-2">Patients</h2>
-            <p class="text-sm text-purple-100">Créer, consulter ou mettre à jour les dossiers patients.</p>
+            class="bg-purple-600 text-white rounded-2xl p-6 shadow hover:bg-purple-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Gestion des patients</h2>
+            <p class="text-sm text-purple-100">Accéder à la liste, création et mise à jour des dossiers patients.</p>
         </a>
 
         {{-- Rendez-vous --}}
         <a href="{{ route('admin.rendezvous.index') }}"
-            class="bg-lime-600 dark:bg-lime-800 text-white rounded-2xl p-6 shadow hover:bg-lime-700 dark:hover:bg-lime-900 transition">
+            class="bg-yellow-500 text-white rounded-2xl p-6 shadow hover:bg-yellow-600 transition">
             <h2 class="text-xl font-semibold mb-2">Rendez-vous</h2>
-            <p class="text-sm text-yellow-100">Planifier ou suivre les rendez-vous médicaux.</p>
+            <p class="text-sm text-yellow-100">Programmer, suivre ou annuler des rendez-vous médicaux.</p>
         </a>
 
-        {{-- Dossier médical --}}
+        {{-- Dossier Médical --}}
         <a href="{{ route('admin.dossiers.index') }}"
-            class="bg-red-500 dark:bg-red-700 text-white rounded-2xl p-6 shadow hover:bg-red-600 dark:hover:bg-red-900 transition">
+            class="bg-red-500 text-white rounded-2xl p-6 shadow hover:bg-red-600 transition">
             <h2 class="text-xl font-semibold mb-2">Dossier Médical</h2>
-            <p class="text-sm text-red-100">Accès aux dossiers médicaux autorisés.</p>
+            <p class="text-sm text-red-100">Consulter et modifier les dossiers médicaux des patients.</p>
         </a>
 
         {{-- Hospitalisations --}}
-        <a href="{{ route('hospitalisations.index') }}"
-            class="bg-blue-600 dark:bg-blue-800 text-white rounded-2xl p-6 shadow hover:bg-blue-700 dark:hover:bg-blue-900 transition">
+        <a href="{{ route('admin.hospitalisations.index') }}"
+            class="bg-pink-600 text-white rounded-2xl p-6 shadow hover:bg-pink-700 transition">
             <h2 class="text-xl font-semibold mb-2">Hospitalisations</h2>
-            <p class="text-sm text-blue-100">Gérer les hospitalisations et les lits.</p>
+            <p class="text-sm text-pink-100">Suivi des séjours et admissions des patients.</p>
         </a>
 
-        {{-- Chambres --}}
-        <a href="{{ route('chambres.index') }}"
-            class="bg-green-600 dark:bg-green-800 text-white rounded-2xl p-6 shadow hover:bg-green-700 dark:hover:bg-green-900 transition">
-            <h2 class="text-xl font-semibold mb-2">Gestion des Chambres</h2>
-            <p class="text-sm text-green-100">Gérer les chambres et lits disponibles.</p>
-        </a>
-
-        {{-- Caisse --}}
+        {{-- Gestion des Factures --}}
         <a href="{{ route('admin.caisses.index') }}"
-            class="bg-gray-700 dark:bg-gray-600 text-white rounded-2xl p-6 shadow hover:bg-gray-800 dark:hover:bg-gray-950 transition">
+            class="bg-gray-700 text-white rounded-2xl p-6 shadow hover:bg-gray-800 transition">
             <h2 class="text-xl font-semibold mb-2">Gestion des Factures</h2>
-            <p class="text-sm text-gray-300">Gérer les flux de trésorerie de la clinique.</p>
+            <p class="text-sm text-gray-300">Suivi des entrées/sorties d'argent et clôtures de caisse.</p>
+        </a>
+
+        {{-- Récap. Services --}}
+        <a href="{{ route('admin.recap-services.index') }}"
+            class="bg-indigo-600 text-white rounded-2xl p-6 shadow hover:bg-indigo-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Récap. Services</h2>
+            <p class="text-sm text-indigo-100">Voir les totaux de services selon les dates.</p>
+        </a>
+
+        {{-- Récap. Opérateurs --}}
+        <a href="{{ route('admin.recap-operateurs.index') }}"
+            class="bg-teal-600 text-white rounded-2xl p-6 shadow hover:bg-teal-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Récap. Opérateurs</h2>
+            <p class="text-sm text-teal-100">Analyser les consultations et les parts des médecins.</p>
         </a>
 
     </div>

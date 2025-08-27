@@ -135,7 +135,9 @@ class DossierMedicalController extends Controller
 
         $dossier->update($request->only(['statut', 'notes_generales']));
 
-        return redirect()->route('dossiers.show', $dossier->id)
+        // Redirection en fonction du rôle de l'utilisateur
+        $route = Auth::user()->role?->name === 'admin' ? 'admin.dossiers.show' : 'dossiers.show';
+        return redirect()->route($route, $dossier->id)
             ->with('success', 'Dossier médical mis à jour avec succès.');
     }
 
@@ -147,7 +149,9 @@ class DossierMedicalController extends Controller
         $dossier = DossierMedical::findOrFail($id);
         $dossier->delete();
 
-        return redirect()->route('dossiers.index')
+        // Redirection en fonction du rôle de l'utilisateur
+        $route = Auth::user()->role?->name === 'admin' ? 'admin.dossiers.index' : 'dossiers.index';
+        return redirect()->route($route)
             ->with('success', 'Dossier médical supprimé avec succès.');
     }
 
@@ -203,7 +207,9 @@ class DossierMedicalController extends Controller
             self::creerOuMettreAJour($patient->id);
         }
 
-        return redirect()->route('dossiers.index')
+        // Redirection en fonction du rôle de l'utilisateur
+        $route = Auth::user()->role?->name === 'admin' ? 'admin.dossiers.index' : 'dossiers.index';
+        return redirect()->route($route)
             ->with('success', 'Synchronisation des dossiers terminée.');
     }
 }

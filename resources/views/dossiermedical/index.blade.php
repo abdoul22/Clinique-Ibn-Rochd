@@ -6,7 +6,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-4">
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-200">Dossiers Médicaux</h1>
         <div class="flex space-x-2 w-full sm:w-auto">
-            <a href="{{ route('dossiers.synchroniser') }}"
+            <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.dossiers.synchroniser') : route('dossiers.synchroniser') }}"
                 class="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-base w-full sm:w-auto text-center"
                 onclick="return confirm('Voulez-vous synchroniser tous les dossiers ?')">
                 <i class="fas fa-sync-alt mr-2"></i>Synchroniser
@@ -16,7 +16,8 @@
 
     <!-- Filtres -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
-        <form method="GET" action="{{ route('dossiers.index') }}"
+        <form method="GET"
+            action="{{ auth()->user()->role?->name === 'admin' ? route('admin.dossiers.index') : route('dossiers.index') }}"
             class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
             <div>
                 <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Recherche</label>
@@ -53,7 +54,7 @@
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-base w-full sm:w-auto">
                     <i class="fas fa-search mr-2"></i>Filtrer
                 </button>
-                <a href="{{ route('dossiers.index') }}"
+                <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.dossiers.index') : route('dossiers.index') }}"
                     class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-base text-center w-full sm:w-auto">
                     <i class="fas fa-times mr-2"></i>Réinitialiser
                 </a>
@@ -195,7 +196,7 @@
                         </td>
                         <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex flex-col sm:flex-row gap-2">
-                                <a href="{{ route('dossiers.show', $dossier->id) }}"
+                                <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.dossiers.show', $dossier->id) : route('dossiers.show', $dossier->id) }}"
                                     class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
                                     <i class="fas fa-eye"></i>
                                 </a>

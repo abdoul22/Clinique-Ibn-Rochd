@@ -16,16 +16,18 @@
 
         <!-- Boutons d'action -->
         <div class="flex space-x-4">
-            <a href="{{ route('hospitalisations.create') }}"
+            <a href="{{ auth()->user()->role->name === 'admin' ? route('admin.hospitalisations.create') : route('hospitalisations.create') }}"
                 class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors">
                 <i class="fas fa-plus mr-2"></i>
                 Nouvelle Hospitalisation
             </a>
-            <button
+            @if(auth()->user()->role->name === 'superadmin')
+            <a href="{{ route('chambres.create') }}"
                 class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors">
                 <i class="fas fa-bed mr-2"></i>
                 Créer une Chambre
-            </button>
+            </a>
+            @endif
         </div>
     </div>
 
@@ -233,22 +235,25 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
-                                <a href="{{ route('hospitalisations.show', $hospitalisation) }}"
+                                <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.show', $hospitalisation) : route('hospitalisations.show', $hospitalisation) }}"
                                     class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                                     title="Voir">
                                     <i class="fas fa-eye"></i>
                                 </a>
 
                                 @if($hospitalisation->statut === 'en cours')
-                                <a href="{{ route('hospitalisations.edit', $hospitalisation) }}"
+                                <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.edit', $hospitalisation) : route('hospitalisations.edit', $hospitalisation) }}"
                                     class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                     title="Modifier">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 @endif
 
-                                <form action="{{ route('hospitalisations.destroy', $hospitalisation) }}" method="POST"
-                                    class="inline" onsubmit="return confirm('Supprimer cette hospitalisation ?')">
+                                @if(auth()->user()->role?->name === 'superadmin')
+                                <form
+                                    action="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.destroy', $hospitalisation) : route('hospitalisations.destroy', $hospitalisation) }}"
+                                    method="POST" class="inline"
+                                    onsubmit="return confirm('Supprimer cette hospitalisation ?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
@@ -257,6 +262,7 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

@@ -68,7 +68,7 @@ class RendezVousController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         $medecins = Medecin::where('statut', 'actif')
             ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
@@ -76,6 +76,9 @@ class RendezVousController extends Controller
             ->get();
         $patients = GestionPatient::all();
         $motifs = Motif::actifs()->orderBy('nom')->get();
+
+        // Récupérer le patient_id depuis la requête (si passé en paramètre)
+        $patientId = $request->get('patient_id');
 
         // Calculer le numéro prévu pour chaque médecin (par jour, tous les numéros utilisés)
         $today = now()->startOfDay();
@@ -107,7 +110,7 @@ class RendezVousController extends Controller
             $numeros_par_medecin[$medecin->id] = $prochainNumero;
         }
 
-        return view('rendezvous.create', compact('medecins', 'patients', 'motifs', 'numeros_par_medecin'));
+        return view('rendezvous.create', compact('medecins', 'patients', 'motifs', 'numeros_par_medecin', 'patientId'));
     }
 
     /**
@@ -118,11 +121,10 @@ class RendezVousController extends Controller
         $validator = Validator::make($request->all(), [
             'patient_id' => 'required|exists:gestion_patients,id',
             'medecin_id' => 'required|exists:medecins,id',
-            'date_rdv' => 'required|date|after_or_equal:today',
+            'date_rdv' => 'required|date',
             'motif' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ], [
-            'date_rdv.after_or_equal' => 'La date du rendez-vous doit être aujourd\'hui ou une date future.',
             'date_rdv.date' => 'Le format de date n\'est pas valide.',
         ]);
 
@@ -175,7 +177,9 @@ class RendezVousController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        return redirect()->route('rendezvous.index')
+        // Redirection en fonction du rôle de l'utilisateur
+        $route = Auth::user()->role?->name === 'admin' ? 'admin.rendezvous.index' : 'rendezvous.index';
+        return redirect()->route($route)
             ->with('success', 'Rendez-vous créé avec succès.');
     }
 
@@ -237,7 +241,9 @@ class RendezVousController extends Controller
             'notes' => $request->notes,
         ]);
 
-        return redirect()->route('rendezvous.index')
+        // Redirection en fonction du rôle de l'utilisateur
+        $route = Auth::user()->role?->name === 'admin' ? 'admin.rendezvous.index' : 'rendezvous.index';
+        return redirect()->route($route)
             ->with('success', 'Rendez-vous mis à jour avec succès.');
     }
 
@@ -264,9 +270,14 @@ class RendezVousController extends Controller
             'statut' => 'required|in:confirme,annule'
         ]);
 
-        $rendezVous->update(['statut' => $request->statut]);
+        $rendezVous->update([
+            'statut' => $request->statut,
+            'annulator_id' => $request->statut === 'annule' ? Auth::id() : null
+        ]);
 
-        return redirect()->back()
+        // Redirection en fonction du rôle de l'utilisateur
+        $route = Auth::user()->role?->name === 'admin' ? 'admin.rendezvous.show' : 'rendezvous.show';
+        return redirect()->route($route, $rendezVous->id)
             ->with('success', 'Statut du rendez-vous mis à jour.');
     }
 

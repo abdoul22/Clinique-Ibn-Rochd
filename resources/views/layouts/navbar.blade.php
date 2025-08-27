@@ -80,21 +80,21 @@
                         class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
                     </div>
                 </a>
-                <a href="{{ route('patients.index') }}"
+                <a href="{{ route('admin.patients.index') }}"
                     class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
                     <i class="fas fa-users mr-2"></i>Patients
                     <div
                         class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
                     </div>
                 </a>
-                <a href="{{ route('caisses.index') }}"
+                <a href="{{ route('admin.caisses.index') }}"
                     class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
                     <i class="fas fa-cash-register mr-2"></i>Caisse
                     <div
                         class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
                     </div>
                 </a>
-                <a href="{{ route('rendezvous.index') }}"
+                <a href="{{ route('admin.rendezvous.index') }}"
                     class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
                     <i class="fas fa-calendar-alt mr-2"></i>Rendez-vous
                     <div
@@ -238,38 +238,38 @@
                                 Pharmacie
                             </a>
                             @elseif(Auth::user()->role?->name === 'admin')
-                            <a href="{{ route('dashboard.superadmin') }}"
+                            <a href="{{ route('dashboard.admin') }}"
                                 class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-home mr-3 text-gray-400 w-5"></i>
                                 Dashboard
                             </a>
-                            <a href="{{ route('superadmin.patients.index') }}"
+                            <a href="{{ route('admin.patients.index') }}"
                                 class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-users mr-3 text-gray-400 w-5"></i>
                                 Patients
                             </a>
-                            <a href="{{ route('caisses.index') }}"
+                            <a href="{{ route('admin.caisses.index') }}"
                                 class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-cash-register mr-3 text-gray-400 w-5"></i>
                                 Caisse
                             </a>
-                            <a href="{{ route('rendezvous.index') }}"
+                            <a href="{{ route('admin.rendezvous.index') }}"
                                 class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-calendar-alt mr-3 text-gray-400 w-5"></i>
                                 Rendez-vous
                             </a>
                             @endif
-                            <a href="#"
+                            <a href="{{ route('profile.show') }}"
                                 class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-user mr-3 text-gray-400 w-5"></i>
                                 Mon Profil
                             </a>
-                            <a href="#"
-                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                            <a href="{{ route('profile.settings') }}"
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-cog mr-3 text-gray-400 w-5"></i>
                                 Paramètres
                             </a>
-                            <a href="#"
+                            <a href="{{ route('profile.help') }}"
                                 class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-question-circle mr-3 text-gray-400 w-5"></i>
                                 Aide

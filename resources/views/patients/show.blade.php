@@ -141,7 +141,7 @@
                             <i class="fas fa-edit mr-2"></i>
                             Modifier le patient
                         </a>
-                        <a href="{{ route('rendezvous.create', ['patient_id' => $patient->id]) }}"
+                        <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.create', ['patient_id' => $patient->id]) : route('rendezvous.create', ['patient_id' => $patient->id]) }}"
                             class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200">
                             <i class="fas fa-calendar-plus mr-2"></i>
                             Nouveau rendez-vous

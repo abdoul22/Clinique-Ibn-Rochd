@@ -7,14 +7,16 @@
     <div class="max-w-2xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Nouveau Rendez-vous</h1>
-            <a href="{{ route('rendezvous.index') }}"
+            <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.index') : route('rendezvous.index') }}"
                 class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                 <i class="fas fa-arrow-left mr-2"></i>Retour
             </a>
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <form action="{{ route('rendezvous.store') }}" method="POST">
+            <form
+                action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.store') : route('rendezvous.store') }}"
+                method="POST">
                 @csrf
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -28,9 +30,9 @@
                             required>
                             <option value="">Sélectionner un patient</option>
                             @foreach($patients as $patient)
-                            <option value="{{ $patient->id }}" data-phone="{{ $patient->phone }}" {{
-                                old('patient_id')==$patient->id ? 'selected' : '' }}>
-                                {{ $patient->first_name }} {{ $patient->last_name }} - {{ $patient->phone }}
+                            <option value="{{ $patient->id }}" data-phone="{{ $patient->phone }}" {{ old('patient_id',
+                                $patientId)==$patient->id ? 'selected' : '' }}>
+                                {{ $patient->first_name }} {{ $patient->last_name }}
                             </option>
                             @endforeach
                         </select>
@@ -160,7 +162,7 @@
                 </div>
 
                 <div class="flex justify-end space-x-4 mt-6">
-                    <a href="{{ route('rendezvous.index') }}"
+                    <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.index') : route('rendezvous.index') }}"
                         class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                         Annuler
                     </a>

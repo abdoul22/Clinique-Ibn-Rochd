@@ -60,14 +60,19 @@
                                 <span
                                     class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
                                     <i class="fas fa-times mr-2"></i>Annulé
+                                    @if($rendezVous->annulator)
+                                    (par {{ $rendezVous->annulator->name }})
+                                    @endif
                                 </span>
                                 @elseif($rendezVous->statut === 'confirme')
                                 <span
                                     class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                                     <i class="fas fa-check mr-2"></i>Confirmé
                                 </span>
-                                <form action="{{ route('rendezvous.change-status', $rendezVous->id) }}" method="POST"
-                                    class="inline-block mt-2">
+                                @if(!$rendezVous->isPaid())
+                                <form
+                                    action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.change-status', $rendezVous->id) : route('rendezvous.change-status', $rendezVous->id) }}"
+                                    method="POST" class="inline-block mt-2">
                                     @csrf
                                     <input type="hidden" name="statut" value="annule">
                                     <button type="submit"
@@ -76,6 +81,7 @@
                                         Annuler
                                     </button>
                                 </form>
+                                @endif
                                 @endif
                             </div>
                         </div>
@@ -180,43 +186,45 @@
                     <div class="space-y-3">
                         <!-- Bouton Payer ou Statut de paiement -->
                         @if($rendezVous->isPaid())
-                            @php
-                                $facture = $rendezVous->getFacture();
-                            @endphp
-                            <div class="w-full bg-blue-100 dark:bg-blue-900 border border-blue-400 dark:border-blue-700 text-blue-700 dark:text-blue-200 px-4 py-3 rounded flex items-center justify-center">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                <div class="text-center">
-                                    <div class="font-semibold">✅ Rendez-vous déjà payé</div>
-                                    <div class="text-sm mt-1">
-                                        Facture N° {{ $facture->numero_facture }}
-                                        (N° d'entrée: {{ $facture->numero_entre }})
-                                    </div>
-                                    <a href="{{ route(auth()->user()->role->name . '.caisses.show', $facture->id) }}"
-                                       class="text-blue-600 dark:text-blue-400 hover:underline text-sm mt-1 inline-block">
-                                        Voir la facture
-                                    </a>
+                        @php
+                        $facture = $rendezVous->getFacture();
+                        @endphp
+                        <div
+                            class="w-full bg-blue-100 dark:bg-blue-900 border border-blue-400 dark:border-blue-700 text-blue-700 dark:text-blue-200 px-4 py-3 rounded flex items-center justify-center">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            <div class="text-center">
+                                <div class="font-semibold">✅ Rendez-vous déjà payé</div>
+                                <div class="text-sm mt-1">
+                                    Facture N° {{ $facture->numero_facture }}
+                                    (N° d'entrée: {{ $facture->numero_entre }})
                                 </div>
+                                <a href="{{ route(auth()->user()->role->name . '.caisses.show', $facture->id) }}"
+                                    class="text-blue-600 dark:text-blue-400 hover:underline text-sm mt-1 inline-block">
+                                    Voir la facture
+                                </a>
                             </div>
+                        </div>
                         @elseif($rendezVous->statut === 'annule')
-                            <div class="w-full bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded flex items-center justify-center">
-                                <i class="fas fa-times-circle mr-2"></i>
-                                <div class="text-center">
-                                    <div class="font-semibold">❌ Rendez-vous annulé</div>
-                                    <div class="text-sm mt-1">
-                                        Ce rendez-vous ne peut pas être payé car il a été annulé
-                                    </div>
+                        <div
+                            class="w-full bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded flex items-center justify-center">
+                            <i class="fas fa-times-circle mr-2"></i>
+                            <div class="text-center">
+                                <div class="font-semibold">❌ Rendez-vous annulé</div>
+                                <div class="text-sm mt-1">
+                                    Ce rendez-vous ne peut pas être payé car il a été annulé
                                 </div>
                             </div>
+                        </div>
                         @else
-                            <a href="{{ route('caisses.create', [
+                        <a href="{{ route('caisses.create', [
                                 'from_rdv' => $rendezVous->id,
                                 'patient_id' => $rendezVous->patient_id,
                                 'medecin_id' => $rendezVous->medecin_id,
                                 'numero_entree' => $rendezVous->numero_entree
                             ]) }}"
-                                class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
-                                <i class="fas fa-credit-card mr-2"></i>💳 Payer ce rendez-vous
-                            </a>
+                            class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-credit-card mr-2"></i>💳 Payer ce rendez-vous
+                        </a>
                         @endif
 
                         @if(Auth::user() && Auth::user()->role?->name === 'superadmin')

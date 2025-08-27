@@ -139,10 +139,28 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
     // Autres ressources pour admin
     Route::resource('caisses', CaisseController::class);
+    Route::get('dossiers/synchroniser', [DossierMedicalController::class, 'synchroniser'])->name('dossiers.synchroniser');
     Route::resource('dossiers', DossierMedicalController::class)->parameters(['dossiers' => 'dossier']);
     // Caisse
     Route::get('/caisses/{caisse}/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
     Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
+
+    // Hospitalisations pour admin
+    Route::resource('hospitalisations', HospitalisationController::class);
+    Route::post('hospitalisations/{id}/facturer', [HospitalisationController::class, 'facturer'])->name('hospitalisations.facturer');
+    Route::patch('hospitalisations/{id}/status', [HospitalisationController::class, 'updateStatus'])->name('hospitalisations.updateStatus');
+    Route::post('hospitalisations/{id}/payer-tout', [HospitalisationController::class, 'payerTout'])->name('hospitalisations.payerTout');
+    Route::get('/hospitalisations/lits-disponibles', [HospitalisationController::class, 'getLitsDisponibles'])->name('hospitalisations.lits.disponibles');
+    Route::post('hospitalisations/{id}/charges', [HospitalisationController::class, 'addCharge'])->name('hospitalisations.addCharge');
+
+    // Récapitulatifs pour admin
+    Route::get('recap-services/print', [RecapitulatifServiceJournalierController::class, 'print'])->name('recap-services.print');
+    Route::get('recap-services/export-pdf', [RecapitulatifServiceJournalierController::class, 'exportPdf'])->name('recap-services.exportPdf');
+    Route::resource('recap-services', RecapitulatifServiceJournalierController::class);
+
+    Route::resource('recap-operateurs', RecapitulatifOperateurController::class);
+    Route::get('recap-operateurs-export-pdf', [RecapitulatifOperateurController::class, 'exportPdf'])->name('recap-operateurs.exportPdf');
+    Route::get('recap-operateurs-print', [RecapitulatifOperateurController::class, 'print'])->name('recap-operateurs.print');
 });
 
 // Route pour afficher la liste des patients (accessible depuis les dashboards)
@@ -286,6 +304,21 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
     Route::resource('motifs', MotifController::class);
     Route::post('motifs/{id}/toggle-status', [MotifController::class, 'toggleStatus'])->name('motifs.toggle-status');
     Route::get('motifs/get-actifs', [MotifController::class, 'getMotifsActifs'])->name('motifs.get-actifs');
+});
+
+// Routes profile utilisateur
+Route::middleware(['auth', 'is.approved'])->group(function () {
+    Route::get('/profile', function () {
+        return view('profile.show');
+    })->name('profile.show');
+
+    Route::get('/settings', function () {
+        return view('profile.settings');
+    })->name('profile.settings');
+
+    Route::get('/help', function () {
+        return view('profile.help');
+    })->name('profile.help');
 });
 
 // Routes spécifiques (protégées par auth et is.approved)

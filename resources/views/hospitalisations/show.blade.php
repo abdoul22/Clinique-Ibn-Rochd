@@ -8,7 +8,7 @@
         <div class="mb-8">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('hospitalisations.index') }}"
+                    <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.index') : route('hospitalisations.index') }}"
                         class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -57,7 +57,8 @@
                     @endif
 
                     @if($hospitalisation->statut === 'en cours')
-                    <form method="POST" action="{{ route('hospitalisations.updateStatus', $hospitalisation->id) }}"
+                    <form method="POST"
+                        action="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.updateStatus', $hospitalisation->id) : route('hospitalisations.updateStatus', $hospitalisation->id) }}"
                         class="inline" id="statut-form">
                         @csrf
                         @method('PATCH')
@@ -261,7 +262,8 @@
                     </h3>
 
                     <!-- Formulaire d'ajout -->
-                    <form method="POST" action="{{ route('hospitalisations.addCharge', $hospitalisation->id) }}"
+                    <form method="POST"
+                        action="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.addCharge', $hospitalisation->id) : route('hospitalisations.addCharge', $hospitalisation->id) }}"
                         class="mb-6">
                         @csrf
                         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -397,7 +399,7 @@
                                 <p class="font-semibold text-green-600 dark:text-green-400">{{
                                     number_format($charge->total_price, 0, ',', ' ') }} MRU</p>
                                 @if($charge->caisse_id)
-                                <a href="{{ route('caisses.show', $charge->caisse_id) }}"
+                                <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.caisses.show', $charge->caisse_id) : route('caisses.show', $charge->caisse_id) }}"
                                     class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
                                     Facture #{{ $charge->caisse_id }}
                                 </a>
@@ -459,7 +461,8 @@
                 </button>
             </div>
 
-            <form method="POST" action="{{ route('hospitalisations.payerTout', $hospitalisation->id) }}">
+            <form method="POST"
+                action="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.payerTout', $hospitalisation->id) : route('hospitalisations.payerTout', $hospitalisation->id) }}">
                 @csrf
                 <div class="mb-6">
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">

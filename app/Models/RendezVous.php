@@ -21,6 +21,7 @@ class RendezVous extends Model
         'notes',
         'numero_entree',
         'created_by',
+        'annulator_id',
     ];
 
     protected $casts = [
@@ -44,6 +45,12 @@ class RendezVous extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // Relation avec l'utilisateur qui a annulé le rendez-vous
+    public function annulator()
+    {
+        return $this->belongsTo(User::class, 'annulator_id');
     }
 
     // Relation avec les caisses (pour vérifier si le rendez-vous a été payé)

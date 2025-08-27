@@ -161,7 +161,9 @@ class HospitalisationController extends Controller
             $lit->occuper();
         });
 
-        return redirect()->route('hospitalisations.index')->with('success', 'Hospitalisation ajoutée avec succès !');
+        // Redirection en fonction du rôle de l'utilisateur
+        $route = Auth::user()->role?->name === 'admin' ? 'admin.hospitalisations.index' : 'hospitalisations.index';
+        return redirect()->route($route)->with('success', 'Hospitalisation ajoutée avec succès !');
     }
 
     public function show($id)
@@ -419,21 +421,41 @@ class HospitalisationController extends Controller
         $patients = GestionPatient::all();
         $medecins = Medecin::all();
         $services = Service::all();
-        $chambres = Chambre::active()->with(['lits'])->get();
+        $chambres = Chambre::active()->with(['lits' => function ($q) use ($hospitalisation) {
+            // Inclure le lit actuel de l'hospitalisation même s'il n'est pas libre
+            $q->where(function ($query) use ($hospitalisation) {
+                $query->where('statut', 'libre')
+                    ->orWhere('id', $hospitalisation->lit_id);
+            })->orderBy('numero');
+        }])->get();
 
         // Préparer les données des lits pour le JavaScript
         $litsParChambre = [];
+        $chambresData = [];
         foreach ($chambres as $chambre) {
-            $litsParChambre[$chambre->id] = $chambre->lits->map(function ($lit) use ($chambre) {
+            // Compter les lits libres (sans compter le lit actuel)
+            $litsLibres = $chambre->lits->filter(function ($lit) use ($hospitalisation) {
+                return $lit->statut === 'libre' || $lit->id === $hospitalisation->lit_id;
+            });
+
+            $litsParChambre[$chambre->id] = $litsLibres->map(function ($lit) use ($chambre) {
                 return [
                     'id' => $lit->id,
                     'numero' => $lit->numero,
-                    'nom_complet' => $chambre->nom . ' - Lit ' . $lit->numero
+                    'nom_complet' => $chambre->nom . ' - Lit ' . $lit->numero,
+                    'statut' => $lit->statut
                 ];
             })->toArray();
+
+            // Ajouter les données de prix des chambres avec nombre de lits libres
+            $chambresData[$chambre->id] = [
+                'prix_par_jour' => $chambre->tarif_journalier ?? 5000,
+                'nom' => $chambre->nom,
+                'lits_libres_count' => $litsLibres->where('statut', 'libre')->count()
+            ];
         }
 
-        return view('hospitalisations.edit', compact('hospitalisation', 'patients', 'medecins', 'services', 'chambres', 'litsParChambre'));
+        return view('hospitalisations.edit', compact('hospitalisation', 'patients', 'medecins', 'services', 'chambres', 'litsParChambre', 'chambresData'));
     }
 
     public function update(Request $request, $id)
@@ -525,7 +547,9 @@ class HospitalisationController extends Controller
             }
         });
 
-        return redirect()->route('hospitalisations.show', $hospitalisation->id)
+        // Redirection en fonction du rôle de l'utilisateur
+        $route = Auth::user()->role?->name === 'admin' ? 'admin.hospitalisations.show' : 'hospitalisations.show';
+        return redirect()->route($route, $hospitalisation->id)
             ->with('success', 'Hospitalisation modifiée avec succès !');
     }
 
@@ -559,7 +583,9 @@ class HospitalisationController extends Controller
             $hospitalisation->delete();
         });
 
-        return redirect()->route('hospitalisations.index')
+        // Redirection en fonction du rôle de l'utilisateur
+        $route = Auth::user()->role?->name === 'admin' ? 'admin.hospitalisations.index' : 'hospitalisations.index';
+        return redirect()->route($route)
             ->with('success', 'Hospitalisation supprimée avec succès !');
     }
 
@@ -850,7 +876,9 @@ class HospitalisationController extends Controller
             }
         });
 
-        return redirect()->route('hospitalisations.show', $hospitalisation->id)
+        // Redirection en fonction du rôle de l'utilisateur
+        $route = Auth::user()->role?->name === 'admin' ? 'admin.hospitalisations.show' : 'hospitalisations.show';
+        return redirect()->route($route, $hospitalisation->id)
             ->with('success', 'Paiement effectué avec succès ! Facture #' . $numeroFacture . ' créée. Statut hospitalisation : Terminé.');
     }
 }
