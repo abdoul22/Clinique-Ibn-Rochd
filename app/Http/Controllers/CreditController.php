@@ -327,15 +327,15 @@ class CreditController extends Controller
         }
 
         if ($etatCaisseExistant) {
-            // Mettre à jour l'entrée existante
-            $etatCaisseExistant->increment('recette', $montant);
-            $etatCaisseExistant->increment('part_clinique', $montant);
+            // Ne PAS incrémenter la recette/part_clinique car le patient a déjà payé sa part
+            // L'assurance paie directement, cela ne change pas les montants de l'état de caisse initial
 
             // Log pour débugger (optionnel)
-            Log::info("EtatCaisse mis à jour", [
+            Log::info("Paiement crédit assurance enregistré", [
                 'etat_caisse_id' => $etatCaisseExistant->id,
                 'credit_id' => $credit->id,
-                'montant' => $montant
+                'montant' => $montant,
+                'note' => 'Pas de modification des montants EtatCaisse - paiement direct assurance'
             ]);
         } else {
             // Ne pas créer d' EtatCaisse sans caisse pour un remboursement d'assurance.

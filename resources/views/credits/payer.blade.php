@@ -130,10 +130,10 @@
                                         Montant à payer *
                                     </label>
                                     <div class="relative">
-                                        <input type="number" id="montant" name="montant" step="0.01" min="1"
+                                        <input type="text" id="montant" name="montant" min="1"
                                             max="{{ $credit->montant - $credit->montant_paye }}"
                                             class="w-full border border-gray-400 dark:border-gray-600 rounded-xl px-4 py-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                            placeholder="0.00" required>
+                                            pattern="[0-9]+(\.[0-9]{1,2})?" placeholder="0.00" required>
                                         <div
                                             class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                             <span class="text-gray-600 dark:text-gray-400 text-sm">MRU</span>

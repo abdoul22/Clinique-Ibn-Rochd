@@ -126,7 +126,7 @@
                     <select name="prescripteur_id"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                         <option value="">Sélectionner un prescripteur</option>
-                        <option value="extern" selected>Extern</option>
+                        <option value="extern" selected>Externe</option>
                         @foreach($prescripteurs as $prescripteur)
                         <option value="{{ $prescripteur->id }}">{{ $prescripteur->nom }}{{ $prescripteur->specialite ? '
                             - ' . $prescripteur->specialite : '' }}</option>
@@ -207,7 +207,8 @@
 
                 {{-- Champs assurance : nom + couverture --}}
                 <div id="assuranceFields" style="display: none;">
-                    <label for="assurance_id" class="text-gray-700 dark:text-gray-200">Nom de l'assurance :</label>
+                    <label for="assurance_id" class="text-gray-700 dark:text-gray-200">Nom de l'assurance <span
+                            class="text-red-500">*</span>:</label>
                     <select name="assurance_id" id="assurance_id" disabled
                         class="form-select bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600">
                         <option value="">-- Sélectionner une assurance --</option>
@@ -217,9 +218,9 @@
                     </select>
 
                     <label for="couverture" class="text-gray-700 dark:text-gray-200">Couverture (%) :</label>
-                    <input type="number" name="couverture" id="couverture"
+                    <input type="text" name="couverture" id="couverture"
                         class="form-input border border-b-black px-2 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
-                        min="0" max="100">
+                        min="0" max="100" pattern="[0-9]+" placeholder="Ex: 90">
                 </div>
 
                 {{-- Mode de paiement : visible sauf si assurance 100% --}}
@@ -230,6 +231,7 @@
                         <option value="especes">Espèces</option>
                         <option value="bankily">Bankily</option>
                         <option value="masrivi">Masrivi</option>
+                        <option value="sedad">Sedad</option>
                     </select>
                 </div>
                 <div>

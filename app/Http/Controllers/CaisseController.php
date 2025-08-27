@@ -194,7 +194,7 @@ class CaisseController extends Controller
             'date_examen' => 'required|date',
             'total' => 'required|numeric',
             // accepter temporairement 'especes' puis normaliser
-            'type' => 'nullable|string|in:espèces,especes,bankily,masrivi',
+            'type' => 'nullable|string|in:espèces,especes,bankily,masrivi,sedad',
             'assurance_id' => 'nullable|exists:assurances,id',
             'couverture' => 'nullable|numeric|min:0|max:100',
         ];
@@ -346,7 +346,7 @@ class CaisseController extends Controller
             'designation' => 'Facture N°' . $caisse->numero_facture,
             'recette' => $montantPatient,
             'part_medecin' => $part_medecin,
-            'part_clinique' => $part_cabinet,
+            'part_clinique' => $montantPatient, // Part clinique = montant payé par le patient (pas le total)
             'assurance_id' => $caisse->assurance_id,
             'medecin_id' => $caisse->medecin_id,
         ]);
