@@ -105,8 +105,8 @@
                         @endif
                     </label>
                     <select name="medecin_id" id="medecin_select" required
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        onchange="updateNumeroEntreeSimple();">
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 {{ $fromRdv ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-900' }} text-gray-900 dark:text-white"
+                        onchange="{{ $fromRdv ? '' : 'updateNumeroEntreeSimple();' }}" {{ $fromRdv ? 'disabled' : '' }}>
                         <option value="">Sélectionner un médecin</option>
                         @php
                         $medecinsParFonction = $medecins->groupBy('fonction');
