@@ -151,11 +151,14 @@ class PayrollController extends Controller
                 $credit->save();
 
                 // Journaliser l'opération comme "entrée" de remboursement (déduction salariale)
+                $datePaiement = now()->setDate($year, $month, 1)->endOfMonth();
                 ModePaiement::create([
                     'type' => $mode,
                     'montant' => $reste,
                     'caisse_id' => null,
                     'source' => 'credit_personnel',
+                    'created_at' => $datePaiement,
+                    'updated_at' => $datePaiement,
                 ]);
             }
 
@@ -170,11 +173,16 @@ class PayrollController extends Controller
             $net = max($personnel->salaire - $creditRestantApres, 0);
 
             if ($net > 0) {
+                // Créer la date du mois payé (dernier jour du mois)
+                $datePaiement = now()->setDate($year, $month, 1)->endOfMonth();
+
                 \App\Models\Depense::create([
-                    'nom' => 'Salaire ' . now()->translatedFormat('F Y') . ' - ' . $personnel->nom,
+                    'nom' => 'Salaire ' . $datePaiement->translatedFormat('F Y') . ' - ' . $personnel->nom,
                     'montant' => $net,
                     'mode_paiement_id' => $mode,
                     'source' => 'salaire',
+                    'created_at' => $datePaiement,
+                    'updated_at' => $datePaiement,
                 ]);
                 \App\Models\Payroll::create([
                     'personnel_id' => $personnel->id,
@@ -182,29 +190,59 @@ class PayrollController extends Controller
                     'month' => $month,
                     'montant_net' => $net,
                     'mode' => $mode,
-                    'paid_at' => now(),
+                    'paid_at' => $datePaiement,
                 ]);
             }
         }
 
-        return redirect()->route('salaires.index')->with('success', 'Tous les salaires ont été traités.');
+        return redirect()->route('salaires.index', ['year' => $year, 'month' => $month])->with('success', 'Tous les salaires ont été traités.');
     }
 
     public function payOne(Request $request, $personnelId)
     {
-        $request->validate([
-            'mode' => 'required|string|in:' . implode(',', ModePaiement::getTypes()),
+        // Debug simple pour voir si la méthode est appelée
+        \Log::info('=== PAYONE METHOD CALLED ===', [
+            'personnel_id' => $personnelId,
+            'request_data' => $request->all()
         ]);
-        $mode = $request->mode;
 
+        // Debug: Log les paramètres reçus AVANT validation
+        \Log::info('Paiement salaire - AVANT validation', [
+            'personnel_id' => $personnelId,
+            'request_data' => $request->all(),
+            'available_modes' => ModePaiement::getTypes()
+        ]);
+
+        try {
+            $request->validate([
+                'mode' => 'required|string|in:' . implode(',', ModePaiement::getTypes()),
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Erreur validation paiement salaire', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        }
+
+        $mode = $request->mode;
         $personnel = Personnel::findOrFail($personnelId);
         $now = now();
         $year = (int) $request->get('year', $now->year);
         $month = (int) $request->get('month', $now->month);
 
+        // Debug: Log les paramètres reçus APRÈS validation
+        \Log::info('Paiement salaire - APRÈS validation', [
+            'personnel_id' => $personnelId,
+            'year' => $year,
+            'month' => $month,
+            'mode' => $mode,
+            'personnel_nom' => $personnel->nom
+        ]);
+
         // Bloquer si déjà payé
         if (\App\Models\Payroll::where('personnel_id', $personnel->id)->where('year', $year)->where('month', $month)->exists()) {
-            return redirect()->route('salaires.index')->with('info', 'Salaire déjà payé pour ' . $personnel->nom . ' ce mois.');
+            return redirect()->route('salaires.index', ['year' => $year, 'month' => $month])->with('info', 'Salaire déjà payé pour ' . $personnel->nom . ' ce mois.');
         }
 
         // Payer crédits restants
@@ -221,11 +259,14 @@ class PayrollController extends Controller
             $credit->status = 'payé';
             $credit->save();
 
+            $datePaiement = now()->setDate($year, $month, 1)->endOfMonth();
             ModePaiement::create([
                 'type' => $mode,
                 'montant' => $reste,
                 'caisse_id' => null,
                 'source' => 'credit_personnel',
+                'created_at' => $datePaiement,
+                'updated_at' => $datePaiement,
             ]);
         }
 
@@ -240,24 +281,40 @@ class PayrollController extends Controller
         $net = max($personnel->salaire - $creditRestantApres, 0);
 
         if ($net > 0) {
-            \App\Models\Depense::create([
-                'nom' => 'Salaire ' . now()->translatedFormat('F Y') . ' - ' . $personnel->nom,
-                'montant' => $net,
-                'mode_paiement_id' => $mode,
-                'source' => 'salaire',
-            ]);
-            \App\Models\Payroll::create([
-                'personnel_id' => $personnel->id,
-                'year' => $year,
-                'month' => $month,
-                'montant_net' => $net,
-                'mode' => $mode,
-                'paid_at' => now(),
-            ]);
-            return redirect()->route('salaires.index')->with('success', 'Salaire payé pour ' . $personnel->nom . '.');
+            try {
+                // Créer la date du mois payé (dernier jour du mois)
+                $datePaiement = now()->setDate($year, $month, 1)->endOfMonth();
+
+                \App\Models\Depense::create([
+                    'nom' => 'Salaire ' . $datePaiement->translatedFormat('F Y') . ' - ' . $personnel->nom,
+                    'montant' => $net,
+                    'mode_paiement_id' => $mode,
+                    'source' => 'salaire',
+                    'created_at' => $datePaiement,
+                    'updated_at' => $datePaiement,
+                ]);
+                \App\Models\Payroll::create([
+                    'personnel_id' => $personnel->id,
+                    'year' => $year,
+                    'month' => $month,
+                    'montant_net' => $net,
+                    'mode' => $mode,
+                    'paid_at' => $datePaiement,
+                ]);
+                return redirect()->route('salaires.index', ['year' => $year, 'month' => $month])->with('success', 'Salaire payé pour ' . $personnel->nom . '.');
+            } catch (\Exception $e) {
+                \Log::error('Erreur paiement salaire', [
+                    'error' => $e->getMessage(),
+                    'personnel_id' => $personnelId,
+                    'year' => $year,
+                    'month' => $month,
+                    'mode' => $mode
+                ]);
+                return redirect()->route('salaires.index', ['year' => $year, 'month' => $month])->with('error', 'Erreur lors du paiement : ' . $e->getMessage());
+            }
         }
 
         // Cas net=0: prévenir clairement
-        return redirect()->route('salaires.index')->with('info', "Paiement ignoré pour {$personnel->nom} : aucun salaire net à verser (salaire ou net à payer égal à 0).");
+        return redirect()->route('salaires.index', ['year' => $year, 'month' => $month])->with('info', "Paiement ignoré pour {$personnel->nom} : aucun salaire net à verser (salaire ou net à payer égal à 0).");
     }
 }

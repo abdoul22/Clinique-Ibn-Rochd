@@ -5,3 +5,6 @@ echo "Caisses avant: " . \App\Models\Caisse::count();
 \App\Models\Caisse::query()->delete();
 echo "\nCaisses après: " . \App\Models\Caisse::count();
 echo "\nFini ✅";
+
+
+

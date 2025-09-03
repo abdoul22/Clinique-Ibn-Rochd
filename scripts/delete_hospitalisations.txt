@@ -48,3 +48,6 @@ echo "Factures: " . \App\Models\Caisse::count() . "\n";
 
 echo "\n✅ SUPPRESSION TERMINÉE !\n";
 
+
+
+

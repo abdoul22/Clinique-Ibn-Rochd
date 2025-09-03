@@ -4,3 +4,6 @@ echo "Modes de paiement avant: " . \App\Models\ModePaiement::count();
 \App\Models\ModePaiement::query()->delete();
 echo "\nModes de paiement après: " . \App\Models\ModePaiement::count();
 echo "\nFini ✅";
+
+
+

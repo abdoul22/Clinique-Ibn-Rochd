@@ -20,3 +20,6 @@ echo "\nDossiers après: " . \App\Models\DossierMedical::count();
 echo "\nPatients préservés: " . \App\Models\GestionPatient::count();
 echo "\nFini ✅";
 
+
+
+

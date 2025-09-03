@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ModePaiement extends Model
 {
-    protected $fillable = ['caisse_id', 'type', 'montant', 'source'];
+    protected $fillable = ['caisse_id', 'type', 'montant', 'source', 'created_at', 'updated_at'];
 
     public function caisse()
     {

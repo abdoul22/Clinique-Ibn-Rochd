@@ -41,3 +41,6 @@ echo "\n✅ SUPPRESSION TERMINÉE !";
 // Note: Les crédits des personnels et assurances seront recalculés automatiquement
 echo "\n📝 Note: Les montants de crédit seront recalculés au prochain accès aux profils";
 
+
+
+

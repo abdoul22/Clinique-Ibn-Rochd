@@ -3,3 +3,6 @@ echo "États de caisse avant: " . \App\Models\EtatCaisse::count();
 \App\Models\EtatCaisse::query()->delete();
 echo "\nÉtats de caisse après: " . \App\Models\EtatCaisse::count();
 echo "\nFini ✅";
+
+
+

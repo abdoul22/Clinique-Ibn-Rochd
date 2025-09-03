@@ -28,6 +28,8 @@
 <div class="card mb-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
     <form method="POST" action="{{ route('salaires.payAll') }}" class="flex flex-wrap items-center gap-3">
         @csrf
+        <input type="hidden" name="year" value="{{ $year }}">
+        <input type="hidden" name="month" value="{{ $month }}">
         <div>
             <label class="form-label text-gray-700 dark:text-gray-300">Mode de paiement</label>
             <select name="mode"
@@ -69,6 +71,8 @@
                     <form method="POST" action="{{ route('salaires.payOne', $p['id']) }}"
                         class="flex items-center gap-2">
                         @csrf
+                        <input type="hidden" name="year" value="{{ $year }}">
+                        <input type="hidden" name="month" value="{{ $month }}">
                         <select name="mode"
                             class="form-select bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600"
                             {{ $p['is_paid'] ? 'disabled' : '' }}>

@@ -26,3 +26,6 @@ echo "\nPatients préservés: " . \App\Models\GestionPatient::count();
 echo "\nMédecins préservés: " . \App\Models\Medecin::count();
 echo "\nExamens préservés: " . \App\Models\Examen::count();
 echo "\nFini ✅";
+
+
+

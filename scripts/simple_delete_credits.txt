@@ -16,3 +16,6 @@ echo "\nPersonnels préservés: " . \App\Models\Personnel::count();
 echo "\nAssurances préservées: " . \App\Models\Assurance::count();
 echo "\nFini ✅";
 
+
+
+

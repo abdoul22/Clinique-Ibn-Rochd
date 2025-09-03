@@ -21,3 +21,6 @@ echo "\nDépenses préservées: " . \App\Models\Depense::count();
 echo "\nCrédits préservés: " . \App\Models\Credit::count();
 echo "\nCaisses préservées: " . \App\Models\Caisse::count();
 echo "\nFini ✅";
+
+
+

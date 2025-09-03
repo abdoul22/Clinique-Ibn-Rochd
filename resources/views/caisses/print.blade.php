@@ -14,33 +14,111 @@
             --fs-l: 22px;
         }
 
+        /* Format A5 par défaut */
         .sheet {
-            width: 210mm;
-            min-height: 297mm;
+            width: 148mm;
+            min-height: 210mm;
             margin: 0 auto;
-            padding: 15mm;
+            padding: 8mm;
             background: #fff;
             color: #000;
             font-family: system-ui, Arial, "Helvetica Neue", sans-serif;
-            line-height: 1.4;
+            line-height: 1.3;
             box-sizing: border-box;
         }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
+        /* Format A4 - plus large */
+        .sheet.a4 {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            line-height: 1.4;
         }
 
-        .fr {
+        /* Layout horizontal pour A5 (comme A4 mais plus compact) */
+        .sheet .header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            text-align: left;
+        }
+
+        .sheet .fr {
+            text-align: left;
+            font-size: 10px;
+        }
+
+        .sheet .ar {
+            text-align: right;
+            direction: rtl;
+            font-size: 10px;
+        }
+
+        .sheet .logo-container {
+            order: 0;
+            margin: 4px 0;
+        }
+
+        .sheet .logo-container img {
+            height: 35px;
+        }
+
+        .sheet .muted {
+            font-size: 9px;
+        }
+
+        .sheet .divider {
+            margin: 4px 0;
+        }
+
+        .sheet .table td,
+        .sheet .table th {
+            padding: 2px 0;
+            font-size: 11px;
+        }
+
+        /* Layout horizontal pour A4 (plus grand) */
+        .sheet.a4 .header {
+            flex-direction: row;
+            justify-content: space-between;
+            text-align: left;
+        }
+
+        .sheet.a4 .fr {
             text-align: left;
             font-size: var(--fs-s);
         }
 
-        .ar {
+        .sheet.a4 .ar {
             text-align: right;
             direction: rtl;
             font-size: var(--fs-s);
         }
+
+        .sheet.a4 .logo-container {
+            order: 0;
+            margin: 8px 0;
+        }
+
+        .sheet.a4 .logo-container img {
+            height: 50px;
+        }
+
+        .sheet.a4 .muted {
+            font-size: var(--fs-xs);
+        }
+
+        .sheet.a4 .divider {
+            margin: 6px 0;
+        }
+
+        .sheet.a4 .table td,
+        .sheet.a4 .table th {
+            padding: 4px 0;
+            font-size: var(--fs-m);
+        }
+
+        /* Styles de base supprimés - maintenant gérés par les classes spécifiques */
 
         .big {
             font-size: var(--fs-l);
@@ -97,10 +175,16 @@
             font-weight: 700;
         }
 
-        .print-button {
+        .print-controls {
             position: fixed;
             top: 10px;
             right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+        }
+
+        .print-button {
             padding: 8px 16px;
             background: #10b981;
             color: white;
@@ -108,15 +192,37 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            z-index: 1000;
         }
 
         .print-button:hover {
             background: #059669;
         }
 
+        .format-button {
+            padding: 8px 12px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .format-button:hover {
+            background: #4b5563;
+        }
+
+        .format-button.active {
+            background: #3b82f6;
+        }
+
         @media print {
             @page {
+                size: A5 portrait;
+                margin: 5mm;
+            }
+
+            @page.a4 {
                 size: A4 portrait;
                 margin: 10mm;
             }
@@ -131,23 +237,33 @@
                 padding: 0;
             }
 
-            .print-button {
+            .sheet.a4 {
+                width: auto;
+                min-height: auto;
+                padding: 0;
+            }
+
+            .print-controls {
                 display: none !important;
             }
         }
 
         @media screen {
-            .print-button {
-                display: block;
+            .print-controls {
+                display: flex;
             }
         }
     </style>
 </head>
 
 <body>
-    <button class="print-button" onclick="window.print()">Imprimer</button>
+    <div class="print-controls">
+        <button class="format-button" onclick="setFormat('a4')">A4</button>
+        <button class="format-button active" onclick="setFormat('a5')">A5</button>
+        <button class="print-button" onclick="window.print()">Imprimer</button>
+    </div>
 
-    <div class="sheet">
+    <div class="sheet a5" id="sheet">
 
         <!-- En-tête bilingue -->
         <div class="header">
@@ -258,8 +374,30 @@
             <span class="label">Caissier(e)</span> : <span class="value">{{ $caisse->nom_caissier ?? 'N/A' }}</span>
         </div>
     </div>
-</body>
 
-</html>
+    <script>
+        function setFormat(format) {
+            const sheet = document.getElementById('sheet');
+            const buttons = document.querySelectorAll('.format-button');
+
+            // Retirer toutes les classes de format
+            sheet.classList.remove('a4', 'a5');
+
+            // Ajouter la nouvelle classe
+            sheet.classList.add(format);
+
+            // Mettre à jour les boutons actifs
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Mettre à jour la page pour l'impression
+            if (format === 'a5') {
+                document.documentElement.style.setProperty('--page-size', 'A5');
+            } else {
+                document.documentElement.style.setProperty('--page-size', 'A4');
+            }
+        }
+    </script>
+</body>
 
 </html>

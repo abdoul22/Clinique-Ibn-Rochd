@@ -9,7 +9,7 @@ class Depense extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'montant', 'etat_caisse_id', 'mode_paiement_id', 'source', 'credit_id', 'rembourse'];
+    protected $fillable = ['nom', 'montant', 'etat_caisse_id', 'mode_paiement_id', 'source', 'credit_id', 'rembourse', 'created_at', 'updated_at'];
 
 
     public function etatCaisse()

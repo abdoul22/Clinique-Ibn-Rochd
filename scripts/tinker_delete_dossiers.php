@@ -54,3 +54,6 @@ echo "\n✅ Nettoyage terminé !\n";
 // \DB::statement('OPTIMIZE TABLE dossier_medicals');
 
 exit
+
+
+
