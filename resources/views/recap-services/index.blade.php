@@ -6,16 +6,19 @@
     <h1 class="text-xl md:text-2xl font-bold">Récapitulatif journalier des services</h1>
 
     <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0 w-full lg:w-auto">
-        <a href="{{ route('recap-services.exportPdf', request()->query()) }}"
+        <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-services.exportPdf', request()->query()) : route('recap-services.exportPdf', request()->query()) }}"
             class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition">PDF</a>
-        <a href="{{ route('recap-services.print', request()->query()) }}" target="_blank"
+        <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-services.print', request()->query()) : route('recap-services.print', request()->query()) }}"
+            target="_blank"
             class="bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded transition">Imprimer</a>
     </div>
 </div>
 
 <!-- Filtres -->
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-    <form method="GET" action="{{ route('recap-services.index') }}" class="space-y-4">
+    <form method="GET"
+        action="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-services.index') : route('recap-services.index') }}"
+        class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Filtre par période -->
             <div>
@@ -105,7 +108,7 @@
             <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition">
                 Filtrer
             </button>
-            <a href="{{ route('recap-services.index') }}"
+            <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-services.index') : route('recap-services.index') }}"
                 class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                 Réinitialiser
             </a>

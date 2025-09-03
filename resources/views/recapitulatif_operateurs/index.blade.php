@@ -37,7 +37,8 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
     <span
         class="inline-block bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium transition">{{
         $summary }}</span>
-    <a href="{{ route('recap-operateurs.index') }}" class="form-button form-button-secondary text-xs">Réinitialiser</a>
+    <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-operateurs.index') : route('recap-operateurs.index') }}"
+        class="form-button form-button-secondary text-xs">Réinitialiser</a>
 </div>
 @endif
 
@@ -75,7 +76,7 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
             placeholder="Fin" aria-label="Date de fin">
     </div>
     <button type="submit" class="form-button text-sm" id="btn-filtrer">Filtrer</button>
-    <a href="{{ route('recap-operateurs.index') }}"
+    <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-operateurs.index') : route('recap-operateurs.index') }}"
         class="ml-2 text-sm text-gray-600 dark:text-gray-400 underline">Afficher
         tous</a>
 </form>
@@ -133,9 +134,10 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
         </div>
 
         <!-- Boutons Export -->
-        <a href="{{ route('recap-operateurs.exportPdf', request()->query()) }}"
+        <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-operateurs.exportPdf', request()->query()) : route('recap-operateurs.exportPdf', request()->query()) }}"
             class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition">PDF</a>
-        <a href="{{ route('recap-operateurs.print', request()->query()) }}" target="_blank"
+        <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-operateurs.print', request()->query()) : route('recap-operateurs.print', request()->query()) }}"
+            target="_blank"
             class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded transition">Imprimer</a>
     </form>
 </div>

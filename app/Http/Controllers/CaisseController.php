@@ -122,6 +122,7 @@ class CaisseController extends Controller
         $prefilledPatient = null;
         $prefilledMedecin = null;
         $prefilledNumeroEntree = null;
+        $prefilledDateExamen = null;
 
         // Si on vient d'un rendez-vous, récupérer les données
         if ($request->has('from_rdv')) {
@@ -130,21 +131,25 @@ class CaisseController extends Controller
                 $prefilledPatient = $fromRdv->patient;
                 $prefilledMedecin = $fromRdv->medecin;
                 $prefilledNumeroEntree = $fromRdv->numero_entree;
+                $prefilledDateExamen = $fromRdv->date_rdv;
             }
         }
 
         // Calculer le numéro prévu pour chaque médecin (par jour, tous les numéros utilisés)
-        $today = now()->startOfDay();
+        // Utiliser la date d'examen si fournie, sinon la date du rendez-vous, sinon la date actuelle
+        $dateReference = $request->get('date_examen')
+            ? \Carbon\Carbon::parse($request->get('date_examen'))->startOfDay()
+            : ($prefilledDateExamen ? $prefilledDateExamen->startOfDay() : now()->startOfDay());
         $numeros_par_medecin = [];
         foreach ($medecins as $medecin) {
-            // Récupérer tous les numéros d'entrée utilisés aujourd'hui pour ce médecin
+            // Récupérer tous les numéros d'entrée utilisés pour ce médecin à cette date
             $numerosCaisses = Caisse::where('medecin_id', $medecin->id)
-                ->whereDate('created_at', $today)
+                ->whereDate('date_examen', $dateReference)
                 ->pluck('numero_entre')
                 ->toArray();
 
             $numerosRendezVous = \App\Models\RendezVous::where('medecin_id', $medecin->id)
-                ->whereDate('created_at', $today)
+                ->whereDate('date_rdv', $dateReference)
                 ->pluck('numero_entree')
                 ->toArray();
 
@@ -178,7 +183,8 @@ class CaisseController extends Controller
             'fromRdv',
             'prefilledPatient',
             'prefilledMedecin',
-            'prefilledNumeroEntree'
+            'prefilledNumeroEntree',
+            'prefilledDateExamen'
         ));
     }
 
@@ -223,7 +229,7 @@ class CaisseController extends Controller
 
         // Si pas de numéro d'entrée du rendez-vous, générer un nouveau
         if (!$numeroEntree) {
-            $numeroEntree = $this->getNextNumeroEntree($request->medecin_id);
+            $numeroEntree = $this->getNextNumeroEntree($request->medecin_id, $request->date_examen);
         }
 
         // Préparer les données de base de la facture
@@ -509,19 +515,20 @@ class CaisseController extends Controller
         return view('caisses.print', compact('caisse'));
     }
 
-    public function getNextNumeroEntree($medecinId)
+    public function getNextNumeroEntree($medecinId, $dateExamen = null)
     {
-        $today = now()->startOfDay();
+        // Utiliser la date d'examen si fournie, sinon la date actuelle
+        $dateReference = $dateExamen ? \Carbon\Carbon::parse($dateExamen)->startOfDay() : now()->startOfDay();
 
-        // Récupérer tous les numéros d'entrée utilisés aujourd'hui pour ce médecin
+        // Récupérer tous les numéros d'entrée utilisés pour ce médecin à cette date
         // (caisses + rendez-vous) pour éviter les doublons
         $numerosCaisses = Caisse::where('medecin_id', $medecinId)
-            ->whereDate('created_at', $today)
+            ->whereDate('date_examen', $dateReference)
             ->pluck('numero_entre')
             ->toArray();
 
         $numerosRendezVous = \App\Models\RendezVous::where('medecin_id', $medecinId)
-            ->whereDate('created_at', $today)
+            ->whereDate('date_rdv', $dateReference)
             ->pluck('numero_entree')
             ->toArray();
 
@@ -538,5 +545,19 @@ class CaisseController extends Controller
         }
 
         return $prochainNumero;
+    }
+
+    public function getNextNumeroEntreeApi(Request $request)
+    {
+        $medecinId = $request->get('medecin_id');
+        $dateExamen = $request->get('date_examen');
+
+        if (!$medecinId) {
+            return response()->json(['error' => 'Médecin requis'], 400);
+        }
+
+        $numero = $this->getNextNumeroEntree($medecinId, $dateExamen);
+
+        return response()->json(['numero' => $numero]);
     }
 }

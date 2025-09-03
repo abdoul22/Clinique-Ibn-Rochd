@@ -382,6 +382,29 @@
                 updateNumeroEntree();
             });
         }
+
+        // Fonction pour mettre à jour les numéros d'entrée quand la date change
+        function updateNumerosByDate() {
+            const dateRdv = document.getElementById('date_rdv').value;
+            const medecinSelect = document.getElementById('medecin_id');
+
+            if (dateRdv && medecinSelect && medecinSelect.value) {
+                // Faire une requête AJAX pour récupérer les nouveaux numéros
+                fetch(`/api/next-numero-entree-rdv?medecin_id=${medecinSelect.value}&date_rdv=${dateRdv}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.numero) {
+                            document.getElementById('numero_entree').value = data.numero;
+                        }
+                    })
+                    .catch(error => console.error('Erreur:', error));
+            }
+        }
+
+        // Ajouter l'événement de changement de date
+        if (dateInput) {
+            dateInput.addEventListener('change', updateNumerosByDate);
+        }
     });
 </script>
 @endpush

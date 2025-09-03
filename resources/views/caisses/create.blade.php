@@ -106,7 +106,7 @@
                     </label>
                     <select name="medecin_id" id="medecin_select" required
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 {{ $fromRdv ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-900' }} text-gray-900 dark:text-white"
-                        onchange="{{ $fromRdv ? '' : 'updateNumeroEntreeSimple();' }}" {{ $fromRdv ? 'disabled' : '' }}>
+                        onchange="{{ $fromRdv ? '' : 'updateNumerosByDate();' }}" {{ $fromRdv ? 'disabled' : '' }}>
                         <option value="">Sélectionner un médecin</option>
                         @php
                         $medecinsParFonction = $medecins->groupBy('fonction');
@@ -150,7 +150,8 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Date de l'examen
                         *</label>
-                    <input type="date" name="date_examen" required value="{{ date('Y-m-d') }}"
+                    <input type="date" name="date_examen" required
+                        value="{{ $prefilledDateExamen ? $prefilledDateExamen->format('Y-m-d') : date('Y-m-d') }}"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                 </div>
 
@@ -704,6 +705,33 @@ function updateNumeroEntreeSimple() {
         }
     }
 }
+
+// Fonction pour mettre à jour les numéros d'entrée quand la date ou le médecin change
+function updateNumerosByDate() {
+    const dateExamen = document.querySelector('input[name="date_examen"]').value;
+    const medecinSelect = document.querySelector('select[name="medecin_id"]');
+
+    if (dateExamen && medecinSelect && medecinSelect.value) {
+        // Faire une requête AJAX pour récupérer les nouveaux numéros
+        fetch(`/api/next-numero-entree?medecin_id=${medecinSelect.value}&date_examen=${dateExamen}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.numero) {
+                    document.getElementById('numero_entree_display').value = data.numero;
+                }
+            })
+            .catch(error => console.error('Erreur lors de la mise à jour du numéro d\'entrée:', error));
+    }
+}
+
+// Ajouter l'événement de changement de date
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.querySelector('input[name="date_examen"]');
+
+    if (dateInput) {
+        dateInput.addEventListener('change', updateNumerosByDate);
+    }
+});
 </script>
 
 <script>

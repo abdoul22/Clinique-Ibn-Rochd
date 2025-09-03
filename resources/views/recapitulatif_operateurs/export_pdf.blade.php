@@ -37,7 +37,7 @@
             <tr>
                 <th>#</th>
                 <th>Médecin</th>
-                <th>Service</th>
+                <th>Examen</th>
                 <th>Nombre</th>
                 <th>Tarif</th>
                 <th>Recettes</th>
@@ -49,15 +49,15 @@
         <tbody>
             @foreach($recaps as $recap)
             <tr>
-                <td>{{ $recap->id }}</td>
+                <td>{{ $loop->iteration }}</td>
                 <td>{{ $recap->medecin->nom ?? '—' }}</td>
-                <td>{{ $recap->service->nom ?? '—' }}</td>
+                <td>{{ $recap->examen->nom ?? '—' }}</td>
                 <td>{{ $recap->nombre }}</td>
                 <td>{{ number_format($recap->tarif, 0, ',', ' ') }}</td>
                 <td>{{ number_format($recap->recettes, 0, ',', ' ') }}</td>
                 <td>{{ number_format($recap->part_medecin, 0, ',', ' ') }}</td>
                 <td>{{ number_format($recap->part_clinique, 0, ',', ' ') }}</td>
-                <td>{{ $recap->date }}</td>
+                <td>{{ \Carbon\Carbon::parse($recap->jour)->format('d/m/Y') }}</td>
             </tr>
             @endforeach
         </tbody>

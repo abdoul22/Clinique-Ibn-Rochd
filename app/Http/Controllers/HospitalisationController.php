@@ -354,15 +354,23 @@ class HospitalisationController extends Controller
             $serviceHosp = Service::where('type_service', 'HOSPITALISATION')->first() ?? Service::first();
             $examen = Examen::where('idsvc', $serviceHosp?->id)
                 ->where('nom', 'Hospitalisation')
+                ->where('medecin_id', $medecinId) // Chercher par médecin aussi
                 ->first();
 
             if (!$examen) {
                 $examen = Examen::create([
                     'nom' => 'Hospitalisation',
                     'idsvc' => $serviceHosp?->id,
+                    'medecin_id' => $medecinId, // Lier l'examen au médecin
                     'tarif' => 0, // Tarif dynamique selon les charges
-                    'part_cabinet' => 0,
-                    'part_medecin' => 0,
+                    'part_cabinet' => $partCabinet, // Utiliser les parts réelles
+                    'part_medecin' => $partMedecin, // Utiliser les parts réelles
+                ]);
+            } else {
+                // Mettre à jour l'examen existant avec les parts réelles
+                $examen->update([
+                    'part_cabinet' => $partCabinet,
+                    'part_medecin' => $partMedecin,
                 ]);
             }
 
@@ -797,15 +805,23 @@ class HospitalisationController extends Controller
             $serviceHosp = Service::where('type_service', 'HOSPITALISATION')->first() ?? Service::first();
             $examen = Examen::where('idsvc', $serviceHosp?->id)
                 ->where('nom', 'Hospitalisation')
+                ->where('medecin_id', $medecinId) // Chercher par médecin aussi
                 ->first();
 
             if (!$examen) {
                 $examen = Examen::create([
                     'nom' => 'Hospitalisation',
                     'idsvc' => $serviceHosp?->id,
+                    'medecin_id' => $medecinId, // Lier l'examen au médecin
                     'tarif' => 0, // Tarif dynamique selon les charges
-                    'part_cabinet' => 0,
-                    'part_medecin' => 0,
+                    'part_cabinet' => $partCabinet, // Utiliser les parts réelles
+                    'part_medecin' => $partMedecin, // Utiliser les parts réelles
+                ]);
+            } else {
+                // Mettre à jour l'examen existant avec les parts réelles
+                $examen->update([
+                    'part_cabinet' => $partCabinet,
+                    'part_medecin' => $partMedecin,
                 ]);
             }
 

@@ -9,11 +9,13 @@
             <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Détails du Rendez-vous</h1>
             <div class="flex space-x-2">
                 @if(Auth::user() && Auth::user()->role?->name === 'superadmin')
-                <a href="{{ route('rendezvous.edit', $rendezVous->id) }}"
+                <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.edit', $rendezVous->id) : route('rendezvous.edit', $rendezVous->id) }}"
                     class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
                     <i class="fas fa-edit mr-2"></i>Modifier
                 </a>
-                <form action="{{ route('rendezvous.destroy', $rendezVous->id) }}" method="POST" class="inline">
+                <form
+                    action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.destroy', $rendezVous->id) : route('rendezvous.destroy', $rendezVous->id) }}"
+                    method="POST" class="inline">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
@@ -228,11 +230,13 @@
                         @endif
 
                         @if(Auth::user() && Auth::user()->role?->name === 'superadmin')
-                        <a href="{{ route('rendezvous.edit', $rendezVous->id) }}"
+                        <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.edit', $rendezVous->id) : route('rendezvous.edit', $rendezVous->id) }}"
                             class="w-full bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center">
                             <i class="fas fa-edit mr-2"></i>Modifier
                         </a>
-                        <form action="{{ route('rendezvous.destroy', $rendezVous->id) }}" method="POST" class="w-full">
+                        <form
+                            action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.destroy', $rendezVous->id) : route('rendezvous.destroy', $rendezVous->id) }}"
+                            method="POST" class="w-full">
                             @csrf
                             @method('DELETE')
                             <button type="submit"

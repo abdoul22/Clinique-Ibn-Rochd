@@ -79,10 +79,34 @@ class Caisse extends Model
             }
 
             // Génération du numéro d'entrée journalier SEULEMENT si pas déjà défini
-            if (empty($caisse->numero_entre)) {
-                $today = now()->startOfDay();
-                $countToday = self::whereDate('created_at', $today)->count();
-                $caisse->numero_entre = $countToday + 1;
+            if (is_null($caisse->numero_entre) || $caisse->numero_entre === '') {
+                // Utiliser la date d'examen si disponible, sinon la date actuelle
+                $dateReference = $caisse->date_examen ? \Carbon\Carbon::parse($caisse->date_examen)->startOfDay() : now()->startOfDay();
+
+                // Récupérer tous les numéros d'entrée utilisés pour ce médecin à cette date
+                $numerosCaisses = self::where('medecin_id', $caisse->medecin_id)
+                    ->whereDate('date_examen', $dateReference)
+                    ->pluck('numero_entre')
+                    ->toArray();
+
+                $numerosRendezVous = \App\Models\RendezVous::where('medecin_id', $caisse->medecin_id)
+                    ->whereDate('date_rdv', $dateReference)
+                    ->pluck('numero_entree')
+                    ->toArray();
+
+                // Fusionner et trier tous les numéros utilisés
+                $numerosUtilises = array_merge($numerosCaisses, $numerosRendezVous);
+                sort($numerosUtilises);
+
+                // Trouver le prochain numéro disponible
+                $numeroEntree = 1;
+                foreach ($numerosUtilises as $numero) {
+                    if ($numero >= $numeroEntree) {
+                        $numeroEntree = $numero + 1;
+                    }
+                }
+
+                $caisse->numero_entre = $numeroEntree;
             }
         });
     }

@@ -9,7 +9,11 @@ class Examen extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'idsvc', 'tarif',
+    protected $fillable = [
+        'nom',
+        'idsvc',
+        'medecin_id',
+        'tarif',
         'part_cabinet',
         'part_medecin',
     ];
@@ -18,6 +22,12 @@ class Examen extends Model
     {
         return $this->belongsTo(Service::class, 'idsvc');
     }
+
+    public function medecin()
+    {
+        return $this->belongsTo(Medecin::class);
+    }
+
     public function caisse()
     {
         return $this->belongsTo(caisse::class, 'examen_id');

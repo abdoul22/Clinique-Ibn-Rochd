@@ -81,17 +81,18 @@ class RendezVousController extends Controller
         $patientId = $request->get('patient_id');
 
         // Calculer le numéro prévu pour chaque médecin (par jour, tous les numéros utilisés)
-        $today = now()->startOfDay();
+        // Utiliser la date de RDV si fournie, sinon la date actuelle
+        $dateReference = $request->get('date_rdv') ? \Carbon\Carbon::parse($request->get('date_rdv'))->startOfDay() : now()->startOfDay();
         $numeros_par_medecin = [];
         foreach ($medecins as $medecin) {
-            // Récupérer tous les numéros d'entrée utilisés aujourd'hui pour ce médecin
+            // Récupérer tous les numéros d'entrée utilisés pour ce médecin à cette date
             $numerosCaisses = \App\Models\Caisse::where('medecin_id', $medecin->id)
-                ->whereDate('created_at', $today)
+                ->whereDate('date_examen', $dateReference)
                 ->pluck('numero_entre')
                 ->toArray();
 
             $numerosRendezVous = RendezVous::where('medecin_id', $medecin->id)
-                ->whereDate('created_at', $today)
+                ->whereDate('date_rdv', $dateReference)
                 ->pluck('numero_entree')
                 ->toArray();
 
@@ -135,36 +136,9 @@ class RendezVousController extends Controller
         }
 
         $dateRdv = $request->date_rdv;
-
-        // Génération du numéro d'entrée spécifique au médecin ET au jour
-        // (partagé entre caisses ET rendez-vous)
-        $today = now()->startOfDay(); // 00h GMT du jour actuel
-
-        // Récupérer tous les numéros d'entrée utilisés aujourd'hui pour ce médecin
-        $numerosCaisses = \App\Models\Caisse::where('medecin_id', $request->medecin_id)
-            ->whereDate('created_at', $today)
-            ->pluck('numero_entre')
-            ->toArray();
-
-        $numerosRendezVous = RendezVous::where('medecin_id', $request->medecin_id)
-            ->whereDate('created_at', $today)
-            ->pluck('numero_entree')
-            ->toArray();
-
-        // Fusionner et trier tous les numéros utilisés
-        $numerosUtilises = array_merge($numerosCaisses, $numerosRendezVous);
-        sort($numerosUtilises);
-
-        // Trouver le prochain numéro disponible
-        $numeroEntree = 1;
-        foreach ($numerosUtilises as $numero) {
-            if ($numero >= $numeroEntree) {
-                $numeroEntree = $numero + 1;
-            }
-        }
-
         $motif = $request->motif ?: 'premier visite';
 
+        // Le numéro d'entrée sera généré automatiquement par le modèle
         RendezVous::create([
             'patient_id' => $request->patient_id,
             'medecin_id' => $request->medecin_id,
@@ -173,7 +147,6 @@ class RendezVousController extends Controller
             'motif' => $motif,
             'statut' => 'confirme',
             'notes' => $request->notes,
-            'numero_entree' => $numeroEntree,
             'created_by' => Auth::id(),
         ]);
 
@@ -331,5 +304,43 @@ class RendezVousController extends Controller
         $rendezVous = $query->orderBy('heure_rdv')->get();
 
         return response()->json($rendezVous);
+    }
+
+    public function getNextNumeroEntreeApi(Request $request)
+    {
+        $medecinId = $request->get('medecin_id');
+        $dateRdv = $request->get('date_rdv');
+
+        if (!$medecinId) {
+            return response()->json(['error' => 'Médecin requis'], 400);
+        }
+
+        // Utiliser la date de RDV si fournie, sinon la date actuelle
+        $dateReference = $dateRdv ? \Carbon\Carbon::parse($dateRdv)->startOfDay() : now()->startOfDay();
+
+        // Récupérer tous les numéros d'entrée utilisés pour ce médecin à cette date
+        $numerosCaisses = \App\Models\Caisse::where('medecin_id', $medecinId)
+            ->whereDate('date_examen', $dateReference)
+            ->pluck('numero_entre')
+            ->toArray();
+
+        $numerosRendezVous = RendezVous::where('medecin_id', $medecinId)
+            ->whereDate('date_rdv', $dateReference)
+            ->pluck('numero_entree')
+            ->toArray();
+
+        // Fusionner et trier tous les numéros utilisés
+        $numerosUtilises = array_merge($numerosCaisses, $numerosRendezVous);
+        sort($numerosUtilises);
+
+        // Trouver le prochain numéro disponible
+        $numeroEntree = 1;
+        foreach ($numerosUtilises as $numero) {
+            if ($numero >= $numeroEntree) {
+                $numeroEntree = $numero + 1;
+            }
+        }
+
+        return response()->json(['numero' => $numeroEntree]);
     }
 }

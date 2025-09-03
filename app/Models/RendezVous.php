@@ -29,6 +29,42 @@ class RendezVous extends Model
         'heure_rdv' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($rendezVous) {
+            // Génération du numéro d'entrée journalier SEULEMENT si pas déjà défini
+            if (empty($rendezVous->numero_entree)) {
+                // Utiliser la date de RDV si disponible, sinon la date actuelle
+                $dateReference = $rendezVous->date_rdv ? \Carbon\Carbon::parse($rendezVous->date_rdv)->startOfDay() : now()->startOfDay();
+
+                // Récupérer tous les numéros d'entrée utilisés pour ce médecin à cette date
+                $numerosCaisses = \App\Models\Caisse::where('medecin_id', $rendezVous->medecin_id)
+                    ->whereDate('date_examen', $dateReference)
+                    ->pluck('numero_entre')
+                    ->toArray();
+
+                $numerosRendezVous = self::where('medecin_id', $rendezVous->medecin_id)
+                    ->whereDate('date_rdv', $dateReference)
+                    ->pluck('numero_entree')
+                    ->toArray();
+
+                // Fusionner et trier tous les numéros utilisés
+                $numerosUtilises = array_merge($numerosCaisses, $numerosRendezVous);
+                sort($numerosUtilises);
+
+                // Trouver le prochain numéro disponible
+                $numeroEntree = 1;
+                foreach ($numerosUtilises as $numero) {
+                    if ($numero >= $numeroEntree) {
+                        $numeroEntree = $numero + 1;
+                    }
+                }
+
+                $rendezVous->numero_entree = $numeroEntree;
+            }
+        });
+    }
+
     // Relation avec le patient
     public function patient()
     {

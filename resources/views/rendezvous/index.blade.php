@@ -14,7 +14,8 @@
 
     <!-- Filtres -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
-        <form method="GET" action="{{ route('rendezvous.index') }}"
+        <form method="GET"
+            action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.index') : route('rendezvous.index') }}"
             class="flex flex-col lg:flex-row lg:space-x-4 space-y-4 lg:space-y-0">
             <div class="flex-1 min-w-[180px]">
                 <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Médecin</label>
@@ -54,7 +55,7 @@
                     class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-base w-full sm:w-auto lg:w-auto">
                     <i class="fas fa-search mr-2"></i>Filtrer
                 </button>
-                <a href="{{ route('rendezvous.index') }}"
+                <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.index') : route('rendezvous.index') }}"
                     class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-base w-full sm:w-auto lg:w-auto text-center">
                     <i class="fas fa-times mr-2"></i>Réinitialiser
                 </a>
@@ -69,11 +70,11 @@
                 {{ \Carbon\Carbon::create($currentYear, $currentMonth)->format('F Y') }}
             </h2>
             <div class="flex space-x-2">
-                <a href="{{ route('rendezvous.index', array_merge(request()->query(), ['month' => $currentMonth - 1, 'year' => $currentYear])) }}"
+                <a href="{{ route(auth()->user()->role?->name === 'admin' ? 'admin.rendezvous.index' : 'rendezvous.index', array_merge(request()->query(), ['month' => $currentMonth - 1, 'year' => $currentYear])) }}"
                     class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg text-base">
                     <i class="fas fa-chevron-left"></i>
                 </a>
-                <a href="{{ route('rendezvous.index', array_merge(request()->query(), ['month' => $currentMonth + 1, 'year' => $currentYear])) }}"
+                <a href="{{ route(auth()->user()->role?->name === 'admin' ? 'admin.rendezvous.index' : 'rendezvous.index', array_merge(request()->query(), ['month' => $currentMonth + 1, 'year' => $currentYear])) }}"
                     class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg text-base">
                     <i class="fas fa-chevron-right"></i>
                 </a>
@@ -230,11 +231,13 @@
                                 </a>
                                 @if(Auth::user() && Auth::user()->role?->name === 'superadmin' &&
                                 !request()->routeIs('admin.*'))
-                                <a href="{{ route('rendezvous.edit', $rdv->id) }}"
+                                <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.edit', $rdv->id) : route('rendezvous.edit', $rdv->id) }}"
                                     class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('rendezvous.destroy', $rdv->id) }}" method="POST" class="inline"
+                                <form
+                                    action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.destroy', $rdv->id) : route('rendezvous.destroy', $rdv->id) }}"
+                                    method="POST" class="inline"
                                     onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')">
                                     @csrf
                                     @method('DELETE')
@@ -246,8 +249,9 @@
                                 @endif
                                 @if(Auth::user() && Auth::user()->role?->name === 'admin' &&
                                 !request()->routeIs('admin.*') && $rdv->statut === 'confirme')
-                                <form action="{{ route('rendezvous.change-status', $rdv->id) }}" method="POST"
-                                    class="inline">
+                                <form
+                                    action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.change-status', $rdv->id) : route('rendezvous.change-status', $rdv->id) }}"
+                                    method="POST" class="inline">
                                     @csrf
                                     <input type="hidden" name="statut" value="annule">
                                     <button type="submit"

@@ -23,11 +23,11 @@ class RecapitulatifOperateurController extends Controller
         // Construire la requête de base
         $query = Caisse::with(['medecin', 'examen'])
             ->select([
-                'medecin_id',
-                'examen_id',
+                'caisses.medecin_id',
+                'caisses.examen_id',
                 DB::raw('COUNT(*) as nombre'),
-                DB::raw('SUM(total) as recettes'),
-                DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00")) as jour'),
+                DB::raw('SUM(caisses.total) as recettes'),
+                DB::raw('DATE(CONVERT_TZ(caisses.date_examen, "+00:00", "+00:00")) as jour'),
                 DB::raw('MAX(examens.tarif) as tarif'),
                 DB::raw('SUM(examens.part_medecin) as part_medecin'),
                 DB::raw('SUM(examens.part_cabinet) as part_clinique')
@@ -38,41 +38,41 @@ class RecapitulatifOperateurController extends Controller
         $period = $request->get('period', 'day');
 
         if ($period === 'day' && $request->filled('date')) {
-            $query->whereDate('date_examen', $request->date);
+            $query->whereDate('caisses.date_examen', $request->date);
         } elseif ($period === 'week' && $request->filled('week')) {
             $parts = explode('-W', $request->week);
             if (count($parts) === 2) {
                 $start = Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
                 $end = Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
-                $query->whereBetween('date_examen', [$start, $end]);
+                $query->whereBetween('caisses.date_examen', [$start, $end]);
             }
         } elseif ($period === 'month' && $request->filled('month')) {
             $parts = explode('-', $request->month);
             if (count($parts) === 2) {
-                $query->whereYear('date_examen', $parts[0])
-                    ->whereMonth('date_examen', $parts[1]);
+                $query->whereYear('caisses.date_examen', $parts[0])
+                    ->whereMonth('caisses.date_examen', $parts[1]);
             }
         } elseif ($period === 'year' && $request->filled('year')) {
-            $query->whereYear('date_examen', $request->year);
+            $query->whereYear('caisses.date_examen', $request->year);
         } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
-            $query->whereBetween('date_examen', [$request->date_start, $request->date_end]);
+            $query->whereBetween('caisses.date_examen', [$request->date_start, $request->date_end]);
         }
 
         // Filtrage par médecin
         if ($request->filled('medecin_id')) {
-            $query->where('medecin_id', $request->medecin_id);
+            $query->where('caisses.medecin_id', $request->medecin_id);
         }
 
         // Filtrage par examen
         if ($request->filled('examen_id')) {
-            $query->where('examen_id', $request->examen_id);
+            $query->where('caisses.examen_id', $request->examen_id);
         }
 
         // Grouper par médecin, examen et jour (une ligne par médecin par examen par jour)
-        $recapOperateurs = $query->groupBy('medecin_id', 'examen_id', DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00"))'))
+        $recapOperateurs = $query->groupBy('caisses.medecin_id', 'caisses.examen_id', DB::raw('DATE(CONVERT_TZ(caisses.date_examen, "+00:00", "+00:00"))'))
             ->orderBy('jour', 'desc')
-            ->orderBy('medecin_id')
-            ->orderBy('examen_id')
+            ->orderBy('caisses.medecin_id')
+            ->orderBy('caisses.examen_id')
             ->paginate(15);
 
         // Calculer les totaux pour le résumé
@@ -80,37 +80,37 @@ class RecapitulatifOperateurController extends Controller
 
         // Appliquer les mêmes filtres
         if ($period === 'day' && $request->filled('date')) {
-            $totauxQuery->whereDate('date_examen', $request->date);
+            $totauxQuery->whereDate('caisses.date_examen', $request->date);
         } elseif ($period === 'week' && $request->filled('week')) {
             $parts = explode('-W', $request->week);
             if (count($parts) === 2) {
                 $start = Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
                 $end = Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
-                $totauxQuery->whereBetween('date_examen', [$start, $end]);
+                $totauxQuery->whereBetween('caisses.date_examen', [$start, $end]);
             }
         } elseif ($period === 'month' && $request->filled('month')) {
             $parts = explode('-', $request->month);
             if (count($parts) === 2) {
-                $totauxQuery->whereYear('date_examen', $parts[0])
-                    ->whereMonth('date_examen', $parts[1]);
+                $totauxQuery->whereYear('caisses.date_examen', $parts[0])
+                    ->whereMonth('caisses.date_examen', $parts[1]);
             }
         } elseif ($period === 'year' && $request->filled('year')) {
-            $totauxQuery->whereYear('date_examen', $request->year);
+            $totauxQuery->whereYear('caisses.date_examen', $request->year);
         } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
-            $totauxQuery->whereBetween('date_examen', [$request->date_start, $request->date_end]);
+            $totauxQuery->whereBetween('caisses.date_examen', [$request->date_start, $request->date_end]);
         }
 
         if ($request->filled('medecin_id')) {
-            $totauxQuery->where('medecin_id', $request->medecin_id);
+            $totauxQuery->where('caisses.medecin_id', $request->medecin_id);
         }
 
         if ($request->filled('examen_id')) {
-            $totauxQuery->where('examen_id', $request->examen_id);
+            $totauxQuery->where('caisses.examen_id', $request->examen_id);
         }
 
         $totaux = $totauxQuery->select([
             DB::raw('COUNT(*) as total_examens'),
-            DB::raw('SUM(total) as total_recettes'),
+            DB::raw('SUM(caisses.total) as total_recettes'),
             DB::raw('SUM(examens.part_medecin) as total_part_medecin'),
             DB::raw('SUM(examens.part_cabinet) as total_part_clinique')
         ])->first();
@@ -202,11 +202,11 @@ class RecapitulatifOperateurController extends Controller
         // Construire la requête de base (même logique que index)
         $query = Caisse::with(['medecin', 'examen'])
             ->select([
-                'medecin_id',
-                'examen_id',
+                'caisses.medecin_id',
+                'caisses.examen_id',
                 DB::raw('COUNT(*) as nombre'),
-                DB::raw('SUM(total) as recettes'),
-                DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00")) as jour'),
+                DB::raw('SUM(caisses.total) as recettes'),
+                DB::raw('DATE(CONVERT_TZ(caisses.date_examen, "+00:00", "+00:00")) as jour'),
                 DB::raw('MAX(examens.tarif) as tarif'),
                 DB::raw('SUM(examens.part_medecin) as part_medecin'),
                 DB::raw('SUM(examens.part_cabinet) as part_clinique')
@@ -217,41 +217,41 @@ class RecapitulatifOperateurController extends Controller
         $period = $request->get('period', 'day');
 
         if ($period === 'day' && $request->filled('date')) {
-            $query->whereDate('date_examen', $request->date);
+            $query->whereDate('caisses.date_examen', $request->date);
         } elseif ($period === 'week' && $request->filled('week')) {
             $parts = explode('-W', $request->week);
             if (count($parts) === 2) {
                 $start = Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
                 $end = Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
-                $query->whereBetween('date_examen', [$start, $end]);
+                $query->whereBetween('caisses.date_examen', [$start, $end]);
             }
         } elseif ($period === 'month' && $request->filled('month')) {
             $parts = explode('-', $request->month);
             if (count($parts) === 2) {
-                $query->whereYear('date_examen', $parts[0])
-                    ->whereMonth('date_examen', $parts[1]);
+                $query->whereYear('caisses.date_examen', $parts[0])
+                    ->whereMonth('caisses.date_examen', $parts[1]);
             }
         } elseif ($period === 'year' && $request->filled('year')) {
-            $query->whereYear('date_examen', $request->year);
+            $query->whereYear('caisses.date_examen', $request->year);
         } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
-            $query->whereBetween('date_examen', [$request->date_start, $request->date_end]);
+            $query->whereBetween('caisses.date_examen', [$request->date_start, $request->date_end]);
         }
 
         // Filtrage par médecin
         if ($request->filled('medecin_id')) {
-            $query->where('medecin_id', $request->medecin_id);
+            $query->where('caisses.medecin_id', $request->medecin_id);
         }
 
         // Filtrage par examen
         if ($request->filled('examen_id')) {
-            $query->where('examen_id', $request->examen_id);
+            $query->where('caisses.examen_id', $request->examen_id);
         }
 
         // Grouper par médecin, examen et jour
-        $recaps = $query->groupBy('medecin_id', 'examen_id', DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00"))'))
+        $recaps = $query->groupBy('caisses.medecin_id', 'caisses.examen_id', DB::raw('DATE(CONVERT_TZ(caisses.date_examen, "+00:00", "+00:00"))'))
             ->orderBy('jour', 'desc')
-            ->orderBy('medecin_id')
-            ->orderBy('examen_id')
+            ->orderBy('caisses.medecin_id')
+            ->orderBy('caisses.examen_id')
             ->get();
 
         $pdf = PDF::loadView('recapitulatif_operateurs.export_pdf', compact('recaps'));
@@ -267,11 +267,11 @@ class RecapitulatifOperateurController extends Controller
         // Construire la requête de base (même logique que index)
         $query = Caisse::with(['medecin', 'examen'])
             ->select([
-                'medecin_id',
-                'examen_id',
+                'caisses.medecin_id',
+                'caisses.examen_id',
                 DB::raw('COUNT(*) as nombre'),
-                DB::raw('SUM(total) as recettes'),
-                DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00")) as jour'),
+                DB::raw('SUM(caisses.total) as recettes'),
+                DB::raw('DATE(CONVERT_TZ(caisses.date_examen, "+00:00", "+00:00")) as jour'),
                 DB::raw('MAX(examens.tarif) as tarif'),
                 DB::raw('SUM(examens.part_medecin) as part_medecin'),
                 DB::raw('SUM(examens.part_cabinet) as part_clinique')
@@ -282,41 +282,41 @@ class RecapitulatifOperateurController extends Controller
         $period = $request->get('period', 'day');
 
         if ($period === 'day' && $request->filled('date')) {
-            $query->whereDate('date_examen', $request->date);
+            $query->whereDate('caisses.date_examen', $request->date);
         } elseif ($period === 'week' && $request->filled('week')) {
             $parts = explode('-W', $request->week);
             if (count($parts) === 2) {
                 $start = Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
                 $end = Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
-                $query->whereBetween('date_examen', [$start, $end]);
+                $query->whereBetween('caisses.date_examen', [$start, $end]);
             }
         } elseif ($period === 'month' && $request->filled('month')) {
             $parts = explode('-', $request->month);
             if (count($parts) === 2) {
-                $query->whereYear('date_examen', $parts[0])
-                    ->whereMonth('date_examen', $parts[1]);
+                $query->whereYear('caisses.date_examen', $parts[0])
+                    ->whereMonth('caisses.date_examen', $parts[1]);
             }
         } elseif ($period === 'year' && $request->filled('year')) {
-            $query->whereYear('date_examen', $request->year);
+            $query->whereYear('caisses.date_examen', $request->year);
         } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
-            $query->whereBetween('date_examen', [$request->date_start, $request->date_end]);
+            $query->whereBetween('caisses.date_examen', [$request->date_start, $request->date_end]);
         }
 
         // Filtrage par médecin
         if ($request->filled('medecin_id')) {
-            $query->where('medecin_id', $request->medecin_id);
+            $query->where('caisses.medecin_id', $request->medecin_id);
         }
 
         // Filtrage par examen
         if ($request->filled('examen_id')) {
-            $query->where('examen_id', $request->examen_id);
+            $query->where('caisses.examen_id', $request->examen_id);
         }
 
         // Grouper par médecin, examen et jour (même logique que index)
-        $recapOperateurs = $query->groupBy('medecin_id', 'examen_id', DB::raw('DATE(CONVERT_TZ(date_examen, "+00:00", "+00:00"))'))
+        $recapOperateurs = $query->groupBy('caisses.medecin_id', 'caisses.examen_id', DB::raw('DATE(CONVERT_TZ(caisses.date_examen, "+00:00", "+00:00"))'))
             ->orderBy('jour', 'desc')
-            ->orderBy('medecin_id')
-            ->orderBy('examen_id')
+            ->orderBy('caisses.medecin_id')
+            ->orderBy('caisses.examen_id')
             ->get(); // Pas de pagination pour l'impression
 
         // Calculer les totaux pour le résumé (même logique que index)
@@ -324,37 +324,37 @@ class RecapitulatifOperateurController extends Controller
 
         // Appliquer les mêmes filtres
         if ($period === 'day' && $request->filled('date')) {
-            $totauxQuery->whereDate('date_examen', $request->date);
+            $totauxQuery->whereDate('caisses.date_examen', $request->date);
         } elseif ($period === 'week' && $request->filled('week')) {
             $parts = explode('-W', $request->week);
             if (count($parts) === 2) {
                 $start = Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
                 $end = Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
-                $totauxQuery->whereBetween('date_examen', [$start, $end]);
+                $totauxQuery->whereBetween('caisses.date_examen', [$start, $end]);
             }
         } elseif ($period === 'month' && $request->filled('month')) {
             $parts = explode('-', $request->month);
             if (count($parts) === 2) {
-                $totauxQuery->whereYear('date_examen', $parts[0])
-                    ->whereMonth('date_examen', $parts[1]);
+                $totauxQuery->whereYear('caisses.date_examen', $parts[0])
+                    ->whereMonth('caisses.date_examen', $parts[1]);
             }
         } elseif ($period === 'year' && $request->filled('year')) {
-            $totauxQuery->whereYear('date_examen', $request->year);
+            $totauxQuery->whereYear('caisses.date_examen', $request->year);
         } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
-            $totauxQuery->whereBetween('date_examen', [$request->date_start, $request->date_end]);
+            $totauxQuery->whereBetween('caisses.date_examen', [$request->date_start, $request->date_end]);
         }
 
         if ($request->filled('medecin_id')) {
-            $totauxQuery->where('medecin_id', $request->medecin_id);
+            $totauxQuery->where('caisses.medecin_id', $request->medecin_id);
         }
 
         if ($request->filled('examen_id')) {
-            $totauxQuery->where('examen_id', $request->examen_id);
+            $totauxQuery->where('caisses.examen_id', $request->examen_id);
         }
 
         $totaux = $totauxQuery->select([
             DB::raw('COUNT(*) as total_examens'),
-            DB::raw('SUM(total) as total_recettes'),
+            DB::raw('SUM(caisses.total) as total_recettes'),
             DB::raw('SUM(examens.part_medecin) as total_part_medecin'),
             DB::raw('SUM(examens.part_cabinet) as total_part_clinique')
         ])->first();

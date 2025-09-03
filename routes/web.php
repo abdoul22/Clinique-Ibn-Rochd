@@ -345,6 +345,10 @@ Route::middleware(['auth', 'is.approved'])->group(function () {
     Route::get('salaires/pdf', [App\Http\Controllers\PayrollController::class, 'pdf'])->name('salaires.pdf');
     Route::post('salaires/payer-tout', [App\Http\Controllers\PayrollController::class, 'payAll'])->name('salaires.payAll');
     Route::post('salaires/{personnelId}/payer', [App\Http\Controllers\PayrollController::class, 'payOne'])->name('salaires.payOne');
+
+    // API pour récupérer le prochain numéro d'entrée
+    Route::get('api/next-numero-entree', [App\Http\Controllers\CaisseController::class, 'getNextNumeroEntreeApi']);
+    Route::get('api/next-numero-entree-rdv', [App\Http\Controllers\RendezVousController::class, 'getNextNumeroEntreeApi']);
 });
 
 // API pour récupérer le prochain numéro d'entrée d'un médecin
