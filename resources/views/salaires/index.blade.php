@@ -51,7 +51,8 @@
                 <th>Personnel</th>
                 <th>Fonction</th>
                 <th>Salaire brut</th>
-                <th>Crédit (Total Restant)</th>
+                <th>Crédit déduit ce mois</th>
+                <th>Crédit restant</th>
                 <th>Net à payer</th>
                 <th>Actions</th>
             </tr>
@@ -59,10 +60,12 @@
         <tbody class="text-gray-900 dark:text-gray-100">
             @foreach($personnels as $p)
             <tr
-                class="{{ $p['is_paid'] ? 'bg-green-50 dark:bg-green-900/20' : ($p['credit_ce_mois']>0 ? 'bg-yellow-50 dark:bg-yellow-900/20' : 'bg-white dark:bg-gray-800') }} border-b border-gray-100 dark:border-gray-700">
+                class="{{ $p['is_paid'] ? 'bg-green-50 dark:bg-green-900/20' : ($p['credit_deduit_ce_mois']>0 ? 'bg-yellow-50 dark:bg-yellow-900/20' : 'bg-white dark:bg-gray-800') }} border-b border-gray-100 dark:border-gray-700">
                 <td class="font-medium">{{ $p['nom'] }}</td>
                 <td>{{ $p['fonction'] ?? '—' }}</td>
                 <td>{{ number_format($p['salaire'], 0, ',', ' ') }} MRU</td>
+                <td class="text-red-600 dark:text-red-400">{{ number_format($p['credit_deduit_ce_mois'], 0, ',', ' ') }}
+                    MRU</td>
                 <td class="text-orange-600 dark:text-orange-400">{{ number_format($p['credit_restant'], 0, ',', ' ') }}
                     MRU</td>
                 <td class="text-green-700 dark:text-green-400">{{ number_format($p['net_a_payer'], 0, ',', ' ') }} MRU

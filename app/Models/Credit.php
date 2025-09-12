@@ -19,6 +19,7 @@ class Credit extends Model
         'statut',
         'mode_paiement_id',
         'description',
+        'caisse_id',
     ];
 
     public function getStatusColorAttribute()
@@ -49,6 +50,11 @@ class Credit extends Model
     public function depense()
     {
         return $this->hasOne(\App\Models\Depense::class, 'credit_id');
+    }
+
+    public function caisse()
+    {
+        return $this->belongsTo(\App\Models\Caisse::class);
     }
 
     public function deduireCredit()

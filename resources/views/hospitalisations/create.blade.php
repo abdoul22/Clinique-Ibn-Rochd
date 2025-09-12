@@ -73,16 +73,19 @@
                                 </div>
                                 Patient *
                             </label>
-                            <select name="gestion_patient_id" required
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg shadow-sm">
+                            <select name="gestion_patient_id" id="patient-select" required
+                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg shadow-sm synchronized-field"
+                                style="background-color: white; color: #111827; border-color: #d1d5db;"
+                                data-dark-bg="#1f2937" data-dark-text="#f9fafb" data-dark-border="#4b5563">
                                 <option value="">Sélectionner un patient</option>
                                 @foreach($patients as $patient)
-                                <option value="{{ $patient->id }}">{{ $patient->nom }} {{ $patient->prenom }}</option>
+                                <option value="{{ $patient->id }}" data-telephone="{{ $patient->phone ?? '' }}">{{
+                                    $patient->nom }} {{ $patient->prenom }}</option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <!-- Médecin -->
+                        <!-- Téléphone -->
                         <div class="space-y-2">
                             <label
                                 class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
@@ -91,31 +94,27 @@
                                     <svg class="w-3 h-3 text-green-600 dark:text-green-400" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
+                                        </path>
                                     </svg>
                                 </div>
-                                Médecin Traitant *
+                                Téléphone
                             </label>
-                            <select name="medecin_id" required
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg shadow-sm">
-                                <option value="">Sélectionner un médecin</option>
-                                @php
-                                $medecinsParFonction = $medecins->groupBy('fonction');
-                                $ordrefonctions = ['Pr', 'Dr', 'Tss', 'SGF', 'IDE'];
-                                @endphp
-                                @foreach($ordrefonctions as $fonction)
-                                @if(isset($medecinsParFonction[$fonction]) && $medecinsParFonction[$fonction]->count() >
-                                0)
-                                <optgroup label="{{ $medecinsParFonction[$fonction]->first()->fonction_complet }}s">
-                                    @foreach($medecinsParFonction[$fonction] as $medecin)
-                                    <option value="{{ $medecin->id }}">{{ $medecin->nom_complet_avec_specialite }}
-                                    </option>
-                                    @endforeach
-                                </optgroup>
+                            <select id="telephone-select"
+                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg shadow-sm synchronized-field"
+                                style="background-color: white; color: #111827; border-color: #d1d5db;"
+                                data-dark-bg="#1f2937" data-dark-text="#f9fafb" data-dark-border="#4b5563">
+                                <option value="">Sélectionner par téléphone</option>
+                                @foreach($patients as $patient)
+                                @if($patient->phone)
+                                <option value="{{ $patient->id }}"
+                                    data-patient-name="{{ $patient->nom }} {{ $patient->prenom }}">{{ $patient->phone }}
+                                    - {{ $patient->nom }} {{ $patient->prenom }}</option>
                                 @endif
                                 @endforeach
                             </select>
                         </div>
+
 
                         <!-- Service -->
                         <div class="space-y-2">
@@ -434,10 +433,101 @@
 </div>
 
 <script>
+    // Script immédiat pour éviter le flash de contenu non stylé
+    (function() {
+        const isDarkMode = document.documentElement.classList.contains('dark') ||
+                          window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // Appliquer les styles immédiatement si les éléments existent
+        const patientSelect = document.getElementById('patient-select');
+        const telephoneSelect = document.getElementById('telephone-select');
+
+        if (patientSelect) {
+            if (isDarkMode) {
+                patientSelect.style.backgroundColor = '#1f2937';
+                patientSelect.style.color = '#f9fafb';
+                patientSelect.style.borderColor = '#4b5563';
+            } else {
+                patientSelect.style.backgroundColor = 'white';
+                patientSelect.style.color = '#111827';
+                patientSelect.style.borderColor = '#d1d5db';
+            }
+        }
+
+        if (telephoneSelect) {
+            if (isDarkMode) {
+                telephoneSelect.style.backgroundColor = '#1f2937';
+                telephoneSelect.style.color = '#f9fafb';
+                telephoneSelect.style.borderColor = '#4b5563';
+            } else {
+                telephoneSelect.style.backgroundColor = 'white';
+                telephoneSelect.style.color = '#111827';
+                telephoneSelect.style.borderColor = '#d1d5db';
+            }
+        }
+    })();
+
+    // Fonction pour appliquer les styles selon le mode sombre/clair
+    function applyThemeStyles() {
+        const isDarkMode = document.documentElement.classList.contains('dark') ||
+                          window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        const patientSelect = document.getElementById('patient-select');
+        const telephoneSelect = document.getElementById('telephone-select');
+
+        if (patientSelect) {
+            if (isDarkMode) {
+                patientSelect.style.backgroundColor = patientSelect.getAttribute('data-dark-bg');
+                patientSelect.style.color = patientSelect.getAttribute('data-dark-text');
+                patientSelect.style.borderColor = patientSelect.getAttribute('data-dark-border');
+            } else {
+                patientSelect.style.backgroundColor = 'white';
+                patientSelect.style.color = '#111827';
+                patientSelect.style.borderColor = '#d1d5db';
+            }
+            // Marquer comme chargé
+            patientSelect.classList.add('loaded');
+        }
+
+        if (telephoneSelect) {
+            if (isDarkMode) {
+                telephoneSelect.style.backgroundColor = telephoneSelect.getAttribute('data-dark-bg');
+                telephoneSelect.style.color = telephoneSelect.getAttribute('data-dark-text');
+                telephoneSelect.style.borderColor = telephoneSelect.getAttribute('data-dark-border');
+            } else {
+                telephoneSelect.style.backgroundColor = 'white';
+                telephoneSelect.style.color = '#111827';
+                telephoneSelect.style.borderColor = '#d1d5db';
+            }
+            // Marquer comme chargé
+            telephoneSelect.classList.add('loaded');
+        }
+    }
+
+    // Appliquer les styles immédiatement
+    applyThemeStyles();
+
     document.addEventListener('DOMContentLoaded', function() {
-    // Données des chambres et lits
-    const litsParChambre = @json($litsParChambre);
-    const chambresData = @json($chambresData);
+        // Réappliquer les styles après le chargement complet
+        applyThemeStyles();
+
+        // Observer les changements de thème
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    applyThemeStyles();
+                }
+            });
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+
+        // Données des chambres et lits
+        const litsParChambre = @json($litsParChambre);
+        const chambresData = @json($chambresData);
 
     // Éléments du DOM avec vérification
     const chambreSelect = document.getElementById('chambre-select');
@@ -454,6 +544,10 @@
     const submitBtn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submit-text');
 
+    // Éléments pour la synchronisation patient/téléphone
+    const patientSelect = document.getElementById('patient-select');
+    const telephoneSelect = document.getElementById('telephone-select');
+
     // Vérifier que tous les éléments existent
     if (!chambreSelect || !litSelect || !montantTotal) {
         console.error('Éléments DOM manquants:', {
@@ -462,6 +556,59 @@
             montantTotal: !!montantTotal
         });
         return;
+    }
+
+    // Synchronisation bidirectionnelle Patient/Téléphone
+    if (patientSelect && telephoneSelect) {
+        // Fonction pour ajouter un effet visuel
+        function addSyncEffect(element) {
+            element.classList.add('field-highlight');
+            setTimeout(() => {
+                element.classList.remove('field-highlight');
+            }, 1000);
+        }
+
+        // Quand on sélectionne un patient par nom
+        patientSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const telephone = selectedOption.getAttribute('data-telephone');
+
+            if (telephone) {
+                // Trouver l'option correspondante dans le select téléphone
+                const telephoneOptions = telephoneSelect.options;
+                for (let i = 0; i < telephoneOptions.length; i++) {
+                    if (telephoneOptions[i].value === this.value) {
+                        telephoneSelect.selectedIndex = i;
+                        addSyncEffect(telephoneSelect);
+                        break;
+                    }
+                }
+            } else {
+                // Si pas de téléphone, réinitialiser le select téléphone
+                telephoneSelect.selectedIndex = 0;
+            }
+        });
+
+        // Quand on sélectionne un patient par téléphone
+        telephoneSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const patientId = selectedOption.value;
+
+            if (patientId) {
+                // Trouver l'option correspondante dans le select patient
+                const patientOptions = patientSelect.options;
+                for (let i = 0; i < patientOptions.length; i++) {
+                    if (patientOptions[i].value === patientId) {
+                        patientSelect.selectedIndex = i;
+                        addSyncEffect(patientSelect);
+                        break;
+                    }
+                }
+            } else {
+                // Si pas de sélection, réinitialiser le select patient
+                patientSelect.selectedIndex = 0;
+            }
+        });
     }
 
     // Variables globales
@@ -730,6 +877,44 @@
     /* Animation pour les icônes */
     .icon-bounce:hover {
         animation: bounce 1s infinite;
+    }
+
+    /* Styles pour la synchronisation patient/téléphone */
+    .synchronized-field {
+        transition: all 0.3s ease;
+        /* Styles par défaut pour éviter le flash */
+        background-color: white !important;
+        color: #111827 !important;
+        border-color: #d1d5db !important;
+    }
+
+    .synchronized-field:focus {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .field-highlight {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+        border-color: #2196f3 !important;
+    }
+
+    /* Styles pour le mode sombre */
+    .dark .synchronized-field {
+        background-color: #1f2937 !important;
+        color: #f9fafb !important;
+        border-color: #4b5563 !important;
+    }
+
+    /* Prévenir le flash de contenu non stylé */
+    #patient-select,
+    #telephone-select {
+        opacity: 0;
+        transition: opacity 0.1s ease-in-out;
+    }
+
+    #patient-select.loaded,
+    #telephone-select.loaded {
+        opacity: 1;
     }
 
     @keyframes bounce {

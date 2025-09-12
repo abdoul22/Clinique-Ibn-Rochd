@@ -116,7 +116,7 @@ class CreditController extends Controller
 
     public function show($id)
     {
-        $credit = Credit::with('source')->findOrFail($id);
+        $credit = Credit::with(['source', 'caisse.patient', 'caisse.medecin', 'caisse.examen', 'caisse.service', 'caisse.assurance', 'caisse.prescripteur'])->findOrFail($id);
 
         // Calculer les informations de paiement
         $montantRestant = $credit->montant - $credit->montant_paye;

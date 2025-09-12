@@ -153,30 +153,103 @@
                         </div>
                     </div>
 
-                    <!-- Médecin -->
+                    <!-- Médecins Impliqués -->
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-                        <div class="flex items-center mb-4">
-                            <div class="p-3 rounded-full bg-green-100 dark:bg-green-900/30 mr-4">
-                                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 dark:bg-green-900/30 mr-4">
+                                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Médecins Impliqués</h3>
+                            </div>
+                            @if($medecinsImpliques->count() > 1)
+                            <a href="{{ route('hospitalisations.doctors', $hospitalisation->id) }}"
+                                class="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800 transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
                                     </path>
                                 </svg>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Médecin Traitant</h3>
+                                Voir détails
+                            </a>
+                            @endif
                         </div>
-                        <div class="space-y-3">
-                            <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Nom</p>
-                                <p class="font-medium text-gray-900 dark:text-white">Dr. {{
-                                    $hospitalisation->medecin->nom ?? '-' }}</p>
+
+                        @if($medecinsImpliques->count() > 0)
+                        <div class="space-y-4">
+                            @foreach($medecinsImpliques as $index => $doctor)
+                            <div
+                                class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center">
+                                        <div
+                                            class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                                            <span class="text-white text-sm font-bold">{{ $index + 1 }}</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-900 dark:text-white">Dr. {{
+                                                $doctor['medecin']->nom }}</p>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $doctor['role'] }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Part médecin</p>
+                                        <p class="font-semibold text-green-600 dark:text-green-400">{{
+                                            number_format($doctor['part_medecin'], 0, ',', ' ') }} MRU</p>
+                                    </div>
+                                </div>
+
+                                @if(count($doctor['examens']) > 0)
+                                <div class="mt-3">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Examens effectués:</p>
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach($doctor['examens'] as $examen)
+                                        <span
+                                            class="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs">
+                                            {{ $examen['nom'] }}
+                                        </span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @endif
                             </div>
-                            <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Couverture assurance</p>
-                                <p class="font-medium text-gray-900 dark:text-white">{{ $hospitalisation->couverture ??
-                                    0 }}%</p>
+                            @endforeach
+
+                            <div
+                                class="bg-green-50 dark:bg-green-900 rounded-lg p-3 border border-green-200 dark:border-green-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-green-800 dark:text-green-200">Total Part
+                                        Médecins:</span>
+                                    <span class="font-bold text-green-600 dark:text-green-400">{{
+                                        number_format($medecinsImpliques->sum('part_medecin'), 0, ',', ' ') }}
+                                        MRU</span>
+                                </div>
                             </div>
+                        </div>
+                        @else
+                        <div class="text-center py-6">
+                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                </path>
+                            </svg>
+                            <p class="text-gray-500 dark:text-gray-400">Aucun médecin impliqué pour le moment</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Ajoutez des examens pour voir les
+                                médecins</p>
+                        </div>
+                        @endif
+
+                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Couverture assurance</p>
+                            <p class="font-medium text-gray-900 dark:text-white">{{ $hospitalisation->couverture ?? 0
+                                }}%</p>
                         </div>
                     </div>
                 </div>
@@ -262,7 +335,7 @@
                     </h3>
 
                     <!-- Formulaire d'ajout -->
-                    <form method="POST"
+                    <form method="POST" id="add-charge-form"
                         action="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.addCharge', $hospitalisation->id) : route('hospitalisations.addCharge', $hospitalisation->id) }}"
                         class="mb-6">
                         @csrf
@@ -279,11 +352,12 @@
                             <div id="examen_field">
                                 <label
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Examen</label>
-                                <select name="examen_id"
+                                <select name="examen_id" id="examen_id"
                                     class="form-select w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                                     <option value="">Sélectionner...</option>
                                     @foreach($examens as $ex)
-                                    <option value="{{ $ex->id }}">{{ $ex->nom }} ({{ number_format($ex->tarif, 0, ',', '
+                                    <option value="{{ $ex->id }}" data-medecin-id="{{ $ex->medecin_id }}">{{ $ex->nom }}
+                                        ({{ number_format($ex->tarif, 0, ',', '
                                         ') }} MRU)</option>
                                     @endforeach
                                 </select>
@@ -307,12 +381,14 @@
                                     class="form-input w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                             </div>
                             <div class="flex items-end">
-                                <button type="submit"
+                                <button type="button" id="add-charge-btn"
                                     class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200">
                                     Ajouter
                                 </button>
                             </div>
                         </div>
+                        <!-- Champ caché pour le médecin sélectionné -->
+                        <input type="hidden" name="medecin_id" id="selected_medecin_id" value="">
                     </form>
                 </div>
                 @endif
@@ -470,6 +546,7 @@
                     </p>
                     <div class="text-center">
                         <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+
                             {{ number_format($totaux['total'], 0, ',', ' ') }} MRU
                         </div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -506,8 +583,75 @@
     </div>
 </div>
 
+<!-- Modal de sélection de médecin pour examen -->
+<div id="medecin-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Sélectionner un médecin</h3>
+                <button onclick="closeMedecinModal()"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Choisissez le médecin qui effectuera cet examen :
+                </p>
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-4">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 dark:bg-blue-900 p-2 rounded-full mr-3">
+                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-medium text-blue-900 dark:text-blue-100" id="examen-name">Examen sélectionné
+                            </p>
+                            <p class="text-sm text-blue-700 dark:text-blue-300" id="examen-price">Prix</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Médecin</label>
+                <select id="medecin-select"
+                    class="form-select w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                    <option value="">Sélectionner un médecin...</option>
+                    @foreach($medecins as $medecin)
+                    <option value="{{ $medecin->id }}">Dr. {{ $medecin->nom }} {{ $medecin->prenom ?? '' }} - {{
+                        $medecin->fonction ?? 'Médecin' }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeMedecinModal()"
+                    class="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors">
+                    Annuler
+                </button>
+                <button type="button" id="confirm-medecin-btn"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                    Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+    // Variables globales pour la modale de médecin
+    let currentExamenData = null;
+
     // Gestion du changement de type de charge
     document.getElementById('charge_type')?.addEventListener('change', function(){
         const examenField = document.getElementById('examen_field');
@@ -526,10 +670,84 @@
         }
     });
 
-    // Fermer le modal en cliquant à l'extérieur
+    // Gestion du bouton "Ajouter" pour les examens
+    document.getElementById('add-charge-btn')?.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        const chargeType = document.getElementById('charge_type').value;
+        const examenId = document.getElementById('examen_id').value;
+
+        if (chargeType === 'examen' && examenId) {
+            // Récupérer les données de l'examen sélectionné
+            const selectedOption = document.querySelector(`#examen_id option[value="${examenId}"]`);
+            const examenName = selectedOption.textContent.split(' (')[0];
+            const examenPrice = selectedOption.textContent.match(/\(([^)]+)\)/)?.[1] || '';
+            const examenMedecinId = selectedOption.getAttribute('data-medecin-id');
+
+            currentExamenData = {
+                id: examenId,
+                name: examenName,
+                price: examenPrice,
+                medecinId: examenMedecinId
+            };
+
+            // Afficher la modale de sélection de médecin
+            openMedecinModal();
+        } else {
+            // Pour les médicaments ou si aucun examen sélectionné, soumettre directement
+            document.getElementById('add-charge-form').submit();
+        }
+    });
+
+    // Fonctions pour la modale de médecin
+    function openMedecinModal() {
+        if (!currentExamenData) return;
+
+        // Mettre à jour les informations de l'examen dans la modale
+        document.getElementById('examen-name').textContent = currentExamenData.name;
+        document.getElementById('examen-price').textContent = currentExamenData.price;
+
+        // Sélectionner le médecin par défaut de l'examen
+        document.getElementById('medecin-select').value = currentExamenData.medecinId || '';
+
+        // Afficher la modale
+        document.getElementById('medecin-modal').classList.remove('hidden');
+    }
+
+    function closeMedecinModal() {
+        document.getElementById('medecin-modal').classList.add('hidden');
+        currentExamenData = null;
+    }
+
+    // Confirmer la sélection du médecin
+    document.getElementById('confirm-medecin-btn')?.addEventListener('click', function() {
+        const selectedMedecinId = document.getElementById('medecin-select').value;
+
+        if (!selectedMedecinId) {
+            alert('Veuillez sélectionner un médecin.');
+            return;
+        }
+
+        // Mettre à jour le champ caché avec le médecin sélectionné
+        document.getElementById('selected_medecin_id').value = selectedMedecinId;
+
+        // Fermer la modale
+        closeMedecinModal();
+
+        // Soumettre le formulaire
+        document.getElementById('add-charge-form').submit();
+    });
+
+    // Fermer les modales en cliquant à l'extérieur
     document.getElementById('paiement-modal')?.addEventListener('click', function(e) {
         if (e.target === this) {
             this.classList.add('hidden');
+        }
+    });
+
+    document.getElementById('medecin-modal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeMedecinModal();
         }
     });
 
@@ -543,5 +761,29 @@
         document.getElementById('statut-form').submit();
     }
 </script>
+
+<style>
+    /* Styles pour forcer le mode sombre sur la section Médecins Impliqués */
+    .dark .bg-gray-50 {
+        background-color: #374151 !important;
+    }
+
+    .dark .text-gray-900 {
+        color: #f9fafb !important;
+    }
+
+    .dark .border-gray-200 {
+        border-color: #4b5563 !important;
+    }
+
+    /* S'assurer que les badges d'examens s'adaptent au mode sombre */
+    .dark .bg-blue-100 {
+        background-color: #1e3a8a !important;
+    }
+
+    .dark .text-blue-700 {
+        color: #93c5fd !important;
+    }
+</style>
 @endpush
 @endsection

@@ -38,14 +38,21 @@ class PayrollController extends Controller
                 ->where('month', $month)
                 ->exists();
 
+            // Calculer le crédit déduit ce mois (crédits qui seront déduits du salaire)
+            $creditDeduitCeMois = $isPaid ? 0 : $creditRestant;
+
+            // Le net à payer est le salaire moins les crédits restants (avant paiement)
+            $netAPayer = max(((float) $p->salaire) - $creditRestant, 0);
+
             return [
                 'id' => $p->id,
                 'nom' => $p->nom,
                 'fonction' => $p->fonction,
                 'salaire' => (float) $p->salaire,
                 'credit_restant' => (float) $creditRestant,
-                'net_a_payer' => max(((float) $p->salaire) - $creditRestant, 0),
+                'net_a_payer' => $netAPayer,
                 'credit_ce_mois' => (float) $creditMois,
+                'credit_deduit_ce_mois' => (float) $creditDeduitCeMois,
                 'is_paid' => $isPaid,
             ];
         });
@@ -96,15 +103,24 @@ class PayrollController extends Controller
                 ->whereBetween('created_at', [$debut, $fin])
                 ->sum('montant');
 
+            $isPaid = \App\Models\Payroll::where('personnel_id', $p->id)->where('year', $year)->where('month', $month)->exists();
+
+            // Calculer le crédit déduit ce mois (crédits qui seront déduits du salaire)
+            $creditDeduitCeMois = $isPaid ? 0 : $creditRestant;
+
+            // Le net à payer est le salaire moins les crédits restants (avant paiement)
+            $netAPayer = max(((float) $p->salaire) - $creditRestant, 0);
+
             return [
                 'id' => $p->id,
                 'nom' => $p->nom,
                 'fonction' => $p->fonction,
                 'salaire' => (float) $p->salaire,
                 'credit_restant' => (float) $creditRestant,
-                'net_a_payer' => max(((float) $p->salaire) - $creditRestant, 0),
+                'net_a_payer' => $netAPayer,
                 'credit_ce_mois' => (float) $creditMois,
-                'is_paid' => \App\Models\Payroll::where('personnel_id', $p->id)->where('year', $year)->where('month', $month)->exists(),
+                'credit_deduit_ce_mois' => (float) $creditDeduitCeMois,
+                'is_paid' => $isPaid,
             ];
         });
         $personnels = $personnels->sortByDesc(function ($x) {

@@ -258,6 +258,13 @@ class EtatCaisseController extends Controller
             $modePaiement->decrement('montant', $etat->part_medecin);
         }
 
+        // Créer un enregistrement ModePaiement pour la sortie (montant négatif)
+        \App\Models\ModePaiement::create([
+            'type' => $modePaiementType,
+            'montant' => -$etat->part_medecin, // Montant négatif pour sortie
+            'source' => 'depense'
+        ]);
+
         $etat->validated = true;
         $etat->depense = $etat->part_medecin;
         $etat->save();
@@ -290,6 +297,13 @@ class EtatCaisseController extends Controller
         // Utiliser le mode de paiement sélectionné depuis la modale
         $modePaiementType = $request->mode_paiement;
 
+        // Créer un enregistrement ModePaiement pour la sortie (montant négatif)
+        \App\Models\ModePaiement::create([
+            'type' => $modePaiementType,
+            'montant' => -$etat->part_medecin, // Montant négatif pour sortie
+            'source' => 'depense'
+        ]);
+
         $depense = Depense::create([
             'nom' => 'Part médecin - ' . $etat->medecin?->nom . ' (' . ucfirst($modePaiementType) . ')',
             'montant' => $etat->part_medecin,
@@ -299,6 +313,7 @@ class EtatCaisseController extends Controller
         ]);
 
         $etat->validated = true;
+        $etat->depense = $etat->part_medecin;
         $etat->save();
 
         return back()->with('success', 'Part médecin validée et dépense créée avec le mode de paiement: ' . ucfirst($modePaiementType));
@@ -311,12 +326,31 @@ class EtatCaisseController extends Controller
             return back()->with('error', 'Cette part n\'est pas validée.');
         }
 
-        // Supprimer uniquement la dépense liée à cette validation
+        // Supprimer la dépense liée à cette validation
         if ($etat->depense) {
-            $etat->depense->delete();
+            $depense = $etat->depense;
+
+            // Vérifier que mode_paiement_id n'est pas null
+            if (!empty($depense->mode_paiement_id)) {
+                // Supprimer l'enregistrement ModePaiement correspondant (montant négatif pour sortie)
+                \App\Models\ModePaiement::where('type', $depense->mode_paiement_id)
+                    ->where('montant', -$depense->montant)
+                    ->where('source', 'depense')
+                    ->delete();
+            }
+
+            // Supprimer la dépense
+            $depense->delete();
+        }
+
+        // Remettre le montant dans le mode de paiement si c'était une validation automatique
+        $modePaiement = $etat->caisse?->mode_paiements()->latest()->first();
+        if ($modePaiement && $etat->part_medecin > 0) {
+            $modePaiement->increment('montant', $etat->part_medecin);
         }
 
         $etat->validated = false;
+        $etat->depense = 0; // Remettre la dépense à 0
         $etat->save();
 
         return back()->with('success', 'Validation annulée et dépense supprimée.');
@@ -331,10 +365,46 @@ class EtatCaisseController extends Controller
         }
 
         // Supprimer la dépense liée si elle existe
-        $nom = 'Part médecin - ' . $etat->medecin?->nom;
-        Depense::where('nom', $nom)->where('montant', $etat->part_medecin)->delete();
+        $depense = $etat->depense;
+        if ($depense && is_object($depense)) {
+            // Vérifier que mode_paiement_id n'est pas null
+            if (!empty($depense->mode_paiement_id)) {
+                // Supprimer l'enregistrement ModePaiement correspondant (montant négatif pour sortie)
+                \App\Models\ModePaiement::where('type', $depense->mode_paiement_id)
+                    ->where('montant', -$depense->montant)
+                    ->where('source', 'depense')
+                    ->delete();
+            }
+
+            // Supprimer la dépense
+            $depense->delete();
+        } else {
+            // Fallback pour les anciennes dépenses sans relation directe
+            $nom = 'Part médecin - ' . $etat->medecin?->nom;
+            $depenses = Depense::where('nom', 'like', '%' . $nom . '%')->where('montant', $etat->part_medecin)->get();
+
+            foreach ($depenses as $depense) {
+                // Vérifier que mode_paiement_id n'est pas null
+                if (!empty($depense->mode_paiement_id)) {
+                    // Supprimer l'enregistrement ModePaiement correspondant
+                    \App\Models\ModePaiement::where('type', $depense->mode_paiement_id)
+                        ->where('montant', -$depense->montant)
+                        ->where('source', 'depense')
+                        ->delete();
+                }
+
+                $depense->delete();
+            }
+        }
+
+        // Remettre le montant dans le mode de paiement si c'était une validation automatique
+        $modePaiement = $etat->caisse?->mode_paiements()->latest()->first();
+        if ($modePaiement && $etat->part_medecin > 0) {
+            $modePaiement->increment('montant', $etat->part_medecin);
+        }
 
         $etat->validated = false;
+        $etat->depense = 0; // Remettre la dépense à 0
         $etat->save();
 
         return back()->with('success', 'Validation annulée avec succès.');

@@ -201,7 +201,48 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
                 <td class="table-cell py-2 px-2">{{ $loop->iteration }}</td>
                 <td class="table-cell py-2 px-2">
                     @if($recap->medecin)
+                    @if($recap->examen && $recap->examen->nom === 'Hospitalisation')
+                    {{-- Pour les hospitalisations, afficher un lien vers les détails des médecins --}}
+                    @php
+                    // Trouver l'hospitalisation correspondante
+                    $caisse = \App\Models\Caisse::where('medecin_id', $recap->medecin->id)
+                    ->where('examen_id', $recap->examen->id)
+                    ->whereDate('date_examen', $recap->jour)
+                    ->first();
+                    $hospitalisationId = null;
+                    if ($caisse) {
+                    // Chercher l'hospitalisation par patient, puis vérifier si ce médecin y est impliqué
+                    $hospitalisation = \App\Models\Hospitalisation::where('gestion_patient_id',
+                    $caisse->gestion_patient_id)
+                    ->first();
+
+                    if ($hospitalisation) {
+                    // Vérifier si ce médecin est impliqué dans cette hospitalisation
+                    $medecinsImpliques = $hospitalisation->getAllInvolvedDoctors();
+                    $medecinImplique = $medecinsImpliques->firstWhere('medecin.id', $recap->medecin->id);
+
+                    if ($medecinImplique) {
+                    $hospitalisationId = $hospitalisation->id;
+                    }
+                    }
+                    }
+                    @endphp
+                    @if($hospitalisationId)
+                    <a href="{{ route('hospitalisations.doctors', $hospitalisationId) }}"
+                        class="text-blue-600 dark:text-blue-400 hover:underline font-medium flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                            </path>
+                        </svg>
+                        Détails Médecins
+                    </a>
+                    @else
                     <span class="font-medium text-gray-900 dark:text-gray-100">{{ $recap->medecin->nom }}</span>
+                    @endif
+                    @else
+                    <span class="font-medium text-gray-900 dark:text-gray-100">{{ $recap->medecin->nom }}</span>
+                    @endif
                     @else
                     <span class="text-gray-500 dark:text-gray-400">—</span>
                     @endif

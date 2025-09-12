@@ -368,7 +368,7 @@
 
                 <div class="p-0">
                     @if($creditsAssurance->count() > 0)
-                    <x-credit-table :credits="$creditsAssurance" />
+                    <x-credit-table-assurance :credits="$creditsAssurance" />
 
                     <!-- Pagination Assurance -->
                     @if($creditsAssurance->hasPages())

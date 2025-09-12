@@ -45,17 +45,17 @@
                 <th>Personnel</th>
                 <th>Fonction</th>
                 <th>Salaire brut</th>
-                <th>Crédit restant</th>
+                <th>Crédit déduit ce mois</th>
                 <th>Net à payer</th>
             </tr>
         </thead>
         <tbody>
             @foreach($personnels as $p)
-            <tr class="{{ $p['credit_ce_mois']>0 ? 'highlight' : '' }}">
+            <tr class="{{ $p['credit_deduit_ce_mois']>0 ? 'highlight' : '' }}">
                 <td>{{ $p['nom'] }}</td>
                 <td>{{ $p['fonction'] ?? '—' }}</td>
                 <td>{{ number_format($p['salaire'], 0, ',', ' ') }} MRU</td>
-                <td>{{ number_format($p['credit_restant'], 0, ',', ' ') }} MRU</td>
+                <td>{{ number_format($p['credit_deduit_ce_mois'], 0, ',', ' ') }} MRU</td>
                 <td>{{ number_format($p['net_a_payer'], 0, ',', ' ') }} MRU</td>
             </tr>
             @endforeach

@@ -97,7 +97,7 @@ class HospitalisationController extends Controller
     {
         $request->validate([
             'gestion_patient_id' => 'required|exists:gestion_patients,id',
-            'medecin_id' => 'required|exists:medecins,id',
+            'medecin_id' => 'nullable|exists:medecins,id',
             'service_id' => 'required|exists:services,id',
             'chambre_id' => 'required|exists:chambres,id',
             'lit_id' => 'required|exists:lits,id',
@@ -243,12 +243,17 @@ class HospitalisationController extends Controller
 
         // Ajouter les variables manquantes pour la vue - Exclure les examens d'hospitalisation automatiques
         $examens = Examen::where('nom', 'NOT LIKE', 'Hospitalisation - %')
+            ->where('nom', '!=', 'Hospitalisation')
             ->orderBy('nom')
             ->get();
         $medicaments = Pharmacie::where('statut', 'actif')
             ->where('stock', '>', 0)
             ->orderBy('nom_medicament')
             ->get();
+        $medecins = Medecin::orderBy('nom')->get();
+
+        // Récupérer tous les médecins impliqués dans cette hospitalisation
+        $medecinsImpliques = $hospitalisation->getAllInvolvedDoctors();
 
         return view('hospitalisations.show', compact(
             'hospitalisation',
@@ -257,6 +262,8 @@ class HospitalisationController extends Controller
             'totaux',
             'examens',
             'medicaments',
+            'medecins',
+            'medecinsImpliques',
             'joursHospitalisation',
             'dureeSejour'
         ));
@@ -628,6 +635,7 @@ class HospitalisationController extends Controller
             'charge_type' => 'required|in:examen,service,pharmacy',
             'examen_id' => 'required_if:charge_type,examen,service|nullable|exists:examens,id',
             'medicament_id' => 'required_if:charge_type,pharmacy|nullable|exists:pharmacies,id',
+            'medecin_id' => 'nullable|exists:medecins,id',
             'quantity' => 'required|integer|min:1|max:999',
         ]);
 
@@ -662,11 +670,20 @@ class HospitalisationController extends Controller
                 $ex = Examen::findOrFail($request->examen_id);
                 $qty = (int) $request->quantity;
 
+                // Utiliser l'examen original, mais modifier la description si un médecin différent est sélectionné
+                $examenId = $ex->id;
+                $description = $ex->nom;
+
+                if ($request->medecin_id && $request->medecin_id != $ex->medecin_id) {
+                    $medecin = \App\Models\Medecin::findOrFail($request->medecin_id);
+                    $description = $ex->nom . ' (Dr. ' . $medecin->nom . ')';
+                }
+
                 HospitalisationCharge::create([
                     'hospitalisation_id' => $hospitalisation->id,
                     'type' => $request->charge_type,
-                    'source_id' => $ex->id,
-                    'description_snapshot' => $ex->nom,
+                    'source_id' => $examenId,
+                    'description_snapshot' => $description,
                     'unit_price' => $ex->tarif,
                     'quantity' => $qty,
                     'total_price' => $ex->tarif * $qty,
@@ -798,7 +815,46 @@ class HospitalisationController extends Controller
             $dernierNumero = Caisse::max('numero_facture') ?? 0;
             $prochainNumero = $dernierNumero + 1;
             $numeroFacture = $prochainNumero; // Stocker pour utilisation en dehors de la transaction
+
+            // Déterminer le médecin principal pour la facturation
             $medecinId = $hospitalisation->medecin_id;
+
+            // Si pas de médecin traitant, utiliser le médecin le plus impliqué dans les examens
+            if (!$medecinId) {
+                $medecinsParts = [];
+
+                // Analyser tous les examens pour trouver le médecin avec la plus grande part
+                foreach ($charges->where('type', 'examen') as $charge) {
+                    if ($charge->source_id) {
+                        $examen = \App\Models\Examen::find($charge->source_id);
+                        if ($examen && $examen->medecin_id) {
+                            $medecinId = $examen->medecin_id;
+                            if (!isset($medecinsParts[$medecinId])) {
+                                $medecinsParts[$medecinId] = 0;
+                            }
+                            $medecinsParts[$medecinId] += $charge->part_medecin;
+                        }
+                    }
+                }
+
+                // Prendre le médecin avec la plus grande part
+                if (!empty($medecinsParts)) {
+                    $medecinId = array_keys($medecinsParts, max($medecinsParts))[0];
+                }
+            }
+
+            // Si toujours pas de médecin, utiliser le premier médecin disponible
+            if (!$medecinId) {
+                $medecinId = \App\Models\Medecin::first()?->id;
+            }
+
+            // Si vraiment aucun médecin, on ne peut pas continuer
+            if (!$medecinId) {
+                throw ValidationException::withMessages([
+                    'medecin' => 'Aucun médecin disponible pour la facturation.'
+                ]);
+            }
+
             $numeroEntree = (new CaisseController)->getNextNumeroEntree($medecinId);
 
             // Utiliser ou créer un examen générique d'hospitalisation
@@ -896,5 +952,29 @@ class HospitalisationController extends Controller
         $route = Auth::user()->role?->name === 'admin' ? 'admin.hospitalisations.show' : 'hospitalisations.show';
         return redirect()->route($route, $hospitalisation->id)
             ->with('success', 'Paiement effectué avec succès ! Facture #' . $numeroFacture . ' créée. Statut hospitalisation : Terminé.');
+    }
+
+    /**
+     * Afficher les détails des médecins d'une hospitalisation
+     */
+    public function showDoctors($id)
+    {
+        $hospitalisation = Hospitalisation::with(['patient', 'medecin', 'service', 'lit.chambre'])
+            ->findOrFail($id);
+
+        $doctors = $hospitalisation->getAllInvolvedDoctors();
+
+        // Calculer les totaux
+        $totalPartMedecin = $doctors->sum('part_medecin');
+        $totalExamens = $doctors->sum(function ($doctor) {
+            return count($doctor['examens']);
+        });
+
+        return view('hospitalisations.doctors', compact(
+            'hospitalisation',
+            'doctors',
+            'totalPartMedecin',
+            'totalExamens'
+        ));
     }
 }
