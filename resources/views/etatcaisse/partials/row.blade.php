@@ -180,20 +180,10 @@
         @if($etat->caisse && $etat->caisse->examen && $etat->caisse->examen->nom === 'Hospitalisation')
         {{-- Pour les hospitalisations, afficher un lien vers les détails des médecins --}}
         @php
-        // Chercher l'hospitalisation par patient, puis vérifier si ce médecin y est impliqué
+        // Chercher l'hospitalisation par patient
         $hospitalisation = \App\Models\Hospitalisation::where('gestion_patient_id', $etat->caisse->gestion_patient_id)
         ->first();
-
-        $hospitalisationId = null;
-        if ($hospitalisation) {
-        // Vérifier si ce médecin est impliqué dans cette hospitalisation
-        $medecinsImpliques = $hospitalisation->getAllInvolvedDoctors();
-        $medecinImplique = $medecinsImpliques->firstWhere('medecin.id', $etat->medecin->id);
-
-        if ($medecinImplique) {
-        $hospitalisationId = $hospitalisation->id;
-        }
-        }
+        $hospitalisationId = $hospitalisation ? $hospitalisation->id : null;
         @endphp
         @if($hospitalisationId)
         <a href="{{ route('hospitalisations.doctors', $hospitalisationId) }}"

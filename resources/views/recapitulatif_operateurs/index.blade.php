@@ -211,20 +211,11 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
                     ->first();
                     $hospitalisationId = null;
                     if ($caisse) {
-                    // Chercher l'hospitalisation par patient, puis vérifier si ce médecin y est impliqué
+                    // Chercher l'hospitalisation par patient
                     $hospitalisation = \App\Models\Hospitalisation::where('gestion_patient_id',
                     $caisse->gestion_patient_id)
                     ->first();
-
-                    if ($hospitalisation) {
-                    // Vérifier si ce médecin est impliqué dans cette hospitalisation
-                    $medecinsImpliques = $hospitalisation->getAllInvolvedDoctors();
-                    $medecinImplique = $medecinsImpliques->firstWhere('medecin.id', $recap->medecin->id);
-
-                    if ($medecinImplique) {
-                    $hospitalisationId = $hospitalisation->id;
-                    }
-                    }
+                    $hospitalisationId = $hospitalisation ? $hospitalisation->id : null;
                     }
                     @endphp
                     @if($hospitalisationId)
