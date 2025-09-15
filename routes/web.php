@@ -287,6 +287,7 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
     Route::get('/hospitalisations/lits-disponibles', [HospitalisationController::class, 'getLitsDisponibles'])->name('hospitalisations.lits.disponibles');
     Route::post('hospitalisations/{id}/charges', [HospitalisationController::class, 'addCharge'])->name('hospitalisations.addCharge');
     Route::get('hospitalisations/{id}/doctors', [HospitalisationController::class, 'showDoctors'])->name('hospitalisations.doctors');
+    Route::get('hospitalisations/doctors/by-date/{date}', [HospitalisationController::class, 'showDoctorsByDate'])->name('hospitalisations.doctors.by-date');
 
     // Chambres (protégées par auth et is.approved)
     Route::resource('chambres', ChambreController::class);

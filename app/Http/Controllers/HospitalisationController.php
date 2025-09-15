@@ -977,4 +977,52 @@ class HospitalisationController extends Controller
             'totalExamens'
         ));
     }
+
+    public function showDoctorsByDate($date)
+    {
+        // Convertir la date en format Carbon
+        $targetDate = Carbon::parse($date)->startOfDay();
+        $endDate = $targetDate->copy()->endOfDay();
+
+        // Récupérer toutes les hospitalisations de cette date
+        $hospitalisations = Hospitalisation::with(['patient', 'medecin', 'service', 'lit.chambre'])
+            ->whereBetween('created_at', [$targetDate, $endDate])
+            ->get();
+
+        // Collecter tous les médecins impliqués dans toutes les hospitalisations de ce jour
+        $allDoctors = collect();
+        $totalPartMedecin = 0;
+        $totalExamens = 0;
+
+        foreach ($hospitalisations as $hospitalisation) {
+            $doctors = $hospitalisation->getAllInvolvedDoctors();
+
+            foreach ($doctors as $doctor) {
+                // Vérifier si ce médecin existe déjà dans la collection
+                $existingDoctor = $allDoctors->firstWhere('medecin.id', $doctor['medecin']->id);
+
+                if ($existingDoctor) {
+                    // Fusionner les données du médecin
+                    $existingDoctor['part_medecin'] += $doctor['part_medecin'];
+                    $existingDoctor['examens'] = array_merge($existingDoctor['examens'], $doctor['examens']);
+                    $existingDoctor['hospitalisations'][] = $hospitalisation->id;
+                } else {
+                    // Ajouter le médecin avec les informations de l'hospitalisation
+                    $doctor['hospitalisations'] = [$hospitalisation->id];
+                    $allDoctors->push($doctor);
+                }
+
+                $totalPartMedecin += $doctor['part_medecin'];
+                $totalExamens += count($doctor['examens']);
+            }
+        }
+
+        return view('hospitalisations.doctors-by-date', compact(
+            'hospitalisations',
+            'allDoctors',
+            'totalPartMedecin',
+            'totalExamens',
+            'date'
+        ));
+    }
 }

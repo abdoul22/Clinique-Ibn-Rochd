@@ -202,24 +202,8 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
                 <td class="table-cell py-2 px-2">
                     @if($recap->medecin)
                     @if($recap->examen && $recap->examen->nom === 'Hospitalisation')
-                    {{-- Pour les hospitalisations, afficher un lien vers les détails des médecins --}}
-                    @php
-                    // Trouver l'hospitalisation correspondante
-                    $caisse = \App\Models\Caisse::where('medecin_id', $recap->medecin->id)
-                    ->where('examen_id', $recap->examen->id)
-                    ->whereDate('date_examen', $recap->jour)
-                    ->first();
-                    $hospitalisationId = null;
-                    if ($caisse) {
-                    // Chercher l'hospitalisation par patient
-                    $hospitalisation = \App\Models\Hospitalisation::where('gestion_patient_id',
-                    $caisse->gestion_patient_id)
-                    ->first();
-                    $hospitalisationId = $hospitalisation ? $hospitalisation->id : null;
-                    }
-                    @endphp
-                    @if($hospitalisationId)
-                    <a href="{{ route('hospitalisations.doctors', $hospitalisationId) }}"
+                    {{-- Pour les hospitalisations, afficher un lien vers les détails des médecins de la journée --}}
+                    <a href="{{ route('hospitalisations.doctors.by-date', \Carbon\Carbon::parse($recap->jour)->format('Y-m-d')) }}"
                         class="text-blue-600 dark:text-blue-400 hover:underline font-medium flex items-center gap-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -228,9 +212,6 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
                         </svg>
                         Détails Médecins
                     </a>
-                    @else
-                    <span class="font-medium text-gray-900 dark:text-gray-100">{{ $recap->medecin->nom }}</span>
-                    @endif
                     @else
                     <span class="font-medium text-gray-900 dark:text-gray-100">{{ $recap->medecin->nom }}</span>
                     @endif
