@@ -203,7 +203,7 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
                     @if($recap->medecin)
                     @if($recap->examen && $recap->examen->nom === 'Hospitalisation')
                     {{-- Pour les hospitalisations, afficher un lien vers les détails des médecins de la journée --}}
-                    <a href="{{ route('hospitalisations.doctors.by-date', \Carbon\Carbon::parse($recap->jour)->format('Y-m-d')) }}"
+                    <a href="{{ route('hospitalisations.doctors.by-date', $recap->jour ? \Carbon\Carbon::parse($recap->jour)->format('Y-m-d') : date('Y-m-d')) }}"
                         class="text-blue-600 dark:text-blue-400 hover:underline font-medium flex items-center gap-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
