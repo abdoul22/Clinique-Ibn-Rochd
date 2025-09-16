@@ -102,10 +102,13 @@ class Hospitalisation extends Model
                 $nomExamen = $examen->nom;
 
                 // Si la description contient un nom de médecin entre parenthèses, c'est le médecin réel
-                if (preg_match('/\(Dr\.\s+([^)]+)\)/', $charge->description_snapshot, $matches)) {
-                    // Chercher le médecin par nom dans la description
-                    $nomMedecin = trim($matches[1]);
-                    $medecinReel = \App\Models\Medecin::where('nom', 'LIKE', "%{$nomMedecin}%")->first();
+                if (preg_match('/\(([^)]+)\)/', $charge->description_snapshot, $matches)) {
+                    // Chercher le médecin par nom complet dans la description
+                    $nomMedecinComplet = trim($matches[1]);
+                    // Chercher le médecin qui correspond exactement au nom complet
+                    $medecinReel = \App\Models\Medecin::all()->first(function ($medecin) use ($nomMedecinComplet) {
+                        return $medecin->nom_complet_avec_prenom === $nomMedecinComplet;
+                    });
                     $nomExamen = str_replace($matches[0], '', $charge->description_snapshot);
                 } else {
                     // Utiliser le médecin de l'examen s'il existe
@@ -114,16 +117,20 @@ class Hospitalisation extends Model
 
                 // Si on a trouvé un médecin, l'ajouter
                 if ($medecinReel) {
-                    $existingDoctor = $doctors->firstWhere('medecin.id', $medecinReel->id);
+                    $existingDoctorIndex = $doctors->search(function ($doctor) use ($medecinReel) {
+                        return $doctor['medecin']->id === $medecinReel->id;
+                    });
 
-                    if ($existingDoctor) {
+                    if ($existingDoctorIndex !== false) {
                         // Ajouter l'examen au médecin existant
+                        $existingDoctor = $doctors->get($existingDoctorIndex);
                         $existingDoctor['part_medecin'] += $charge->part_medecin;
                         $existingDoctor['examens'][] = [
                             'nom' => trim($nomExamen),
                             'part_medecin' => $charge->part_medecin,
                             'date' => $charge->created_at
                         ];
+                        $doctors->put($existingDoctorIndex, $existingDoctor);
                     } else {
                         // Nouveau médecin spécialiste
                         $doctors->push([

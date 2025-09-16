@@ -192,8 +192,8 @@
                                             <span class="text-white text-sm font-bold">{{ $index + 1 }}</span>
                                         </div>
                                         <div>
-                                            <p class="font-semibold text-gray-900 dark:text-white">Dr. {{
-                                                $doctor['medecin']->nom }}</p>
+                                            <p class="font-semibold text-gray-900 dark:text-white">{{
+                                                $doctor['medecin']->nom_complet_avec_prenom }}</p>
                                             <p class="text-sm text-gray-500 dark:text-gray-400">{{ $doctor['role'] }}
                                             </p>
                                         </div>
@@ -507,10 +507,26 @@
                     <div class="space-y-3">
                         @foreach($hospitalisation->roomStays as $stay)
                         <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <p class="font-medium text-gray-900 dark:text-white">{{ $stay->chambre->nom ?? '—' }}</p>
+                            <p class="font-medium text-gray-900 dark:text-white">
+                                @if($stay->chambre && $stay->chambre->nom)
+                                Chambre {{ $stay->chambre->nom }}
+                                @else
+                                —
+                                @endif
+                            </p>
                             <p class="text-sm text-gray-600 dark:text-gray-400">
                                 {{ optional($stay->start_at)->format('d/m/Y H:i') }} -
-                                {{ optional($stay->end_at)->format('d/m/Y H:i') ?? 'En cours' }}
+                                @if($stay->end_at)
+                                {{ $stay->end_at->format('d/m/Y H:i') }}
+                                @else
+                                @if($hospitalisation->statut === 'terminé')
+                                Terminé
+                                @elseif($hospitalisation->statut === 'annulé')
+                                Annulé
+                                @else
+                                En cours
+                                @endif
+                                @endif
                             </p>
                         </div>
                         @endforeach
@@ -627,7 +643,7 @@
                     class="form-select w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                     <option value="">Sélectionner un médecin...</option>
                     @foreach($medecins as $medecin)
-                    <option value="{{ $medecin->id }}">Dr. {{ $medecin->nom }} {{ $medecin->prenom ?? '' }} - {{
+                    <option value="{{ $medecin->id }}">{{ $medecin->nom_complet_avec_prenom }} - {{
                         $medecin->fonction ?? 'Médecin' }}</option>
                     @endforeach
                 </select>

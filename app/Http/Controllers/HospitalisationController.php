@@ -301,7 +301,7 @@ class HospitalisationController extends Controller
                 break;
             }
 
-            HospitalisationCharge::create([
+            $charge = new HospitalisationCharge([
                 'hospitalisation_id' => $hospitalisation->id,
                 'type' => 'room_day',
                 'source_id' => $chambre->id,
@@ -312,8 +312,11 @@ class HospitalisationController extends Controller
                 'part_medecin' => 0,
                 'part_cabinet' => $chambre->tarif_journalier ?? 5000,
                 'is_pharmacy' => false,
-                'created_at' => $dateCharge,
             ]);
+
+            // Forcer la date de création à la date calculée
+            $charge->created_at = $dateCharge;
+            $charge->save();
         }
     }
 
@@ -676,7 +679,7 @@ class HospitalisationController extends Controller
 
                 if ($request->medecin_id && $request->medecin_id != $ex->medecin_id) {
                     $medecin = \App\Models\Medecin::findOrFail($request->medecin_id);
-                    $description = $ex->nom . ' (Dr. ' . $medecin->nom . ')';
+                    $description = $ex->nom . ' (' . $medecin->nom_complet_avec_prenom . ')';
                 }
 
                 HospitalisationCharge::create([

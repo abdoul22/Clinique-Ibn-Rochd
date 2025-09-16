@@ -16,6 +16,11 @@ class HospitalizationRoomStay extends Model
         'end_at',
     ];
 
+    protected $casts = [
+        'start_at' => 'datetime',
+        'end_at' => 'datetime',
+    ];
+
     public function hospitalisation()
     {
         return $this->belongsTo(Hospitalisation::class);
