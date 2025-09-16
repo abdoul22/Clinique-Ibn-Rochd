@@ -8,6 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Vérifier si on est en environnement de test (SQLite)
+        if (config('database.default') === 'sqlite') {
+            // Pour SQLite, on ne peut pas modifier les colonnes ENUM, on skip cette migration
+            return;
+        }
+
         // 1) Étape de transition: passer provisoirement la colonne en VARCHAR pour éviter l'erreur de doublon ENUM
         \Illuminate\Support\Facades\DB::statement("ALTER TABLE services MODIFY type_service VARCHAR(100) NULL");
 
