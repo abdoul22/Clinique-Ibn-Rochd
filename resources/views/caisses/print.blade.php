@@ -8,23 +8,24 @@
 
     <style>
         :root {
-            --fs-xs: 11px;
-            --fs-s: 12px;
-            --fs-m: 13px;
-            --fs-l: 22px;
+            --fs-xs: 9px;
+            --fs-s: 10px;
+            --fs-m: 11px;
+            --fs-l: 14px;
         }
 
-        /* Format A5 par défaut */
+        /* Format A5 par défaut - Optimisé pour impression verticale */
         .sheet {
             width: 148mm;
             min-height: 210mm;
             margin: 0 auto;
-            padding: 8mm;
+            padding: 5mm;
             background: #fff;
             color: #000;
             font-family: system-ui, Arial, "Helvetica Neue", sans-serif;
-            line-height: 1.3;
+            line-height: 1.2;
             box-sizing: border-box;
+            font-size: var(--fs-s);
         }
 
         /* Format A4 - plus large */
@@ -33,75 +34,87 @@
             min-height: 297mm;
             padding: 15mm;
             line-height: 1.4;
+            font-size: var(--fs-m);
         }
 
-        /* Layout horizontal pour A5 (comme A4 mais plus compact) */
+        /* Layout optimisé pour A5 vertical */
         .sheet .header {
             display: flex;
             flex-direction: row;
             justify-content: space-between;
+            align-items: flex-start;
             text-align: left;
+            margin-bottom: 3mm;
         }
 
         .sheet .fr {
             text-align: left;
-            font-size: 10px;
+            font-size: var(--fs-xs);
+            flex: 1;
+            line-height: 1.1;
         }
 
         .sheet .ar {
             text-align: right;
             direction: rtl;
-            font-size: 10px;
+            font-size: var(--fs-xs);
+            flex: 1;
+            line-height: 1.1;
         }
 
         .sheet .logo-container {
-            order: 0;
-            margin: 4px 0;
+            flex: 0 0 auto;
+            margin: 0 3mm;
+            text-align: center;
         }
 
         .sheet .logo-container img {
-            height: 35px;
+            height: 25mm;
+            width: auto;
         }
 
         .sheet .muted {
-            font-size: 9px;
+            font-size: var(--fs-xs);
+            line-height: 1.1;
         }
 
         .sheet .divider {
-            margin: 4px 0;
+            margin: 2mm 0;
         }
 
         .sheet .table td,
         .sheet .table th {
-            padding: 2px 0;
-            font-size: 11px;
+            padding: 1mm 0;
+            font-size: var(--fs-s);
         }
 
-        /* Layout horizontal pour A4 (plus grand) */
+        /* Layout pour A4 (plus grand) */
         .sheet.a4 .header {
             flex-direction: row;
             justify-content: space-between;
             text-align: left;
+            margin-bottom: 5mm;
         }
 
         .sheet.a4 .fr {
             text-align: left;
             font-size: var(--fs-s);
+            line-height: 1.3;
         }
 
         .sheet.a4 .ar {
             text-align: right;
             direction: rtl;
             font-size: var(--fs-s);
+            line-height: 1.3;
         }
 
         .sheet.a4 .logo-container {
-            order: 0;
-            margin: 8px 0;
+            margin: 0 5mm;
         }
 
         .sheet.a4 .logo-container img {
-            height: 50px;
+            height: 35mm;
         }
 
         .sheet.a4 .muted {
@@ -109,14 +122,15 @@
         }
 
         .sheet.a4 .divider {
-            margin: 6px 0;
+            margin: 3mm 0;
         }
 
         .sheet.a4 .table td,
         .sheet.a4 .table th {
-            padding: 4px 0;
+            padding: 2mm 0;
             font-size: var(--fs-m);
         }
+
 
         /* Styles de base supprimés - maintenant gérés par les classes spécifiques */
 
@@ -126,45 +140,38 @@
             text-align: center;
         }
 
-        .logo-container {
-            text-align: center;
-            margin: 8px 0;
-        }
-
-        .logo-container img {
-            height: 50px;
-            width: auto;
-        }
-
         .muted {
             color: #444;
             font-size: var(--fs-xs);
+            line-height: 1.1;
         }
 
         .divider {
             border-bottom: 1px dashed #000;
-            margin: 6px 0;
+            margin: 2mm 0;
         }
 
         .label {
             display: inline-block;
-            width: 45%;
+            width: 40%;
+            font-size: var(--fs-s);
         }
 
         .value {
             font-weight: 600;
+            font-size: var(--fs-s);
         }
 
         .table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
+            margin-top: 2mm;
         }
 
         .table td,
         .table th {
-            padding: 4px 0;
-            font-size: var(--fs-m);
+            padding: 1mm 0;
+            font-size: var(--fs-s);
         }
 
         .right {
@@ -219,32 +226,56 @@
         @media print {
             @page {
                 size: A5 portrait;
-                margin: 5mm;
+                margin: 3mm;
             }
 
             @page.a4 {
                 size: A4 portrait;
-                margin: 10mm;
+                margin: 8mm;
             }
+
 
             body {
                 margin: 0;
+                padding: 0;
             }
 
             .sheet {
                 width: auto;
                 min-height: auto;
-                padding: 0;
+                padding: 2mm;
+                margin: 0;
+                box-shadow: none;
             }
 
             .sheet.a4 {
                 width: auto;
                 min-height: auto;
-                padding: 0;
+                padding: 5mm;
+                margin: 0;
             }
+
 
             .print-controls {
                 display: none !important;
+            }
+
+            /* Optimisations spécifiques pour A5 en impression */
+            .sheet .header {
+                margin-bottom: 2mm;
+            }
+
+            .sheet .logo-container img {
+                height: 20mm;
+            }
+
+            .sheet .divider {
+                margin: 1.5mm 0;
+            }
+
+            .sheet .table td,
+            .sheet .table th {
+                padding: 0.5mm 0;
             }
         }
 
@@ -290,46 +321,42 @@
 
 
 
-        <div class="muted" style="text-align:center;">
+        <div class="muted" style="text-align:center; margin: 1mm 0;">
             Urgences Tél. 26 38 24 84 – 22 30 56 26 <br>
             Avenue John Kennedy, en face de la Polyclinique – Nouakchott
         </div>
 
         <div class="divider"></div>
-        <div style="text-align:center; font-size: var(--fs-s); margin-bottom:6px;">
+        <div style="text-align:center; font-size: var(--fs-s); margin-bottom:2mm;">
             RECU N° <span class="bold">{{ $caisse->numero_facture ?? $caisse->id }}</span>
         </div>
 
         <!-- Infos patient -->
-        <div style="font-size: var(--fs-s);">
-            <div><span class="label">Numéro d'entrée</span> : <span class="value">{{ $caisse->numero_entre ?? '1'
-                    }}</span></div>
-            <div><span class="label">Nom du patient</span> : <span class="value">{{ ($caisse->patient->first_name ?? '')
-                    . ' ' . ($caisse->patient->last_name ?? '') }}</span></div>
-            <div><span class="label">Adresse / Tel</span> : <span class="value">{{ $caisse->patient->phone ?? 'N/A'
-                    }}</span></div>
-            <div><span class="label">Prescripteur</span> : <span class="value">{{ $caisse->prescripteur->nom ??
-                    'Externe' }}</span></div>
-            <div><span class="label">Examinateur</span> : <span class="value">
+        <div style="font-size: var(--fs-s); line-height: 1.2;">
+            <div style="margin-bottom: 1mm;"><span class="label">Numéro d'entrée</span> : <span class="value">{{
+                    $caisse->numero_entre ?? '1' }}</span></div>
+            <div style="margin-bottom: 1mm;"><span class="label">Nom du patient</span> : <span class="value">{{
+                    ($caisse->patient->first_name ?? '') . ' ' . ($caisse->patient->last_name ?? '') }}</span></div>
+            <div style="margin-bottom: 1mm;"><span class="label">Adresse / Tel</span> : <span class="value">{{
+                    $caisse->patient->phone ?? 'N/A' }}</span></div>
+            <div style="margin-bottom: 1mm;"><span class="label">Prescripteur</span> : <span class="value">{{
+                    $caisse->prescripteur->nom ?? 'Externe' }}</span></div>
+            <div style="margin-bottom: 1mm;"><span class="label">Examinateur</span> : <span class="value">
                     @if($caisse->medecin)
                     {{ $caisse->medecin->nom_complet_avec_specialite }}
                     @else
                     N/A
                     @endif
                 </span></div>
-            <div><span class="label">Date de l'examen</span> :
-                <span class="value">
-                    {{ $caisse->date_examen ? \Carbon\Carbon::parse($caisse->date_examen)->format('d/m/Y') . ' ' .
-                    \Carbon\Carbon::now()->format('H:i') :
-                    \Carbon\Carbon::now()->format('d/m/Y H:i') }}
-                </span>
-            </div>
+            <div style="margin-bottom: 1mm;"><span class="label">Date de l'examen</span> : <span class="value">{{
+                    $caisse->date_examen ? \Carbon\Carbon::parse($caisse->date_examen)->format('d/m/Y') . ' ' .
+                    \Carbon\Carbon::now()->format('H:i') : \Carbon\Carbon::now()->format('d/m/Y H:i') }}</span></div>
         </div>
 
         <div class="divider"></div>
 
         <!-- Examens -->
-        <div class="bold" style="font-size: var(--fs-s); margin-bottom:4px;">Examens demandés</div>
+        <div class="bold" style="font-size: var(--fs-s); margin-bottom:2mm;">Examens demandés</div>
         <table class="table">
             <tbody>
                 @if($caisse->examens_data)
@@ -370,7 +397,7 @@
         </table>
 
         <div class="divider"></div>
-        <div style="font-size: var(--fs-s);">
+        <div style="font-size: var(--fs-s); margin-top: 2mm;">
             <span class="label">Caissier(e)</span> : <span class="value">{{ $caisse->nom_caissier ?? 'N/A' }}</span>
         </div>
     </div>
@@ -391,11 +418,22 @@
             event.target.classList.add('active');
 
             // Mettre à jour la page pour l'impression
-            if (format === 'a5') {
-                document.documentElement.style.setProperty('--page-size', 'A5');
-            } else {
-                document.documentElement.style.setProperty('--page-size', 'A4');
+            const style = document.createElement('style');
+            style.id = 'dynamic-print-style';
+
+            // Supprimer l'ancien style s'il existe
+            const oldStyle = document.getElementById('dynamic-print-style');
+            if (oldStyle) {
+                oldStyle.remove();
             }
+
+            if (format === 'a5') {
+                style.textContent = '@media print { @page { size: A5 portrait; margin: 3mm; } }';
+            } else if (format === 'a4') {
+                style.textContent = '@media print { @page { size: A4 portrait; margin: 8mm; } }';
+            }
+
+            document.head.appendChild(style);
         }
     </script>
 </body>
