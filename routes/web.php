@@ -103,6 +103,18 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmi
     Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
     // API pour numéro d'entrée
     Route::get('/api/caisses/numero-entree/{medecin_id}', [CaisseController::class, 'getNextNumeroEntree'])->name('caisses.getNextNumeroEntree');
+
+    // Récapitulatifs pour superadmin
+    Route::get('recap-services/print', [RecapitulatifServiceJournalierController::class, 'print'])->name('recap-services.print');
+    Route::get('recap-services/export-pdf', [RecapitulatifServiceJournalierController::class, 'exportPdf'])->name('recap-services.exportPdf');
+    Route::resource('recap-services', RecapitulatifServiceJournalierController::class);
+
+    Route::resource('recap-operateurs', RecapitulatifOperateurController::class);
+    Route::get('recap-operateurs-export-pdf', [RecapitulatifOperateurController::class, 'exportPdf'])->name('recap-operateurs.exportPdf');
+    Route::get('recap-operateurs-print', [RecapitulatifOperateurController::class, 'print'])->name('recap-operateurs.print');
+
+    // Récapitulatif opérateurs - Détails médecins hospitalisations
+    Route::get('hospitalisations/doctors/by-date/{date}', [HospitalisationController::class, 'showDoctorsByDate'])->name('hospitalisations.doctors.by-date');
 });
 
 // Routes pour ADMIN
@@ -153,6 +165,7 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     Route::get('/hospitalisations/lits-disponibles', [HospitalisationController::class, 'getLitsDisponibles'])->name('hospitalisations.lits.disponibles');
     Route::post('hospitalisations/{id}/charges', [HospitalisationController::class, 'addCharge'])->name('hospitalisations.addCharge');
     Route::get('hospitalisations/{id}/doctors', [HospitalisationController::class, 'showDoctors'])->name('hospitalisations.doctors');
+    Route::get('hospitalisations/doctors/by-date/{date}', [HospitalisationController::class, 'showDoctorsByDate'])->name('hospitalisations.doctors.by-date');
 
     // Récapitulatifs pour admin
     Route::get('recap-services/print', [RecapitulatifServiceJournalierController::class, 'print'])->name('recap-services.print');

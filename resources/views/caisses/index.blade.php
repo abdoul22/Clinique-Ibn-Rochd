@@ -301,6 +301,7 @@
                                     class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
                                     <i class="fas fa-eye"></i>
                                 </a>
+                                @if($role === 'superadmin')
                                 <form action="{{ route($destroyRoute, $caisse->id) }}" method="POST" class="inline"
                                     onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')">
                                     @csrf
@@ -310,6 +311,7 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

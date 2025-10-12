@@ -15,7 +15,12 @@
                 </p>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('recap-operateurs.index') }}"
+                @php
+                $role = auth()->user()->role->name;
+                $recapRoute = ($role === 'superadmin' || $role === 'admin') ? $role . '.recap-operateurs.index' :
+                'recap-operateurs.index';
+                @endphp
+                <a href="{{ route($recapRoute) }}"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -185,6 +190,3 @@
     @endif
 </div>
 @endsection
-
-
-

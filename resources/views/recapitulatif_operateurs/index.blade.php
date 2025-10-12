@@ -37,8 +37,12 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
     <span
         class="inline-block bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium transition">{{
         $summary }}</span>
-    <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-operateurs.index') : route('recap-operateurs.index') }}"
-        class="form-button form-button-secondary text-xs">Réinitialiser</a>
+    @php
+    $role = auth()->user()->role->name;
+    $resetRoute = ($role === 'superadmin' || $role === 'admin') ? route($role . '.recap-operateurs.index') :
+    route('recap-operateurs.index');
+    @endphp
+    <a href="{{ $resetRoute }}" class="form-button form-button-secondary text-xs">Réinitialiser</a>
 </div>
 @endif
 
@@ -76,8 +80,12 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
             placeholder="Fin" aria-label="Date de fin">
     </div>
     <button type="submit" class="form-button text-sm" id="btn-filtrer">Filtrer</button>
-    <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-operateurs.index') : route('recap-operateurs.index') }}"
-        class="ml-2 text-sm text-gray-600 dark:text-gray-400 underline">Afficher
+    @php
+    $role = auth()->user()->role->name;
+    $showAllRoute = ($role === 'superadmin' || $role === 'admin') ? route($role . '.recap-operateurs.index') :
+    route('recap-operateurs.index');
+    @endphp
+    <a href="{{ $showAllRoute }}" class="ml-2 text-sm text-gray-600 dark:text-gray-400 underline">Afficher
         tous</a>
 </form>
 
@@ -134,10 +142,16 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
         </div>
 
         <!-- Boutons Export -->
-        <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-operateurs.exportPdf', request()->query()) : route('recap-operateurs.exportPdf', request()->query()) }}"
+        @php
+        $role = auth()->user()->role->name;
+        $exportPdfRoute = ($role === 'superadmin' || $role === 'admin') ? route($role . '.recap-operateurs.exportPdf',
+        request()->query()) : route('recap-operateurs.exportPdf', request()->query());
+        $printRoute = ($role === 'superadmin' || $role === 'admin') ? route($role . '.recap-operateurs.print',
+        request()->query()) : route('recap-operateurs.print', request()->query());
+        @endphp
+        <a href="{{ $exportPdfRoute }}"
             class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition">PDF</a>
-        <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.recap-operateurs.print', request()->query()) : route('recap-operateurs.print', request()->query()) }}"
-            target="_blank"
+        <a href="{{ $printRoute }}" target="_blank"
             class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded transition">Imprimer</a>
     </form>
 </div>
@@ -203,7 +217,12 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
                     @if($recap->medecin)
                     @if($recap->examen && $recap->examen->nom === 'Hospitalisation')
                     {{-- Pour les hospitalisations, afficher un lien vers les détails des médecins de la journée --}}
-                    <a href="{{ route('hospitalisations.doctors.by-date', $recap->jour ? \Carbon\Carbon::parse($recap->jour)->format('Y-m-d') : date('Y-m-d')) }}"
+                    @php
+                    $role = auth()->user()->role->name;
+                    $routeName = ($role === 'superadmin' || $role === 'admin') ? $role .
+                    '.hospitalisations.doctors.by-date' : 'hospitalisations.doctors.by-date';
+                    @endphp
+                    <a href="{{ route($routeName, $recap->jour ? \Carbon\Carbon::parse($recap->jour)->format('Y-m-d') : date('Y-m-d')) }}"
                         class="text-blue-600 dark:text-blue-400 hover:underline font-medium flex items-center gap-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

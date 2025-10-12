@@ -13,11 +13,18 @@
             @auth
             @if(Auth::user()->role?->name === 'superadmin')
             <div class="flex space-x-6 text-sm">
+                @php
+                $role = auth()->user()->role->name ?? null;
+                $recapOperateursRoute = ($role === 'superadmin' || $role === 'admin') ? route($role .
+                '.recap-operateurs.index') : route('recap-operateurs.index');
+                $recapServicesRoute = ($role === 'superadmin' || $role === 'admin') ? route($role .
+                '.recap-services.index') : route('recap-services.index');
+                @endphp
                 <a href="{{ route('etatcaisse.index') }}"
                     class="hover:text-blue-600 dark:hover:text-blue-300 transition">État de Caisse</a>
-                <a href="{{ route('recap-services.index') }}"
+                <a href="{{ $recapServicesRoute }}"
                     class="hover:text-blue-600 dark:hover:text-blue-300 transition">Récap. Services</a>
-                <a href="{{ route('recap-operateurs.index') }}"
+                <a href="{{ $recapOperateursRoute }}"
                     class="hover:text-blue-600 dark:hover:text-blue-300 transition">Récap. Opérateurs</a>
                 <a href="{{ route('credits.index') }}"
                     class="hover:text-blue-600 dark:hover:text-blue-300 transition">Suivi du Crédit</a>

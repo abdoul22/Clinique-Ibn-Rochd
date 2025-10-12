@@ -122,7 +122,7 @@
         </a>
 
         {{-- 10) Récapitulatif Journalier des Médecins --}}
-        <a href="{{ route('recap-operateurs.index') }}"
+        <a href="{{ route('superadmin.recap-operateurs.index') }}"
             class="bg-teal-600 text-white rounded-2xl p-6 shadow hover:bg-teal-700 transition">
             <h2 class="text-xl font-semibold mb-2">Récap. Opérateurs</h2>
             <p class="text-sm text-teal-100">Analyser les consultations et les parts des médecins.</p>

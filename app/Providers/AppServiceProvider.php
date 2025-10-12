@@ -37,14 +37,14 @@ class AppServiceProvider extends ServiceProvider
 
         Route::middleware('is.approved', IsApproved::class); // Ceci enregistre le middleware
 
-        Redis::enableEvents();
+        // Redis::enableEvents(); // Désactivé temporairement - cause timeout si Redis n'est pas démarré
         //Tailwind Pagination
         Paginator::useTailwind();
 
         // Configuration spéciale pour les données médicales
-        config([
-            'database.redis.options.prefix' => env('APP_NAME') . ':medical:'
-        ]);
+        // config([
+        //     'database.redis.options.prefix' => env('APP_NAME') . ':medical:'
+        // ]);
 
         if ($this->app->runningInConsole() && !app()->environment('testing')) {
             $this->commands([

@@ -478,17 +478,16 @@ class CaisseController extends Controller
 
     public function destroy(Caisse $caisse, $id)
     {
+        // Vérifier que seul le superadmin peut supprimer une facture
+        $role = Auth::user()->role->name;
+
+        if ($role !== 'superadmin') {
+            return back()->with('error', 'Vous n\'avez pas la permission de supprimer une facture.');
+        }
+
         $caisse = Caisse::find($id);
         if ($caisse->delete()) {
-            $role = Auth::user()->role->name;
-
-            if ($role === 'superadmin') {
-                return redirect()->route('superadmin.caisses.index')->with('success', 'Facture supprimée !');
-            } elseif ($role === 'admin') {
-                return redirect()->route('admin.caisses.index')->with('success', 'Facture supprimée !');
-            }
-
-            return redirect()->route('caisses.index')->with('success', 'Facture supprimée !');
+            return redirect()->route('superadmin.caisses.index')->with('success', 'Facture supprimée !');
         }
 
         return back()->with('error', 'Erreur lors de la suppression');
