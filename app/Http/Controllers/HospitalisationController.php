@@ -242,8 +242,15 @@ class HospitalisationController extends Controller
         $joursHospitalisation = max(1, $jours);
 
         // Ajouter les variables manquantes pour la vue - Exclure les examens d'hospitalisation automatiques
-        $examens = Examen::where('nom', 'NOT LIKE', 'Hospitalisation - %')
+        // Filtrer les examens pour exclure ceux liés à des services de type pharmacie
+        $examens = Examen::with('service')
+            ->where('nom', 'NOT LIKE', 'Hospitalisation - %')
             ->where('nom', '!=', 'Hospitalisation')
+            ->whereHas('service', function ($query) {
+                $query->where('type_service', '!=', 'PHARMACIE')
+                    ->where('type_service', '!=', 'pharmacie')
+                    ->where('type_service', '!=', 'medicament');
+            })
             ->orderBy('nom')
             ->get();
         $medicaments = Pharmacie::where('statut', 'actif')
