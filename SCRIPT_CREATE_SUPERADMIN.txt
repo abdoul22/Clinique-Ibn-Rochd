@@ -1,0 +1,91 @@
+═══════════════════════════════════════════════════════════════════
+ SCRIPT POUR CRÉER UN SUPERADMIN VIA TINKER
+═══════════════════════════════════════════════════════════════════
+
+1. Ouvrir le terminal et lancer tinker:
+   php artisan tinker
+
+2. Copier-coller le script suivant (MODIFIEZ LES INFORMATIONS):
+
+// Récupérer le rôle superadmin
+$superadminRole = \App\Models\Role::where('name', 'superadmin')->first();
+
+// Créer l'utilisateur superadmin
+$user = \App\Models\User::create([
+    'name' => 'Dr Brahim',
+    'email' => 'drntaghry@yahoo.fr',
+    'password' => \Hash::make('36305626'),
+    'role_id' => $superadminRole->id,
+    'is_approved' => true
+]);
+
+echo "✅ Superadmin créé avec succès !\nID: " . $user->id . "\nNom: " . $user->name . "\nEmail: " . $user->email;
+
+═══════════════════════════════════════════════════════════════════
+ VARIANTES DU SCRIPT
+═══════════════════════════════════════════════════════════════════
+
+--- Pour créer un ADMIN (au lieu de superadmin) ---
+
+$adminRole = \App\Models\Role::where('name', 'admin')->first();
+$user = \App\Models\User::create([
+    'name' => 'Nom Admin',
+    'email' => 'admin@exemple.com',
+    'password' => \Hash::make('motdepasse'),
+    'role_id' => $adminRole->id,
+    'is_approved' => true
+]);
+echo "✅ Admin créé avec succès !";
+
+═══════════════════════════════════════════════════════════════════
+
+--- Script tout-en-un avec vérification ---
+
+// Vérifier si l'utilisateur existe déjà
+$email = 'nouveauadmin@exemple.com';
+$existingUser = \App\Models\User::where('email', $email)->first();
+
+if ($existingUser) {
+    echo "❌ Utilisateur existant: " . $existingUser->name;
+} else {
+    $superadminRole = \App\Models\Role::where('name', 'superadmin')->first();
+    $user = \App\Models\User::create([
+        'name' => 'Nouveau Admin',
+        'email' => $email,
+        'password' => \Hash::make('motdepasse123'),
+        'role_id' => $superadminRole->id,
+        'is_approved' => true
+    ]);
+    echo "✅ Superadmin créé avec succès !\nID: " . $user->id;
+}
+
+═══════════════════════════════════════════════════════════════════
+
+--- Pour lister tous les utilisateurs ---
+
+\App\Models\User::with('role')->get()->each(function($u) {
+    echo $u->name . " (" . $u->email . ") - Rôle: " . ($u->role ? $u->role->name : 'Aucun') . "\n";
+});
+
+═══════════════════════════════════════════════════════════════════
+
+--- Pour supprimer un utilisateur par email ---
+
+$user = \App\Models\User::where('email', 'email@supprimer.com')->first();
+if ($user) {
+    $user->delete();
+    echo "✅ Utilisateur supprimé !";
+} else {
+    echo "❌ Utilisateur non trouvé !";
+}
+
+═══════════════════════════════════════════════════════════════════
+ NOTES IMPORTANTES
+═══════════════════════════════════════════════════════════════════
+
+- Modifiez toujours les valeurs: name, email, password
+- Vérifiez que l'email n'existe pas déjà
+- Utilisez des mots de passe forts pour les superadmins
+- Le script fonctionne dans tinker ou dans un fichier PHP
+
+═══════════════════════════════════════════════════════════════════
