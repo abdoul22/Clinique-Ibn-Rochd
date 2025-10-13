@@ -20,7 +20,8 @@ class ExamenController extends Controller
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
 
-        $query = Examen::with(['service.pharmacie']);
+        $query = Examen::with(['service.pharmacie'])
+            ->where('nom', 'NOT LIKE', '%Hospitalisation%');
 
         if ($search) {
             $query->where('nom', 'like', "%{$search}%")
@@ -213,7 +214,9 @@ class ExamenController extends Controller
 
     public function exportPdf()
     {
-        $examens = Examen::with(['service.pharmacie'])->get();
+        $examens = Examen::with(['service.pharmacie'])
+            ->where('nom', 'NOT LIKE', '%Hospitalisation%')
+            ->get();
 
         // Traiter les données pour l'affichage
         $examens->transform(function ($examen) {
@@ -234,7 +237,9 @@ class ExamenController extends Controller
 
     public function print()
     {
-        $examens = Examen::with(['service.pharmacie'])->get();
+        $examens = Examen::with(['service.pharmacie'])
+            ->where('nom', 'NOT LIKE', '%Hospitalisation%')
+            ->get();
 
         // Traiter les données pour l'affichage
         $examens->transform(function ($examen) {

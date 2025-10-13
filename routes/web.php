@@ -82,9 +82,9 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmi
     // Médecins
     Route::resource('medecins', MedecinController::class);
     // Examens
-    Route::resource('examens', ExamenController::class);
     Route::get('/examens/print', [ExamenController::class, 'print'])->name('examens.print');
     Route::get('/examens/export-pdf', [ExamenController::class, 'exportPdf'])->name('examens.exportPdf');
+    Route::resource('examens', ExamenController::class);
     // Services
     Route::resource('services', ServiceController::class);
     Route::get('/services/export-pdf', [ServiceController::class, 'exportPdf'])->name('services.exportPdf');
@@ -130,9 +130,9 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     // Médecins
     Route::resource('medecins', MedecinController::class);
     // Examens
-    Route::resource('examens', ExamenController::class);
     Route::get('/examens/print', [ExamenController::class, 'print'])->name('examens.print');
     Route::get('/examens/export-pdf', [ExamenController::class, 'exportPdf'])->name('examens.exportPdf');
+    Route::resource('examens', ExamenController::class);
     // Services
     Route::resource('services', ServiceController::class);
     Route::get('/services/export-pdf', [ServiceController::class, 'exportPdf'])->name('services.exportPdf');

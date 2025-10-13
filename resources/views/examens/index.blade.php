@@ -4,13 +4,18 @@
 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
     <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Liste des examens</h1>
     <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0 w-full lg:w-auto">
+        @php
+        $role = auth()->user()->role?->name;
+        $routePrefix = ($role === 'superadmin' || $role === 'admin') ? $role . '.' : '';
+        @endphp
+
         <!-- Bouton Ajouter -->
-        <a href="{{ route('examens.create') }}"
+        <a href="{{ route($routePrefix . 'examens.create') }}"
             class="bg-cyan-600 dark:bg-cyan-800 hover:bg-cyan-700 dark:hover:bg-cyan-900 text-white text-sm px-4 py-2 rounded transition">
             + Ajouter un examen
         </a>
         <!-- Bouton PDF -->
-        <a href="{{ route('examens.exportPdf') }}"
+        <a href="{{ route($routePrefix . 'examens.exportPdf') }}"
             class="bg-red-500 dark:bg-red-700 hover:bg-red-600 dark:hover:bg-red-900 text-white text-sm px-4 py-2 rounded flex items-center">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -18,7 +23,7 @@
             Télécharger PDF
         </a>
         <!-- Bouton Impression -->
-        <a href="{{ route('examens.print') }}" target="_blank"
+        <a href="{{ route($routePrefix . 'examens.print') }}" target="_blank"
             class="bg-gray-600 dark:bg-gray-800 hover:bg-gray-700 dark:hover:bg-gray-900 text-white text-sm px-4 py-2 rounded flex items-center">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
