@@ -61,6 +61,7 @@
                 <th>Nom</th>
                 <th>Service</th>
                 <th>Tarif (MRU)</th>
+                <th>Part Médecins (MRU)</th>
             </tr>
         </thead>
         <tbody>
@@ -70,6 +71,7 @@
                 <td>{{ $examen->nom_affichage }}</td>
                 <td>{{ $examen->service_affichage }}</td>
                 <td class="text-right">{{ number_format($examen->tarif, 0, ',', ' ') }}</td>
+                <td class="text-right">{{ number_format($examen->part_medecin, 0, ',', ' ') }}</td>
             </tr>
             @endforeach
         </tbody>

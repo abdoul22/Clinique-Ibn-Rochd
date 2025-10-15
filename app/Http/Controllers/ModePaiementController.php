@@ -13,11 +13,46 @@ class ModePaiementController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $paiements = ModePaiement::with('caisse')->latest()->paginate(10);
+        // Construire la requête de base
+        $query = ModePaiement::with('caisse');
 
-        return view('modepaiements.index', compact('paiements'));
+        // Récupérer les types de modes de paiement pour le filtre
+        $typesModes = ModePaiement::getTypes();
+
+        // Filtrage par type de paiement
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Filtrage par période
+        $period = $request->get('period', null);
+
+        if ($period === 'day' && $request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        } elseif ($period === 'week' && $request->filled('week')) {
+            $parts = explode('-W', $request->week);
+            if (count($parts) === 2) {
+                $start = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
+                $end = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
+                $query->whereBetween('created_at', [$start, $end]);
+            }
+        } elseif ($period === 'month' && $request->filled('month')) {
+            $parts = explode('-', $request->month);
+            if (count($parts) === 2) {
+                $query->whereYear('created_at', $parts[0])
+                    ->whereMonth('created_at', $parts[1]);
+            }
+        } elseif ($period === 'year' && $request->filled('year')) {
+            $query->whereYear('created_at', $request->year);
+        } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
+            $query->whereBetween('created_at', [$request->date_start, $request->date_end]);
+        }
+
+        $paiements = $query->latest()->paginate(10)->withQueryString();
+
+        return view('modepaiements.index', compact('paiements', 'typesModes'));
     }
 
     public function dashboard(Request $request)
