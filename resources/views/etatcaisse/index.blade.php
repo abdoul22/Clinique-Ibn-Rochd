@@ -250,7 +250,8 @@ $employe = $personnels->where('id', request('personnel_id'))->first();
 
 <!-- Pagination -->
 <div class="pagination-container my-4">
-    {{ $etatcaisses->links() }}
+    {{ $etatcaisses->appends(request()->query())->links() }}
+
 </div>
 
 <!-- Résumé filtré moderne (toujours affiché, même sans filtre) -->
@@ -349,20 +350,22 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
     }
     function updateFiltrerButtonState() {
         const period = document.getElementById('period').value;
-        let valid = false;
+        const medecinSelected = !!(document.getElementById('medecin_id') && document.getElementById('medecin_id').value);
+        let hasValidPeriod = false;
         if (period === 'day') {
-            valid = !!document.querySelector('input[name="date"]').value;
+            hasValidPeriod = !!document.querySelector('input[name="date"]').value;
         } else if (period === 'week') {
-            valid = !!document.querySelector('input[name="week"]').value;
+            hasValidPeriod = !!document.querySelector('input[name="week"]').value;
         } else if (period === 'month') {
-            valid = !!document.querySelector('input[name="month"]').value;
+            hasValidPeriod = !!document.querySelector('input[name="month"]').value;
         } else if (period === 'year') {
-            valid = !!document.querySelector('input[name="year"]').value;
+            hasValidPeriod = !!document.querySelector('input[name="year"]').value;
         } else if (period === 'range') {
             const start = document.querySelector('input[name="date_start"]').value;
             const end = document.querySelector('input[name="date_end"]').value;
-            valid = !!start && !!end && start <= end;
+            hasValidPeriod = !!start && !!end && start <= end;
         }
+        const valid = hasValidPeriod || medecinSelected; // Autoriser filtre par médecin seul
         document.getElementById('btn-filtrer').disabled = !valid;
         document.getElementById('btn-filtrer').classList.toggle('opacity-50', !valid);
         document.getElementById('btn-filtrer').classList.toggle('cursor-not-allowed', !valid);
@@ -388,6 +391,14 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
         updateFiltrerButtonState();
         updateFiltrerButtonLabel();
     });
+
+    // Mise à jour quand le médecin change
+    const medecinSelect = document.getElementById('medecin_id');
+    if (medecinSelect) {
+        medecinSelect.addEventListener('change', function() {
+            updateFiltrerButtonState();
+        });
+    }
 </script>
 
 <script>
