@@ -135,6 +135,22 @@
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                             placeholder="Année">
                     </div>
+                    <!-- Filtre Médecin -->
+                    <div>
+                        <label for="medecin_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-user-md mr-1"></i>Médecin
+                        </label>
+                        <select name="medecin_id" id="medecin_id"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                            <option value="">Tous</option>
+                            @foreach(($medecins ?? []) as $m)
+                            <option value="{{ $m->id }}" {{ (string)request('medecin_id')===(string)$m->id ? 'selected'
+                                : '' }}>
+                                {{ $m->nom_complet_avec_specialite ?? $m->nom_complet ?? $m->nom }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Plage personnalisée -->

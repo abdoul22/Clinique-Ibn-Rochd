@@ -49,6 +49,7 @@ class EtatCaisseController extends Controller
             ->when($period === 'range' && $dateStart && $dateEnd, fn($q) => $q->whereBetween('created_at', [$dateStart, $dateEnd]))
             ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
             ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
+            ->when($request->medecin_id, fn($q) => $q->where('medecin_id', $request->medecin_id))
             ->latest()->paginate(10);
 
         $personnels = Personnel::all();
@@ -158,6 +159,8 @@ class EtatCaisseController extends Controller
                 ->values();
         }
 
+        $medecins = \App\Models\Medecin::all();
+
         return view('etatcaisse.index', compact(
             'etatcaisses',
             'personnels',
@@ -166,7 +169,8 @@ class EtatCaisseController extends Controller
             'resumeFiltre',
             'chartGlobalData',
             'chartFiltreData',
-            'assurances'
+            'assurances',
+            'medecins'
         ));
     }
 
@@ -616,6 +620,7 @@ class EtatCaisseController extends Controller
             ->when($period === 'range' && $dateStart && $dateEnd, fn($q) => $q->whereBetween('created_at', [$dateStart, $dateEnd]))
             ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
             ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
+            ->when($request->medecin_id, fn($q) => $q->where('medecin_id', $request->medecin_id))
             ->latest()->get(); // Pas de pagination pour le PDF
 
         // Calculer les résumés avec filtres
@@ -671,6 +676,7 @@ class EtatCaisseController extends Controller
             ->when($period === 'range' && $dateStart && $dateEnd, fn($q) => $q->whereBetween('created_at', [$dateStart, $dateEnd]))
             ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
             ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
+            ->when($request->medecin_id, fn($q) => $q->where('medecin_id', $request->medecin_id))
             ->latest()->get(); // Pas de pagination pour l'impression
 
         // Calculer les résumés avec filtres
@@ -691,12 +697,18 @@ class EtatCaisseController extends Controller
         $year = $request->input('year');
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
+        $medecinId = $request->input('medecin_id');
 
         // Construire la requête de base pour les résumés
         $etatCaisseQuery = EtatCaisse::query();
         $depenseQuery = Depense::query();
         $creditPersonnelQuery = Credit::where('source_type', \App\Models\Personnel::class);
         $creditAssuranceQuery = Credit::where('source_type', \App\Models\Assurance::class);
+
+        // Filtrer par médecin si fourni
+        if ($medecinId) {
+            $etatCaisseQuery->where('medecin_id', $medecinId);
+        }
 
         // Appliquer les filtres de date
         if ($period === 'day' && $date) {
