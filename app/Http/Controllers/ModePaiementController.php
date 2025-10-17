@@ -74,16 +74,25 @@ class ModePaiementController extends Controller
         // Récupérer les types de modes de paiement uniques (avec fallback)
         $typesModes = ModePaiement::getTypes();
 
+        // Gérer le filtrage par période
+        $period = $request->get('period', null);
+        $dateConstraints = $this->getDateConstraints($request, $period);
+
         // Ne compter que les recettes liées à des factures (caisse_id non null)
-        $totalCaisse = EtatCaisse::whereNotNull('caisse_id')->sum('recette');
+        $queryTotalCaisse = EtatCaisse::whereNotNull('caisse_id');
+        $this->applyDateFilter($queryTotalCaisse, $dateConstraints);
+        $totalCaisse = $queryTotalCaisse->sum('recette');
 
         // Calculer les dépenses (exclure les crédits personnel car ils sont payés par déduction salaire)
-        $totalDepenses = Depense::where('rembourse', false)->sum('montant');
+        $queryTotalDepenses = Depense::where('rembourse', false);
+        $this->applyDateFilter($queryTotalDepenses, $dateConstraints);
+        $totalDepenses = $queryTotalDepenses->sum('montant');
 
         // Ajouter SEULEMENT les paiements de crédits d'assurance comme entrées de trésorerie (vraies recettes)
-        $paiementsCreditsAssurance = ModePaiement::whereNull('caisse_id')
-            ->where('source', 'credit_assurance')
-            ->sum('montant');
+        $queryPaiementsCreditsAssurance = ModePaiement::whereNull('caisse_id')
+            ->where('source', 'credit_assurance');
+        $this->applyDateFilter($queryPaiementsCreditsAssurance, $dateConstraints);
+        $paiementsCreditsAssurance = $queryPaiementsCreditsAssurance->sum('montant');
         $totalCaisse += $paiementsCreditsAssurance;
 
         $soldeDisponible = $totalCaisse - $totalDepenses;
@@ -96,24 +105,25 @@ class ModePaiementController extends Controller
         $chartSoldes = [];
 
         foreach ($typesModes as $type) {
-            // Récupérer le montant total pour ce type de mode de paiement
-            $montantTotal = ModePaiement::where('type', $type)->sum('montant');
-
             // Calculer les entrées (recettes) pour ce mode de paiement
-            $entree = EtatCaisse::whereNotNull('caisse_id')->whereHas('caisse.mode_paiements', function ($query) use ($type) {
+            $queryEntree = EtatCaisse::whereNotNull('caisse_id')->whereHas('caisse.mode_paiements', function ($query) use ($type) {
                 $query->where('type', $type);
-            })->sum('recette'); // Utiliser la recette réelle d'EtatCaisse
+            });
+            $this->applyDateFilter($queryEntree, $dateConstraints);
+            $entree = $queryEntree->sum('recette'); // Utiliser la recette réelle d'EtatCaisse
 
             // Ajouter SEULEMENT les paiements de crédits d'assurance (vraies recettes)
-            $entree += ModePaiement::where('type', $type)
+            $queryEntreeCredits = ModePaiement::where('type', $type)
                 ->whereNull('caisse_id')
-                ->where('source', 'credit_assurance')
-                ->sum('montant');
+                ->where('source', 'credit_assurance');
+            $this->applyDateFilter($queryEntreeCredits, $dateConstraints);
+            $entree += $queryEntreeCredits->sum('montant');
 
             // Calculer les sorties (dépenses) pour ce mode de paiement
-            $sortie = Depense::where('mode_paiement_id', $type)
-                ->where('rembourse', false)
-                ->sum('montant');
+            $querySortie = Depense::where('mode_paiement_id', $type)
+                ->where('rembourse', false);
+            $this->applyDateFilter($querySortie, $dateConstraints);
+            $sortie = $querySortie->sum('montant');
 
             $solde = $entree - $sortie;
 
@@ -144,19 +154,19 @@ class ModePaiementController extends Controller
 
     public function historique(Request $request)
     {
+        // Gérer le filtrage par période
+        $period = $request->get('period', null);
+        $dateConstraints = $this->getDateConstraints($request, $period);
+
         // Récupérer les dépenses
         $queryDepenses = Depense::with(['modePaiement', 'credit']);
 
         // Suppression de l'exclusion : on affiche toutes les dépenses
         $queryDepenses->where('rembourse', false);
 
-        // Filtres pour les dépenses
-        if ($request->filled('date_debut')) {
-            $queryDepenses->whereDate('created_at', '>=', $request->date_debut);
-        }
-        if ($request->filled('date_fin')) {
-            $queryDepenses->whereDate('created_at', '<=', $request->date_fin);
-        }
+        // Appliquer le filtre de date
+        $this->applyDateFilter($queryDepenses, $dateConstraints);
+
         if ($request->filled('mode_paiement')) {
             $queryDepenses->where('mode_paiement_id', $request->mode_paiement);
         }
@@ -173,13 +183,9 @@ class ModePaiementController extends Controller
         // Récupérer les recettes (entrées) de la caisse
         $queryRecettes = EtatCaisse::with(['caisse.mode_paiements', 'caisse.patient', 'medecin', 'caisse.examen']);
 
-        // Filtres pour les recettes
-        if ($request->filled('date_debut')) {
-            $queryRecettes->whereDate('created_at', '>=', $request->date_debut);
-        }
-        if ($request->filled('date_fin')) {
-            $queryRecettes->whereDate('created_at', '<=', $request->date_fin);
-        }
+        // Appliquer le filtre de date
+        $this->applyDateFilter($queryRecettes, $dateConstraints);
+
         if ($request->filled('mode_paiement')) {
             $queryRecettes->whereHas('caisse.mode_paiements', function ($query) use ($request) {
                 $query->where('type', $request->mode_paiement);
@@ -204,13 +210,9 @@ class ModePaiementController extends Controller
         $queryPaiementsCredits = ModePaiement::whereNull('caisse_id')
             ->whereIn('source', ['credit_assurance', 'credit_personnel']);
 
-        // Filtres pour les paiements de crédits
-        if ($request->filled('date_debut')) {
-            $queryPaiementsCredits->whereDate('created_at', '>=', $request->date_debut);
-        }
-        if ($request->filled('date_fin')) {
-            $queryPaiementsCredits->whereDate('created_at', '<=', $request->date_fin);
-        }
+        // Appliquer le filtre de date
+        $this->applyDateFilter($queryPaiementsCredits, $dateConstraints);
+
         if ($request->filled('mode_paiement')) {
             $queryPaiementsCredits->where('type', $request->mode_paiement);
         }
@@ -371,5 +373,54 @@ class ModePaiementController extends Controller
     public function destroy(ModePaiement $modePaiement)
     {
         //
+    }
+
+    /**
+     * Extraire les contraintes de date selon le type de période
+     */
+    private function getDateConstraints(Request $request, $period)
+    {
+        if ($period === 'day' && $request->filled('date')) {
+            return ['type' => 'day', 'value' => $request->date];
+        } elseif ($period === 'week' && $request->filled('week')) {
+            $parts = explode('-W', $request->week);
+            if (count($parts) === 2) {
+                $start = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
+                $end = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
+                return ['type' => 'range', 'start' => $start, 'end' => $end];
+            }
+        } elseif ($period === 'month' && $request->filled('month')) {
+            $parts = explode('-', $request->month);
+            if (count($parts) === 2) {
+                return ['type' => 'month', 'year' => $parts[0], 'month' => $parts[1]];
+            }
+        } elseif ($period === 'year' && $request->filled('year')) {
+            return ['type' => 'year', 'value' => $request->year];
+        } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
+            return ['type' => 'range', 'start' => $request->date_start, 'end' => $request->date_end];
+        }
+
+        return null;
+    }
+
+    /**
+     * Appliquer les filtres de date à une requête
+     */
+    private function applyDateFilter($query, $dateConstraints)
+    {
+        if (!$dateConstraints) {
+            return;
+        }
+
+        if ($dateConstraints['type'] === 'day') {
+            $query->whereDate('created_at', $dateConstraints['value']);
+        } elseif ($dateConstraints['type'] === 'month') {
+            $query->whereYear('created_at', $dateConstraints['year'])
+                ->whereMonth('created_at', $dateConstraints['month']);
+        } elseif ($dateConstraints['type'] === 'year') {
+            $query->whereYear('created_at', $dateConstraints['value']);
+        } elseif ($dateConstraints['type'] === 'range') {
+            $query->whereBetween('created_at', [$dateConstraints['start'], $dateConstraints['end']]);
+        }
     }
 }
