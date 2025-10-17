@@ -1035,4 +1035,32 @@ class HospitalisationController extends Controller
             'date'
         ));
     }
+
+    /**
+     * Afficher la page d'impression pour une hospitalisation
+     */
+    public function print($id)
+    {
+        $hospitalisation = Hospitalisation::with([
+            'patient',
+            'medecin',
+            'service',
+            'lit.chambre',
+            'charges' => function ($q) {
+                $q->where('is_billed', true)
+                    ->orderBy('created_at', 'asc');
+            }
+        ])->findOrFail($id);
+
+        $chargesFacturees = $hospitalisation->charges;
+
+        // Calculer le total des charges facturées
+        $totalCharges = $chargesFacturees->sum('total_price');
+
+        return view('hospitalisations.print', compact(
+            'hospitalisation',
+            'chargesFacturees',
+            'totalCharges'
+        ));
+    }
 }
