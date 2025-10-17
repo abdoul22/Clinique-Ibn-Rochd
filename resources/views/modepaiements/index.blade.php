@@ -41,106 +41,153 @@
     if (request('type')) {
     $summary .= ($summary ? ' • ' : '') . 'Type : ' . ucfirst(request('type'));
     }
+    if (request('source')) {
+    $sourceLabels = [
+    'facture' => 'Factures',
+    'depense' => 'Dépenses',
+    ];
+    $summary .= ($summary ? ' • ' : '') . 'Source : ' . ($sourceLabels[request('source')] ?? request('source'));
+    }
     @endphp
     @if($summary)
     <div class="mb-4 flex items-center gap-3">
-        <span
-            class="inline-block bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium transition">{{
-            $summary }}</span>
-        <a href="{{ route('modepaiements.index') }}" class="form-button form-button-secondary text-xs">Réinitialiser</a>
+        <div
+            class="flex-1 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2.5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-blue-900 dark:text-blue-100">{{ $summary }}</span>
+                </div>
+                <a href="{{ route('modepaiements.index') }}"
+                    class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition">
+                    Réinitialiser
+                </a>
+            </div>
+        </div>
     </div>
     @endif
 
-    <!-- Filtres -->
-    <div class="card mb-6">
-        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Filtres</h3>
+    <!-- Filtres Modernes -->
+    <div
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6 filters-card">
+        <form method="GET" action="{{ route('modepaiements.index') }}" id="filter-form" autocomplete="off">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Filtre Période -->
+                <div class="space-y-2">
+                    <label for="period"
+                        class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                        Période
+                    </label>
+                    <select name="period" id="period"
+                        class="w-full text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <option value="">Toutes les dates</option>
+                        <option value="day" {{ request('period')=='day' ? 'selected' : '' }}>Jour</option>
+                        <option value="week" {{ request('period')=='week' ? 'selected' : '' }}>Semaine</option>
+                        <option value="month" {{ request('period')=='month' ? 'selected' : '' }}>Mois</option>
+                        <option value="year" {{ request('period')=='year' ? 'selected' : '' }}>Année</option>
+                        <option value="range" {{ request('period')=='range' ? 'selected' : '' }}>Plage</option>
+                    </select>
+                </div>
 
-        <!-- Filtre par période -->
-        <form method="GET" action="{{ route('modepaiements.index') }}" class="mb-4 flex flex-wrap gap-2 items-center"
-            id="periode-filter-form" autocomplete="off">
-            <!-- Préserver le filtre de type -->
-            @if(request('type'))
-            <input type="hidden" name="type" value="{{ request('type') }}">
-            @endif
+                <!-- Filtre Type de paiement -->
+                <div class="space-y-2">
+                    <label for="type"
+                        class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                        Type
+                    </label>
+                    <select name="type" id="type"
+                        class="w-full text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <option value="">Tous les types</option>
+                        @foreach($typesModes as $type)
+                        <option value="{{ $type }}" {{ request('type')==$type ? 'selected' : '' }}>
+                            {{ ucfirst($type) }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <label for="period" class="text-sm font-medium text-gray-700 dark:text-gray-300">Période :</label>
-            <select name="period" id="period" class="form-select text-sm" aria-label="Choisir la période">
-                <option value="">Toutes les dates</option>
-                <option value="day" {{ request('period')=='day' ? 'selected' : '' }}>Jour</option>
-                <option value="week" {{ request('period')=='week' ? 'selected' : '' }}>Semaine</option>
-                <option value="month" {{ request('period')=='month' ? 'selected' : '' }}>Mois</option>
-                <option value="year" {{ request('period')=='year' ? 'selected' : '' }}>Année</option>
-                <option value="range" {{ request('period')=='range' ? 'selected' : '' }}>Plage personnalisée</option>
-            </select>
-            <div id="input-day"
-                class="period-input transition-all duration-300 {{ request('period') != 'day' ? 'hidden' : '' }}">
-                <input type="date" name="date" value="{{ request('date') }}" class="form-input text-sm"
-                    placeholder="Choisir une date" aria-label="Date du jour">
-            </div>
-            <div id="input-week"
-                class="period-input transition-all duration-300 {{ request('period') != 'week' ? 'hidden' : '' }}">
-                <input type="week" name="week" value="{{ request('week') }}" class="form-input text-sm"
-                    placeholder="Choisir une semaine" aria-label="Semaine">
-            </div>
-            <div id="input-month"
-                class="period-input transition-all duration-300 {{ request('period') != 'month' ? 'hidden' : '' }}">
-                <input type="month" name="month" value="{{ request('month') }}" class="form-input text-sm"
-                    placeholder="Choisir un mois" aria-label="Mois">
-            </div>
-            <div id="input-year"
-                class="period-input transition-all duration-300 {{ request('period') != 'year' ? 'hidden' : '' }}">
-                <input type="number" name="year" min="1900" max="2100" step="1" value="{{ request('year', date('Y')) }}"
-                    class="form-input text-sm w-24" placeholder="Année" aria-label="Année">
-            </div>
-            <div id="input-range"
-                class="period-input flex gap-2 items-center transition-all duration-300 {{ request('period') != 'range' ? 'hidden' : '' }}">
-                <input type="date" name="date_start" value="{{ request('date_start') }}" class="form-input text-sm"
-                    placeholder="Début" aria-label="Date de début">
-                <span class="text-gray-500 dark:text-gray-400">à</span>
-                <input type="date" name="date_end" value="{{ request('date_end') }}" class="form-input text-sm"
-                    placeholder="Fin" aria-label="Date de fin">
-            </div>
-            <button type="submit" class="form-button text-sm" id="btn-filtrer">Filtrer</button>
-            <a href="{{ route('modepaiements.index') }}"
-                class="ml-2 text-sm text-gray-600 dark:text-gray-400 underline">Afficher tous</a>
-        </form>
+                <!-- Filtre Source -->
+                <div class="space-y-2">
+                    <label for="source"
+                        class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                        Source
+                    </label>
+                    <select name="source" id="source"
+                        class="w-full text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <option value="">Toutes les sources</option>
+                        <option value="facture" {{ request('source')=='facture' ? 'selected' : '' }}>Factures</option>
+                        <option value="depense" {{ request('source')=='depense' ? 'selected' : '' }}>Dépenses</option>
+                    </select>
+                </div>
 
-        <!-- Filtre par type de paiement -->
-        <form method="GET" action="{{ route('modepaiements.index') }}" class="flex flex-wrap gap-2 items-center">
-            <!-- Préserver les filtres de période -->
-            @if(request('period'))
-            <input type="hidden" name="period" value="{{ request('period') }}">
-            @endif
-            @if(request('date'))
-            <input type="hidden" name="date" value="{{ request('date') }}">
-            @endif
-            @if(request('week'))
-            <input type="hidden" name="week" value="{{ request('week') }}">
-            @endif
-            @if(request('month'))
-            <input type="hidden" name="month" value="{{ request('month') }}">
-            @endif
-            @if(request('year'))
-            <input type="hidden" name="year" value="{{ request('year') }}">
-            @endif
-            @if(request('date_start'))
-            <input type="hidden" name="date_start" value="{{ request('date_start') }}">
-            @endif
-            @if(request('date_end'))
-            <input type="hidden" name="date_end" value="{{ request('date_end') }}">
-            @endif
+                <!-- Boutons d'action -->
+                <div class="space-y-2">
+                    <label
+                        class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide opacity-0">
+                        Actions
+                    </label>
+                    <div class="flex gap-2">
+                        <button type="submit" id="btn-filtrer"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors duration-200 shadow-sm hover:shadow">
+                            Filtrer
+                        </button>
+                        <a href="{{ route('modepaiements.index') }}"
+                            class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium py-2 px-3 rounded-lg transition-colors duration-200"
+                            title="Réinitialiser">
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-            <label for="type" class="text-sm font-medium text-gray-700 dark:text-gray-300">Type de paiement :</label>
-            <select name="type" id="type" class="form-select text-sm" onchange="this.form.submit()">
-                <option value="">Tous les types</option>
-                @foreach($typesModes as $type)
-                <option value="{{ $type }}" {{ request('type')==$type ? 'selected' : '' }}>
-                    {{ ucfirst($type) }}
-                </option>
-                @endforeach
-            </select>
+            <!-- Inputs de période dynamiques -->
+            <div class="mt-4 space-y-3">
+                <div id="input-day"
+                    class="period-input transition-all duration-300 {{ request('period') != 'day' ? 'hidden' : '' }}">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+                    <input type="date" name="date" value="{{ request('date') }}"
+                        class="w-full md:w-auto text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div id="input-week"
+                    class="period-input transition-all duration-300 {{ request('period') != 'week' ? 'hidden' : '' }}">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Semaine</label>
+                    <input type="week" name="week" value="{{ request('week') }}"
+                        class="w-full md:w-auto text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div id="input-month"
+                    class="period-input transition-all duration-300 {{ request('period') != 'month' ? 'hidden' : '' }}">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Mois</label>
+                    <input type="month" name="month" value="{{ request('month') }}"
+                        class="w-full md:w-auto text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div id="input-year"
+                    class="period-input transition-all duration-300 {{ request('period') != 'year' ? 'hidden' : '' }}">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Année</label>
+                    <input type="number" name="year" min="1900" max="2100" step="1"
+                        value="{{ request('year', date('Y')) }}"
+                        class="w-32 text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div id="input-range"
+                    class="period-input transition-all duration-300 {{ request('period') != 'range' ? 'hidden' : '' }}">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Plage de
+                        dates</label>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <input type="date" name="date_start" value="{{ request('date_start') }}"
+                            class="flex-1 min-w-[150px] text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <span class="text-gray-500 dark:text-gray-400 font-medium">→</span>
+                        <input type="date" name="date_end" value="{{ request('date_end') }}"
+                            class="flex-1 min-w-[150px] text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
+    @push('styles')
+    <style>
+        /* Supprimer toutes les icônes dans la carte des filtres si un style externe les agrandit */
+        .filters-card svg {
+            display: none !important;
+        }
+    </style>
+    @endpush
     <div class="table-container">
         <table class="table-main">
             <thead class="bg-gray-50 dark:bg-gray-700">
@@ -172,6 +219,16 @@
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                             Paiement crédit assurance
                         </span>
+                        @elseif($paiement->source === 'depense')
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                            Dépense
+                        </span>
+                        @elseif($paiement->source === 'part_medecin')
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                            Part médecin
+                        </span>
                         @else
                         <span class="text-gray-400 dark:text-gray-500 italic">Aucune</span>
                         @endif
@@ -198,17 +255,23 @@
 
 @push('scripts')
 <script>
-    // Affichage dynamique des inputs selon la période + accessibilité + transitions
+    // Affichage dynamique des inputs selon la période
     function updatePeriodInputs() {
         const period = document.getElementById('period').value;
-        document.querySelectorAll('.period-input').forEach(div => div.classList.add('hidden'));
-        if (period === 'day') document.getElementById('input-day').classList.remove('hidden');
-        if (period === 'week') document.getElementById('input-week').classList.remove('hidden');
-        if (period === 'month') document.getElementById('input-month').classList.remove('hidden');
-        if (period === 'year') document.getElementById('input-year').classList.remove('hidden');
-        if (period === 'range') document.getElementById('input-range').classList.remove('hidden');
+        document.querySelectorAll('.period-input').forEach(div => {
+            div.classList.add('hidden');
+            div.style.opacity = '0';
+        });
+
+        const targetInput = document.getElementById(`input-${period}`);
+        if (targetInput) {
+            targetInput.classList.remove('hidden');
+            setTimeout(() => {
+                targetInput.style.opacity = '1';
+            }, 10);
+        }
+
         updateFiltrerButtonState();
-        updateFiltrerButtonLabel();
     }
 
     function updateFiltrerButtonState() {
@@ -216,7 +279,7 @@
         let valid = true;
 
         if (period === '') {
-            valid = true; // Pas de période sélectionnée = afficher tout
+            valid = true;
         } else if (period === 'day') {
             valid = !!document.querySelector('input[name="date"]').value;
         } else if (period === 'week') {
@@ -231,33 +294,22 @@
             valid = !!start && !!end && start <= end;
         }
 
-        document.getElementById('btn-filtrer').disabled = !valid;
-        document.getElementById('btn-filtrer').classList.toggle('opacity-50', !valid);
-        document.getElementById('btn-filtrer').classList.toggle('cursor-not-allowed', !valid);
+        const btnFiltrer = document.getElementById('btn-filtrer');
+        btnFiltrer.disabled = !valid;
+        btnFiltrer.classList.toggle('opacity-50', !valid);
+        btnFiltrer.classList.toggle('cursor-not-allowed', !valid);
     }
 
-    function updateFiltrerButtonLabel() {
-        const period = document.getElementById('period').value;
-        let label = 'Filtrer';
-        if (period === 'day') label = 'Filtrer par jour';
-        else if (period === 'week') label = 'Filtrer par semaine';
-        else if (period === 'month') label = 'Filtrer par mois';
-        else if (period === 'year') label = 'Filtrer par année';
-        else if (period === 'range') label = 'Filtrer par plage';
-        document.getElementById('btn-filtrer').textContent = label;
-    }
-
+    // Initialisation
     document.getElementById('period').addEventListener('change', updatePeriodInputs);
+
     document.querySelectorAll('.period-input input').forEach(input => {
-        input.addEventListener('input', function() {
-            updateFiltrerButtonState();
-        });
+        input.addEventListener('input', updateFiltrerButtonState);
     });
 
     window.addEventListener('DOMContentLoaded', function() {
         updatePeriodInputs();
         updateFiltrerButtonState();
-        updateFiltrerButtonLabel();
     });
 </script>
 @endpush

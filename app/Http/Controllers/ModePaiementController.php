@@ -26,6 +26,20 @@ class ModePaiementController extends Controller
             $query->where('type', $request->type);
         }
 
+        // Filtrage par source (facture, depense, part_medecin, credit_assurance)
+        if ($request->filled('source')) {
+            if ($request->source === 'facture') {
+                // Factures = ceux qui ont un caisse_id
+                $query->whereNotNull('caisse_id');
+            } elseif ($request->source === 'depense') {
+                $query->where('source', 'depense');
+            } elseif ($request->source === 'part_medecin') {
+                $query->where('source', 'part_medecin');
+            } elseif ($request->source === 'credit_assurance') {
+                $query->where('source', 'credit_assurance');
+            }
+        }
+
         // Filtrage par période
         $period = $request->get('period', null);
 
