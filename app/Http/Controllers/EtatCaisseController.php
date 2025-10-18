@@ -262,25 +262,34 @@ class EtatCaisseController extends Controller
             $modePaiement->decrement('montant', $etat->part_medecin);
         }
 
+        // Récupérer la date de création de la facture
+        $dateFacture = $etat->caisse?->created_at ?? now();
+
         // Créer un enregistrement ModePaiement pour la sortie (montant négatif)
-        \App\Models\ModePaiement::create([
+        $modePaiementRecord = new \App\Models\ModePaiement([
             'type' => $modePaiementType,
             'montant' => -$etat->part_medecin, // Montant négatif pour sortie
             'source' => 'depense'
         ]);
+        $modePaiementRecord->created_at = $dateFacture;
+        $modePaiementRecord->updated_at = $dateFacture;
+        $modePaiementRecord->save();
 
         $etat->validated = true;
         $etat->depense = $etat->part_medecin;
         $etat->save();
 
-        // Créer la dépense avec le bon mode de paiement
-        \App\Models\Depense::create([
+        // Créer la dépense avec le bon mode de paiement et la date de la facture
+        $depense = new \App\Models\Depense([
             'nom' => 'Part médecin - ' . ($etat->medecin?->nom ?? 'N/A'),
             'montant' => $etat->part_medecin,
             'source' => 'automatique',
             'etat_caisse_id' => $etat->id,
             'mode_paiement_id' => $modePaiementType, // Utiliser le type, pas l'ID
         ]);
+        $depense->created_at = $dateFacture;
+        $depense->updated_at = $dateFacture;
+        $depense->save();
 
         return back()->with('success', 'Part validée avec succès.');
     }
@@ -301,20 +310,30 @@ class EtatCaisseController extends Controller
         // Utiliser le mode de paiement sélectionné depuis la modale
         $modePaiementType = $request->mode_paiement;
 
-        // Créer un enregistrement ModePaiement pour la sortie (montant négatif)
-        \App\Models\ModePaiement::create([
+        // Récupérer la date de création de la facture
+        $dateFacture = $etat->caisse?->created_at ?? now();
+
+        // Créer un enregistrement ModePaiement pour la sortie (montant négatif) avec la date de la facture
+        $modePaiementRecord = new \App\Models\ModePaiement([
             'type' => $modePaiementType,
             'montant' => -$etat->part_medecin, // Montant négatif pour sortie
             'source' => 'depense'
         ]);
+        $modePaiementRecord->created_at = $dateFacture;
+        $modePaiementRecord->updated_at = $dateFacture;
+        $modePaiementRecord->save();
 
-        $depense = Depense::create([
+        // Créer la dépense avec la date de la facture
+        $depense = new Depense([
             'nom' => 'Part médecin - ' . $etat->medecin?->nom . ' (' . ucfirst($modePaiementType) . ')',
             'montant' => $etat->part_medecin,
             'etat_caisse_id' => $etat->id, // Lien direct
             'source' => 'générée', // pour le filtre
             'mode_paiement_id' => $modePaiementType,
         ]);
+        $depense->created_at = $dateFacture;
+        $depense->updated_at = $dateFacture;
+        $depense->save();
 
         $etat->validated = true;
         $etat->depense = $etat->part_medecin;
