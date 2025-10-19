@@ -136,10 +136,14 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Date de
-                                naissance</label>
-                            <p class="text-gray-900 dark:text-gray-200">{{ $rendezVous->patient->date_of_birth ?
-                                $rendezVous->patient->date_of_birth->format('d/m/Y') : 'Non renseignée' }}</p>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Âge</label>
+                            <p class="text-gray-900 dark:text-gray-200">{{ $rendezVous->patient->age ?
+                                $rendezVous->patient->age . ' ans' : 'Non renseigné' }}
+                                @if($rendezVous->patient->date_of_birth)
+                                <span class="text-xs text-gray-500">(né le {{
+                                    $rendezVous->patient->date_of_birth->format('d/m/Y') }})</span>
+                                @endif
+                            </p>
                         </div>
 
                         <div>

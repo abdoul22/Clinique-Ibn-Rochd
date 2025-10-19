@@ -111,7 +111,7 @@ class GestionPatientController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'gender' => 'required|in:Homme,Femme',
-            'date_of_birth' => 'required|date',
+            'age' => 'required|integer|min:0|max:150',
             'phone' => 'required|string|max:20|unique:gestion_patients,phone',
         ]);
 
@@ -129,7 +129,7 @@ class GestionPatientController extends Controller
         $patient->first_name = $request->first_name;
         $patient->last_name = $request->last_name;
         $patient->gender = $request->gender;
-        $patient->date_of_birth = $request->date_of_birth;
+        $patient->age = $request->age;
         $patient->phone = $request->phone;
         $patient->address = $request->address ?? '';
 
@@ -166,7 +166,7 @@ class GestionPatientController extends Controller
         $patient->first_name = $request->first_name;
         $patient->last_name = $request->last_name;
         $patient->gender = $request->gender;
-        $patient->date_of_birth = $request->date_of_birth;
+        $patient->age = $request->age;
         $patient->phone = $request->phone;
         $patient->address = $request->address;
 

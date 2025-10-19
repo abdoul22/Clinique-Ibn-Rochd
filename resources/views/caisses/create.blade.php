@@ -229,9 +229,22 @@
                     </select>
 
                     <label for="couverture" class="text-gray-700 dark:text-gray-200">Couverture (%) :</label>
-                    <input type="text" name="couverture" id="couverture"
-                        class="form-input border border-b-black px-2 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
-                        min="0" max="100" pattern="[0-9]+" placeholder="Ex: 90">
+                    <div class="relative">
+                        <input type="text" name="couverture" id="couverture" disabled
+                            class="form-input border border-b-black px-2 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 w-full"
+                            min="0" max="100" pattern="[0-9]+" placeholder="Sélectionnez d'abord une assurance">
+                        <div id="couverture-lock-icon"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <small id="couverture-help" class="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                        🔒 Ce champ sera activé après sélection d'une assurance
+                    </small>
                 </div>
 
                 {{-- Mode de paiement : visible sauf si assurance 100% --}}
@@ -349,6 +362,8 @@
         const assuranceSelect = document.getElementById('assurance_id');
         const couvertureField = document.getElementById('couverture');
         const couvertureInput = document.getElementById('couverture');
+        const couvertureLockIcon = document.getElementById('couverture-lock-icon');
+        const couvertureHelp = document.getElementById('couverture-help');
         const modePaiementField = document.getElementById('modePaiement');
 
         // Affiche/masque les champs assurance
@@ -357,6 +372,13 @@
                 assuranceFields.style.display = 'block';
                 assuranceSelect.disabled = false;
                 assuranceSelect.required = true;
+                // Le champ couverture reste désactivé jusqu'à ce qu'une assurance soit sélectionnée
+                couvertureInput.disabled = true;
+                couvertureInput.value = '';
+                couvertureInput.placeholder = 'Sélectionnez d\'abord une assurance';
+                couvertureInput.className = 'form-input border border-b-black px-2 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 w-full';
+                couvertureLockIcon.style.display = 'flex';
+                couvertureHelp.textContent = '🔒 Ce champ sera activé après sélection d\'une assurance';
             } else {
                 assuranceFields.style.display = 'none';
                 assuranceSelect.disabled = true;
@@ -364,7 +386,30 @@
                 // Réinitialiser les valeurs
                 assuranceSelect.value = '';
                 couvertureInput.value = '';
+                couvertureInput.disabled = true;
+                couvertureLockIcon.style.display = 'flex';
+                couvertureHelp.textContent = '🔒 Ce champ sera activé après sélection d\'une assurance';
                 modePaiementField.style.display = 'block'; // réaffiche toujours
+            }
+        });
+
+        // Gérer l'activation/désactivation du champ couverture selon la sélection d'assurance
+        assuranceSelect.addEventListener('change', function () {
+            if (this.value && this.value !== '') {
+                // Une assurance est sélectionnée, activer le champ couverture
+                couvertureInput.disabled = false;
+                couvertureInput.placeholder = 'Ex: 90';
+                couvertureInput.className = 'form-input border border-b-black px-2 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 w-full';
+                couvertureLockIcon.style.display = 'none';
+                couvertureHelp.textContent = '💡 Saisissez le pourcentage de couverture (0-100%)';
+            } else {
+                // Aucune assurance sélectionnée, désactiver le champ couverture
+                couvertureInput.disabled = true;
+                couvertureInput.value = '';
+                couvertureInput.placeholder = 'Sélectionnez d\'abord une assurance';
+                couvertureInput.className = 'form-input border border-b-black px-2 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 w-full';
+                couvertureLockIcon.style.display = 'flex';
+                couvertureHelp.textContent = '🔒 Ce champ sera activé après sélection d\'une assurance';
             }
         });
 
@@ -375,6 +420,34 @@
                 modePaiementField.style.display = 'none';
             } else {
                 modePaiementField.style.display = 'block';
+            }
+        });
+
+        // Validation du formulaire avant soumission
+        document.getElementById('formFacture').addEventListener('submit', function(e) {
+            const hasAssurance = document.getElementById('hasAssurance').checked;
+            const assuranceId = document.getElementById('assurance_id').value;
+            const couverture = document.getElementById('couverture').value;
+
+            // Si le checkbox assurance est coché mais aucune assurance sélectionnée
+            if (hasAssurance && (!assuranceId || assuranceId === '')) {
+                e.preventDefault();
+                alert('Veuillez sélectionner une assurance si le patient en a une.');
+                return false;
+            }
+
+            // Si une assurance est sélectionnée mais pas de couverture
+            if (assuranceId && assuranceId !== '' && (!couverture || couverture === '')) {
+                e.preventDefault();
+                alert('Veuillez saisir le pourcentage de couverture de l\'assurance.');
+                return false;
+            }
+
+            // Si couverture saisie mais pas d'assurance sélectionnée
+            if (couverture && couverture !== '' && (!assuranceId || assuranceId === '')) {
+                e.preventDefault();
+                alert('Veuillez sélectionner une assurance avant de saisir la couverture.');
+                return false;
             }
         });
 

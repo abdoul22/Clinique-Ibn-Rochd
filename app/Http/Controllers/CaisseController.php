@@ -203,6 +203,11 @@ class CaisseController extends Controller
             'couverture' => 'nullable|numeric|min:0|max:100',
         ];
 
+        // Validation conditionnelle : si une assurance est sélectionnée, la couverture est obligatoire
+        if ($request->filled('assurance_id')) {
+            $rules['couverture'] = 'required|numeric|min:0|max:100';
+        }
+
         // Si examens multiples, valider les données JSON, sinon valider l'examen unique
         if ($request->examens_multiple === 'true' && $request->filled('examens_data')) {
             $rules['examens_data'] = 'required|json';

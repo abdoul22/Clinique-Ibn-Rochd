@@ -48,10 +48,13 @@
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Date de naissance</label>
+                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Âge</label>
                         <p class="text-sm text-gray-900 dark:text-gray-200">
-                            {{ $dossier->patient->date_of_birth ? $dossier->patient->date_of_birth->format('d/m/Y') :
-                            'Non renseignée' }}
+                            {{ $dossier->patient->age ? $dossier->patient->age . ' ans' : 'Non renseigné' }}
+                            @if($dossier->patient->date_of_birth)
+                            <span class="text-xs text-gray-500">(né le {{
+                                $dossier->patient->date_of_birth->format('d/m/Y') }})</span>
+                            @endif
                         </p>
                     </div>
                     <div>

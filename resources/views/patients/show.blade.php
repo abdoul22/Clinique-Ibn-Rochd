@@ -61,13 +61,15 @@
                             </div>
                         </div>
                         <div class="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <i class="fas fa-calendar text-blue-600 mr-3 w-6"></i>
+                            <i class="fas fa-birthday-cake text-blue-600 mr-3 w-6"></i>
                             <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Date de naissance</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Âge</p>
                                 <p class="font-medium text-gray-900 dark:text-white">
-                                    {{ \Carbon\Carbon::parse($patient->date_of_birth)->format('d/m/Y') }}
-                                    <span class="text-sm text-gray-500">({{
-                                        \Carbon\Carbon::parse($patient->date_of_birth)->age }} ans)</span>
+                                    {{ $patient->age }} ans
+                                    @if($patient->date_of_birth)
+                                    <span class="text-sm text-gray-500">(né le {{
+                                        \Carbon\Carbon::parse($patient->date_of_birth)->format('d/m/Y') }})</span>
+                                    @endif
                                 </p>
                             </div>
                         </div>

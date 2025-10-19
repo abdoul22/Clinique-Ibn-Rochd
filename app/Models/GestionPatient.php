@@ -17,6 +17,7 @@ class GestionPatient extends Model
         'first_name',
         'last_name',
         'date_of_birth',
+        'age',
         'gender',
         'phone',
     ];
@@ -48,5 +49,50 @@ class GestionPatient extends Model
     public function getPrenomAttribute()
     {
         return $this->first_name;
+    }
+
+    // Accesseur pour calculer l'âge à partir de la date de naissance
+    public function getCalculatedAgeAttribute()
+    {
+        if ($this->date_of_birth) {
+            return \Carbon\Carbon::parse($this->date_of_birth)->age;
+        }
+        return $this->age;
+    }
+
+    // Accesseur pour obtenir l'âge (priorité au champ age, sinon calculé)
+    public function getAgeAttribute($value)
+    {
+        if ($value !== null) {
+            return $value;
+        }
+
+        if ($this->date_of_birth) {
+            return \Carbon\Carbon::parse($this->date_of_birth)->age;
+        }
+
+        return null;
+    }
+
+    // Mutateur pour calculer la date de naissance à partir de l'âge
+    public function setAgeAttribute($value)
+    {
+        $this->attributes['age'] = $value;
+
+        // Si on a un âge mais pas de date de naissance, calculer une date approximative
+        if ($value && !$this->date_of_birth) {
+            $this->attributes['date_of_birth'] = \Carbon\Carbon::now()->subYears($value)->format('Y-m-d');
+        }
+    }
+
+    // Mutateur pour mettre à jour l'âge quand la date de naissance change
+    public function setDateOfBirthAttribute($value)
+    {
+        $this->attributes['date_of_birth'] = $value;
+
+        // Mettre à jour l'âge si on a une date de naissance
+        if ($value) {
+            $this->attributes['age'] = \Carbon\Carbon::parse($value)->age;
+        }
     }
 }

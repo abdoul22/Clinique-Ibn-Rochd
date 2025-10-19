@@ -92,8 +92,12 @@
                 </h3>
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Nom:</span> {{
                     $caisse->patient->first_name ?? 'N/A' }} {{ $caisse->patient->last_name ?? '' }}</p>
-                <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Date de naissance:</span> {{
-                    isset($caisse->patient->date_of_birth) ? $caisse->patient->date_of_birth->format('d/m/Y') : 'N/A' }}
+                <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Âge:</span> {{
+                    $caisse->patient->age ? $caisse->patient->age . ' ans' : 'N/A' }}
+                    @if($caisse->patient->date_of_birth)
+                    <span class="text-xs text-gray-500">(né le {{ $caisse->patient->date_of_birth->format('d/m/Y')
+                        }})</span>
+                    @endif
                 </p>
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Téléphone:</span> {{
                     $caisse->patient->phone ?? 'N/A' }}</p>

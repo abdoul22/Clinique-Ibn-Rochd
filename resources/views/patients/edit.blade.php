@@ -76,12 +76,13 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <i class="fas fa-calendar mr-1"></i>Date de naissance *
+                                <i class="fas fa-birthday-cake mr-1"></i>Âge *
                             </label>
-                            <input type="date" name="date_of_birth" value="{{ $patient->date_of_birth }}"
+                            <input type="number" name="age" value="{{ $patient->age }}"
+                                placeholder="Entrez l'âge (ex: 25)"
                                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-200"
-                                required>
-                            @error('date_of_birth')
+                                min="0" max="150" required>
+                            @error('age')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
                         </div>
