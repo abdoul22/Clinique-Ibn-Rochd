@@ -17,6 +17,7 @@ use App\Models\Pharmacie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
@@ -359,7 +360,9 @@ class HospitalisationController extends Controller
 
             $assuranceId = $hospitalisation->assurance_id;
             $couverture = (float) ($hospitalisation->couverture ?? 0);
-            $patientPart = $assuranceId ? $total * (1 - ($couverture / 100)) : $total;
+            // CORRECTION: Le montant du mode de paiement = total des charges (sans déduire la part médecin)
+            // La part médecin sera déduite plus tard lors de la validation dans etatcaisse
+            $montantPaiement = $assuranceId ? $total * (1 - ($couverture / 100)) : $total;
 
             // Préparer numeros
             $dernierNumero = Caisse::max('numero_facture') ?? 0;
@@ -407,22 +410,33 @@ class HospitalisationController extends Controller
                 'couverture' => $assuranceId ? (int) $couverture : null,
             ]);
 
-            // Etat de caisse (recette = part patient)
+            // Etat de caisse - La recette = montant du paiement (total des charges)
             EtatCaisse::create([
                 'caisse_id' => $caisse->id,
                 'designation' => 'Facture Hospitalisation N°' . $caisse->numero_facture,
-                'recette' => $patientPart,
+                'recette' => $montantPaiement, // Total des charges, pas déduction de la part médecin
                 'part_medecin' => $partMedecin,
                 'part_clinique' => $partCabinet,
                 'assurance_id' => $assuranceId,
                 'medecin_id' => $medecinId,
             ]);
 
-            // Paiement (uniquement part patient)
+            // Log de vérification pour débogage
+            Log::info("=== DÉBOGAGE PAIEMENT HOSPITALISATION (facturer) ===");
+            Log::info("Hospitalisation ID: {$hospitalisation->id}");
+            Log::info("Caisse ID: {$caisse->id}");
+            Log::info("Total charges: {$total} MRU");
+            Log::info("Part Cabinet: {$partCabinet} MRU");
+            Log::info("Part Médecin: {$partMedecin} MRU");
+            Log::info("Montant Paiement (à enregistrer): {$montantPaiement} MRU");
+            Log::info("Assurance ID: " . ($assuranceId ?: 'Aucune'));
+            Log::info("Couverture: {$couverture}%");
+            Log::info("================================================");
+
             ModePaiement::create([
                 'caisse_id' => $caisse->id,
                 'type' => $request->type,
-                'montant' => $patientPart,
+                'montant' => $montantPaiement,
                 'source' => 'caisse',
             ]);
 
@@ -819,7 +833,9 @@ class HospitalisationController extends Controller
 
             $assuranceId = $hospitalisation->assurance_id;
             $couverture = (float) ($hospitalisation->couverture ?? 0);
-            $patientPart = $assuranceId ? $total * (1 - ($couverture / 100)) : $total;
+            // CORRECTION: Le montant du mode de paiement = total des charges (sans déduire la part médecin)
+            // La part médecin sera déduite plus tard lors de la validation dans etatcaisse
+            $montantPaiement = $assuranceId ? $total * (1 - ($couverture / 100)) : $total;
 
             // Préparer numeros
             $dernierNumero = Caisse::max('numero_facture') ?? 0;
@@ -907,22 +923,33 @@ class HospitalisationController extends Controller
                 'couverture' => $assuranceId ? (int) $couverture : null,
             ]);
 
-            // Etat de caisse
+            // Etat de caisse - La recette = montant du paiement (total des charges)
             EtatCaisse::create([
                 'caisse_id' => $caisse->id,
                 'designation' => 'Paiement Total Hospitalisation N°' . $caisse->numero_facture,
-                'recette' => $patientPart,
+                'recette' => $montantPaiement, // Total des charges, pas déduction de la part médecin
                 'part_medecin' => $partMedecin,
                 'part_clinique' => $partCabinet,
                 'assurance_id' => $assuranceId,
                 'medecin_id' => $medecinId,
             ]);
 
-            // Paiement
+            // Log de vérification pour débogage
+            Log::info("=== DÉBOGAGE PAIEMENT HOSPITALISATION ===");
+            Log::info("Hospitalisation ID: {$hospitalisation->id}");
+            Log::info("Caisse ID: {$caisse->id}");
+            Log::info("Total charges: {$total} MRU");
+            Log::info("Part Cabinet: {$partCabinet} MRU");
+            Log::info("Part Médecin: {$partMedecin} MRU");
+            Log::info("Montant Paiement (à enregistrer): {$montantPaiement} MRU");
+            Log::info("Assurance ID: " . ($assuranceId ?: 'Aucune'));
+            Log::info("Couverture: {$couverture}%");
+            Log::info("==========================================");
+
             ModePaiement::create([
                 'caisse_id' => $caisse->id,
                 'type' => $request->type,
-                'montant' => $patientPart,
+                'montant' => $montantPaiement,
                 'source' => 'caisse',
             ]);
 

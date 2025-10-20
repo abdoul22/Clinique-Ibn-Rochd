@@ -10,6 +10,7 @@ use App\Models\Examen;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class RecapitulatifOperateurController extends Controller
@@ -20,106 +21,168 @@ class RecapitulatifOperateurController extends Controller
         $medecins = Medecin::orderBy('nom')->get();
         $examens = Examen::orderBy('nom')->get();
 
-        // Construire la requête de base
-        $query = Caisse::with(['medecin', 'examen'])
-            ->select([
-                'caisses.medecin_id',
-                'caisses.examen_id',
-                DB::raw('COUNT(*) as nombre'),
-                DB::raw('SUM(caisses.total) as recettes'),
-                DB::raw('DATE(CONVERT_TZ(caisses.date_examen, "+00:00", "+00:00")) as jour'),
-                DB::raw('MAX(examens.tarif) as tarif'),
-                DB::raw('SUM(examens.part_medecin) as part_medecin'),
-                DB::raw('SUM(examens.part_cabinet) as part_clinique')
-            ])
-            ->join('examens', 'caisses.examen_id', '=', 'examens.id');
+        // Construire la requête de base avec filtres
+        $query = Caisse::with(['medecin', 'examen']);
 
-        // Filtrage par période
+        // Appliquer les filtres de période
         $period = $request->get('period', 'day');
 
         if ($period === 'day' && $request->filled('date')) {
-            $query->whereDate('caisses.date_examen', $request->date);
+            $query->whereDate('date_examen', $request->date);
         } elseif ($period === 'week' && $request->filled('week')) {
             $parts = explode('-W', $request->week);
             if (count($parts) === 2) {
                 $start = Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
                 $end = Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
-                $query->whereBetween('caisses.date_examen', [$start, $end]);
+                $query->whereBetween('date_examen', [$start, $end]);
             }
         } elseif ($period === 'month' && $request->filled('month')) {
             $parts = explode('-', $request->month);
             if (count($parts) === 2) {
-                $query->whereYear('caisses.date_examen', $parts[0])
-                    ->whereMonth('caisses.date_examen', $parts[1]);
+                $query->whereYear('date_examen', $parts[0])
+                    ->whereMonth('date_examen', $parts[1]);
             }
         } elseif ($period === 'year' && $request->filled('year')) {
-            $query->whereYear('caisses.date_examen', $request->year);
+            $query->whereYear('date_examen', $request->year);
         } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
-            $query->whereBetween('caisses.date_examen', [$request->date_start, $request->date_end]);
+            $query->whereBetween('date_examen', [$request->date_start, $request->date_end]);
         }
 
         // Filtrage par médecin
         if ($request->filled('medecin_id')) {
-            $query->where('caisses.medecin_id', $request->medecin_id);
+            $query->where('medecin_id', $request->medecin_id);
         }
 
         // Filtrage par examen
         if ($request->filled('examen_id')) {
-            $query->where('caisses.examen_id', $request->examen_id);
+            $query->where('examen_id', $request->examen_id);
         }
 
-        // Grouper par médecin, examen et jour (une ligne par médecin par examen par jour)
-        $recapOperateurs = $query->groupBy('caisses.medecin_id', 'caisses.examen_id', DB::raw('DATE(CONVERT_TZ(caisses.date_examen, "+00:00", "+00:00"))'))
-            ->orderBy('jour', 'desc')
-            ->orderBy('caisses.medecin_id')
-            ->orderBy('caisses.examen_id')
-            ->paginate(15);
+        // Récupérer les caisses filtrées
+        $caisses = $query->get();
 
-        // Calculer les totaux pour le résumé
-        $totauxQuery = Caisse::join('examens', 'caisses.examen_id', '=', 'examens.id');
+        // Récupérer tous les médecins et examens pour les relations
+        $medecinsMap = Medecin::all()->keyBy('id');
+        $examensMap = Examen::all()->keyBy('id');
 
-        // Appliquer les mêmes filtres
-        if ($period === 'day' && $request->filled('date')) {
-            $totauxQuery->whereDate('caisses.date_examen', $request->date);
-        } elseif ($period === 'week' && $request->filled('week')) {
-            $parts = explode('-W', $request->week);
-            if (count($parts) === 2) {
-                $start = Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
-                $end = Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
-                $totauxQuery->whereBetween('caisses.date_examen', [$start, $end]);
+        // Décomposer les examens multiples et grouper par médecin/examen
+        $recapParOperateur = [];
+
+        foreach ($caisses as $caisse) {
+            $jour = $caisse->date_examen->format('Y-m-d');
+            $medecinId = $caisse->medecin_id;
+
+            if ($caisse->examens_data) {
+                // Mode examens multiples
+                $examensData = is_string($caisse->examens_data) ? json_decode($caisse->examens_data, true) : $caisse->examens_data;
+                foreach ($examensData as $examenData) {
+                    $examen = \App\Models\Examen::find($examenData['id']);
+                    if ($examen) {
+                        // Déterminer la clé basée sur le type d'examen
+                        $service = \App\Models\Service::find($examen->idsvc);
+                        $serviceKey = $this->determineServiceKey($examen, $service, $examen->idsvc);
+
+                        if ($serviceKey === 'HOSPITALISATION') {
+                            $key = $medecinId . '_HOSPITALISATION_' . $jour;
+                        } else {
+                            $key = $medecinId . '_' . $examen->id . '_' . $jour;
+                        }
+
+                        if (!isset($recapParOperateur[$key])) {
+                            $examenId = ($serviceKey === 'HOSPITALISATION') ? 'HOSPITALISATION' : $examen->id;
+                            $recapParOperateur[$key] = [
+                                'medecin_id' => $medecinId,
+                                'examen_id' => $examenId,
+                                'jour' => $jour,
+                                'nombre' => 0,
+                                'recettes' => 0,
+                                'tarif' => $examen->tarif,
+                                'part_medecin' => 0,
+                                'part_clinique' => 0,
+                                'medecin' => $medecinsMap->get($medecinId),
+                                'examen' => $examenId === 'HOSPITALISATION' ? (object)['nom' => 'Hospitalisation'] : $examensMap->get($examenId)
+                            ];
+                        }
+
+                        $quantite = $examenData['quantite'];
+                        $recapParOperateur[$key]['nombre'] += $quantite;
+                        $recapParOperateur[$key]['recettes'] += $examen->tarif * $quantite;
+                        $recapParOperateur[$key]['part_medecin'] += ($examen->part_medecin ?? 0) * $quantite;
+                        $recapParOperateur[$key]['part_clinique'] += ($examen->part_cabinet ?? 0) * $quantite;
+                    }
+                }
+            } else {
+                // Mode examen unique
+                $examen = $caisse->examen;
+                if ($examen) {
+                    // Vérifier si c'est une hospitalisation
+                    if (strtolower($examen->nom) === 'hospitalisation') {
+                        // Décomposer l'hospitalisation en charges individuelles
+                        $this->decomposeHospitalisationOperateur($caisse, $recapParOperateur, $jour, $medecinId, $medecinsMap, $examensMap);
+                    } else {
+                        $key = $medecinId . '_' . $examen->id . '_' . $jour;
+
+                        if (!isset($recapParOperateur[$key])) {
+                            $recapParOperateur[$key] = [
+                                'medecin_id' => $medecinId,
+                                'examen_id' => $examen->id,
+                                'jour' => $jour,
+                                'nombre' => 0,
+                                'recettes' => 0,
+                                'tarif' => $examen->tarif,
+                                'part_medecin' => 0,
+                                'part_clinique' => 0,
+                                'medecin' => $medecinsMap->get($medecinId),
+                                'examen' => $examensMap->get($examen->id)
+                            ];
+                        }
+
+                        $recapParOperateur[$key]['nombre'] += 1;
+                        $recapParOperateur[$key]['recettes'] += $caisse->total;
+                        $recapParOperateur[$key]['part_medecin'] += $examen->part_medecin ?? 0;
+                        $recapParOperateur[$key]['part_clinique'] += $examen->part_cabinet ?? 0;
+                    }
+                }
             }
-        } elseif ($period === 'month' && $request->filled('month')) {
-            $parts = explode('-', $request->month);
-            if (count($parts) === 2) {
-                $totauxQuery->whereYear('caisses.date_examen', $parts[0])
-                    ->whereMonth('caisses.date_examen', $parts[1]);
-            }
-        } elseif ($period === 'year' && $request->filled('year')) {
-            $totauxQuery->whereYear('caisses.date_examen', $request->year);
-        } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
-            $totauxQuery->whereBetween('caisses.date_examen', [$request->date_start, $request->date_end]);
         }
 
-        if ($request->filled('medecin_id')) {
-            $totauxQuery->where('caisses.medecin_id', $request->medecin_id);
-        }
+        // Convertir en collection
+        $recaps = collect($recapParOperateur)->map(function ($item) {
+            return (object) $item;
+        });
 
-        if ($request->filled('examen_id')) {
-            $totauxQuery->where('caisses.examen_id', $request->examen_id);
-        }
+        // Trier et paginer
+        $recapOperateurs = $recaps->sortByDesc('jour')
+            ->sortBy('medecin_id')
+            ->sortBy('examen_id')
+            ->values();
 
-        $totaux = $totauxQuery->select([
-            DB::raw('COUNT(*) as total_examens'),
-            DB::raw('SUM(caisses.total) as total_recettes'),
-            DB::raw('SUM(examens.part_medecin) as total_part_medecin'),
-            DB::raw('SUM(examens.part_cabinet) as total_part_clinique')
-        ])->first();
+        // Pagination manuelle
+        $perPage = 15;
+        $currentPage = $request->get('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedRecaps = $recapOperateurs->slice($offset, $perPage);
+
+        // Créer un objet de pagination personnalisé
+        $recapOperateurs = new \Illuminate\Pagination\LengthAwarePaginator(
+            $paginatedRecaps,
+            $recapOperateurs->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'pageName' => 'page']
+        );
+
+        // Calculer les totaux pour le résumé à partir des données filtrées
+        $totalExamens = $recaps->sum('nombre');
+        $totalRecettes = $recaps->sum('recettes');
+        $totalPartMedecin = $recaps->sum('part_medecin');
+        $totalPartClinique = $recaps->sum('part_clinique');
 
         $resume = [
-            'total_examens' => $totaux->total_examens ?? 0,
-            'total_recettes' => $totaux->total_recettes ?? 0,
-            'total_part_medecin' => $totaux->total_part_medecin ?? 0,
-            'total_part_clinique' => $totaux->total_part_clinique ?? 0,
+            'total_examens' => $totalExamens,
+            'total_recettes' => $totalRecettes,
+            'total_part_medecin' => $totalPartMedecin,
+            'total_part_clinique' => $totalPartClinique,
         ];
 
         return view('recapitulatif_operateurs.index', compact(
@@ -393,5 +456,203 @@ class RecapitulatifOperateurController extends Controller
             'resume',
             'periodSummary'
         ));
+    }
+
+    /**
+     * Détermine la clé de service basée sur le nom de l'examen et le service
+     */
+    private function determineServiceKey($examen, $service, $serviceId)
+    {
+        $nomExamen = strtolower($examen->nom);
+
+        // DEBUG: Log pour voir ce qui se passe
+        Log::info("Classification examen: {$examen->nom} -> Service: " . ($service ? $service->nom : 'N/A') . " (Type: " . ($service ? $service->type_service : 'N/A') . ")");
+
+        // Seuls les examens ROOM_DAY ou Hospitalisation avec "Chambre" sont comptabilisés comme hospitalisation
+        if (
+            strpos($nomExamen, 'room_day') !== false ||
+            (strpos($nomExamen, 'hospitalisation') !== false && strpos($nomExamen, 'chambre') !== false)
+        ) {
+            return 'HOSPITALISATION';
+        }
+
+        // Identifier les médicaments par leur nom
+        if (
+            strpos($nomExamen, 'flagyl') !== false ||
+            strpos($nomExamen, 'novalgin') !== false ||
+            strpos($nomExamen, 'ssi') !== false ||
+            strpos($nomExamen, 'kit') !== false ||
+            strpos($nomExamen, 'mg') !== false
+        ) {
+            return 'PHARMACIE';
+        }
+
+        // Identifier les examens d'exploration fonctionnelle
+        if (
+            strpos($nomExamen, 'ecg') !== false ||
+            strpos($nomExamen, 'echo') !== false ||
+            strpos($nomExamen, 'radiologie') !== false ||
+            strpos($nomExamen, 'scanner') !== false
+        ) {
+            return 'EXPLORATIONS_FONCTIONNELLES';
+        }
+
+        // Identifier les consultations
+        if (
+            strpos($nomExamen, 'consultation') !== false ||
+            strpos($nomExamen, 'cs') !== false
+        ) {
+            return 'CONSULTATIONS_EXTERNES';
+        }
+
+        // Si le service existe, utiliser son type
+        if ($service) {
+            switch ($service->type_service) {
+                case 'PHARMACIE':
+                case 'pharmacie':
+                case 'medicament':
+                    return 'PHARMACIE';
+                case 'CONSULTATIONS EXTERNES':
+                case 'consultations':
+                    return 'CONSULTATIONS_EXTERNES';
+                case 'EXPLORATIONS FONCTIONNELLES':
+                case 'explorations':
+                    return 'EXPLORATIONS_FONCTIONNELLES';
+                case 'HOSPITALISATION':
+                    // Si c'est marqué comme hospitalisation mais pas ROOM_DAY, c'est probablement un autre acte
+                    return $serviceId;
+                default:
+                    return $serviceId;
+            }
+        }
+
+        return $serviceId;
+    }
+
+    /**
+     * Décompose une hospitalisation en charges individuelles pour les opérateurs
+     */
+    private function decomposeHospitalisationOperateur($caisse, &$recapParOperateur, $jour, $medecinId, $medecinsMap, $examensMap)
+    {
+        // Récupérer l'hospitalisation associée à cette caisse
+        $hospitalisation = \App\Models\Hospitalisation::where('gestion_patient_id', $caisse->gestion_patient_id)
+            ->whereDate('date_entree', $caisse->date_examen)
+            ->first();
+
+        if (!$hospitalisation) {
+            // Si pas d'hospitalisation trouvée, traiter comme un examen normal
+            $key = $medecinId . '_HOSPITALISATION_' . $jour;
+            if (!isset($recapParOperateur[$key])) {
+                $recapParOperateur[$key] = [
+                    'medecin_id' => $medecinId,
+                    'examen_id' => 'HOSPITALISATION',
+                    'jour' => $jour,
+                    'nombre' => 0,
+                    'recettes' => 0,
+                    'tarif' => 0,
+                    'part_medecin' => 0,
+                    'part_clinique' => 0,
+                    'medecin' => $medecinsMap->get($medecinId),
+                    'examen' => (object)['nom' => 'Hospitalisation']
+                ];
+            }
+            $recapParOperateur[$key]['nombre'] += 1;
+            $recapParOperateur[$key]['recettes'] += $caisse->total;
+            return;
+        }
+
+        // Vérifier si cette hospitalisation a déjà été traitée pour éviter les doublons
+        static $hospitalisationsTraitees = [];
+        $key = $hospitalisation->id . '_' . $jour;
+
+        if (isset($hospitalisationsTraitees[$key])) {
+            // Cette hospitalisation a déjà été traitée, ne pas la compter à nouveau
+            return;
+        }
+
+        $hospitalisationsTraitees[$key] = true;
+
+        // Récupérer les charges de l'hospitalisation
+        $charges = \App\Models\HospitalisationCharge::where('hospitalisation_id', $hospitalisation->id)->get();
+
+        Log::info("Décomposition hospitalisation opérateur ID {$hospitalisation->id} - {$charges->count()} charges trouvées");
+
+        foreach ($charges as $charge) {
+            $serviceKey = $this->classifyCharge($charge);
+            $examenId = $serviceKey === 'HOSPITALISATION' ? 'HOSPITALISATION' : 'CHARGE_' . $charge->id;
+            $key = $medecinId . '_' . $examenId . '_' . $jour;
+
+            if (!isset($recapParOperateur[$key])) {
+                $recapParOperateur[$key] = [
+                    'medecin_id' => $medecinId,
+                    'examen_id' => $examenId,
+                    'jour' => $jour,
+                    'nombre' => 0,
+                    'recettes' => 0,
+                    'tarif' => $charge->unit_price,
+                    'part_medecin' => 0,
+                    'part_clinique' => 0,
+                    'medecin' => $medecinsMap->get($medecinId),
+                    'examen' => $examenId === 'HOSPITALISATION' ?
+                        (object)['nom' => 'Hospitalisation'] :
+                        (object)['nom' => $charge->description_snapshot]
+                ];
+            }
+
+            $recapParOperateur[$key]['nombre'] += $charge->quantity;
+            $recapParOperateur[$key]['recettes'] += $charge->total_price;
+            $recapParOperateur[$key]['part_medecin'] += $charge->part_medecin;
+            $recapParOperateur[$key]['part_clinique'] += $charge->part_cabinet;
+        }
+    }
+
+    /**
+     * Classifie une charge d'hospitalisation selon son type
+     */
+    private function classifyCharge($charge)
+    {
+        $description = strtolower($charge->description_snapshot);
+
+        // Identifier les médicaments
+        if (
+            $charge->type === 'pharmacy' ||
+            strpos($description, 'flagyl') !== false ||
+            strpos($description, 'novalgin') !== false ||
+            strpos($description, 'ssi') !== false ||
+            strpos($description, 'mg') !== false
+        ) {
+            return 'PHARMACIE';
+        }
+
+        // Identifier les examens d'exploration fonctionnelle
+        if (
+            strpos($description, 'ecg') !== false ||
+            strpos($description, 'echo') !== false ||
+            strpos($description, 'radiologie') !== false ||
+            strpos($description, 'scanner') !== false
+        ) {
+            return 'EXPLORATIONS_FONCTIONNELLES';
+        }
+
+        // Identifier les consultations
+        if (
+            strpos($description, 'consultation') !== false ||
+            strpos($description, 'cs') !== false ||
+            strpos($description, 'dr.') !== false
+        ) {
+            return 'CONSULTATIONS_EXTERNES';
+        }
+
+        // Identifier les chambres (ROOM_DAY)
+        if (
+            strpos($description, 'chambre') !== false ||
+            strpos($description, 'room_day') !== false ||
+            strpos($description, 'lit') !== false
+        ) {
+            return 'HOSPITALISATION';
+        }
+
+        // Par défaut, retourner le type de charge
+        return strtoupper($charge->type);
     }
 }

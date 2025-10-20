@@ -187,11 +187,25 @@
                     'EXPLORATIONS FONCTIONNELLES' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
                     ];
 
+                    // Traiter tous les types de services de manière cohérente
                     if ($key === 'PHARMACIE') {
                     $displayName = 'PHARMACIE';
                     $typeKey = 'PHARMACIE';
                     $badgeClass = $badgeColors[$typeKey];
+                    } elseif ($key === 'HOSPITALISATION') {
+                    $displayName = 'HOSPITALISATION';
+                    $typeKey = 'HOSPITALISATION';
+                    $badgeClass = $badgeColors[$typeKey];
+                    } elseif ($key === 'CONSULTATIONS_EXTERNES') {
+                    $displayName = 'CONSULTATIONS EXTERNES';
+                    $typeKey = 'CONSULTATIONS EXTERNES';
+                    $badgeClass = $badgeColors[$typeKey];
+                    } elseif ($key === 'EXPLORATIONS_FONCTIONNELLES') {
+                    $displayName = 'EXPLORATIONS FONCTIONNELLES';
+                    $typeKey = 'EXPLORATIONS FONCTIONNELLES';
+                    $badgeClass = $badgeColors[$typeKey];
                     } else {
+                    // Pour les autres services (IDs numériques)
                     $serviceModel = \App\Models\Service::find($key);
                     $typeKey = $serviceModel?->type_service;
                     $badgeClass = $typeKey ? ($badgeColors[$typeKey] ?? 'bg-gray-200 text-gray-800 dark:bg-gray-700

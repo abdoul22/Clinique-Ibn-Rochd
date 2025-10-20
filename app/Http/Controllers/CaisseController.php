@@ -218,6 +218,35 @@ class CaisseController extends Controller
 
         $request->validate($rules);
 
+        // Validation stricte du total soumis
+        if ($request->examens_multiple === 'true' && $request->filled('examens_data')) {
+            $examensData = json_decode($request->examens_data, true);
+            $totalCalcule = 0;
+            foreach ($examensData as $examenData) {
+                $examen = Examen::find($examenData['id']);
+                $totalCalcule += ($examen->tarif * $examenData['quantite']);
+            }
+
+            $tolerance = 0.01; // Tolérance de 1 centime pour les arrondis
+            if (abs($request->total - $totalCalcule) > $tolerance) {
+                return back()->withErrors([
+                    'total' => "Erreur de calcul détectée. Total soumis : {$request->total} MRU, Total calculé : {$totalCalcule} MRU. Veuillez réessayer."
+                ])->withInput();
+            }
+        } else {
+            // Validation pour examen unique
+            $examen = Examen::findOrFail($request->examen_id);
+            $quantite = $request->quantite_medicament ?? 1;
+            $totalCalcule = $examen->tarif * $quantite;
+
+            $tolerance = 0.01; // Tolérance de 1 centime pour les arrondis
+            if (abs($request->total - $totalCalcule) > $tolerance) {
+                return back()->withErrors([
+                    'total' => "Erreur de calcul détectée. Total soumis : {$request->total} MRU, Total calculé : {$totalCalcule} MRU. Veuillez réessayer."
+                ])->withInput();
+            }
+        }
+
         $dernierNumero = Caisse::max('numero_facture') ?? 0;
         $prochainNumero = $dernierNumero + 1;
 
@@ -281,6 +310,24 @@ class CaisseController extends Controller
         }
 
         $caisse = Caisse::create($data);
+
+        // Recalculer le total réel côté serveur pour éviter les manipulations
+        if ($request->examens_multiple === 'true' && $request->filled('examens_data')) {
+            $examensData = json_decode($request->examens_data, true);
+            $totalReel = 0;
+            foreach ($examensData as $examenData) {
+                $examen = Examen::find($examenData['id']);
+                $totalReel += ($examen->tarif * $examenData['quantite']);
+            }
+        } else {
+            $examen = Examen::findOrFail($request->examen_id);
+            $quantite = $request->quantite_medicament ?? 1;
+            $totalReel = $examen->tarif * $quantite;
+        }
+
+        // Mettre à jour la caisse avec le total recalculé
+        $caisse->total = $totalReel;
+        $caisse->save();
 
         // Gestion de la déduction du stock de pharmacie
         if ($request->examens_multiple === 'true' && $request->filled('examens_data')) {

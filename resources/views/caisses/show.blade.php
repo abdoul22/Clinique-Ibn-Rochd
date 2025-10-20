@@ -55,8 +55,25 @@
                     $caisse->numero_entre }}</p>
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Date de l'examen:</span> {{
                     $caisse->date_examen ? $caisse->date_examen->format('d/m/Y') : 'N/A' }}</p>
+                @if($caisse->examens_data)
+                <div>
+                    <p class="font-medium text-gray-800 dark:text-gray-200">Examens effectués :</p>
+                    @php
+                    $examensData = is_string($caisse->examens_data) ? json_decode($caisse->examens_data, true) :
+                    $caisse->examens_data;
+                    @endphp
+                    @foreach($examensData as $examenData)
+                    @php
+                    $examen = \App\Models\Examen::find($examenData['id']);
+                    @endphp
+                    <p class="ml-4 text-gray-800 dark:text-gray-200">- {{ $examen->nom }} ({{ $examenData['quantite']
+                        }}x) : {{ number_format($examen->tarif * $examenData['quantite'], 2) }} MRU</p>
+                    @endforeach
+                </div>
+                @else
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Type d'examen:</span> {{
                     $caisse->examen->nom ?? 'N/A' }}</p>
+                @endif
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Service:</span>
                     @php
                     $svc = $caisse->service;
