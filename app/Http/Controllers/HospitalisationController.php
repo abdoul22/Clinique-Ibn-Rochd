@@ -169,119 +169,130 @@ class HospitalisationController extends Controller
 
     public function show($id)
     {
-        $hospitalisation = Hospitalisation::with([
-            'patient',
-            'medecin',
-            'pharmacien',
-            'service',
-            'lit.chambre',
-            'roomStays' => function ($q) {
-                $q->orderBy('start_at', 'desc');
-            },
-            'roomStays.chambre',
-            'charges' => function ($q) {
-                $q->orderBy('created_at', 'desc');
+        try {
+            Log::info("HospitalisationController@show - START");
+            Log::info("Hospitalisation ID: " . $id);
+
+            $hospitalisation = Hospitalisation::with([
+                'patient',
+                'medecin',
+                'pharmacien',
+                'service',
+                'lit.chambre',
+                'roomStays' => function ($q) {
+                    $q->orderBy('start_at', 'desc');
+                },
+                'roomStays.chambre',
+                'charges' => function ($q) {
+                    $q->orderBy('created_at', 'desc');
+                }
+            ])->findOrFail($id);
+
+            Log::info("Hospitalisation loaded successfully");
+
+            // Générer les charges de chambre automatiques si en cours
+            if ($hospitalisation->statut === 'en cours') {
+                $this->generateRoomCharges($hospitalisation);
             }
-        ])->findOrFail($id);
 
-        // Générer les charges de chambre automatiques si en cours
-        if ($hospitalisation->statut === 'en cours') {
-            $this->generateRoomCharges($hospitalisation);
+            $chargesNonFacturees = $hospitalisation->charges()->where('is_billed', false)->get();
+            $chargesFacturees = $hospitalisation->charges()->where('is_billed', true)->get();
+
+            $totaux = [
+                'room_day' => $chargesNonFacturees->where('type', 'room_day')->sum('total_price'),
+                'examens' => $chargesNonFacturees->where('type', 'examen')->sum('total_price'),
+                'services' => $chargesNonFacturees->where('type', 'service')->sum('total_price'),
+                'pharmacie' => $chargesNonFacturees->where('type', 'pharmacy')->sum('total_price'),
+                'part_medecin' => $chargesNonFacturees->sum('part_medecin'),
+                'part_cabinet' => $chargesNonFacturees->sum('part_cabinet'),
+                'total' => $chargesNonFacturees->sum('total_price'),
+                'facturees' => $chargesFacturees->sum('total_price'),
+                'montant_total' => $chargesNonFacturees->sum('total_price') + $chargesFacturees->sum('total_price'),
+            ];
+
+            // Calculer la durée d'hospitalisation en format lisible
+            $dateEntree = Carbon::parse($hospitalisation->date_entree);
+            $dateFin = $hospitalisation->date_sortie ? Carbon::parse($hospitalisation->date_sortie) : Carbon::now();
+
+            // Utiliser la même logique que generateRoomCharges pour cohérence
+            if ($dateEntree->isToday()) {
+                $joursEcoules = 0; // Premier jour = 0 jours écoulés
+            } else {
+                $joursEcoules = intval($dateEntree->diffInDays($dateFin));
+            }
+
+            // Le nombre de jours d'hospitalisation = jours écoulés + 1 (jour d'entrée)
+            $jours = $joursEcoules + 1;
+
+            // Calculer les heures et minutes restantes
+            $diffInSeconds = $dateFin->diffInSeconds($dateEntree);
+            $heures = floor(($diffInSeconds % 86400) / 3600);
+            $minutes = floor(($diffInSeconds % 3600) / 60);
+
+            // Formatter la durée
+            $dureeSejour = '';
+            if ($jours > 0) {
+                $dureeSejour .= $jours . ' jour' . ($jours > 1 ? 's' : '');
+            }
+            if ($heures > 0) {
+                $dureeSejour .= ($dureeSejour ? ' ' : '') . $heures . 'h';
+            }
+            if ($minutes > 0) {
+                $dureeSejour .= ($dureeSejour ? ' ' : '') . $minutes . 'mn';
+            }
+
+            // Si aucune durée calculée, afficher au minimum 1 jour
+            if (empty($dureeSejour)) {
+                $dureeSejour = '1 jour';
+            }
+
+            // Garder aussi la valeur numérique pour la compatibilité
+            $joursHospitalisation = max(1, $jours);
+
+            // Ajouter les variables manquantes pour la vue - Exclure les examens d'hospitalisation automatiques
+            // Filtrer les examens pour exclure ceux liés à des services de type pharmacie
+            $examens = Examen::with('service')
+                ->where('nom', 'NOT LIKE', 'Hospitalisation - %')
+                ->where('nom', '!=', 'Hospitalisation')
+                ->whereHas('service', function ($query) {
+                    $query->where('type_service', '!=', 'PHARMACIE')
+                        ->where('type_service', '!=', 'pharmacie')
+                        ->where('type_service', '!=', 'medicament');
+                })
+                ->orderBy('nom')
+                ->get();
+            $medicaments = Pharmacie::where('statut', 'actif')
+                ->where('stock', '>', 0)
+                ->orderBy('nom_medicament')
+                ->get();
+            $medecins = Medecin::orderBy('nom')->get();
+
+            // Récupérer uniquement les pharmaciens (médecins avec fonction Pharmacien)
+            $pharmaciens = Medecin::where('fonction', 'Phr')
+                ->orderBy('nom')
+                ->get();
+
+            // Récupérer tous les médecins impliqués dans cette hospitalisation
+            $medecinsImpliques = $hospitalisation->getAllInvolvedDoctors();
+
+            return view('hospitalisations.show', compact(
+                'hospitalisation',
+                'chargesNonFacturees',
+                'chargesFacturees',
+                'totaux',
+                'examens',
+                'medicaments',
+                'medecins',
+                'pharmaciens',
+                'medecinsImpliques',
+                'joursHospitalisation',
+                'dureeSejour'
+            ));
+        } catch (\Exception $e) {
+            Log::error("HospitalisationController@show - Error: " . $e->getMessage());
+            Log::error("Trace: " . $e->getTraceAsString());
+            return response()->view('errors.500', [], 500);
         }
-
-        $chargesNonFacturees = $hospitalisation->charges()->where('is_billed', false)->get();
-        $chargesFacturees = $hospitalisation->charges()->where('is_billed', true)->get();
-
-        $totaux = [
-            'room_day' => $chargesNonFacturees->where('type', 'room_day')->sum('total_price'),
-            'examens' => $chargesNonFacturees->where('type', 'examen')->sum('total_price'),
-            'services' => $chargesNonFacturees->where('type', 'service')->sum('total_price'),
-            'pharmacie' => $chargesNonFacturees->where('type', 'pharmacy')->sum('total_price'),
-            'part_medecin' => $chargesNonFacturees->sum('part_medecin'),
-            'part_cabinet' => $chargesNonFacturees->sum('part_cabinet'),
-            'total' => $chargesNonFacturees->sum('total_price'),
-            'facturees' => $chargesFacturees->sum('total_price'),
-            'montant_total' => $chargesNonFacturees->sum('total_price') + $chargesFacturees->sum('total_price'),
-        ];
-
-        // Calculer la durée d'hospitalisation en format lisible
-        $dateEntree = Carbon::parse($hospitalisation->date_entree);
-        $dateFin = $hospitalisation->date_sortie ? Carbon::parse($hospitalisation->date_sortie) : Carbon::now();
-
-        // Utiliser la même logique que generateRoomCharges pour cohérence
-        if ($dateEntree->isToday()) {
-            $joursEcoules = 0; // Premier jour = 0 jours écoulés
-        } else {
-            $joursEcoules = intval($dateEntree->diffInDays($dateFin));
-        }
-
-        // Le nombre de jours d'hospitalisation = jours écoulés + 1 (jour d'entrée)
-        $jours = $joursEcoules + 1;
-
-        // Calculer les heures et minutes restantes
-        $diffInSeconds = $dateFin->diffInSeconds($dateEntree);
-        $heures = floor(($diffInSeconds % 86400) / 3600);
-        $minutes = floor(($diffInSeconds % 3600) / 60);
-
-        // Formatter la durée
-        $dureeSejour = '';
-        if ($jours > 0) {
-            $dureeSejour .= $jours . ' jour' . ($jours > 1 ? 's' : '');
-        }
-        if ($heures > 0) {
-            $dureeSejour .= ($dureeSejour ? ' ' : '') . $heures . 'h';
-        }
-        if ($minutes > 0) {
-            $dureeSejour .= ($dureeSejour ? ' ' : '') . $minutes . 'mn';
-        }
-
-        // Si aucune durée calculée, afficher au minimum 1 jour
-        if (empty($dureeSejour)) {
-            $dureeSejour = '1 jour';
-        }
-
-        // Garder aussi la valeur numérique pour la compatibilité
-        $joursHospitalisation = max(1, $jours);
-
-        // Ajouter les variables manquantes pour la vue - Exclure les examens d'hospitalisation automatiques
-        // Filtrer les examens pour exclure ceux liés à des services de type pharmacie
-        $examens = Examen::with('service')
-            ->where('nom', 'NOT LIKE', 'Hospitalisation - %')
-            ->where('nom', '!=', 'Hospitalisation')
-            ->whereHas('service', function ($query) {
-                $query->where('type_service', '!=', 'PHARMACIE')
-                    ->where('type_service', '!=', 'pharmacie')
-                    ->where('type_service', '!=', 'medicament');
-            })
-            ->orderBy('nom')
-            ->get();
-        $medicaments = Pharmacie::where('statut', 'actif')
-            ->where('stock', '>', 0)
-            ->orderBy('nom_medicament')
-            ->get();
-        $medecins = Medecin::orderBy('nom')->get();
-
-        // Récupérer uniquement les pharmaciens (médecins avec fonction Pharmacien)
-        $pharmaciens = Medecin::where('fonction', 'Phr')
-            ->orderBy('nom')
-            ->get();
-
-        // Récupérer tous les médecins impliqués dans cette hospitalisation
-        $medecinsImpliques = $hospitalisation->getAllInvolvedDoctors();
-
-        return view('hospitalisations.show', compact(
-            'hospitalisation',
-            'chargesNonFacturees',
-            'chargesFacturees',
-            'totaux',
-            'examens',
-            'medicaments',
-            'medecins',
-            'pharmaciens',
-            'medecinsImpliques',
-            'joursHospitalisation',
-            'dureeSejour'
-        ));
     }
 
     private function generateRoomCharges($hospitalisation)

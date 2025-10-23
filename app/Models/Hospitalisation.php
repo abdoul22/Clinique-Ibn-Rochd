@@ -82,8 +82,8 @@ class Hospitalisation extends Model
     {
         $doctors = collect();
 
-        // 1. Médecin traitant principal (seulement s'il existe)
-        if ($this->medecin) {
+        // 1. Médecin traitant principal (seulement s'il existe ET n'est pas null)
+        if ($this->medecin && $this->medecin->id) {
             $doctors->push([
                 'medecin' => $this->medecin,
                 'role' => 'Médecin Traitant',
@@ -93,65 +93,77 @@ class Hospitalisation extends Model
         }
 
         // 2. Médecins des examens (via les charges)
-        $examensCharges = $this->charges()
-            ->where('type', 'examen')
-            ->whereNotNull('source_id')
-            ->with(['hospitalisation'])
-            ->get();
+        try {
+            $examensCharges = $this->charges()
+                ->where('type', 'examen')
+                ->whereNotNull('source_id')
+                ->with(['hospitalisation'])
+                ->get();
 
-        foreach ($examensCharges as $charge) {
-            // Récupérer l'examen via source_id
-            $examen = \App\Models\Examen::find($charge->source_id);
-            if ($examen) {
-                // Déterminer le médecin réel de cette charge
-                $medecinReel = null;
-                $nomExamen = $examen->nom;
+            foreach ($examensCharges as $charge) {
+                try {
+                    // Récupérer l'examen via source_id
+                    $examen = \App\Models\Examen::find($charge->source_id);
+                    if ($examen) {
+                        // Déterminer le médecin réel de cette charge
+                        $medecinReel = null;
+                        $nomExamen = $examen->nom;
 
-                // Si la description contient un nom de médecin entre parenthèses, c'est le médecin réel
-                if (preg_match('/\(([^)]+)\)/', $charge->description_snapshot, $matches)) {
-                    // Chercher le médecin par nom complet dans la description
-                    $nomMedecinComplet = trim($matches[1]);
-                    // Chercher le médecin qui correspond exactement au nom complet
-                    $medecinReel = \App\Models\Medecin::all()->first(function ($medecin) use ($nomMedecinComplet) {
-                        return $medecin->nom_complet_avec_prenom === $nomMedecinComplet;
-                    });
-                    $nomExamen = str_replace($matches[0], '', $charge->description_snapshot);
-                } else {
-                    // Utiliser le médecin de l'examen s'il existe
-                    $medecinReel = $examen->medecin;
-                }
+                        // Si la description contient un nom de médecin entre parenthèses, c'est le médecin réel
+                        if (preg_match('/\(([^)]+)\)/', $charge->description_snapshot, $matches)) {
+                            // Chercher le médecin par nom complet dans la description
+                            $nomMedecinComplet = trim($matches[1]);
+                            // Chercher le médecin qui correspond exactement au nom complet
+                            $medecinReel = \App\Models\Medecin::all()->first(function ($medecin) use ($nomMedecinComplet) {
+                                $nomCompletAccessor = $medecin->nom_complet_avec_prenom;
+                                return $nomCompletAccessor && $nomCompletAccessor === $nomMedecinComplet;
+                            });
+                            $nomExamen = str_replace($matches[0], '', $charge->description_snapshot);
+                        } else {
+                            // Utiliser le médecin de l'examen s'il existe
+                            $medecinReel = $examen->medecin ?? null;
+                        }
 
-                // Si on a trouvé un médecin, l'ajouter
-                if ($medecinReel) {
-                    $existingDoctorIndex = $doctors->search(function ($doctor) use ($medecinReel) {
-                        return $doctor['medecin']->id === $medecinReel->id;
-                    });
+                        // Si on a trouvé un médecin, l'ajouter
+                        if ($medecinReel && $medecinReel->id) {
+                            $existingDoctorIndex = $doctors->search(function ($doctor) use ($medecinReel) {
+                                return $doctor['medecin']->id === $medecinReel->id;
+                            });
 
-                    if ($existingDoctorIndex !== false) {
-                        // Ajouter l'examen au médecin existant
-                        $existingDoctor = $doctors->get($existingDoctorIndex);
-                        $existingDoctor['part_medecin'] += $charge->part_medecin;
-                        $existingDoctor['examens'][] = [
-                            'nom' => trim($nomExamen),
-                            'part_medecin' => $charge->part_medecin,
-                            'date' => $charge->created_at
-                        ];
-                        $doctors->put($existingDoctorIndex, $existingDoctor);
-                    } else {
-                        // Nouveau médecin spécialiste
-                        $doctors->push([
-                            'medecin' => $medecinReel,
-                            'role' => 'Médecin Spécialiste',
-                            'part_medecin' => $charge->part_medecin,
-                            'examens' => [[
-                                'nom' => trim($nomExamen),
-                                'part_medecin' => $charge->part_medecin,
-                                'date' => $charge->created_at
-                            ]]
-                        ]);
+                            if ($existingDoctorIndex !== false) {
+                                // Ajouter l'examen au médecin existant
+                                $existingDoctor = $doctors->get($existingDoctorIndex);
+                                $existingDoctor['part_medecin'] += $charge->part_medecin;
+                                $existingDoctor['examens'][] = [
+                                    'nom' => trim($nomExamen),
+                                    'part_medecin' => $charge->part_medecin,
+                                    'date' => $charge->created_at
+                                ];
+                                $doctors->put($existingDoctorIndex, $existingDoctor);
+                            } else {
+                                // Nouveau médecin spécialiste
+                                $doctors->push([
+                                    'medecin' => $medecinReel,
+                                    'role' => 'Médecin Spécialiste',
+                                    'part_medecin' => $charge->part_medecin,
+                                    'examens' => [[
+                                        'nom' => trim($nomExamen),
+                                        'part_medecin' => $charge->part_medecin,
+                                        'date' => $charge->created_at
+                                    ]]
+                                ]);
+                            }
+                        }
                     }
+                } catch (\Exception $e) {
+                    // Log l'erreur mais continue le traitement
+                    \Illuminate\Support\Facades\Log::warning("Erreur lors du traitement de la charge " . $charge->id . ": " . $e->getMessage());
+                    continue;
                 }
             }
+        } catch (\Exception $e) {
+            // Log l'erreur mais continue
+            \Illuminate\Support\Facades\Log::warning("Erreur lors du chargement des charges: " . $e->getMessage());
         }
 
         return $doctors;
