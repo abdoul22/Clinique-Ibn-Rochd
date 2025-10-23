@@ -315,8 +315,6 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
     Route::post('hospitalisations/{id}/facturer', [HospitalisationController::class, 'facturer'])->name('hospitalisations.facturer');
     Route::patch('hospitalisations/{id}/status', [HospitalisationController::class, 'updateStatus'])->name('hospitalisations.updateStatus');
     Route::post('hospitalisations/{id}/payer-tout', [HospitalisationController::class, 'payerTout'])->name('hospitalisations.payerTout');
-    Route::post('hospitalisations/{id}/charges', [HospitalisationController::class, 'addCharge'])->name('hospitalisations.addCharge');
-    Route::delete('hospitalisations/{id}/charges/{chargeId}', [HospitalisationController::class, 'removeCharge'])->name('hospitalisations.removeCharge');
 
     // Chambres (protégées par auth et is.approved)
     Route::resource('chambres', ChambreController::class);
