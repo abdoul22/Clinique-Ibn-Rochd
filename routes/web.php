@@ -115,6 +115,22 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmi
 
     // Récapitulatif opérateurs - Détails médecins hospitalisations
     Route::get('hospitalisations/doctors/by-date/{date}', [HospitalisationController::class, 'showDoctorsByDate'])->name('hospitalisations.doctors.by-date');
+
+    // Hospitalisations pour superadmin
+    Route::get('hospitalisations/search-patients-by-phone', [HospitalisationController::class, 'searchPatientsByPhone'])->name('hospitalisations.search-patients-by-phone');
+    Route::get('/hospitalisations/lits-disponibles', [HospitalisationController::class, 'getLitsDisponibles'])->name('hospitalisations.lits.disponibles');
+    Route::get('hospitalisations/{id}/doctors', [HospitalisationController::class, 'showDoctors'])->name('hospitalisations.doctors');
+    Route::get('hospitalisations/{id}/print', [HospitalisationController::class, 'print'])->name('hospitalisations.print');
+
+    // Route de ressources
+    Route::resource('hospitalisations', HospitalisationController::class);
+
+    // Routes d'actions
+    Route::post('hospitalisations/{id}/facturer', [HospitalisationController::class, 'facturer'])->name('hospitalisations.facturer');
+    Route::patch('hospitalisations/{id}/status', [HospitalisationController::class, 'updateStatus'])->name('hospitalisations.updateStatus');
+    Route::post('hospitalisations/{id}/payer-tout', [HospitalisationController::class, 'payerTout'])->name('hospitalisations.payerTout');
+    Route::post('hospitalisations/{id}/charges', [HospitalisationController::class, 'addCharge'])->name('hospitalisations.addCharge');
+    Route::delete('hospitalisations/{id}/charges/{chargeId}', [HospitalisationController::class, 'removeCharge'])->name('hospitalisations.removeCharge');
 });
 
 // Routes pour ADMIN
@@ -172,8 +188,6 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     Route::post('hospitalisations/{id}/facturer', [HospitalisationController::class, 'facturer'])->name('hospitalisations.facturer');
     Route::patch('hospitalisations/{id}/status', [HospitalisationController::class, 'updateStatus'])->name('hospitalisations.updateStatus');
     Route::post('hospitalisations/{id}/payer-tout', [HospitalisationController::class, 'payerTout'])->name('hospitalisations.payerTout');
-    Route::post('hospitalisations/{id}/charges', [HospitalisationController::class, 'addCharge'])->name('hospitalisations.addCharge');
-    Route::delete('hospitalisations/{id}/charges/{chargeId}', [HospitalisationController::class, 'removeCharge'])->name('hospitalisations.removeCharge');
 
     // Récapitulatifs pour admin
     Route::get('recap-services/print', [RecapitulatifServiceJournalierController::class, 'print'])->name('recap-services.print');
