@@ -57,7 +57,7 @@
                         @endif
                     </td>
                     <td class="table-cell">
-                        @if($personnel['type'] === 'personnel' && $personnel['credit'] > 0)
+                        @if($personnel['credit'] > 0)
                         <span class="text-red-600 dark:text-red-400 font-semibold">
                             {{ number_format($personnel['credit'], 2) }} MRU
                         </span>

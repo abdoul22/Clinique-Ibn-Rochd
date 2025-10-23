@@ -172,6 +172,7 @@ class HospitalisationController extends Controller
         $hospitalisation = Hospitalisation::with([
             'patient',
             'medecin',
+            'pharmacien',
             'service',
             'lit.chambre',
             'roomStays' => function ($q) {
@@ -260,6 +261,11 @@ class HospitalisationController extends Controller
             ->get();
         $medecins = Medecin::orderBy('nom')->get();
 
+        // Récupérer uniquement les pharmaciens (médecins avec fonction Pharmacien)
+        $pharmaciens = Medecin::where('fonction', 'Phr')
+            ->orderBy('nom')
+            ->get();
+
         // Récupérer tous les médecins impliqués dans cette hospitalisation
         $medecinsImpliques = $hospitalisation->getAllInvolvedDoctors();
 
@@ -271,6 +277,7 @@ class HospitalisationController extends Controller
             'examens',
             'medicaments',
             'medecins',
+            'pharmaciens',
             'medecinsImpliques',
             'joursHospitalisation',
             'dureeSejour'
@@ -655,11 +662,20 @@ class HospitalisationController extends Controller
     {
         $hospitalisation = Hospitalisation::with('lit.chambre')->findOrFail($id);
 
+        // Vérifier que l'hospitalisation n'est pas annulée
+        if ($hospitalisation->statut === 'annulé') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Impossible d\'ajouter une charge à une hospitalisation annulée'
+            ], 403);
+        }
+
         $request->validate([
             'charge_type' => 'required|in:examen,service,pharmacy',
             'examen_id' => 'required_if:charge_type,examen,service|nullable|exists:examens,id',
             'medicament_id' => 'required_if:charge_type,pharmacy|nullable|exists:pharmacies,id',
             'medecin_id' => 'nullable|exists:medecins,id',
+            'pharmacien_id' => 'nullable|exists:medecins,id',
             'quantity' => 'required|integer|min:1|max:999',
         ]);
 
@@ -677,6 +693,11 @@ class HospitalisationController extends Controller
 
                 // Déduire le stock
                 $med->deduireStock($qty);
+
+                // Si c'est le premier médicament et qu'un pharmacien est sélectionné, le stocker dans l'hospitalisation
+                if ($request->pharmacien_id && !$hospitalisation->pharmacien_id) {
+                    $hospitalisation->update(['pharmacien_id' => $request->pharmacien_id]);
+                }
 
                 HospitalisationCharge::create([
                     'hospitalisation_id' => $hospitalisation->id,
@@ -718,7 +739,38 @@ class HospitalisationController extends Controller
             }
         });
 
-        return back()->with('success', 'Charge ajoutée avec succès.');
+        // Récupérer la charge créée pour la retourner
+        $lastCharge = HospitalisationCharge::where('hospitalisation_id', $hospitalisation->id)
+            ->where('is_billed', false)
+            ->latest()
+            ->first();
+
+        // Recalculer les totaux
+        $chargesNonFacturees = HospitalisationCharge::where('hospitalisation_id', $hospitalisation->id)
+            ->where('is_billed', false)
+            ->get();
+
+        $total = $chargesNonFacturees->sum('total_price');
+        $partCabinet = $chargesNonFacturees->sum('part_cabinet');
+        $partMedecin = $chargesNonFacturees->sum('part_medecin');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Charge ajoutée avec succès',
+            'charge' => [
+                'id' => $lastCharge->id,
+                'type' => $lastCharge->type,
+                'description' => $lastCharge->description_snapshot,
+                'total_price' => $lastCharge->total_price,
+                'created_at' => $lastCharge->created_at->format('d/m/Y H:i')
+            ],
+            'totals' => [
+                'total' => $total,
+                'part_cabinet' => $partCabinet,
+                'part_medecin' => $partMedecin,
+                'count' => $chargesNonFacturees->count()
+            ]
+        ]);
     }
 
     public function updateStatus(Request $request, $id)
@@ -735,6 +787,21 @@ class HospitalisationController extends Controller
 
             // Si on annule, enregistrer l'utilisateur qui annule
             if ($nouveauStatut === 'annulé' && $hospitalisation->statut !== 'annulé') {
+                // Restaurer le stock des médicaments non facturés
+                $chargesPharmaNonFacturees = HospitalisationCharge::where('hospitalisation_id', $hospitalisation->id)
+                    ->where('type', 'pharmacy')
+                    ->where('is_billed', false)
+                    ->get();
+
+                foreach ($chargesPharmaNonFacturees as $charge) {
+                    if ($charge->source_id) {
+                        $medicament = Pharmacie::find($charge->source_id);
+                        if ($medicament) {
+                            $medicament->ajouterStock($charge->quantity);
+                        }
+                    }
+                }
+
                 $hospitalisation->update([
                     'statut' => $nouveauStatut,
                     'annulated_by' => Auth::id(),
@@ -996,7 +1063,7 @@ class HospitalisationController extends Controller
      */
     public function showDoctors($id)
     {
-        $hospitalisation = Hospitalisation::with(['patient', 'medecin', 'service', 'lit.chambre'])
+        $hospitalisation = Hospitalisation::with(['patient', 'medecin', 'pharmacien', 'service', 'lit', 'chambre'])
             ->findOrFail($id);
 
         $doctors = $hospitalisation->getAllInvolvedDoctors();
@@ -1022,7 +1089,7 @@ class HospitalisationController extends Controller
         $endDate = $targetDate->copy()->endOfDay();
 
         // Récupérer toutes les hospitalisations de cette date
-        $hospitalisations = Hospitalisation::with(['patient', 'medecin', 'service', 'lit.chambre'])
+        $hospitalisations = Hospitalisation::with(['patient', 'medecin', 'service', 'lit.chambre', 'chambre'])
             ->whereBetween('created_at', [$targetDate, $endDate])
             ->get();
 
@@ -1089,5 +1156,94 @@ class HospitalisationController extends Controller
             'chargesFacturees',
             'totalCharges'
         ));
+    }
+
+    public function removeCharge(Request $request, $id, $chargeId)
+    {
+        try {
+            $hospitalisation = Hospitalisation::findOrFail($id);
+
+            // Vérifier que l'hospitalisation n'est pas annulée
+            if ($hospitalisation->statut === 'annulé') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Impossible de supprimer une charge d\'une hospitalisation annulée'
+                ], 403);
+            }
+
+            $charge = HospitalisationCharge::where('hospitalisation_id', $id)
+                ->where('id', $chargeId)
+                ->where('is_billed', false) // Ne peut supprimer que les charges non facturées
+                ->firstOrFail();
+
+            // Vérifier que ce n'est pas un ROOM_DAY
+            if ($charge->type === 'room_day') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Impossible de supprimer le ROOM_DAY - Cette charge est protégée'
+                ], 403);
+            }
+
+            // Restaurer le stock si c'est un médicament
+            if ($charge->type === 'pharmacy' && $charge->source_id) {
+                $medicament = Pharmacie::find($charge->source_id);
+                if ($medicament) {
+                    $medicament->ajouterStock($charge->quantity);
+                }
+            }
+
+            $charge->delete();
+
+            // Recalculer les totaux
+            $chargesNonFacturees = HospitalisationCharge::where('hospitalisation_id', $id)
+                ->where('is_billed', false)
+                ->get();
+
+            $total = $chargesNonFacturees->sum('total_price');
+            $partCabinet = $chargesNonFacturees->sum('part_cabinet');
+            $partMedecin = $chargesNonFacturees->sum('part_medecin');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Charge supprimée avec succès',
+                'totals' => [
+                    'total' => $total,
+                    'part_cabinet' => $partCabinet,
+                    'part_medecin' => $partMedecin,
+                    'count' => $chargesNonFacturees->count()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression de la charge: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Recherche de patients par numéro de téléphone
+     */
+    public function searchPatientsByPhone(Request $request)
+    {
+        $phone = $request->get('phone', '');
+
+        if (empty($phone)) {
+            // Si pas de téléphone, retourner tous les patients
+            $patients = GestionPatient::select('id', 'first_name', 'last_name', 'phone')
+                ->orderBy('first_name')
+                ->get();
+        } else {
+            // Rechercher les patients dont le téléphone contient la chaîne recherchée
+            $patients = GestionPatient::select('id', 'first_name', 'last_name', 'phone')
+                ->where('phone', 'LIKE', '%' . $phone . '%')
+                ->orderBy('first_name')
+                ->get();
+        }
+
+        return response()->json([
+            'success' => true,
+            'patients' => $patients
+        ]);
     }
 }

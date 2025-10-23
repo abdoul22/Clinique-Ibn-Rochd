@@ -243,6 +243,31 @@
                                         MRU</span>
                                 </div>
                             </div>
+
+                            <!-- Pharmacien Impliqué -->
+                            @if($hospitalisation->pharmacien_id)
+                            <div
+                                class="bg-indigo-50 dark:bg-indigo-900 rounded-lg p-4 border border-indigo-200 dark:border-indigo-700 mt-4">
+                                <div class="flex items-center mb-3">
+                                    <div
+                                        class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center mr-3">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.452a1 1 0 00-.898.467l-.368.794a1 1 0 001.286 1.286l.794-.368c.149-.074.312-.06.466.007l2.387.452a2 2 0 00.948-3.084l-2.387-.452zm0 0A2.884 2.884 0 1015.428 19.428">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-indigo-600 dark:text-indigo-400 uppercase">
+                                            Pharmacien Responsable</p>
+                                        <p class="font-semibold text-gray-900 dark:text-white">{{
+                                            $hospitalisation->pharmacien->nom_complet_avec_prenom }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
                         </div>
                         @else
                         <div class="text-center py-6">
@@ -402,6 +427,16 @@
                         <!-- Champ caché pour le médecin sélectionné -->
                         <input type="hidden" name="medecin_id" id="selected_medecin_id" value="">
                     </form>
+
+                    <!-- Zone d'affichage des charges ajoutées dynamiquement -->
+                    <div id="charges_ajoutees_div" style="display: none;">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Charges
+                            ajoutées</label>
+                        <div id="charges_liste"
+                            class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800 space-y-2">
+                            <!-- Les charges ajoutées apparaîtront ici -->
+                        </div>
+                    </div>
                 </div>
                 @endif
 
@@ -419,6 +454,8 @@
                                     <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
                                         Description</th>
                                     <th class="text-right py-3 px-4 font-medium text-gray-900 dark:text-white">Montant
+                                    </th>
+                                    <th class="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">Actions
                                     </th>
                                 </tr>
                             </thead>
@@ -441,12 +478,47 @@
                                         }}</td>
                                     <td class="py-3 px-4 text-right font-semibold text-gray-900 dark:text-white">{{
                                         number_format($charge->total_price, 0, ',', ' ') }} MRU</td>
+                                    <td class="py-3 px-4 text-center">
+                                        @if($charge->type === 'room_day')
+                                        <span
+                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                                            title="Le ROOM_DAY ne peut pas être supprimé">
+                                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                                    clip-rule="evenodd"></path>
+                                            </svg>
+                                            Protégé
+                                        </span>
+                                        @elseif($hospitalisation->statut !== 'annulé')
+                                        <button type="button" onclick="removeCharge({{ $charge->id }})"
+                                            class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200"
+                                            title="Supprimer cette charge">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                    clip-rule="evenodd"></path>
+                                            </svg>
+                                        </button>
+                                        @else
+                                        <span
+                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                                            title="Impossible de supprimer - Hospitalisation annulée">
+                                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                                    clip-rule="evenodd"></path>
+                                            </svg>
+                                            Verrouillé
+                                        </span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>
                             <tfoot>
                                 <tr class="border-t-2 border-gray-300 dark:border-gray-600">
-                                    <td colspan="3" class="py-3 px-4 font-semibold text-gray-900 dark:text-white">Total
+                                    <td colspan="4" class="py-3 px-4 font-semibold text-gray-900 dark:text-white">Total
                                     </td>
                                     <td class="py-3 px-4 text-right font-bold text-lg text-blue-600 dark:text-blue-400">
                                         {{ number_format($totaux['total'], 0, ',', ' ') }} MRU</td>
@@ -675,10 +747,78 @@
     </div>
 </div>
 
+<!-- Modal de sélection de pharmacien pour médicaments -->
+<div id="pharmacien-modal"
+    class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Sélectionner un pharmacien</h3>
+                <button onclick="closePharmacienModal()"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Choisissez le pharmacien responsable des médicaments de cette hospitalisation :
+                </p>
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 mb-4">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 dark:bg-green-900 p-2 rounded-full mr-3">
+                            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4">
+                                </path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-medium text-green-900 dark:text-green-100">Médicaments en attente</p>
+                            <p class="text-sm text-green-700 dark:text-green-300">Un seul pharmacien pour toute
+                                l'hospitalisation</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pharmacien</label>
+                <select id="pharmacien-select"
+                    class="form-select w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                    <option value="">Sélectionner un pharmacien...</option>
+                    @foreach($pharmaciens as $pharmacien)
+                    <option value="{{ $pharmacien->id }}">{{ $pharmacien->nom_complet_avec_prenom }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closePharmacienModal()"
+                    class="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors">
+                    Annuler
+                </button>
+                <button type="button" id="confirm-pharmacien-btn"
+                    class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                    Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     // Variables globales pour la modale de médecin
     let currentExamenData = null;
+    // Variables pour la modale de pharmacien
+    let currentMedicamentData = null;
+    let hospitalisationPharmacienId = {{ $hospitalisation->pharmacien_id ?? 'null' }};
+    const hospitalisationId = {{ $hospitalisation->id }};
 
     // Gestion du changement de type de charge
     document.getElementById('charge_type')?.addEventListener('change', function(){
@@ -698,12 +838,13 @@
         }
     });
 
-    // Gestion du bouton "Ajouter" pour les examens
+    // Gestion du bouton "Ajouter" pour les examens et médicaments
     document.getElementById('add-charge-btn')?.addEventListener('click', function(e) {
         e.preventDefault();
 
         const chargeType = document.getElementById('charge_type').value;
         const examenId = document.getElementById('examen_id').value;
+        const medicamentId = document.querySelector('select[name="medicament_id"]').value;
 
         if (chargeType === 'examen' && examenId) {
             // Récupérer les données de l'examen sélectionné
@@ -721,9 +862,21 @@
 
             // Afficher la modale de sélection de médecin
             openMedecinModal();
+        } else if (chargeType === 'pharmacy' && medicamentId) {
+            // Pour les médicaments, vérifier si un pharmacien a déjà été sélectionné
+            if (!hospitalisationPharmacienId) {
+                // Pas de pharmacien sélectionné, afficher la modale de pharmacien
+                currentMedicamentData = {
+                    id: medicamentId,
+                    quantity: parseInt(document.querySelector('input[name="quantity"]').value) || 1
+                };
+                openPharmacienModal();
+            } else {
+                // Pharmacien déjà sélectionné, soumettre directement
+                addChargeAjax();
+            }
         } else {
-            // Pour les médicaments ou si aucun examen sélectionné, soumettre directement
-            document.getElementById('add-charge-form').submit();
+            addChargeAjax();
         }
     });
 
@@ -762,8 +915,38 @@
         // Fermer la modale
         closeMedecinModal();
 
-        // Soumettre le formulaire
-        document.getElementById('add-charge-form').submit();
+        // Soumettre via AJAX
+        addChargeAjax();
+    });
+
+    // Fonctions pour la modale de pharmacien
+    function openPharmacienModal() {
+        // Afficher la modale
+        document.getElementById('pharmacien-modal').classList.remove('hidden');
+    }
+
+    function closePharmacienModal() {
+        document.getElementById('pharmacien-modal').classList.add('hidden');
+        currentMedicamentData = null;
+    }
+
+    // Confirmer la sélection du pharmacien
+    document.getElementById('confirm-pharmacien-btn')?.addEventListener('click', function() {
+        const selectedPharmacienId = document.getElementById('pharmacien-select').value;
+
+        if (!selectedPharmacienId) {
+            alert('Veuillez sélectionner un pharmacien.');
+            return;
+        }
+
+        // Mettre à jour la variable globale
+        hospitalisationPharmacienId = selectedPharmacienId;
+
+        // Fermer la modale
+        closePharmacienModal();
+
+        // Soumettre via AJAX avec le pharmacien
+        addChargeAjax();
     });
 
     // Fermer les modales en cliquant à l'extérieur
@@ -779,6 +962,12 @@
         }
     });
 
+    document.getElementById('pharmacien-modal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePharmacienModal();
+        }
+    });
+
     // Empêcher la sélection manuelle de "Terminé"
     function handleStatutChange(select) {
         if (select.value === 'terminé') {
@@ -787,6 +976,259 @@
             return false;
         }
         document.getElementById('statut-form').submit();
+    }
+
+    // Fonction pour ajouter une charge via AJAX
+    function addChargeAjax() {
+        const form = document.getElementById('add-charge-form');
+        const formData = new FormData(form);
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Ajouter le pharmacien_id s'il est disponible et que c'est un médicament
+        const chargeType = document.getElementById('charge_type').value;
+        if (chargeType === 'pharmacy' && hospitalisationPharmacienId) {
+            formData.append('pharmacien_id', hospitalisationPharmacienId);
+        }
+
+        // Afficher un indicateur de chargement
+        const button = document.getElementById('add-charge-btn');
+        const originalContent = button.innerHTML;
+        button.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+        button.disabled = true;
+
+        fetch(`/hospitalisations/${hospitalisationId}/charges`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Ajouter la charge à la liste
+                addChargeToList(data.charge);
+
+                // Mettre à jour les totaux
+                updateTotals(data.totals);
+
+                // Réinitialiser le formulaire
+                resetForm();
+
+                // Afficher un message de succès
+                showNotification('Charge ajoutée avec succès', 'success');
+
+                // Afficher la zone des charges ajoutées
+                document.getElementById('charges_ajoutees_div').style.display = 'block';
+            } else {
+                showNotification(data.message || 'Erreur lors de l\'ajout', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur lors de l\'ajout de la charge', 'error');
+        })
+        .finally(() => {
+            // Restaurer le bouton
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        });
+    }
+
+    // Fonction pour ajouter une charge à la liste d'affichage
+    function addChargeToList(charge) {
+        const container = document.getElementById('charges_liste');
+        const chargeElement = document.createElement('div');
+
+        const typeClass = charge.type === 'pharmacy' ?
+            'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+            'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+
+        chargeElement.className = 'flex justify-between items-center bg-white dark:bg-gray-700 p-2 rounded border';
+        chargeElement.innerHTML = `
+            <div>
+                <span class="font-medium">${charge.description}</span>
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${typeClass} mr-2">
+                        ${charge.type.toUpperCase()}
+                    </span>
+                    ${charge.total_price.toLocaleString()} MRU
+                </div>
+            </div>
+            <button type="button" onclick="removeChargeFromList(this, ${charge.id})"
+                class="text-red-500 hover:text-red-700">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        `;
+
+        container.appendChild(chargeElement);
+    }
+
+    // Fonction pour supprimer une charge de la liste d'affichage
+    function removeChargeFromList(button, chargeId) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer cette charge ?')) {
+            return;
+        }
+
+        const hospitalisationId = {{ $hospitalisation->id }};
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch(`/hospitalisations/${hospitalisationId}/charges/${chargeId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Supprimer l'élément de la liste
+                button.closest('div').remove();
+
+                // Mettre à jour les totaux
+                updateTotals(data.totals);
+
+                // Masquer la zone si plus de charges
+                const container = document.getElementById('charges_liste');
+                if (container.children.length === 0) {
+                    document.getElementById('charges_ajoutees_div').style.display = 'none';
+                }
+
+                // Afficher un message de succès
+                showNotification('Charge supprimée avec succès', 'success');
+
+                // Recharger la page si plus de charges pour synchroniser
+                if (data.totals.count === 0) {
+                    location.reload();
+                }
+            } else {
+                showNotification(data.message || 'Erreur lors de la suppression', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur lors de la suppression de la charge', 'error');
+        });
+    }
+
+    // Fonction pour réinitialiser le formulaire
+    function resetForm() {
+        // Sauvegarder le type actuel avant de réinitialiser
+        const currentChargeType = document.getElementById('charge_type').value;
+
+        document.getElementById('add-charge-form').reset();
+        document.getElementById('selected_medecin_id').value = '';
+        currentExamenData = null;
+
+        // Restaurer le type de charge
+        if (currentChargeType) {
+            document.getElementById('charge_type').value = currentChargeType;
+            // Réafficher le bon champ (examen ou médicament)
+            const examenField = document.getElementById('examen_field');
+            const medicamentField = document.getElementById('medicament_field');
+            if (currentChargeType === 'pharmacy') {
+                examenField.style.display = 'none';
+                medicamentField.style.display = 'block';
+            } else {
+                examenField.style.display = 'block';
+                medicamentField.style.display = 'none';
+            }
+        }
+    }
+
+    // Fonction pour supprimer une charge
+    function removeCharge(chargeId) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer cette charge ?')) {
+            return;
+        }
+
+        const hospitalisationId = {{ $hospitalisation->id }};
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Afficher un indicateur de chargement
+        const button = event.target.closest('button');
+        const originalContent = button.innerHTML;
+        button.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+        button.disabled = true;
+
+        fetch(`/hospitalisations/${hospitalisationId}/charges/${chargeId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Supprimer la ligne du tableau
+                const row = button.closest('tr');
+                row.remove();
+
+                // Mettre à jour les totaux
+                updateTotals(data.totals);
+
+                // Afficher un message de succès
+                showNotification('Charge supprimée avec succès', 'success');
+
+                // Si plus de charges, masquer le tableau
+                if (data.totals.count === 0) {
+                    location.reload(); // Recharger pour masquer le tableau
+                }
+            } else {
+                showNotification(data.message || 'Erreur lors de la suppression', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur lors de la suppression de la charge', 'error');
+        })
+        .finally(() => {
+            // Restaurer le bouton
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        });
+    }
+
+    // Fonction pour mettre à jour les totaux
+    function updateTotals(totals) {
+        // Mettre à jour le total dans le tableau
+        const totalCell = document.querySelector('tfoot td:last-child');
+        if (totalCell) {
+            totalCell.textContent = `${totals.total.toLocaleString()} MRU`;
+        }
+
+        // Mettre à jour le total dans le résumé financier si présent
+        const summaryTotal = document.querySelector('.text-3xl.font-bold.text-blue-600');
+        if (summaryTotal) {
+            summaryTotal.textContent = `${totals.total.toLocaleString()} MRU`;
+        }
+    }
+
+    // Fonction pour afficher des notifications
+    function showNotification(message, type = 'info') {
+        // Créer l'élément de notification
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+            type === 'success' ? 'bg-green-500 text-white' :
+            type === 'error' ? 'bg-red-500 text-white' :
+            'bg-blue-500 text-white'
+        }`;
+        notification.textContent = message;
+
+        // Ajouter au DOM
+        document.body.appendChild(notification);
+
+        // Supprimer après 3 secondes
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
     }
 </script>
 

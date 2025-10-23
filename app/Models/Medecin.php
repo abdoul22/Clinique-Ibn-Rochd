@@ -33,7 +33,8 @@ class Medecin extends Model
             'Dr' => 'Dr.',
             'Tss' => 'Tss.',
             'SGF' => 'SGF.',
-            'IDE' => 'IDE.'
+            'IDE' => 'IDE.',
+            'Phr' => 'Phr.'
         ];
 
         $prefix = $fonctions[$this->fonction] ?? 'Dr.';
@@ -50,7 +51,8 @@ class Medecin extends Model
             'Dr' => 'Docteur',
             'Tss' => 'Technicien Supérieur',
             'SGF' => 'Sage femme',
-            'IDE' => 'Infirmier d\'état'
+            'IDE' => 'Infirmier d\'état',
+            'Phr' => 'Pharmacien'
         ];
 
         return $fonctions[$this->fonction] ?? 'Docteur';
@@ -66,7 +68,8 @@ class Medecin extends Model
             'Dr' => 'Dr.',
             'Tss' => 'Tss.',
             'SGF' => 'SGF.',
-            'IDE' => 'IDE.'
+            'IDE' => 'IDE.',
+            'Phr' => 'Phr.'
         ];
 
         $prefix = $fonctions[$this->fonction] ?? 'Dr.';
@@ -83,7 +86,8 @@ class Medecin extends Model
             'Dr' => 'Dr.',
             'Tss' => 'Tss.',
             'SGF' => 'SGF.',
-            'IDE' => 'IDE.'
+            'IDE' => 'IDE.',
+            'Phr' => 'Phr.'
         ];
 
         $prefix = $fonctions[$this->fonction] ?? 'Dr.';

@@ -140,7 +140,7 @@
         <div class="logo-text">IBN ROCHD</div>
 
         <div class="muted center">
-            Urgences Tél. 26 38 24 84 – 22 30 56 26<br>
+            Urgences Tél. 43 45 54 23 – 22 30 56 26<br>
             Avenue John Kennedy, en face de la Polyclinique – Nouakchott
         </div>
 
@@ -361,7 +361,7 @@
         <div class="logo-text">IBN ROCHD</div>
 
         <div class="muted center">
-            Urgences Tél. 26 38 24 84 – 22 30 56 26<br>
+            Urgences Tél. 43 45 54 23 – 22 30 56 26<br>
             Avenue John Kennedy, en face de la Polyclinique – Nouakchott
         </div>
 

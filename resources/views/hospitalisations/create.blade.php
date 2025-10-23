@@ -100,19 +100,10 @@
                                 </div>
                                 Téléphone
                             </label>
-                            <select id="telephone-select"
+                            <input type="text" id="telephone-input" placeholder="Tapez le numéro de téléphone"
                                 class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg shadow-sm synchronized-field"
                                 style="background-color: white; color: #111827; border-color: #d1d5db;"
                                 data-dark-bg="#1f2937" data-dark-text="#f9fafb" data-dark-border="#4b5563">
-                                <option value="">Sélectionner par téléphone</option>
-                                @foreach($patients as $patient)
-                                @if($patient->phone)
-                                <option value="{{ $patient->id }}"
-                                    data-patient-name="{{ $patient->nom }} {{ $patient->prenom }}">{{ $patient->phone }}
-                                    - {{ $patient->nom }} {{ $patient->prenom }}</option>
-                                @endif
-                                @endforeach
-                            </select>
                         </div>
 
 
@@ -439,30 +430,30 @@
                           window.matchMedia('(prefers-color-scheme: dark)').matches;
 
         // Appliquer les styles immédiatement si les éléments existent
-        const patientSelect = document.getElementById('patient-select');
-        const telephoneSelect = document.getElementById('telephone-select');
+        let patientSelectTemp = document.getElementById('patient-select');
+        let telephoneInputTemp = document.getElementById('telephone-input');
 
-        if (patientSelect) {
+        if (patientSelectTemp) {
             if (isDarkMode) {
-                patientSelect.style.backgroundColor = '#1f2937';
-                patientSelect.style.color = '#f9fafb';
-                patientSelect.style.borderColor = '#4b5563';
+                patientSelectTemp.style.backgroundColor = '#1f2937';
+                patientSelectTemp.style.color = '#f9fafb';
+                patientSelectTemp.style.borderColor = '#4b5563';
             } else {
-                patientSelect.style.backgroundColor = 'white';
-                patientSelect.style.color = '#111827';
-                patientSelect.style.borderColor = '#d1d5db';
+                patientSelectTemp.style.backgroundColor = 'white';
+                patientSelectTemp.style.color = '#111827';
+                patientSelectTemp.style.borderColor = '#d1d5db';
             }
         }
 
-        if (telephoneSelect) {
+        if (telephoneInputTemp) {
             if (isDarkMode) {
-                telephoneSelect.style.backgroundColor = '#1f2937';
-                telephoneSelect.style.color = '#f9fafb';
-                telephoneSelect.style.borderColor = '#4b5563';
+                telephoneInputTemp.style.backgroundColor = '#1f2937';
+                telephoneInputTemp.style.color = '#f9fafb';
+                telephoneInputTemp.style.borderColor = '#4b5563';
             } else {
-                telephoneSelect.style.backgroundColor = 'white';
-                telephoneSelect.style.color = '#111827';
-                telephoneSelect.style.borderColor = '#d1d5db';
+                telephoneInputTemp.style.backgroundColor = 'white';
+                telephoneInputTemp.style.color = '#111827';
+                telephoneInputTemp.style.borderColor = '#d1d5db';
             }
         }
     })();
@@ -472,35 +463,35 @@
         const isDarkMode = document.documentElement.classList.contains('dark') ||
                           window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-        const patientSelect = document.getElementById('patient-select');
-        const telephoneSelect = document.getElementById('telephone-select');
+        let patientSelectTemp = document.getElementById('patient-select');
+        let telephoneInputTemp = document.getElementById('telephone-input');
 
-        if (patientSelect) {
+        if (patientSelectTemp) {
             if (isDarkMode) {
-                patientSelect.style.backgroundColor = patientSelect.getAttribute('data-dark-bg');
-                patientSelect.style.color = patientSelect.getAttribute('data-dark-text');
-                patientSelect.style.borderColor = patientSelect.getAttribute('data-dark-border');
+                patientSelectTemp.style.backgroundColor = patientSelectTemp.getAttribute('data-dark-bg');
+                patientSelectTemp.style.color = patientSelectTemp.getAttribute('data-dark-text');
+                patientSelectTemp.style.borderColor = patientSelectTemp.getAttribute('data-dark-border');
             } else {
-                patientSelect.style.backgroundColor = 'white';
-                patientSelect.style.color = '#111827';
-                patientSelect.style.borderColor = '#d1d5db';
+                patientSelectTemp.style.backgroundColor = 'white';
+                patientSelectTemp.style.color = '#111827';
+                patientSelectTemp.style.borderColor = '#d1d5db';
             }
             // Marquer comme chargé
-            patientSelect.classList.add('loaded');
+            patientSelectTemp.classList.add('loaded');
         }
 
-        if (telephoneSelect) {
+        if (telephoneInputTemp) {
             if (isDarkMode) {
-                telephoneSelect.style.backgroundColor = telephoneSelect.getAttribute('data-dark-bg');
-                telephoneSelect.style.color = telephoneSelect.getAttribute('data-dark-text');
-                telephoneSelect.style.borderColor = telephoneSelect.getAttribute('data-dark-border');
+                telephoneInputTemp.style.backgroundColor = telephoneInputTemp.getAttribute('data-dark-bg');
+                telephoneInputTemp.style.color = telephoneInputTemp.getAttribute('data-dark-text');
+                telephoneInputTemp.style.borderColor = telephoneInputTemp.getAttribute('data-dark-border');
             } else {
-                telephoneSelect.style.backgroundColor = 'white';
-                telephoneSelect.style.color = '#111827';
-                telephoneSelect.style.borderColor = '#d1d5db';
+                telephoneInputTemp.style.backgroundColor = 'white';
+                telephoneInputTemp.style.color = '#111827';
+                telephoneInputTemp.style.borderColor = '#d1d5db';
             }
             // Marquer comme chargé
-            telephoneSelect.classList.add('loaded');
+            telephoneInputTemp.classList.add('loaded');
         }
     }
 
@@ -546,7 +537,7 @@
 
     // Éléments pour la synchronisation patient/téléphone
     const patientSelect = document.getElementById('patient-select');
-    const telephoneSelect = document.getElementById('telephone-select');
+    const telephoneInput = document.getElementById('telephone-input');
 
     // Vérifier que tous les éléments existent
     if (!chambreSelect || !litSelect || !montantTotal) {
@@ -558,56 +549,116 @@
         return;
     }
 
-    // Synchronisation bidirectionnelle Patient/Téléphone
-    if (patientSelect && telephoneSelect) {
-        // Fonction pour ajouter un effet visuel
-        function addSyncEffect(element) {
-            element.classList.add('field-highlight');
-            setTimeout(() => {
-                element.classList.remove('field-highlight');
-            }, 1000);
+    // Fonction pour ajouter un effet visuel
+    function addSyncEffect(element) {
+        element.classList.add('field-highlight');
+        setTimeout(() => {
+            element.classList.remove('field-highlight');
+        }, 1000);
+    }
+
+    // Fonction pour mettre à jour le select des patients
+    function updatePatientSelect(patients) {
+        console.log('updatePatientSelect appelée avec', patients.length, 'patients');
+        console.log('patientSelect element:', patientSelect);
+
+        const currentValue = patientSelect.value;
+
+        // Construire le HTML complet du select
+        let optionsHTML = '<option value="">Sélectionner un patient</option>';
+
+        patients.forEach(patient => {
+            console.log('Ajout du patient:', patient);
+            optionsHTML += `<option value="${patient.id}" data-telephone="${patient.phone || ''}">${patient.last_name} ${patient.first_name}</option>`;
+        });
+
+        // Remplacer complètement le contenu
+        patientSelect.innerHTML = optionsHTML;
+
+        console.log('Nombre d\'options après mise à jour:', patientSelect.options.length);
+
+        // Vérifier le contenu des options
+        for (let i = 0; i < patientSelect.options.length; i++) {
+            console.log(`Option ${i}:`, patientSelect.options[i].textContent, 'Value:', patientSelect.options[i].value);
         }
+
+        // Forcer un re-render du select
+        patientSelect.style.display = 'none';
+        patientSelect.offsetHeight; // Trigger reflow
+        patientSelect.style.display = '';
+
+        // Restaurer la sélection si elle existe encore
+        if (currentValue) {
+            patientSelect.value = currentValue;
+        }
+    }
+
+    // Recherche dynamique de patients par téléphone
+    let searchTimeout;
+    function searchPatientsByPhone(phone) {
+        console.log('Recherche pour:', phone);
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const url = `{{ route('hospitalisations.search-patients-by-phone') }}?phone=${encodeURIComponent(phone)}`;
+            console.log('URL de recherche:', url);
+
+            fetch(url)
+                .then(response => {
+                    console.log('Réponse reçue:', response);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Données reçues:', data);
+                    if (data.success) {
+                        updatePatientSelect(data.patients);
+
+                        // Auto-sélectionner le patient s'il n'y en a qu'un seul
+                        if (data.patients.length === 1) {
+                            patientSelect.value = data.patients[0].id;
+                            console.log('Patient auto-sélectionné:', data.patients[0].last_name, data.patients[0].first_name);
+
+                            // Mettre à jour le champ téléphone avec le numéro du patient sélectionné
+                            if (telephoneInput) {
+                                telephoneInput.value = data.patients[0].phone || '';
+                                addSyncEffect(telephoneInput);
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la recherche:', error);
+                });
+        }, 300); // Délai de 300ms pour éviter trop de requêtes
+    }
+
+    // Synchronisation Patient/Téléphone
+    if (patientSelect && telephoneInput) {
+        console.log('Initialisation de la synchronisation patient/téléphone');
 
         // Quand on sélectionne un patient par nom
         patientSelect.addEventListener('change', function() {
+            console.log('Patient sélectionné:', this.value);
             const selectedOption = this.options[this.selectedIndex];
             const telephone = selectedOption.getAttribute('data-telephone');
 
             if (telephone) {
-                // Trouver l'option correspondante dans le select téléphone
-                const telephoneOptions = telephoneSelect.options;
-                for (let i = 0; i < telephoneOptions.length; i++) {
-                    if (telephoneOptions[i].value === this.value) {
-                        telephoneSelect.selectedIndex = i;
-                        addSyncEffect(telephoneSelect);
-                        break;
-                    }
-                }
+                telephoneInput.value = telephone;
+                addSyncEffect(telephoneInput);
             } else {
-                // Si pas de téléphone, réinitialiser le select téléphone
-                telephoneSelect.selectedIndex = 0;
+                telephoneInput.value = '';
             }
         });
 
-        // Quand on sélectionne un patient par téléphone
-        telephoneSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const patientId = selectedOption.value;
-
-            if (patientId) {
-                // Trouver l'option correspondante dans le select patient
-                const patientOptions = patientSelect.options;
-                for (let i = 0; i < patientOptions.length; i++) {
-                    if (patientOptions[i].value === patientId) {
-                        patientSelect.selectedIndex = i;
-                        addSyncEffect(patientSelect);
-                        break;
-                    }
-                }
-            } else {
-                // Si pas de sélection, réinitialiser le select patient
-                patientSelect.selectedIndex = 0;
-            }
+        // Recherche dynamique par téléphone
+        telephoneInput.addEventListener('input', function() {
+            const phone = this.value.trim();
+            console.log('Téléphone saisi:', phone);
+            searchPatientsByPhone(phone);
+        });
+    } else {
+        console.error('Éléments manquants:', {
+            patientSelect: !!patientSelect,
+            telephoneInput: !!telephoneInput
         });
     }
 
@@ -907,13 +958,13 @@
 
     /* Prévenir le flash de contenu non stylé */
     #patient-select,
-    #telephone-select {
+    #telephone-input {
         opacity: 0;
         transition: opacity 0.1s ease-in-out;
     }
 
     #patient-select.loaded,
-    #telephone-select.loaded {
+    #telephone-input.loaded {
         opacity: 1;
     }
 

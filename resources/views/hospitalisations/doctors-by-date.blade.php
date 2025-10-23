@@ -168,20 +168,66 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($hospitalisations as $hospitalisation)
             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center justify-between mb-3">
                     <h4 class="font-medium text-gray-900 dark:text-white">
                         {{ $hospitalisation->patient->nom ?? 'N/A' }} {{ $hospitalisation->patient->prenom ?? '' }}
                     </h4>
-                    <span
-                        class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded">
+                    <a href="{{ route(auth()->user()->role->name === 'admin' ? 'admin.hospitalisations.show' : 'hospitalisations.show', $hospitalisation->id) }}"
+                        class="text-xs bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-800 dark:text-blue-300 px-2 py-1 rounded transition-colors duration-200"
+                        title="Voir la facture">
                         #{{ $hospitalisation->id }}
-                    </span>
+                    </a>
                 </div>
+
+                <!-- Statut -->
+                <div class="mb-3">
+                    @if($hospitalisation->statut === 'en cours')
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                        <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></div>
+                        En Cours
+                    </span>
+                    @elseif($hospitalisation->statut === 'terminé')
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        Terminé
+                    </span>
+                    @else
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        Annulé
+                    </span>
+                    @endif
+                </div>
+
                 <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                     <p><strong>Service:</strong> {{ $hospitalisation->service->nom ?? '—' }}</p>
-                    <p><strong>Chambre:</strong> {{ $hospitalisation->chambre->numero ?? '—' }}</p>
-                    <p><strong>Médecin traitant:</strong> {{ $hospitalisation->medecin->nom_complet_avec_prenom ?? '—'
-                        }}</p>
+                    <p><strong>Chambre:</strong>
+                        @if($hospitalisation->lit_id)
+                        @php
+                        $lit = \App\Models\Lit::with('chambre')->find($hospitalisation->lit_id);
+                        @endphp
+                        @if($lit && $lit->chambre)
+                        {{ $lit->chambre->nom ?? $lit->chambre->numero ?? '—' }}
+                        @else
+                        —
+                        @endif
+                        @else
+                        —
+                        @endif
+                    </p>
+                    <p><strong>Médecin traitant:</strong> {{ $hospitalisation->medecin ? ($hospitalisation->medecin->nom
+                        . ' ' . ($hospitalisation->medecin->prenom ?? '')) : '—' }}</p>
                 </div>
             </div>
             @endforeach

@@ -79,7 +79,7 @@ class MedecinController extends Controller
     {
         $request->validate([
             'nom' => 'required',
-            'fonction' => 'required|in:Pr,Dr,Tss,SGF,IDE',
+            'fonction' => 'required|in:Pr,Dr,Tss,SGF,IDE,Phr',
             'prenom' => 'required',
             'specialite' => 'required',
             'email' => 'nullable|email|unique:medecins,email',
@@ -251,7 +251,7 @@ class MedecinController extends Controller
 
         $request->validate([
             'nom' => 'required',
-            'fonction' => 'required|in:Pr,Dr,Tss,SGF,IDE',
+            'fonction' => 'required|in:Pr,Dr,Tss,SGF,IDE,Phr',
             'prenom' => 'required',
             'specialite' => 'required',
             'email' => 'nullable|email|unique:medecins,email,' . $medecin->id,

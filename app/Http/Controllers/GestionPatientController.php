@@ -113,6 +113,8 @@ class GestionPatientController extends Controller
             'gender' => 'required|in:Homme,Femme',
             'age' => 'required|integer|min:0|max:150',
             'phone' => 'required|string|max:20|unique:gestion_patients,phone',
+        ], [
+            'phone.unique' => 'Le numéro de téléphone existe déjà.',
         ]);
 
         // Vérifier si le patient existe déjà (nom + prénom + téléphone)
@@ -163,6 +165,17 @@ class GestionPatientController extends Controller
 
     public function update(Request $request, GestionPatient $patient)
     {
+        // Validation pour éviter les doublons
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'gender' => 'required|in:Homme,Femme',
+            'age' => 'required|integer|min:0|max:150',
+            'phone' => 'required|string|max:20|unique:gestion_patients,phone,' . $patient->id,
+        ], [
+            'phone.unique' => 'Le numéro de téléphone existe déjà.',
+        ]);
+
         $patient->first_name = $request->first_name;
         $patient->last_name = $request->last_name;
         $patient->gender = $request->gender;

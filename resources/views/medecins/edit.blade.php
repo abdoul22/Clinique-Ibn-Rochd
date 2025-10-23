@@ -135,6 +135,8 @@
                                     }}>Sage femme</option>
                                 <option value="IDE" {{ old('fonction', $medecin->fonction) == 'IDE' ? 'selected' : ''
                                     }}>Infirmier d'état</option>
+                                <option value="Phr" {{ old('fonction', $medecin->fonction) == 'Phr' ? 'selected' : ''
+                                    }}>Pharmacien</option>
                             </select>
                             @error('fonction')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

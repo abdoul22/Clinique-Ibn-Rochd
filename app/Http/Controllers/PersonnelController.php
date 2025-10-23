@@ -9,8 +9,8 @@ class PersonnelController extends Controller
 {
     public function index()
     {
-        // Récupérer le personnel existant
-        $personnels = Personnel::latest()->get();
+        // Récupérer le personnel existant avec les crédits
+        $personnels = Personnel::with('credits')->latest()->get();
 
         // Récupérer les utilisateurs qui ont une fonction attribuée
         $usersWithFunction = \App\Models\User::whereNotNull('fonction')
@@ -31,7 +31,7 @@ class PersonnelController extends Controller
                 'telephone' => $personnel->telephone,
                 'adresse' => $personnel->adresse,
                 'is_approved' => $personnel->is_approved,
-                'credit' => $personnel->credit,
+                'credit' => $personnel->credit, // Utilise l'accesseur getCreditAttribute()
                 'type' => $personnel->user_id ? 'user' : 'personnel', // Détecter si lié à un utilisateur
                 'user_id' => $personnel->user_id
             ]);
@@ -48,6 +48,12 @@ class PersonnelController extends Controller
             }
 
             if (!$existingPersonnel) {
+                // Calculer le crédit pour cet utilisateur
+                $userCredits = \App\Models\Credit::where('source_type', \App\Models\Personnel::class)
+                    ->where('source_id', $user->id)
+                    ->get();
+                $userCredit = $userCredits->sum('montant') - $userCredits->sum('montant_paye');
+
                 $allPersonnel->push([
                     'id' => 'user_' . $user->id,
                     'nom' => $user->name,
@@ -56,7 +62,7 @@ class PersonnelController extends Controller
                     'telephone' => null, // À remplir manuellement
                     'adresse' => null, // À remplir manuellement
                     'is_approved' => $user->is_approved,
-                    'credit' => 0, // Pas de crédit par défaut
+                    'credit' => $userCredit, // Calculer le crédit réel
                     'type' => 'user',
                     'user_id' => $user->id
                 ]);
@@ -99,6 +105,7 @@ class PersonnelController extends Controller
         // Le personnel créé manuellement est automatiquement approuvé
         $data = $request->all();
         $data['is_approved'] = true; // Personnel créé manuellement = automatiquement approuvé
+        $data['created_by'] = 'superadmin'; // Marquer comme créé par superadmin
 
         Personnel::create($data);
         return redirect()->route('personnels.index')->with('success', 'Personnel ajouté et approuvé automatiquement.');
@@ -137,7 +144,9 @@ class PersonnelController extends Controller
         $personnel = Personnel::findOrFail($id);
 
         // Permettre l'édition partielle des personnels liés aux utilisateurs
-        $isLinkedToUser = (bool) $personnel->user_id;
+        // Un personnel est considéré comme "lié à un utilisateur" seulement s'il a été créé automatiquement
+        // via le système d'utilisateurs, pas s'il a été créé manuellement puis lié
+        $isLinkedToUser = (bool) $personnel->user_id && $personnel->created_by === 'system';
 
         return view('personnels.edit', compact('personnel', 'isLinkedToUser'));
     }
@@ -151,7 +160,9 @@ class PersonnelController extends Controller
         }
 
         $personnel = Personnel::findOrFail($id);
-        $isLinkedToUser = (bool) $personnel->user_id;
+        // Un personnel est considéré comme "lié à un utilisateur" seulement s'il a été créé automatiquement
+        // via le système d'utilisateurs, pas s'il a été créé manuellement puis lié
+        $isLinkedToUser = (bool) $personnel->user_id && $personnel->created_by === 'system';
 
         if ($isLinkedToUser) {
             // Édition partielle pour personnel lié à un utilisateur

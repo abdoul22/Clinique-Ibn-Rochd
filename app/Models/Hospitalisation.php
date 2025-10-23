@@ -12,6 +12,7 @@ class Hospitalisation extends Model
     protected $fillable = [
         'gestion_patient_id',
         'medecin_id',
+        'pharmacien_id',
         'service_id',
         'lit_id',
         'date_entree',
@@ -37,6 +38,11 @@ class Hospitalisation extends Model
     public function medecin()
     {
         return $this->belongsTo(Medecin::class);
+    }
+
+    public function pharmacien()
+    {
+        return $this->belongsTo(Medecin::class, 'pharmacien_id');
     }
 
     public function service()

@@ -158,15 +158,22 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
 
     // Hospitalisations pour admin
+    // Routes spécifiques AVANT les routes de ressources
+    Route::get('hospitalisations/search-patients-by-phone', [HospitalisationController::class, 'searchPatientsByPhone'])->name('hospitalisations.search-patients-by-phone');
+    Route::get('/hospitalisations/lits-disponibles', [HospitalisationController::class, 'getLitsDisponibles'])->name('hospitalisations.lits.disponibles');
+    Route::get('hospitalisations/doctors/by-date/{date}', [HospitalisationController::class, 'showDoctorsByDate'])->name('hospitalisations.doctors.by-date');
+    Route::get('hospitalisations/{id}/doctors', [HospitalisationController::class, 'showDoctors'])->name('hospitalisations.doctors');
+    Route::get('hospitalisations/{id}/print', [HospitalisationController::class, 'print'])->name('hospitalisations.print');
+
+    // Route de ressources
     Route::resource('hospitalisations', HospitalisationController::class);
+
+    // Routes d'actions
     Route::post('hospitalisations/{id}/facturer', [HospitalisationController::class, 'facturer'])->name('hospitalisations.facturer');
     Route::patch('hospitalisations/{id}/status', [HospitalisationController::class, 'updateStatus'])->name('hospitalisations.updateStatus');
     Route::post('hospitalisations/{id}/payer-tout', [HospitalisationController::class, 'payerTout'])->name('hospitalisations.payerTout');
-    Route::get('/hospitalisations/lits-disponibles', [HospitalisationController::class, 'getLitsDisponibles'])->name('hospitalisations.lits.disponibles');
     Route::post('hospitalisations/{id}/charges', [HospitalisationController::class, 'addCharge'])->name('hospitalisations.addCharge');
-    Route::get('hospitalisations/{id}/doctors', [HospitalisationController::class, 'showDoctors'])->name('hospitalisations.doctors');
-    Route::get('hospitalisations/{id}/print', [HospitalisationController::class, 'print'])->name('hospitalisations.print');
-    Route::get('hospitalisations/doctors/by-date/{date}', [HospitalisationController::class, 'showDoctorsByDate'])->name('hospitalisations.doctors.by-date');
+    Route::delete('hospitalisations/{id}/charges/{chargeId}', [HospitalisationController::class, 'removeCharge'])->name('hospitalisations.removeCharge');
 
     // Récapitulatifs pour admin
     Route::get('recap-services/print', [RecapitulatifServiceJournalierController::class, 'print'])->name('recap-services.print');
@@ -294,15 +301,22 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
     Route::post('/pharmacie-api/medicament/{id}/deduire-stock', [PharmacieController::class, 'deduireStock'])->name('pharmacie.api.deduire-stock');
 
     // Hospitalisations (protégées par auth et is.approved)
+    // Routes spécifiques AVANT les routes de ressources
+    Route::get('hospitalisations/search-patients-by-phone', [HospitalisationController::class, 'searchPatientsByPhone'])->name('hospitalisations.search-patients-by-phone');
+    Route::get('/hospitalisations/lits-disponibles', [HospitalisationController::class, 'getLitsDisponibles'])->name('hospitalisations.lits.disponibles');
+    Route::get('hospitalisations/doctors/by-date/{date}', [HospitalisationController::class, 'showDoctorsByDate'])->name('hospitalisations.doctors.by-date');
+    Route::get('hospitalisations/{id}/doctors', [HospitalisationController::class, 'showDoctors'])->name('hospitalisations.doctors');
+    Route::get('hospitalisations/{id}/print', [HospitalisationController::class, 'print'])->name('hospitalisations.print');
+
+    // Route de ressources
     Route::resource('hospitalisations', HospitalisationController::class);
+
+    // Routes d'actions
     Route::post('hospitalisations/{id}/facturer', [HospitalisationController::class, 'facturer'])->name('hospitalisations.facturer');
     Route::patch('hospitalisations/{id}/status', [HospitalisationController::class, 'updateStatus'])->name('hospitalisations.updateStatus');
     Route::post('hospitalisations/{id}/payer-tout', [HospitalisationController::class, 'payerTout'])->name('hospitalisations.payerTout');
-    Route::get('/hospitalisations/lits-disponibles', [HospitalisationController::class, 'getLitsDisponibles'])->name('hospitalisations.lits.disponibles');
     Route::post('hospitalisations/{id}/charges', [HospitalisationController::class, 'addCharge'])->name('hospitalisations.addCharge');
-    Route::get('hospitalisations/{id}/doctors', [HospitalisationController::class, 'showDoctors'])->name('hospitalisations.doctors');
-    Route::get('hospitalisations/{id}/print', [HospitalisationController::class, 'print'])->name('hospitalisations.print');
-    Route::get('hospitalisations/doctors/by-date/{date}', [HospitalisationController::class, 'showDoctorsByDate'])->name('hospitalisations.doctors.by-date');
+    Route::delete('hospitalisations/{id}/charges/{chargeId}', [HospitalisationController::class, 'removeCharge'])->name('hospitalisations.removeCharge');
 
     // Chambres (protégées par auth et is.approved)
     Route::resource('chambres', ChambreController::class);

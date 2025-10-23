@@ -114,6 +114,9 @@ class CaisseController extends Controller
         // Exclure les examens d'hospitalisation automatiques des listes de sélection
         $exam_types = Examen::with('service.pharmacie')
             ->where('nom', 'NOT LIKE', 'Hospitalisation - %')
+            ->whereHas('service', function ($query) {
+                $query->where('type_service', '!=', 'HOSPITALISATION');
+            })
             ->get();
         $assurances = \App\Models\Assurance::all();
 
@@ -439,6 +442,9 @@ class CaisseController extends Controller
         // Exclure les examens d'hospitalisation automatiques des listes de sélection
         $exam_types = Examen::with('service.pharmacie')
             ->where('nom', 'NOT LIKE', 'Hospitalisation - %')
+            ->whereHas('service', function ($query) {
+                $query->where('type_service', '!=', 'HOSPITALISATION');
+            })
             ->get();
         $assurances = \App\Models\Assurance::all();
 

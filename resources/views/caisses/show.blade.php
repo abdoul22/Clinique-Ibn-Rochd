@@ -33,7 +33,7 @@
 
         <div class="text-center mt-4">
             <div class="text-xs text-blue-200">
-                Urgences Tél. 26 38 24 84 – 22 30 56 26 <br>
+                Urgences Tél. 43 45 54 23 – 22 30 56 26 <br>
                 Avenue John Kennedy, en face de la Polyclinique – Nouakchott
             </div>
         </div>
@@ -162,7 +162,7 @@
 
     <!-- Pied de page -->
     <div class="bg-gray-100 dark:bg-gray-900 p-4 text-center text-sm text-gray-600 dark:text-gray-300">
-        <p>{{ config('app.name', 'Clinique Médicale') }} - Téléphone: +222 00 00 00 00 - Email: contact@clinique.com</p>
+        <p>{{ config('app.name', 'Clinique Médicale') }} - Téléphone: 43 45 54 23 - Email: contact@clinique.com</p>
         <p class="mt-1">Adresse: Nouakchott, Mauritanie</p>
     </div>
 </div>

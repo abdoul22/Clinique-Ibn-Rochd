@@ -322,7 +322,7 @@
 
 
         <div class="muted" style="text-align:center; margin: 1mm 0;">
-            Urgences Tél. 26 38 24 84 – 22 30 56 26 <br>
+            Urgences Tél. 43 45 54 23 – 22 30 56 26 <br>
             Avenue John Kennedy, en face de la Polyclinique – Nouakchott
         </div>
 

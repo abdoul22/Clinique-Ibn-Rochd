@@ -228,7 +228,7 @@
         <div
             class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Informations sur l'hospitalisation</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Date d'entrée</p>
                     <p class="text-sm text-gray-900 dark:text-white">{{ $hospitalisation->date_entree ?
@@ -245,7 +245,17 @@
                 </div>
                 <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Chambre</p>
-                    <p class="text-sm text-gray-900 dark:text-white">{{ $hospitalisation->chambre->numero ?? '—' }}</p>
+                    <p class="text-sm text-gray-900 dark:text-white">{{ $hospitalisation->chambre->nom ?? '—' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pharmacien</p>
+                    <p class="text-sm text-gray-900 dark:text-white">
+                        @if($hospitalisation->pharmacien)
+                        {{ $hospitalisation->pharmacien->nom_complet_avec_prenom }}
+                        @else
+                        —
+                        @endif
+                    </p>
                 </div>
             </div>
             @if($hospitalisation->motif)
@@ -258,10 +268,3 @@
     </div>
 </div>
 @endsection
-
-
-
-
-
-
-
