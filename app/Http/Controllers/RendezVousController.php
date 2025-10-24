@@ -93,7 +93,6 @@ class RendezVousController extends Controller
 
             $numerosRendezVous = RendezVous::where('medecin_id', $medecin->id)
                 ->whereDate('date_rdv', $dateReference)
-                ->where('statut', '!=', 'annule')
                 ->pluck('numero_entree')
                 ->toArray();
 
@@ -327,7 +326,6 @@ class RendezVousController extends Controller
 
         $numerosRendezVous = RendezVous::where('medecin_id', $medecinId)
             ->whereDate('date_rdv', $dateReference)
-            ->where('statut', '!=', 'annule')
             ->pluck('numero_entree')
             ->toArray();
 

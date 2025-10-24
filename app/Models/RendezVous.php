@@ -45,7 +45,6 @@ class RendezVous extends Model
 
                 $numerosRendezVous = self::where('medecin_id', $rendezVous->medecin_id)
                     ->whereDate('date_rdv', $dateReference)
-                    ->where('statut', '!=', 'annule')
                     ->pluck('numero_entree')
                     ->toArray();
 
