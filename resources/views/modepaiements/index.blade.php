@@ -2,7 +2,20 @@
 @section('title', 'Modes de Paiement')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
+<style>
+    :root[data-theme="light"] .modepaiements-container,
+    html:not(.dark) .modepaiements-container {
+        background: linear-gradient(to bottom right, rgb(241, 245, 249), rgb(219, 234, 254), rgb(226, 232, 240));
+        color: rgb(15, 23, 42);
+    }
+    
+    html.dark .modepaiements-container {
+        background: linear-gradient(to bottom right, rgb(15, 23, 42), rgb(75, 0, 130), rgb(15, 23, 42));
+        color: rgb(255, 255, 255);
+    }
+</style>
+
+<div class="modepaiements-container min-h-screen p-4 sm:p-6 lg:p-8">
     <div class="max-w-7xl mx-auto">
         <!-- En-tête -->
         <div class="mb-12">
