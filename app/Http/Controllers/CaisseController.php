@@ -153,6 +153,7 @@ class CaisseController extends Controller
 
             $numerosRendezVous = \App\Models\RendezVous::where('medecin_id', $medecin->id)
                 ->whereDate('date_rdv', $dateReference)
+                ->where('statut', '!=', 'annule')
                 ->pluck('numero_entree')
                 ->toArray();
 
@@ -586,6 +587,7 @@ class CaisseController extends Controller
 
         $numerosRendezVous = \App\Models\RendezVous::where('medecin_id', $medecinId)
             ->whereDate('date_rdv', $dateReference)
+            ->where('statut', '!=', 'annule')
             ->pluck('numero_entree')
             ->toArray();
 
