@@ -35,7 +35,7 @@
                     <!-- Période -->
                     <div>
                         <label class="block text-sm font-medium text-gray-100 mb-2">Période</label>
-                        <select name="period" class="w-full px-4 py-2.5 border border-white/20 rounded-lg bg-white/10 backdrop-blur-sm text-white placeholder-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent transition" onchange="updatePeriodFields()">
+                        <select name="period" class="w-full px-4 py-2.5 border border-white/20 rounded-lg bg-white/10 backdrop-blur-sm text-white placeholder-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent transition dark:bg-gray-900/50 dark:border-gray-700 dark:text-white" onchange="updatePeriodFields()">
                             <option value="" style="background-color: rgb(30, 30, 30); color: white;">Toutes les périodes</option>
                             <option value="day" style="background-color: rgb(30, 30, 30); color: white;" {{ request('period') === 'day' ? 'selected' : '' }}>Jour</option>
                             <option value="week" style="background-color: rgb(30, 30, 30); color: white;" {{ request('period') === 'week' ? 'selected' : '' }}>Semaine</option>
@@ -48,13 +48,13 @@
                     <!-- Date -->
                     <div id="dateField" style="display: {{ request('period') === 'day' ? 'block' : 'none' }};">
                         <label class="block text-sm font-medium text-gray-100 mb-2">Date</label>
-                        <input type="date" name="date" value="{{ request('date') }}" class="w-full px-4 py-2.5 border border-white/20 rounded-lg bg-white/10 backdrop-blur-sm text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition">
+                        <input type="date" name="date" value="{{ request('date') }}" class="w-full px-4 py-2.5 border border-white/20 rounded-lg bg-white/10 backdrop-blur-sm text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition dark:bg-gray-900/50 dark:border-gray-700 dark:text-white">
                     </div>
 
                     <!-- Type de paiement -->
                     <div>
                         <label class="block text-sm font-medium text-gray-100 mb-2">Type de Paiement</label>
-                        <select name="type" class="w-full px-4 py-2.5 border border-white/20 rounded-lg bg-white/10 backdrop-blur-sm text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition">
+                        <select name="type" class="w-full px-4 py-2.5 border border-white/20 rounded-lg bg-white/10 backdrop-blur-sm text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition dark:bg-gray-900/50 dark:border-gray-700 dark:text-white">
                             <option value="" style="background-color: rgb(30, 30, 30); color: white;">Tous les types</option>
                             @foreach($typesModes as $typeMode)
                             <option value="{{ $typeMode }}" style="background-color: rgb(30, 30, 30); color: white;" {{ request('type') === $typeMode ? 'selected' : '' }}>{{ ucfirst($typeMode) }}</option>
@@ -65,7 +65,7 @@
                     <!-- Source de paiement -->
                     <div>
                         <label class="block text-sm font-medium text-gray-100 mb-2">Source</label>
-                        <select name="source" class="w-full px-4 py-2.5 border border-white/20 rounded-lg bg-white/10 backdrop-blur-sm text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition">
+                        <select name="source" class="w-full px-4 py-2.5 border border-white/20 rounded-lg bg-white/10 backdrop-blur-sm text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition dark:bg-gray-900/50 dark:border-gray-700 dark:text-white">
                             <option value="" style="background-color: rgb(30, 30, 30); color: white;">Toutes les sources</option>
                             <option value="facture" style="background-color: rgb(30, 30, 30); color: white;" {{ request('source') === 'facture' ? 'selected' : '' }}>Factures</option>
                             <option value="depense" style="background-color: rgb(30, 30, 30); color: white;" {{ request('source') === 'depense' ? 'selected' : '' }}>Dépenses</option>

@@ -269,7 +269,7 @@ class EtatCaisseController extends Controller
         $modePaiementRecord = new \App\Models\ModePaiement([
             'type' => $modePaiementType,
             'montant' => -$etat->part_medecin, // Montant négatif pour sortie
-            'source' => 'depense'
+            'source' => 'part_medecin'
         ]);
         $modePaiementRecord->created_at = $dateFacture;
         $modePaiementRecord->updated_at = $dateFacture;
@@ -317,7 +317,7 @@ class EtatCaisseController extends Controller
         $modePaiementRecord = new \App\Models\ModePaiement([
             'type' => $modePaiementType,
             'montant' => -$etat->part_medecin, // Montant négatif pour sortie
-            'source' => 'depense'
+            'source' => 'part_medecin'
         ]);
         $modePaiementRecord->created_at = $dateFacture;
         $modePaiementRecord->updated_at = $dateFacture;
