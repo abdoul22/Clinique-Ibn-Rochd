@@ -13,6 +13,41 @@
         background: linear-gradient(to bottom right, rgb(15, 23, 42), rgb(75, 0, 130), rgb(15, 23, 42));
         color: rgb(255, 255, 255);
     }
+    
+    /* Améliorer la lisibilité des textes en dark mode */
+    html.dark .modepaiements-container h1,
+    html.dark .modepaiements-container h3,
+    html.dark .modepaiements-container label {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    html.dark .modepaiements-container p {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Améliorer les éléments du formulaire en dark mode */
+    html.dark .modepaiements-container input,
+    html.dark .modepaiements-container select {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        color: rgb(255, 255, 255) !important;
+    }
+    
+    html.dark .modepaiements-container input::placeholder,
+    html.dark .modepaiements-container select::placeholder {
+        color: rgba(255, 255, 255, 0.5) !important;
+    }
+    
+    /* Améliorer le texte du tableau en dark mode */
+    html.dark .modepaiements-container tbody td {
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Améliorer les cartes de statistiques */
+    html.dark .modepaiements-container .group {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+    }
 </style>
 
 <div class="modepaiements-container min-h-screen p-4 sm:p-6 lg:p-8">
