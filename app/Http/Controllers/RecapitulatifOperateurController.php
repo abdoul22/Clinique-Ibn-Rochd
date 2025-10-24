@@ -459,7 +459,7 @@ class RecapitulatifOperateurController extends Controller
     }
 
     /**
-     * Détermine la clé de service basée sur le nom de l'examen et le service
+     * Détermine la clé de service basée sur le type du service
      */
     private function determineServiceKey($examen, $service, $serviceId)
     {
@@ -487,45 +487,47 @@ class RecapitulatifOperateurController extends Controller
             return 'PHARMACIE';
         }
 
-        // Identifier les examens d'exploration fonctionnelle
-        if (
-            strpos($nomExamen, 'ecg') !== false ||
-            strpos($nomExamen, 'echo') !== false ||
-            strpos($nomExamen, 'radiologie') !== false ||
-            strpos($nomExamen, 'scanner') !== false
-        ) {
-            return 'EXPLORATIONS_FONCTIONNELLES';
-        }
-
-        // Identifier les consultations
-        if (
-            strpos($nomExamen, 'consultation') !== false ||
-            strpos($nomExamen, 'cs') !== false
-        ) {
-            return 'CONSULTATIONS_EXTERNES';
-        }
-
-        // Si le service existe, utiliser son type
+        // Si le service existe, utiliser son type_service plutôt que de deviner par le nom
         if ($service) {
-            switch ($service->type_service) {
-                case 'PHARMACIE':
-                case 'pharmacie':
-                case 'medicament':
-                    return 'PHARMACIE';
-                case 'CONSULTATIONS EXTERNES':
-                case 'consultations':
-                    return 'CONSULTATIONS_EXTERNES';
-                case 'EXPLORATIONS FONCTIONNELLES':
-                case 'explorations':
-                    return 'EXPLORATIONS_FONCTIONNELLES';
-                case 'HOSPITALISATION':
-                    // Si c'est marqué comme hospitalisation mais pas ROOM_DAY, c'est probablement un autre acte
-                    return $serviceId;
-                default:
-                    return $serviceId;
+            $serviceType = strtoupper($service->type_service);
+            Log::info("  -> Utilisant le type du service: {$serviceType}");
+            
+            // Retourner l'ID du service pour les types spécifiques (au lieu de les hardcoder)
+            // Cela permet à chaque service d'avoir son propre groupement
+            if (in_array($serviceType, ['IMAGERIE MEDICALE', 'LABORATOIRE', 'MEDECINE DENTAIRE', 'BLOC OPERATOIRE', 'INFIRMERIE'])) {
+                Log::info("  -> Retournant service ID {$serviceId} pour type {$serviceType}");
+                return $serviceId;
             }
+            
+            // Pour les types génériques, utiliser le type lui-même
+            if ($serviceType === 'PHARMACIE') {
+                Log::info("  -> Classé comme PHARMACIE");
+                return 'PHARMACIE';
+            }
+            
+            if ($serviceType === 'HOSPITALISATION') {
+                Log::info("  -> Classé comme HOSPITALISATION");
+                return 'HOSPITALISATION';
+            }
+            
+            if ($serviceType === 'CONSULTATIONS EXTERNES' || $serviceType === 'CONSULTATIONS_EXTERNES') {
+                Log::info("  -> Classé comme CONSULTATIONS_EXTERNES");
+                return 'CONSULTATIONS_EXTERNES';
+            }
+            
+            // Pour les explorations fonctionnelles (si le service a ce type)
+            if ($serviceType === 'EXPLORATIONS FONCTIONNELLES' || $serviceType === 'EXPLORATIONS_FONCTIONNELLES') {
+                Log::info("  -> Classé comme EXPLORATIONS_FONCTIONNELLES");
+                return 'EXPLORATIONS_FONCTIONNELLES';
+            }
+            
+            // Par défaut, utiliser le service ID
+            Log::info("  -> Type non reconnu, utilisant service ID {$serviceId}");
+            return $serviceId;
         }
 
+        // Fallback si pas de service
+        Log::warning("  -> Pas de service trouvé, utilisant service ID {$serviceId}");
         return $serviceId;
     }
 
