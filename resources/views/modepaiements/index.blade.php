@@ -115,61 +115,80 @@
             </div>
 
             <!-- Paiements en espèces -->
-            <div class="group bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 rounded-xl shadow-lg p-6 text-white overflow-hidden relative">
-                <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition">
-                    <svg class="absolute -right-8 -top-8 w-32 h-32" fill="currentColor" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="50" opacity="0.1"/>
-                    </svg>
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-sm font-medium opacity-90">Espèces</h3>
-                        <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M8.16 2.75a.75.75 0 00-.743.882l.534 3.201H5.75a.75.75 0 000 1.5h2.122l.66 3.966H6.75a.75.75 0 000 1.5h2.211l.534 3.2a.75.75 0 001.485-.247l-.61-3.653h3.958l.534 3.2a.75.75 0 001.485-.247l-.61-3.653H17.75a.75.75 0 000-1.5h-2.211l-.66-3.966H17.25a.75.75 0 000-1.5h-2.122l-.534-3.2a.75.75 0 00-1.485.247l.61 3.653H9.25l-.534-3.2a.75.75 0 00-.743-.882zM12.332 11.75l.66-3.966H9.034l-.66 3.966h3.958z"/>
-                        </svg>
-                    </div>
-                    <p class="text-3xl font-bold">{{ number_format($paiements->where('type', 'espèces')->sum('montant'), 0, ',', ' ') }}</p>
-                    <p class="text-xs opacity-75 mt-1">MRU</p>
-                </div>
-            </div>
+             <div class="group bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 rounded-xl shadow-lg p-6 text-white overflow-hidden relative">
+                 <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition">
+                     <svg class="absolute -right-8 -top-8 w-32 h-32" fill="currentColor" viewBox="0 0 100 100">
+                         <circle cx="50" cy="50" r="50" opacity="0.1"/>
+                     </svg>
+                 </div>
+                 <div class="relative z-10">
+                     <div class="flex items-center justify-between mb-2">
+                         <h3 class="text-sm font-medium opacity-90">Espèces</h3>
+                         <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20">
+                             <path d="M8.16 2.75a.75.75 0 00-.743.882l.534 3.201H5.75a.75.75 0 000 1.5h2.122l.66 3.966H6.75a.75.75 0 000 1.5h2.211l.534 3.2a.75.75 0 001.485-.247l-.61-3.653h3.958l.534 3.2a.75.75 0 001.485-.247l-.61-3.653H17.75a.75.75 0 000-1.5h-2.211l-.66-3.966H17.25a.75.75 0 000-1.5h-2.122l-.534-3.2a.75.75 0 00-1.485.247l.61 3.653H9.25l-.534-3.2a.75.75 0 00-.743-.882zM12.332 11.75l.66-3.966H9.034l-.66 3.966h3.958z"/>
+                         </svg>
+                     </div>
+                     <p class="text-3xl font-bold">{{ number_format($paiements->where('type', 'espèces')->sum('montant'), 0, ',', ' ') }}</p>
+                     <p class="text-xs opacity-75 mt-1">MRU</p>
+                 </div>
+             </div>
 
-            <!-- Paiements numériques -->
-            <div class="group bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 rounded-xl shadow-lg p-6 text-white overflow-hidden relative">
-                <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition">
-                    <svg class="absolute -right-8 -top-8 w-32 h-32" fill="currentColor" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="50" opacity="0.1"/>
-                    </svg>
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-sm font-medium opacity-90">Paiements Numériques</h3>
-                        <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M3.25 3A2.25 2.25 0 001 5.25v9.5A2.25 2.25 0 003.25 17h13.5A2.25 2.25 0 0019 14.75v-9.5A2.25 2.25 0 0016.75 3H3.25zm0 1.5h13.5a.75.75 0 01.75.75v2h-15v-2a.75.75 0 01.75-.75zm0 12h13.5a.75.75 0 01-.75.75H3.25a.75.75 0 01-.75-.75zm.75-4.5h13.5v3a.75.75 0 01-.75.75H3.25a.75.75 0 01-.75-.75v-3z"/>
-                        </svg>
-                    </div>
-                    <p class="text-3xl font-bold">{{ number_format($paiements->whereIn('type', ['bankily', 'masrivi', 'sedad'])->sum('montant'), 0, ',', ' ') }}</p>
-                    <p class="text-xs opacity-75 mt-1">MRU</p>
-                </div>
-            </div>
+             <!-- Paiements numériques -->
+             <div class="group bg-gradient-to-br from-cyan-500 to-blue-600 dark:from-cyan-600 dark:to-blue-700 rounded-xl shadow-lg p-6 text-white overflow-hidden relative">
+                 <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition">
+                     <svg class="absolute -right-8 -top-8 w-32 h-32" fill="currentColor" viewBox="0 0 100 100">
+                         <circle cx="50" cy="50" r="50" opacity="0.1"/>
+                     </svg>
+                 </div>
+                 <div class="relative z-10">
+                     <div class="flex items-center justify-between mb-2">
+                         <h3 class="text-sm font-medium opacity-90">Paiements Numériques</h3>
+                         <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20">
+                             <path d="M3.25 3A2.25 2.25 0 001 5.25v9.5A2.25 2.25 0 003.25 17h13.5A2.25 2.25 0 0019 14.75v-9.5A2.25 2.25 0 0016.75 3H3.25zm0 1.5h13.5a.75.75 0 01.75.75v2h-15v-2a.75.75 0 01.75-.75zm0 12h13.5a.75.75 0 01-.75.75H3.25a.75.75 0 01-.75-.75zm.75-4.5h13.5v3a.75.75 0 01-.75.75H3.25a.75.75 0 01-.75-.75v-3z"/>
+                         </svg>
+                     </div>
+                     <p class="text-3xl font-bold">{{ number_format($paiements->whereIn('type', ['bankily', 'masrivi', 'sedad'])->sum('montant'), 0, ',', ' ') }}</p>
+                     <p class="text-xs opacity-75 mt-1">MRU</p>
+                 </div>
+             </div>
 
-            <!-- Part Médecin -->
-            <div class="group bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 rounded-xl shadow-lg p-6 text-white overflow-hidden relative">
-                <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition">
-                    <svg class="absolute -right-8 -top-8 w-32 h-32" fill="currentColor" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="50" opacity="0.1"/>
-                    </svg>
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-sm font-medium opacity-90">Part Médecin</h3>
-                        <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <p class="text-3xl font-bold">{{ number_format($paiements->where('source', 'part_medecin')->sum('montant'), 0, ',', ' ') }}</p>
-                    <p class="text-xs opacity-75 mt-1">MRU</p>
-                </div>
-            </div>
+             <!-- Part Médecin -->
+             <div class="group bg-gradient-to-br from-rose-500 to-pink-600 dark:from-rose-600 dark:to-pink-700 rounded-xl shadow-lg p-6 text-white overflow-hidden relative">
+                 <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition">
+                     <svg class="absolute -right-8 -top-8 w-32 h-32" fill="currentColor" viewBox="0 0 100 100">
+                         <circle cx="50" cy="50" r="50" opacity="0.1"/>
+                     </svg>
+                 </div>
+                 <div class="relative z-10">
+                     <div class="flex items-center justify-between mb-2">
+                         <h3 class="text-sm font-medium opacity-90">Part Médecin</h3>
+                         <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20">
+                             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                         </svg>
+                     </div>
+                     <p class="text-3xl font-bold">{{ number_format($paiements->where('source', 'part_medecin')->sum('montant'), 0, ',', ' ') }}</p>
+                     <p class="text-xs opacity-75 mt-1">MRU</p>
+                 </div>
+             </div>
+
+             <!-- Dépenses -->
+             <div class="group bg-gradient-to-br from-amber-500 to-orange-600 dark:from-amber-600 dark:to-orange-700 rounded-xl shadow-lg p-6 text-white overflow-hidden relative">
+                 <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition">
+                     <svg class="absolute -right-8 -top-8 w-32 h-32" fill="currentColor" viewBox="0 0 100 100">
+                         <circle cx="50" cy="50" r="50" opacity="0.1"/>
+                     </svg>
+                 </div>
+                 <div class="relative z-10">
+                     <div class="flex items-center justify-between mb-2">
+                         <h3 class="text-sm font-medium opacity-90">Dépenses</h3>
+                         <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20">
+                             <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM15.657 14.243a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM11 17a1 1 0 102 0v-1a1 1 0 10-2 0v1zM5.757 15.657a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707zM4 10a1 1 0 01-1-1V8a1 1 0 112 0v1a1 1 0 01-1 1zM4.343 5.757a1 1 0 010-1.414l.707-.707a1 1 0 11-1.414 1.414l-.707-.707zM10 5a1 1 0 011 1v6a1 1 0 11-2 0V6a1 1 0 011-1z"/>
+                         </svg>
+                     </div>
+                     <p class="text-3xl font-bold">{{ number_format($paiements->where('source', 'depense')->sum('montant'), 0, ',', ' ') }}</p>
+                     <p class="text-xs opacity-75 mt-1">MRU</p>
+                 </div>
+             </div>
         </div>
 
         <!-- Tableau des paiements -->
@@ -222,7 +241,19 @@
                                 {{ number_format($paiement->montant, 0, ',', ' ') }} MRU
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                @if($paiement->caisse_id)
+                                @if($paiement->source === 'part_medecin')
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
+                                        💰 Part Versée
+                                    </span>
+                                @elseif($paiement->source === 'depense')
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                                        📊 Dépense
+                                    </span>
+                                @elseif($paiement->source === 'credit_assurance')
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                        🏥 Crédit Assurance
+                                    </span>
+                                @elseif($paiement->caisse_id)
                                     <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.caisses.show', $paiement->caisse_id) : route('caisses.show', $paiement->caisse_id) }}" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                                         Facture #{{ $paiement->caisse_id }}
                                     </a>
