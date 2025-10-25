@@ -316,9 +316,20 @@
                                     @if($paiement->source === 'part_medecin')
                                         💰 Part Versée
                                     @elseif($paiement->source === 'depense')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-900 dark:bg-red-900 text-white dark:text-white border border-red-700 dark:border-red-700">
+                                        @php
+                                            $depense = $paiement->depense->first();
+                                        @endphp
+                                        @if($depense)
+                                            @if(str_contains($depense->nom ?? '', 'Part médecin'))
+                                                Part médecin
+                                            @elseif($depense->source === 'automatique')
+                                                Automatique
+                                            @else
+                                                {{ ucfirst($depense->source ?? 'manuel') }}
+                                            @endif
+                                        @else
                                             Dépense
-                                        </span>
+                                        @endif
                                     @elseif($paiement->source === 'facture')
                                         📋 Facture
                                     @elseif($paiement->source === 'credit_assurance')
@@ -338,16 +349,9 @@
                                     💰 Part Versée
                                 </span>
                                 @elseif($paiement->source === 'depense')
-                                @php
-                                $depense = $paiement->depense->first();
-                                @endphp
                                 <span
                                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-900 dark:bg-red-900 text-white dark:text-white border border-red-700 dark:border-red-700">
-                                    @if($depense)
-                                    {{ ucfirst($depense->source ?? 'depense') }}
-                                    @else
                                     Dépense
-                                    @endif
                                 </span>
                                 @elseif($paiement->source === 'credit_assurance')
                                 <span
