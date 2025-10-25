@@ -319,14 +319,8 @@
                                         @php
                                             $depense = $paiement->depense->first();
                                         @endphp
-                                        @if($depense)
-                                            @if(str_contains($depense->nom ?? '', 'Part médecin'))
-                                                Part médecin
-                                            @elseif($depense->source === 'automatique')
-                                                Automatique
-                                            @else
-                                                {{ ucfirst($depense->source ?? 'manuel') }}
-                                            @endif
+                                        @if($depense && $depense->source)
+                                            {{ ucfirst($depense->source) }}
                                         @else
                                             Dépense
                                         @endif
