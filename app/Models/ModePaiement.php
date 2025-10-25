@@ -15,7 +15,9 @@ class ModePaiement extends Model
 
     public function depense()
     {
-        return $this->hasMany(Depense::class, 'mode_paiement_id', 'type');
+        return $this->hasMany(Depense::class, 'mode_paiement_id', 'type')
+            ->latest()
+            ->limit(1);
     }
 
     /**
