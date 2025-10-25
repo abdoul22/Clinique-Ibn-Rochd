@@ -15,7 +15,10 @@ class ModePaiement extends Model
 
     public function depense()
     {
+        // Récupérer la dépense liée au même type de mode de paiement et source 'depense'
+        // en cherchant les dépenses créées autour de la même date
         return $this->hasMany(Depense::class, 'mode_paiement_id', 'type')
+            ->where('source', '!=', 'manuelle')  // Prioriser part_medecin et autres
             ->latest()
             ->limit(1);
     }
