@@ -255,11 +255,13 @@
                                     @if($paiement->source === 'part_medecin')
                                         💰 Part Versée
                                     @elseif($paiement->source === 'depense')
-                                        @if($paiement->depense)
-                                            {{ ucfirst($paiement->depense->source ?? 'depense') }}
-                                        @else
-                                            Dépense
-                                        @endif
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-500/30 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-400/50">
+                                            @if($paiement->depense->count())
+                                                {{ ucfirst($paiement->depense->first()->source ?? 'depense') }}
+                                            @else
+                                                Dépense
+                                            @endif
+                                        </span>
                                     @elseif($paiement->source === 'facture')
                                         📋 Facture
                                     @elseif($paiement->source === 'credit_assurance')
@@ -279,8 +281,8 @@
                                     </span>
                                 @elseif($paiement->source === 'depense')
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-500/30 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-400/50">
-                                        @if($paiement->depense)
-                                            {{ ucfirst($paiement->depense->source ?? 'depense') }}
+                                        @if($paiement->depense->count())
+                                            {{ ucfirst($paiement->depense->first()->source ?? 'depense') }}
                                         @else
                                             Dépense
                                         @endif

@@ -15,8 +15,7 @@ class ModePaiement extends Model
 
     public function depense()
     {
-        return $this->hasOne(Depense::class, 'mode_paiement_id', 'type')
-            ->whereColumn('depenses.created_at', '=', 'mode_paiements.created_at');
+        return $this->hasMany(Depense::class, 'mode_paiement_id', 'type');
     }
 
     /**
