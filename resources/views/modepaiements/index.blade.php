@@ -153,7 +153,7 @@
                             <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
                         </svg>
                     </div>
-                    <p class="text-4xl font-black text-blue-700 dark:text-blue-100 drop-shadow">{{ number_format($paiements->sum('montant'), 0, ',', ' ') }}</p>
+                    <p class="text-4xl font-black text-blue-700 dark:text-blue-100 drop-shadow">{{ number_format($totalPaiements, 0, ',', ' ') }}</p>
                     <p class="text-xs opacity-75 mt-2">MRU</p>
                 </div>
             </div>
@@ -168,7 +168,7 @@
                             <path d="M8.16 2.75a.75.75 0 00-.743.882l.534 3.201H5.75a.75.75 0 000 1.5h2.122l.66 3.966H6.75a.75.75 0 000 1.5h2.211l.534 3.2a.75.75 0 001.485-.247l-.61-3.653h3.958l.534 3.2a.75.75 0 001.485-.247l-.61-3.653H17.75a.75.75 0 000-1.5h-2.211l-.66-3.966H17.25a.75.75 0 000-1.5h-2.122l-.534-3.2a.75.75 0 00-1.485.247l.61 3.653H9.25l-.534-3.2a.75.75 0 00-.743-.882zM12.332 11.75l.66-3.966H9.034l-.66 3.966h3.958z"/>
                         </svg>
                     </div>
-                    <p class="text-4xl font-black text-emerald-700 dark:text-emerald-100 drop-shadow">{{ number_format($paiements->where('type', 'espèces')->sum('montant'), 0, ',', ' ') }}</p>
+                    <p class="text-4xl font-black text-emerald-700 dark:text-emerald-100 drop-shadow">{{ number_format($totalEspeces, 0, ',', ' ') }}</p>
                     <p class="text-xs opacity-75 mt-2">MRU</p>
                 </div>
             </div>
@@ -183,7 +183,7 @@
                             <path d="M3.25 3A2.25 2.25 0 001 5.25v9.5A2.25 2.25 0 003.25 17h13.5A2.25 2.25 0 0019 14.75v-9.5A2.25 2.25 0 0016.75 3H3.25zm0 1.5h13.5a.75.75 0 01.75.75v2h-15v-2a.75.75 0 01.75-.75zm0 12h13.5a.75.75 0 01-.75.75H3.25a.75.75 0 01-.75-.75zm.75-4.5h13.5v3a.75.75 0 01-.75.75H3.25a.75.75 0 01-.75-.75v-3z"/>
                         </svg>
                     </div>
-                    <p class="text-4xl font-black text-violet-700 dark:text-violet-100 drop-shadow">{{ number_format($paiements->whereIn('type', ['bankily', 'masrivi', 'sedad'])->sum('montant'), 0, ',', ' ') }}</p>
+                    <p class="text-4xl font-black text-violet-700 dark:text-violet-100 drop-shadow">{{ number_format($totalNumeriques, 0, ',', ' ') }}</p>
                     <p class="text-xs opacity-75 mt-2">MRU</p>
                 </div>
             </div>
@@ -198,7 +198,7 @@
                             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
                         </svg>
                     </div>
-                    <p class="text-4xl font-black text-rose-700 dark:text-rose-100 drop-shadow">{{ number_format(\App\Models\EtatCaisse::where('validated', true)->sum('part_medecin'), 0, ',', ' ') }}</p>
+                    <p class="text-4xl font-black text-rose-700 dark:text-rose-100 drop-shadow">{{ number_format($totalPartMedecin, 0, ',', ' ') }}</p>
                     <p class="text-xs opacity-75 mt-2">MRU</p>
                 </div>
             </div>
@@ -213,7 +213,7 @@
                             <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM15.657 14.243a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM11 17a1 1 0 102 0v-1a1 1 0 10-2 0v1zM5.757 15.657a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707zM4 10a1 1 0 01-1-1V8a1 1 0 112 0v1a1 1 0 01-1 1zM4.343 5.757a1 1 0 010-1.414l.707-.707a1 1 0 11-1.414 1.414l-.707-.707zM10 5a1 1 0 011 1v6a1 1 0 11-2 0V6a1 1 0 011-1z"/>
                         </svg>
                     </div>
-                    <p class="text-4xl font-black text-amber-700 dark:text-amber-100 drop-shadow">{{ number_format(abs($paiements->where('source', 'depense')->sum('montant')), 0, ',', ' ') }}</p>
+                    <p class="text-4xl font-black text-amber-700 dark:text-amber-100 drop-shadow">{{ number_format($totalDepenses, 0, ',', ' ') }}</p>
                     <p class="text-xs opacity-75 mt-2">MRU</p>
                 </div>
             </div>

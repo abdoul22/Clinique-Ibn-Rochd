@@ -64,9 +64,44 @@ class ModePaiementController extends Controller
             $query->whereBetween('created_at', [$request->date_start, $request->date_end]);
         }
 
+        // Cloner la requête AVANT la pagination pour calculer les totaux globaux
+        $queryAllResults = clone $query;
+        $allResults = $queryAllResults->get();
+
+        // Calculer les totaux pour TOUS les résultats (avant pagination)
+        $totalPaiements = $allResults->sum('montant');
+        $totalEspeces = $allResults->where('type', 'espèces')->sum('montant');
+        $totalNumeriques = $allResults->whereIn('type', ['bankily', 'masrivi', 'sedad'])->sum('montant');
+        $totalDepenses = abs($allResults->where('source', 'depense')->sum('montant'));
+
+        // Calculer Part Médecin avec les mêmes filtres de date
+        $queryPartMedecin = \App\Models\EtatCaisse::where('validated', true);
+        if ($period === 'day' && $request->filled('date')) {
+            $queryPartMedecin->whereDate('created_at', $request->date);
+        } elseif ($period === 'week' && $request->filled('week')) {
+            $parts = explode('-W', $request->week);
+            if (count($parts) === 2) {
+                $start = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
+                $end = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
+                $queryPartMedecin->whereBetween('created_at', [$start, $end]);
+            }
+        } elseif ($period === 'month' && $request->filled('month')) {
+            $parts = explode('-', $request->month);
+            if (count($parts) === 2) {
+                $queryPartMedecin->whereYear('created_at', $parts[0])
+                    ->whereMonth('created_at', $parts[1]);
+            }
+        } elseif ($period === 'year' && $request->filled('year')) {
+            $queryPartMedecin->whereYear('created_at', $request->year);
+        } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
+            $queryPartMedecin->whereBetween('created_at', [$request->date_start, $request->date_end]);
+        }
+        $totalPartMedecin = $queryPartMedecin->sum('part_medecin');
+
+        // Paginer les résultats
         $paiements = $query->latest()->paginate(10)->withQueryString();
 
-        return view('modepaiements.index', compact('paiements', 'typesModes'));
+        return view('modepaiements.index', compact('paiements', 'typesModes', 'totalPaiements', 'totalEspeces', 'totalNumeriques', 'totalDepenses', 'totalPartMedecin'));
     }
 
     public function dashboard(Request $request)
