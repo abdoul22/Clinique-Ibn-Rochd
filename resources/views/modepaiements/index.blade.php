@@ -248,14 +248,18 @@
                             <td class="px-6 py-4 text-sm">
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
                                     {{ $paiement->source === 'part_medecin' ? 'bg-rose-100 dark:bg-rose-500/30 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-400/50' : '' }}
-                                    {{ $paiement->source === 'depense' ? 'bg-amber-100 dark:bg-amber-500/30 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-400/50' : '' }}
+                                    {{ $paiement->source === 'depense' ? 'bg-red-100 dark:bg-red-500/30 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-400/50' : '' }}
                                     {{ $paiement->source === 'facture' ? 'bg-blue-100 dark:bg-blue-500/30 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-400/50' : '' }}
                                     {{ $paiement->source === 'credit_assurance' ? 'bg-indigo-100 dark:bg-indigo-500/30 text-indigo-800 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-400/50' : '' }}
                                 ">
                                     @if($paiement->source === 'part_medecin')
                                         💰 Part Versée
                                     @elseif($paiement->source === 'depense')
-                                        📊 Dépense
+                                        @if($paiement->depense)
+                                            {{ ucfirst($paiement->depense->source ?? 'depense') }}
+                                        @else
+                                            Dépense
+                                        @endif
                                     @elseif($paiement->source === 'facture')
                                         📋 Facture
                                     @elseif($paiement->source === 'credit_assurance')
@@ -274,8 +278,12 @@
                                         💰 Part Versée
                                     </span>
                                 @elseif($paiement->source === 'depense')
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-500/30 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-400/50">
-                                        📊 Dépense
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-500/30 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-400/50">
+                                        @if($paiement->depense)
+                                            {{ ucfirst($paiement->depense->source ?? 'depense') }}
+                                        @else
+                                            Dépense
+                                        @endif
                                     </span>
                                 @elseif($paiement->source === 'credit_assurance')
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-500/30 text-indigo-800 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-400/50">

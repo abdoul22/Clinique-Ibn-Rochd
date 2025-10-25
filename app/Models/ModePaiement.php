@@ -13,6 +13,12 @@ class ModePaiement extends Model
         return $this->belongsTo(Caisse::class);
     }
 
+    public function depense()
+    {
+        return $this->hasOne(Depense::class, 'mode_paiement_id', 'type')
+            ->whereColumn('depenses.created_at', '=', 'mode_paiements.created_at');
+    }
+
     /**
      * Récupérer tous les types de modes de paiement disponibles
      */

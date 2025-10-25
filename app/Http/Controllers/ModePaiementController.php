@@ -16,7 +16,7 @@ class ModePaiementController extends Controller
     public function index(Request $request)
     {
         // Construire la requête de base
-        $query = ModePaiement::with('caisse');
+        $query = ModePaiement::with('caisse', 'depense');
 
         // Récupérer les types de modes de paiement pour le filtre
         $typesModes = ModePaiement::getTypes();
