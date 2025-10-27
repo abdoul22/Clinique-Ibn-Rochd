@@ -248,6 +248,10 @@
             color: #0369a1;
         }
 
+        .print-header {
+            display: none;
+        }
+
         @media print {
             body {
                 background: white;
@@ -294,11 +298,96 @@
                 padding: 2px 6px;
                 font-size: 9px;
             }
+
+            .print-header {
+                display: block;
+                text-align: center;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 3px solid #333;
+            }
+
+            .clinic-name {
+                font-size: 20px;
+                font-weight: bold;
+                color: #000;
+                margin-bottom: 5px;
+            }
+
+            .clinic-doctor {
+                font-size: 12px;
+                color: #333;
+                margin-bottom: 3px;
+            }
+
+            .clinic-speciality {
+                font-size: 11px;
+                color: #555;
+                margin-bottom: 8px;
+            }
+
+            .clinic-services {
+                font-size: 10px;
+                color: #666;
+                line-height: 1.4;
+                margin-bottom: 3px;
+            }
+
+            .clinic-arabic {
+                font-size: 10px;
+                color: #666;
+                line-height: 1.4;
+                margin-top: 10px;
+                border-top: 1px dashed #ccc;
+                padding-top: 8px;
+            }
+
+            .clinic-arabic .clinic-name-ar {
+                font-size: 14px;
+                font-weight: bold;
+                margin-bottom: 3px;
+            }
+
+            .clinic-arabic .clinic-doctor-ar {
+                font-size: 11px;
+                margin-bottom: 3px;
+            }
+
+            .clinic-arabic .clinic-speciality-ar {
+                font-size: 10px;
+                margin-bottom: 5px;
+            }
+
+            .clinic-arabic .clinic-services-ar {
+                font-size: 9px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header pour impression uniquement -->
+        <div class="print-header">
+            <div class="clinic-name">CENTRE IBN ROCHD</div>
+            <div class="clinic-doctor">Dr Brahim Ould Ntaghry</div>
+            <div class="clinic-speciality">Spécialiste en Imagerie Médicale</div>
+            <div class="clinic-speciality">Centre Imagerie Médicale</div>
+            <div class="clinic-services">
+                Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire
+            </div>
+
+            <!-- Texte arabe -->
+            <div class="clinic-arabic">
+                <div class="clinic-name-ar">مركز ابن رشد</div>
+                <div class="clinic-doctor-ar">الدكتور إبراهيم ولد نْتَغري</div>
+                <div class="clinic-speciality-ar">اختصاصي في التشخيص الطبي والأشعة</div>
+                <div class="clinic-speciality-ar">مركز التشخيص الطبي</div>
+                <div class="clinic-services-ar">
+                    فحص بالأشعة – تصوير بالموجات فوق الصوتية – أشعة عامة – تصوير الثدي – أشعة الأسنان
+                </div>
+            </div>
+        </div>
+
         <!-- Header -->
         <div class="header">
             <div>
