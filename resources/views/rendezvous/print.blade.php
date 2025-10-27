@@ -247,7 +247,9 @@
 
             .filters-section,
             .print-btn,
-            .filter-buttons {
+            .filter-buttons,
+            .header,
+            .stats {
                 display: none;
             }
 
@@ -259,12 +261,6 @@
             .header {
                 box-shadow: none;
                 border-bottom: 2px solid #333;
-                margin-bottom: 20px;
-            }
-
-            .stats {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
                 margin-bottom: 20px;
             }
 
