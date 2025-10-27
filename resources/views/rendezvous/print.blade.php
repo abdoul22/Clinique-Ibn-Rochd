@@ -398,7 +398,7 @@
                 </div>
             </div>
             <div class="logo-container">
-                <img src="{{ asset('assets/images/logo.png') }}" alt="Logo">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo">
             </div>
             <div class="ar">
                 <div class="clinic-name-ar">مركز ابن رشد</div>
