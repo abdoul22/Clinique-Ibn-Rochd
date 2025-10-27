@@ -345,4 +345,49 @@ class RendezVousController extends Controller
 
         return response()->json(['numero' => $numeroEntree]);
     }
+
+    /**
+     * Page d'impression pour les rendez-vous
+     */
+    public function print(Request $request)
+    {
+        $query = RendezVous::with(['patient', 'medecin']);
+
+        // Filtres
+        if ($request->filled('medecin_id')) {
+            $query->where('medecin_id', $request->medecin_id);
+        }
+
+        if ($request->filled('date')) {
+            $query->whereDate('date_rdv', $request->date);
+        }
+
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->statut);
+        }
+
+        if ($request->filled('patient_phone')) {
+            $query->whereHas('patient', function ($q) use ($request) {
+                $q->where('phone', 'like', '%' . $request->patient_phone . '%');
+            });
+        }
+
+        // Pour une période
+        if ($request->filled('date_start') && $request->filled('date_end')) {
+            $query->whereBetween('date_rdv', [$request->date_start, $request->date_end]);
+        }
+
+        $rendezVous = $query->orderBy('date_rdv', 'desc')
+            ->orderBy('heure_rdv', 'desc')
+            ->get();
+
+        $medecins = Medecin::where('statut', 'actif')
+            ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
+            ->orderBy('nom')
+            ->get();
+
+        $statuts = ['confirme' => 'Confirmé', 'annule' => 'Annulé'];
+
+        return view('rendezvous.print', compact('rendezVous', 'medecins', 'statuts'));
+    }
 }

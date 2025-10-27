@@ -6,10 +6,16 @@
 <div class="w-full px-0 sm:px-2 lg:px-4 py-4 sm:py-8">
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 sm:mb-6 gap-4">
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-200">Gestion des Rendez-vous</h1>
-        <a href="{{ auth()->user()->role->name === 'admin' ? route('admin.rendezvous.create') : route('rendezvous.create') }}"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-base w-full sm:w-auto text-center lg:w-auto">
-            <i class="fas fa-plus mr-2"></i>Nouveau Rendez-vous
-        </a>
+        <div class="flex gap-3 w-full sm:w-auto">
+            <a href="{{ auth()->user()->role->name === 'admin' ? route('admin.rendezvous.print') : route('rendezvous.print') }}"
+                class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-base w-full sm:w-auto text-center">
+                <i class="fas fa-print mr-2"></i>Imprimer
+            </a>
+            <a href="{{ auth()->user()->role->name === 'admin' ? route('admin.rendezvous.create') : route('rendezvous.create') }}"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-base w-full sm:w-auto text-center lg:w-auto">
+                <i class="fas fa-plus mr-2"></i>Nouveau Rendez-vous
+            </a>
+        </div>
     </div>
 
     <!-- Filtres -->
