@@ -239,6 +239,15 @@
             opacity: 0.5;
         }
 
+        .print-advice {
+            text-align: center;
+            padding: 15px;
+            background: #f0f9ff;
+            border-bottom: 1px solid #0ea5e9;
+            font-size: 13px;
+            color: #0369a1;
+        }
+
         @media print {
             body {
                 background: white;
@@ -249,24 +258,41 @@
             .print-btn,
             .filter-buttons,
             .header,
-            .stats {
+            .stats,
+            .print-advice {
                 display: none;
             }
 
             .table-container {
                 box-shadow: none;
                 border: 1px solid #ddd;
+                margin-bottom: 0;
             }
 
-            .header {
-                box-shadow: none;
-                border-bottom: 2px solid #333;
-                margin-bottom: 20px;
+            th {
+                padding: 8px 6px;
+                font-size: 10px;
+                white-space: nowrap;
             }
 
-            .stat-card {
-                box-shadow: none;
-                border: 1px solid #ddd;
+            td {
+                padding: 6px 6px;
+                font-size: 10px;
+                word-break: break-word;
+            }
+
+            table {
+                width: 100%;
+                font-size: 10px;
+            }
+
+            tbody tr {
+                page-break-inside: avoid;
+            }
+
+            .status-badge {
+                padding: 2px 6px;
+                font-size: 9px;
             }
         }
     </style>
@@ -372,11 +398,13 @@
         <!-- Tableau -->
         <div class="table-container">
             @if($rendezVous->count() > 0)
+                <div class="print-advice">
+                    <i class="fas fa-info-circle"></i> <strong>Conseil :</strong> Pour un meilleur rendu d'impression, utilisez l'orientation <strong>Paysage (Landscape)</strong>
+                </div>
                 <table>
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Heure</th>
                             <th>Patient</th>
                             <th>Téléphone</th>
                             <th>Médecin</th>
@@ -390,7 +418,6 @@
                         @foreach($rendezVous as $rdv)
                             <tr>
                                 <td>{{ $rdv->date_rdv ? \Carbon\Carbon::parse($rdv->date_rdv)->format('d/m/Y') : '—' }}</td>
-                                <td>{{ $rdv->heure_rdv ?? '—' }}</td>
                                 <td>
                                     <strong>{{ $rdv->patient->nom ?? '—' }} {{ $rdv->patient->prenom ?? '' }}</strong>
                                 </td>
