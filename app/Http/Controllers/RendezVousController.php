@@ -270,7 +270,7 @@ class RendezVousController extends Controller
 
         while ($currentDate <= $endDate) {
             $dayRendezVous = $rendezVous->filter(function ($rdv) use ($currentDate) {
-                return $rdv->date_rdv->format('Y-m-d') === $currentDate->format('Y-m-d');
+                return $rdv->date_rdv && $rdv->date_rdv->format('Y-m-d') === $currentDate->format('Y-m-d');
             });
 
             $calendar[] = [
