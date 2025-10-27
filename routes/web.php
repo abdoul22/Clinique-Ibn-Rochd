@@ -133,10 +133,10 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmi
     Route::delete('hospitalisations/{id}/charges/{chargeId}', [HospitalisationController::class, 'removeCharge'])->name('hospitalisations.removeCharge');
 
     // Rendez-vous pour superadmin
+    Route::get('rendezvous/print', [RendezVousController::class, 'print'])->name('rendezvous.print');
     Route::resource('rendezvous', RendezVousController::class)->parameters(['rendezvous' => 'id']);
     Route::post('rendezvous/{id}/change-status', [RendezVousController::class, 'changeStatus'])->name('rendezvous.change-status');
     Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
-    Route::get('rendezvous/print', [RendezVousController::class, 'print'])->name('rendezvous.print');
 });
 
 // Routes pour ADMIN
@@ -168,10 +168,10 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     Route::get('assurances/export/pdf', [AssuranceController::class, 'exportPdf'])->name('assurances.exportPdf');
     Route::get('assurances/print', [AssuranceController::class, 'print'])->name('assurances.print');
     // Rendez-vous pour admin
+    Route::get('rendezvous/print', [RendezVousController::class, 'print'])->name('rendezvous.print');
     Route::resource('rendezvous', RendezVousController::class)->parameters(['rendezvous' => 'id']);
     Route::post('rendezvous/{id}/change-status', [RendezVousController::class, 'changeStatus'])->name('rendezvous.change-status');
     Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
-    Route::get('rendezvous/print', [RendezVousController::class, 'print'])->name('rendezvous.print');
     // Autres ressources pour admin
     Route::resource('caisses', CaisseController::class);
     Route::get('dossiers/synchroniser', [DossierMedicalController::class, 'synchroniser'])->name('dossiers.synchroniser');
@@ -351,10 +351,10 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
     Route::get('/lits-api/disponibles', [LitController::class, 'getLitsDisponibles'])->name('lits.api.disponibles');
 
     // Rendez-vous (accessible aux admins et superadmins)
+    Route::get('rendezvous/print', [RendezVousController::class, 'print'])->name('rendezvous.print');
     Route::resource('rendezvous', RendezVousController::class)->parameters(['rendezvous' => 'id']);
     Route::post('rendezvous/{id}/change-status', [RendezVousController::class, 'changeStatus'])->name('rendezvous.change-status');
     Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
-    Route::get('rendezvous/print', [RendezVousController::class, 'print'])->name('rendezvous.print');
 
     // Routes pour les motifs de consultation (accessible aux admins et superadmins)
     Route::resource('motifs', MotifController::class);
