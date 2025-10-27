@@ -354,6 +354,7 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
     Route::resource('rendezvous', RendezVousController::class)->parameters(['rendezvous' => 'id']);
     Route::post('rendezvous/{id}/change-status', [RendezVousController::class, 'changeStatus'])->name('rendezvous.change-status');
     Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
+    Route::get('rendezvous/print', [RendezVousController::class, 'print'])->name('rendezvous.print');
 
     // Routes pour les motifs de consultation (accessible aux admins et superadmins)
     Route::resource('motifs', MotifController::class);
