@@ -300,66 +300,86 @@
             }
 
             .print-header {
-                display: block;
-                text-align: center;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: flex-start;
                 margin-bottom: 20px;
                 padding-bottom: 15px;
-                border-bottom: 3px solid #333;
+                border-bottom: 2px solid #000;
+            }
+
+            .print-header .fr {
+                flex: 1;
+                text-align: left;
+            }
+
+            .print-header .ar {
+                flex: 1;
+                text-align: right;
+                direction: rtl;
+            }
+
+            .print-header .logo-container {
+                flex: 0 0 auto;
+                margin: 0 15px;
+                text-align: center;
+            }
+
+            .print-header .logo-container img {
+                height: 50px;
+                width: auto;
             }
 
             .clinic-name {
-                font-size: 20px;
+                font-size: 16px;
                 font-weight: bold;
                 color: #000;
-                margin-bottom: 5px;
+                margin-bottom: 3px;
             }
 
             .clinic-doctor {
-                font-size: 12px;
+                font-size: 11px;
                 color: #333;
-                margin-bottom: 3px;
+                margin-bottom: 2px;
             }
 
             .clinic-speciality {
-                font-size: 11px;
+                font-size: 10px;
                 color: #555;
-                margin-bottom: 8px;
+                margin-bottom: 4px;
             }
 
             .clinic-services {
-                font-size: 10px;
+                font-size: 9px;
                 color: #666;
-                line-height: 1.4;
-                margin-bottom: 3px;
+                line-height: 1.3;
+                margin-bottom: 0;
             }
 
-            .clinic-arabic {
-                font-size: 10px;
-                color: #666;
-                line-height: 1.4;
-                margin-top: 10px;
-                border-top: 1px dashed #ccc;
-                padding-top: 8px;
-            }
-
-            .clinic-arabic .clinic-name-ar {
+            .clinic-name-ar {
                 font-size: 14px;
                 font-weight: bold;
+                color: #000;
                 margin-bottom: 3px;
             }
 
-            .clinic-arabic .clinic-doctor-ar {
-                font-size: 11px;
-                margin-bottom: 3px;
-            }
-
-            .clinic-arabic .clinic-speciality-ar {
+            .clinic-doctor-ar {
                 font-size: 10px;
-                margin-bottom: 5px;
+                color: #333;
+                margin-bottom: 2px;
             }
 
-            .clinic-arabic .clinic-services-ar {
+            .clinic-speciality-ar {
                 font-size: 9px;
+                color: #555;
+                margin-bottom: 4px;
+            }
+
+            .clinic-services-ar {
+                font-size: 8px;
+                color: #666;
+                line-height: 1.3;
             }
         }
     </style>
@@ -368,16 +388,19 @@
     <div class="container">
         <!-- Header pour impression uniquement -->
         <div class="print-header">
-            <div class="clinic-name">CENTRE IBN ROCHD</div>
-            <div class="clinic-doctor">Dr Brahim Ould Ntaghry</div>
-            <div class="clinic-speciality">Spécialiste en Imagerie Médicale</div>
-            <div class="clinic-speciality">Centre Imagerie Médicale</div>
-            <div class="clinic-services">
-                Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire
+            <div class="fr">
+                <div class="clinic-name">CENTRE IBN ROCHD</div>
+                <div class="clinic-doctor">Dr Brahim Ould Ntaghry</div>
+                <div class="clinic-speciality">Spécialiste en Imagerie Médicale</div>
+                <div class="clinic-speciality">Centre Imagerie Médicale</div>
+                <div class="clinic-services">
+                    Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire
+                </div>
             </div>
-
-            <!-- Texte arabe -->
-            <div class="clinic-arabic">
+            <div class="logo-container">
+                <img src="{{ asset('assets/images/logo.png') }}" alt="Logo">
+            </div>
+            <div class="ar">
                 <div class="clinic-name-ar">مركز ابن رشد</div>
                 <div class="clinic-doctor-ar">الدكتور إبراهيم ولد نْتَغري</div>
                 <div class="clinic-speciality-ar">اختصاصي في التشخيص الطبي والأشعة</div>
