@@ -314,22 +314,22 @@
                                     {{ $paiement->source === 'credit_assurance' ? 'bg-indigo-100 dark:bg-indigo-500/30 text-indigo-800 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-400/50' : '' }}
                                 ">
                                     @if($paiement->source === 'part_medecin')
-                                        💰 Part Versée
+                                    💰 Part Versée
                                     @elseif($paiement->source === 'depense')
-                                        @php
-                                            $depense = $paiement->depense->first();
-                                        @endphp
-                                        @if($depense && $depense->source)
-                                            {{ ucfirst($depense->source) }}
-                                        @else
-                                            Dépense
-                                        @endif
-                                    @elseif($paiement->source === 'facture')
-                                        📋 Facture
-                                    @elseif($paiement->source === 'credit_assurance')
-                                        🏥 Crédit Assurance
+                                    @php
+                                    $depense = $paiement->depense->first();
+                                    @endphp
+                                    @if($depense && $depense->source)
+                                    {{ ucfirst($depense->source) }}
                                     @else
-                                        {{ ucfirst($paiement->source ?? 'N/A') }}
+                                    Dépense
+                                    @endif
+                                    @elseif($paiement->source === 'facture')
+                                    📋 Facture
+                                    @elseif($paiement->source === 'credit_assurance')
+                                    🏥 Crédit Assurance
+                                    @else
+                                    {{ ucfirst($paiement->source ?? 'N/A') }}
                                     @endif
                                 </span>
                             </td>
@@ -390,7 +390,14 @@
         <!-- Pagination -->
         @if($paiements->hasPages())
         <div class="mt-8">
-            {{ $paiements->links() }}
+            <div class="flex justify-center gap-2">
+                <div class="sm:hidden">
+                    {{ $paiements->appends(request()->query())->links('pagination::simple-tailwind') }}
+                </div>
+                <div class="hidden sm:block">
+                    {{ $paiements->onEachSide(1)->appends(request()->query())->links() }}
+                </div>
+            </div>
         </div>
         @endif
     </div>

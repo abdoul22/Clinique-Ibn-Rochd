@@ -283,7 +283,14 @@
 
         @if($rendezVous->hasPages())
         <div class="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            {{ $rendezVous->links() }}
+            <div class="flex justify-center gap-2">
+                <div class="sm:hidden">
+                    {{ $rendezVous->appends(request()->query())->links('pagination::simple-tailwind') }}
+                </div>
+                <div class="hidden sm:block">
+                    {{ $rendezVous->onEachSide(1)->appends(request()->query())->links() }}
+                </div>
+            </div>
         </div>
         @endif
     </div>

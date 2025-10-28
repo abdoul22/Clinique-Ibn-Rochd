@@ -252,7 +252,14 @@
 </div>
 
 <div class="py-4">
-    {{ $recaps->links() }}
+    <div class="flex justify-center gap-2">
+        <div class="sm:hidden">
+            {{ $recaps->appends(request()->query())->links('pagination::simple-tailwind') }}
+        </div>
+        <div class="hidden sm:block">
+            {{ $recaps->onEachSide(1)->appends(request()->query())->links() }}
+        </div>
+    </div>
 </div>
 
 <script>

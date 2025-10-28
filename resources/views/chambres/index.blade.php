@@ -312,7 +312,14 @@
 
     <!-- Pagination -->
     <div class="mt-6">
-        {{ $chambres->links() }}
+        <div class="flex justify-center gap-2">
+            <div class="sm:hidden">
+                {{ $chambres->appends(request()->query())->links('pagination::simple-tailwind') }}
+            </div>
+            <div class="hidden sm:block">
+                {{ $chambres->onEachSide(1)->appends(request()->query())->links() }}
+            </div>
+        </div>
     </div>
 </div>
 @endsection

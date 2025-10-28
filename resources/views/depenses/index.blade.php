@@ -348,11 +348,13 @@
 
 <!-- Pagination -->
 <div class="pagination-container">
-    <div class="sm:hidden">
-        {{ $depenses->appends(request()->query())->links('pagination::simple-tailwind') }}
-    </div>
-    <div class="hidden sm:block">
-        {{ $depenses->onEachSide(1)->appends(request()->query())->links() }}
+    <div class="flex justify-center gap-2">
+        <div class="sm:hidden">
+            {{ $depenses->appends(request()->query())->links('pagination::simple-tailwind') }}
+        </div>
+        <div class="hidden sm:block">
+            {{ $depenses->onEachSide(1)->appends(request()->query())->links() }}
+        </div>
     </div>
 </div>
 

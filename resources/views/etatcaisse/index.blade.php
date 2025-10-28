@@ -250,8 +250,14 @@ $employe = $personnels->where('id', request('personnel_id'))->first();
 
 <!-- Pagination -->
 <div class="pagination-container my-4">
-    {{ $etatcaisses->appends(request()->query())->links() }}
-
+    <div class="flex justify-center gap-2">
+        <div class="sm:hidden">
+            {{ $etatcaisses->appends(request()->query())->links('pagination::simple-tailwind') }}
+        </div>
+        <div class="hidden sm:block">
+            {{ $etatcaisses->onEachSide(1)->appends(request()->query())->links() }}
+        </div>
+    </div>
 </div>
 
 <!-- Résumé filtré moderne (toujours affiché, même sans filtre) -->

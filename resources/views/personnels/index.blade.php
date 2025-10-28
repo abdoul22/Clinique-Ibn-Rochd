@@ -161,7 +161,14 @@
 
     <!-- Pagination -->
     <div class="mt-4">
-        {{ $personnels->links() }}
+        <div class="flex justify-center gap-2">
+            <div class="sm:hidden">
+                {{ $personnels->appends(request()->query())->links('pagination::simple-tailwind') }}
+            </div>
+            <div class="hidden sm:block">
+                {{ $personnels->onEachSide(1)->appends(request()->query())->links() }}
+            </div>
+        </div>
     </div>
 </div>
 @endsection

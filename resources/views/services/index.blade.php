@@ -115,6 +115,13 @@
 
 <!-- Pagination -->
 <div class="pagination-container">
-    {{ $services->links() }}
+    <div class="flex justify-center gap-2">
+        <div class="sm:hidden">
+            {{ $services->appends(request()->query())->links('pagination::simple-tailwind') }}
+        </div>
+        <div class="hidden sm:block">
+            {{ $services->onEachSide(1)->appends(request()->query())->links() }}
+        </div>
+    </div>
 </div>
 @endsection

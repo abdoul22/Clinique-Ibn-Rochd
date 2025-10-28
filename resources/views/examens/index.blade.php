@@ -189,7 +189,14 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
 </div>
 <!-- Pagination -->
 <div class="py-4">
-    {{ $examens->links() }}
+    <div class="flex justify-center gap-2">
+        <div class="sm:hidden">
+            {{ $examens->appends(request()->query())->links('pagination::simple-tailwind') }}
+        </div>
+        <div class="hidden sm:block">
+            {{ $examens->onEachSide(1)->appends(request()->query())->links() }}
+        </div>
+    </div>
 </div>
 @endsection
 @push('scripts')

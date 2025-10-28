@@ -346,11 +346,13 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
 
 <!-- Pagination -->
 <div class="pagination-container">
-    <div class="sm:hidden">
-        {{ $recapOperateurs->appends(request()->query())->links('pagination::simple-tailwind') }}
-    </div>
-    <div class="hidden sm:block">
-        {{ $recapOperateurs->onEachSide(1)->appends(request()->query())->links() }}
+    <div class="flex justify-center gap-2">
+        <div class="sm:hidden">
+            {{ $recapOperateurs->appends(request()->query())->links('pagination::simple-tailwind') }}
+        </div>
+        <div class="hidden sm:block">
+            {{ $recapOperateurs->onEachSide(1)->appends(request()->query())->links() }}
+        </div>
     </div>
 </div>
 

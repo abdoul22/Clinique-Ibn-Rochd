@@ -282,7 +282,14 @@
 
     <!-- Pagination -->
     <div class="mt-6">
-        {{ $patients->links() }}
+        <div class="flex justify-center gap-2">
+            <div class="sm:hidden">
+                {{ $patients->appends(request()->query())->links('pagination::simple-tailwind') }}
+            </div>
+            <div class="hidden sm:block">
+                {{ $patients->onEachSide(1)->appends(request()->query())->links() }}
+            </div>
+        </div>
     </div>
 
     @else

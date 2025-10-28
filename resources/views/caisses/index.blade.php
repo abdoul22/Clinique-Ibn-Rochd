@@ -349,7 +349,14 @@
     @if($caisses->hasPages())
     <div class="mt-8">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-            {{ $caisses->appends(request()->query())->links() }}
+            <div class="flex justify-center gap-2">
+                <div class="sm:hidden">
+                    {{ $caisses->appends(request()->query())->links('pagination::simple-tailwind') }}
+                </div>
+                <div class="hidden sm:block">
+                    {{ $caisses->onEachSide(1)->appends(request()->query())->links() }}
+                </div>
+            </div>
         </div>
     </div>
     @endif
