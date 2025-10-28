@@ -79,6 +79,12 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
         <input type="date" name="date_end" value="{{ request('date_end') }}" class="form-input text-sm"
             placeholder="Fin" aria-label="Date de fin">
     </div>
+    @if(request('medecin_id'))
+    <input type="hidden" name="medecin_id" value="{{ request('medecin_id') }}">
+    @endif
+    @if(request('examen_id'))
+    <input type="hidden" name="examen_id" value="{{ request('examen_id') }}">
+    @endif
     <button type="submit" class="form-button text-sm" id="btn-filtrer">Filtrer</button>
     @php
     $role = auth()->user()->role->name;
@@ -340,7 +346,12 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
 
 <!-- Pagination -->
 <div class="pagination-container">
-    {{ $recapOperateurs->links() }}
+    <div class="sm:hidden">
+        {{ $recapOperateurs->appends(request()->query())->links('pagination::simple-tailwind') }}
+    </div>
+    <div class="hidden sm:block">
+        {{ $recapOperateurs->onEachSide(1)->appends(request()->query())->links() }}
+    </div>
 </div>
 
 @push('scripts')

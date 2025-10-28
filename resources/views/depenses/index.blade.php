@@ -132,6 +132,12 @@
             <input type="date" name="date_end" value="{{ request('date_end') }}" class="form-input text-sm"
                 placeholder="Fin" aria-label="Date de fin">
         </div>
+        @if(request('mode_paiement'))
+        <input type="hidden" name="mode_paiement" value="{{ request('mode_paiement') }}">
+        @endif
+        @if(request('source'))
+        <input type="hidden" name="source" value="{{ request('source') }}">
+        @endif
         <button type="submit" class="form-button text-sm" id="btn-filtrer">Filtrer</button>
         <a href="{{ route('depenses.index') }}" class="ml-2 text-sm text-gray-600 dark:text-gray-400 underline">Afficher
             tous</a>
@@ -139,6 +145,27 @@
 
     <!-- Filtres supplémentaires -->
     <form method="GET" action="" class="flex flex-wrap gap-2 items-center mt-4" autocomplete="off">
+        @if(request('period'))
+        <input type="hidden" name="period" value="{{ request('period') }}">
+        @endif
+        @if(request('date'))
+        <input type="hidden" name="date" value="{{ request('date') }}">
+        @endif
+        @if(request('week'))
+        <input type="hidden" name="week" value="{{ request('week') }}">
+        @endif
+        @if(request('month'))
+        <input type="hidden" name="month" value="{{ request('month') }}">
+        @endif
+        @if(request('year'))
+        <input type="hidden" name="year" value="{{ request('year') }}">
+        @endif
+        @if(request('date_start'))
+        <input type="hidden" name="date_start" value="{{ request('date_start') }}">
+        @endif
+        @if(request('date_end'))
+        <input type="hidden" name="date_end" value="{{ request('date_end') }}">
+        @endif
         <label for="mode_paiement" class="text-sm font-medium text-gray-700 dark:text-gray-300">Mode de paiement
             :</label>
         <select name="mode_paiement" id="mode_paiement" class="form-select text-sm" onchange="this.form.submit()">
@@ -321,7 +348,12 @@
 
 <!-- Pagination -->
 <div class="pagination-container">
-    {{ $depenses->links() }}
+    <div class="sm:hidden">
+        {{ $depenses->appends(request()->query())->links('pagination::simple-tailwind') }}
+    </div>
+    <div class="hidden sm:block">
+        {{ $depenses->onEachSide(1)->appends(request()->query())->links() }}
+    </div>
 </div>
 
 @endsection

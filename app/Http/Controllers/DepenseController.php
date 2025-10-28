@@ -72,7 +72,7 @@ class DepenseController extends Controller
             $query->where('mode_paiement_id', $request->mode_paiement);
         }
 
-        $depenses = $query->latest()->paginate(10);
+        $depenses = $query->latest()->paginate(10)->withQueryString();
 
         // Calculer le total des dépenses (excluant les crédits personnel et assurance)
         $totalDepenses = Depense::where('rembourse', false)->sum('montant');
