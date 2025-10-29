@@ -145,7 +145,7 @@
         <a href="{{ route('superadmin.situation-journaliere.index') }}"
             class="bg-orange-600 text-white rounded-2xl p-6 shadow hover:bg-orange-700 transition">
             <h2 class="text-xl font-semibold mb-2">Situation Journalière</h2>
-            <p class="text-sm text-orange-100">Rapport quotidien du caissier : recettes, dépenses, crédits et liquidités.</p>
+            <p class="text-sm text-white">Rapport quotidien du caissier : recettes, dépenses, crédits et liquidités.</p>
         </a>
     </div>
 </div>
