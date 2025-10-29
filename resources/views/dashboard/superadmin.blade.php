@@ -143,9 +143,9 @@
 
         {{-- 12) Situation Journalière --}}
         <a href="{{ route('superadmin.situation-journaliere.index') }}"
-            class="bg-gradient-to-br from-violet-600 to-purple-700 dark:from-violet-500 dark:to-purple-600 text-white rounded-2xl p-6 shadow hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
-            <h2 class="text-xl font-semibold mb-2 text-white">Situation Journalière</h2>
-            <p class="text-sm text-white opacity-95">Rapport quotidien du caissier : recettes, dépenses, crédits et liquidités.</p>
+            class="bg-orange-600 text-white rounded-2xl p-6 shadow hover:bg-orange-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Situation Journalière</h2>
+            <p class="text-sm text-orange-100">Rapport quotidien du caissier : recettes, dépenses, crédits et liquidités.</p>
         </a>
     </div>
 </div>
