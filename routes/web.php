@@ -26,6 +26,7 @@ use App\Http\Controllers\PharmacieController;
 use App\Http\Controllers\HospitalisationController;
 use App\Http\Controllers\ChambreController;
 use App\Http\Controllers\LitController;
+use App\Http\Controllers\SituationJournaliereController;
 
 require __DIR__ . '/auth.php';
 
@@ -137,6 +138,11 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmi
     Route::resource('rendezvous', RendezVousController::class)->parameters(['rendezvous' => 'id']);
     Route::post('rendezvous/{id}/change-status', [RendezVousController::class, 'changeStatus'])->name('rendezvous.change-status');
     Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
+
+    // Situation Journalière pour superadmin
+    Route::get('situation-journaliere', [SituationJournaliereController::class, 'index'])->name('situation-journaliere.index');
+    Route::get('situation-journaliere/print', [SituationJournaliereController::class, 'print'])->name('situation-journaliere.print');
+    Route::get('situation-journaliere/export-pdf', [SituationJournaliereController::class, 'exportPdf'])->name('situation-journaliere.exportPdf');
 });
 
 // Routes pour ADMIN
@@ -206,6 +212,11 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     Route::resource('recap-operateurs', RecapitulatifOperateurController::class);
     Route::get('recap-operateurs-export-pdf', [RecapitulatifOperateurController::class, 'exportPdf'])->name('recap-operateurs.exportPdf');
     Route::get('recap-operateurs-print', [RecapitulatifOperateurController::class, 'print'])->name('recap-operateurs.print');
+
+    // Situation Journalière pour admin
+    Route::get('situation-journaliere', [SituationJournaliereController::class, 'index'])->name('situation-journaliere.index');
+    Route::get('situation-journaliere/print', [SituationJournaliereController::class, 'print'])->name('situation-journaliere.print');
+    Route::get('situation-journaliere/export-pdf', [SituationJournaliereController::class, 'exportPdf'])->name('situation-journaliere.exportPdf');
 });
 
 // Route pour afficher la liste des patients (accessible depuis les dashboards)

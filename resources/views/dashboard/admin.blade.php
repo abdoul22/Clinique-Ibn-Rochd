@@ -56,6 +56,14 @@
             <p class="text-sm text-teal-100">Analyser les consultations et les parts des médecins.</p>
         </a>
 
+        {{-- Situation Journalière --}}
+        <a href="{{ route('admin.situation-journaliere.index') }}"
+            class="bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 text-white rounded-2xl p-6 shadow hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+            <h2 class="text-xl font-semibold mb-2">Situation Journalière</h2>
+            <p class="text-sm text-purple-50">Rapport quotidien du caissier : recettes, dépenses, crédits et liquidités.
+            </p>
+        </a>
+
     </div>
 </div>
 @endsection
