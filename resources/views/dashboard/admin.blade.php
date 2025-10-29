@@ -58,9 +58,10 @@
 
         {{-- Situation Journalière --}}
         <a href="{{ route('admin.situation-journaliere.index') }}"
-            class="bg-orange-600 text-white rounded-2xl p-6 shadow hover:bg-orange-700 transition">
-            <h2 class="text-xl font-semibold mb-2">Situation Journalière</h2>
-            <p class="text-sm text-white">Rapport quotidien du caissier : recettes, dépenses, crédits et liquidités.</p>
+            class="bg-red-600 text-white rounded-2xl p-6 shadow hover:bg-red-700 transition"
+            style="background-color: #dc2626 !important;">
+            <h2 class="text-xl font-semibold mb-2" style="color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Situation Journalière</h2>
+            <p class="text-sm" style="color: #ffffff !important;">Rapport quotidien du caissier : recettes, dépenses, crédits et liquidités.</p>
         </a>
 
     </div>
