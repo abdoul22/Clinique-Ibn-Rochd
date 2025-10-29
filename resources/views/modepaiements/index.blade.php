@@ -314,7 +314,7 @@
                                     {{ $paiement->source === 'credit_assurance' ? 'bg-indigo-100 dark:bg-indigo-500/30 text-indigo-800 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-400/50' : '' }}
                                 ">
                                     @if($paiement->source === 'part_medecin')
-                                    💰 Part Versée
+                                    Part Médecin
                                     @elseif($paiement->source === 'depense')
                                     @php
                                     $depense = $paiement->depense->first();
@@ -340,12 +340,12 @@
                                 @if($paiement->source === 'part_medecin')
                                 <span
                                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-500/30 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-400/50">
-                                    💰 Part Versée
+                                    Part Médecin
                                 </span>
                                 @elseif($paiement->source === 'depense')
                                 <span
                                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-600 dark:bg-red-900 text-white dark:text-white border border-red-700 dark:border-red-700">
-                                    Dépense
+                                    🔴 Dépense
                                 </span>
                                 @elseif($paiement->source === 'credit_assurance')
                                 <span
