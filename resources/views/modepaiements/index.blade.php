@@ -219,7 +219,7 @@
                 </div>
                 <div class="relative z-10">
                     <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-semibold opacity-90">Numériques</h3>
+                        <h3 class="text-sm font-semibold opacity-90">Paiements en ligne</h3>
                         <svg class="w-6 h-6 opacity-60" fill="currentColor" viewBox="0 0 20 20">
                             <path
                                 d="M3.25 3A2.25 2.25 0 001 5.25v9.5A2.25 2.25 0 003.25 17h13.5A2.25 2.25 0 0019 14.75v-9.5A2.25 2.25 0 0016.75 3H3.25zm0 1.5h13.5a.75.75 0 01.75.75v2h-15v-2a.75.75 0 01.75-.75zm0 12h13.5a.75.75 0 01-.75.75H3.25a.75.75 0 01-.75-.75zm.75-4.5h13.5v3a.75.75 0 01-.75.75H3.25a.75.75 0 01-.75-.75v-3z" />
