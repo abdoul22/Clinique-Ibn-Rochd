@@ -14,23 +14,23 @@
         </div>
 
         <!-- Date Filter & Buttons -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8 border border-gray-200 dark:border-gray-700">
             <form method="GET"
                 action="{{ route(auth()->user()->role->name === 'superadmin' ? 'superadmin.situation-journaliere.index' : 'admin.situation-journaliere.index') }}"
                 class="flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-[250px]">
-                    <label for="date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label for="date" class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                         Sélectionner une date
                     </label>
                     <input type="date" name="date" id="date" value="{{ $date }}"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 dark:bg-gray-700 dark:text-white">
+                        class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 dark:focus:ring-violet-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                 </div>
                 <button type="submit"
-                    class="px-6 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold">
+                    class="px-6 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg hover:shadow-lg hover:from-violet-600 hover:to-purple-700 transition-all font-semibold shadow-md">
                     🔍 Filtrer
                 </button>
                 <button type="button" onclick="window.print()"
-                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold">
+                    class="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all font-semibold">
                     🖨️ Imprimer
                 </button>
             </form>
@@ -103,11 +103,11 @@
                                     $service['total_actes'] }}</td>
                                 <td class="px-6 py-4 text-center">
                                     <input type="text"
-                                        class="w-24 px-2 py-1 border border-violet-400 dark:border-violet-600 rounded font-bold text-right bg-violet-100 text-violet-900 dark:bg-gray-700 dark:text-white">
+                                        class="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded font-bold text-right bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <input type="text"
-                                        class="w-24 px-2 py-1 border border-violet-400 dark:border-violet-600 rounded font-bold text-right bg-violet-100 text-violet-900 dark:bg-gray-700 dark:text-white">
+                                        class="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded font-bold text-right bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                                 </td>
                             </tr>
                         </tfoot>
@@ -166,7 +166,7 @@
                             CRÉDIT ASSURANCE</h3>
                         <div class="flex justify-center items-center h-20">
                             <input type="text"
-                                class="w-32 px-3 py-2 border-2 border-amber-500 dark:border-amber-400 rounded text-center font-bold bg-amber-50 text-amber-900 dark:bg-gray-700 dark:text-white">
+                                class="w-32 px-3 py-2 border-2 border-gray-400 dark:border-gray-500 rounded text-center font-bold bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                         </div>
                     </div>
                     @endif
@@ -179,10 +179,21 @@
                             CRÉDIT PERSONNEL</h3>
                         <div class="flex justify-center items-center h-20">
                             <input type="text"
-                                class="w-32 px-3 py-2 border-2 border-cyan-500 dark:border-cyan-400 rounded text-center font-bold bg-cyan-50 text-cyan-900 dark:bg-gray-700 dark:text-white">
+                                class="w-32 px-3 py-2 border-2 border-gray-400 dark:border-gray-500 rounded text-center font-bold bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                         </div>
                     </div>
                     @endif
+
+                    <!-- Dépense (Always visible) -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                        <h3
+                            class="font-bold text-gray-800 dark:text-white mb-3 text-center border-b border-gray-300 dark:border-gray-600 pb-2">
+                            DÉPENSE</h3>
+                        <div class="flex justify-center items-center h-20">
+                            <input type="text"
+                                class="w-32 px-3 py-2 border-2 border-gray-400 dark:border-gray-500 rounded text-center font-bold bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Main Summary Table - SECOND -->
@@ -211,7 +222,7 @@
                                 @if($totalPartMedecin > 0)
                                 <td class="px-4 py-4 text-center">
                                     <input type="text"
-                                        class="w-24 px-2 py-2 border-2 border-green-400 dark:border-green-500 rounded text-center font-semibold bg-green-50 text-green-900 dark:bg-gray-700 dark:text-white">
+                                        class="w-24 px-2 py-2 border-2 border-gray-400 dark:border-gray-500 rounded text-center font-semibold bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                                 </td>
                                 @endif
                                 <td class="px-4 py-4 text-center">
@@ -225,12 +236,12 @@
                                 @if($hasOnlinePayments)
                                 <td class="px-4 py-4 text-center">
                                     <input type="text"
-                                        class="w-24 px-2 py-2 border-2 border-blue-400 dark:border-blue-500 rounded text-center font-semibold bg-blue-50 text-blue-900 dark:bg-gray-700 dark:text-white">
+                                        class="w-24 px-2 py-2 border-2 border-gray-400 dark:border-gray-500 rounded text-center font-semibold bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                                 </td>
                                 @endif
                                 <td class="px-4 py-4 text-center">
                                     <input type="text"
-                                        class="w-24 px-2 py-2 border-2 border-violet-400 dark:border-violet-500 rounded text-center font-semibold bg-violet-100 text-violet-900 dark:bg-violet-900 dark:text-white">
+                                        class="w-24 px-2 py-2 border-2 border-gray-400 dark:border-gray-500 rounded text-center font-semibold bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                                 </td>
                             </tr>
                         </tbody>
