@@ -345,7 +345,7 @@
                                 @elseif($paiement->source === 'depense')
                                 <span
                                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-600 dark:bg-red-900 text-white dark:text-white border border-red-700 dark:border-red-700">
-                                    🔴 Dépense
+                                    Dépense
                                 </span>
                                 @elseif($paiement->source === 'credit_assurance')
                                 <span
