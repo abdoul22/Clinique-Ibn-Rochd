@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Caisse;
 use App\Models\ModePaiement;
 use App\Models\Credit;
+use App\Models\EtatCaisse;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -104,18 +105,36 @@ class SituationJournaliereController extends Controller
         // Calculate only total acts
         $totalActes = array_sum(array_column($servicesData, 'total_actes'));
 
-        // Get payment modes used for this date (only online payments: bankily, masrvi, sedad)
-        $paiementsEnLigne = ModePaiement::whereHas('caisse', function ($query) use ($date) {
-            $query->whereDate('date_examen', $date);
-        })
-            ->whereIn('type', ['bankily', 'masrvi', 'sedad'])
-            ->selectRaw('type, SUM(montant) as total')
-            ->groupBy('type')
-            ->get()
-            ->keyBy('type');
+        // Get payment modes used for this date (only online payments: bankily, masrivi, sedad)
+        // Utiliser EtatCaisse->recette pour les factures pour éviter les doublons
+        $paiementsEnLigne = collect();
+        
+        // Récupérer les caisses_id uniques pour cette date
+        $caissesIds = Caisse::whereDate('date_examen', $date)->pluck('id');
+        
+        if ($caissesIds->count() > 0) {
+            // Pour chaque type de paiement en ligne, calculer la somme depuis EtatCaisse
+            foreach (['bankily', 'masrivi', 'sedad'] as $type) {
+                $total = EtatCaisse::whereNotNull('caisse_id')
+                    ->whereIn('caisse_id', $caissesIds)
+                    ->whereHas('caisse.mode_paiements', function ($query) use ($type) {
+                        $query->where('type', $type);
+                    })
+                    ->sum('recette');
+                
+                if ($total > 0) {
+                    $paiementsEnLigne->put($type, (object)['type' => $type, 'total' => $total]);
+                }
+            }
+        }
 
         // Check if there are any online payments
         $hasOnlinePayments = $paiementsEnLigne->isNotEmpty();
+        
+        // Calculer le total des paiements en ligne
+        $totalPaiementsEnLigne = $paiementsEnLigne->sum(function($item) {
+            return $item->total ?? 0;
+        });
 
         // Get credits for this date (either linked to caisse of that date OR created on that date)
         $creditsPersonnel = Credit::where('source_type', 'App\Models\Personnel')
@@ -168,6 +187,7 @@ class SituationJournaliereController extends Controller
             'totalActes',
             'paiementsEnLigne',
             'hasOnlinePayments',
+            'totalPaiementsEnLigne',
             'creditsPersonnel',
             'creditsAssurance',
             'totalPartMedecin',
