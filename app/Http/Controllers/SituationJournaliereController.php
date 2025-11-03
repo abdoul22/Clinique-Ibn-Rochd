@@ -55,13 +55,8 @@ class SituationJournaliereController extends Controller
             // Group all pharmacy items under "PHARMACIE" service
             $serviceName = $service->nom;
 
-            // Check if service type is PHARMACIE or has pharmacy relation
-            if (
-                $service->type_service === 'PHARMACIE' ||
-                $service->type_service === 'pharmacie' ||
-                strtoupper($service->nom) === 'PHARMACIE' ||
-                $service->pharmacie_id !== null
-            ) {
+            // Use the centralized method to detect PHARMACIE service
+            if ($this->isPharmacieService($service, $examen)) {
                 $serviceName = 'PHARMACIE';
                 // Use a consistent service ID for all pharmacy items
                 $serviceId = 'pharmacie-group';
@@ -158,13 +153,8 @@ class SituationJournaliereController extends Controller
                 return 0;
             }
 
-            // Check if this is a pharmaceutical product
-            if (
-                $service->type_service === 'PHARMACIE' ||
-                $service->type_service === 'pharmacie' ||
-                strtoupper($service->nom) === 'PHARMACIE' ||
-                $service->pharmacie_id !== null
-            ) {
+            // Use the centralized method to detect PHARMACIE service
+            if ($this->isPharmacieService($service, $caisse->examen)) {
                 return $caisse->total ?? 0;
             }
 
@@ -193,5 +183,63 @@ class SituationJournaliereController extends Controller
     public function exportPdf(Request $request)
     {
         return $this->index($request);
+    }
+
+    /**
+     * Détermine si un service/examen est de type PHARMACIE
+     * Aligné avec la logique de RecapitulatifServiceJournalierController::determineServiceKey()
+     * 
+     * @param \App\Models\Service|null $service
+     * @param \App\Models\Examen|null $examen
+     * @return bool
+     */
+    private function isPharmacieService($service, $examen = null)
+    {
+        // Vérifier d'abord par le nom de l'examen (comme dans determineServiceKey)
+        if ($examen && $examen->nom) {
+            $nomExamen = strtolower($examen->nom);
+            
+            // Identifier les médicaments par leur nom (patterns communs)
+            $pharmaciePatterns = [
+                'flagyl',
+                'novalgin',
+                'ssi',
+                'kit',
+                'bande',
+                'velpo',
+                'gant',
+                'steril',
+                'mg'
+            ];
+            
+            foreach ($pharmaciePatterns as $pattern) {
+                if (strpos($nomExamen, $pattern) !== false) {
+                    return true;
+                }
+            }
+        }
+
+        // Si pas de service, retourner false
+        if (!$service) {
+            return false;
+        }
+
+        // Vérifier par le type_service du service
+        $serviceType = strtoupper($service->type_service ?? '');
+        if ($serviceType === 'PHARMACIE') {
+            return true;
+        }
+
+        // Vérifier par le nom du service
+        if (strtoupper($service->nom ?? '') === 'PHARMACIE') {
+            return true;
+        }
+
+        // Vérifier si le service est lié à un médicament (pharmacie_id)
+        if ($service->pharmacie_id !== null) {
+            return true;
+        }
+
+        return false;
     }
 }
