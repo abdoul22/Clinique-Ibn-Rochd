@@ -356,9 +356,10 @@ class EtatCaisseController extends Controller
             // Vérifier que mode_paiement_id n'est pas null
             if (!empty($depense->mode_paiement_id)) {
                 // Supprimer l'enregistrement ModePaiement correspondant (montant négatif pour sortie)
+                // Utiliser 'part_medecin' comme source car c'est ainsi qu'ils sont créés lors de la validation
                 \App\Models\ModePaiement::where('type', $depense->mode_paiement_id)
                     ->where('montant', -$depense->montant)
-                    ->where('source', 'depense')
+                    ->where('source', 'part_medecin')
                     ->delete();
             }
 
@@ -393,9 +394,10 @@ class EtatCaisseController extends Controller
             // Vérifier que mode_paiement_id n'est pas null
             if (!empty($depense->mode_paiement_id)) {
                 // Supprimer l'enregistrement ModePaiement correspondant (montant négatif pour sortie)
+                // Utiliser 'part_medecin' comme source car c'est ainsi qu'ils sont créés lors de la validation
                 \App\Models\ModePaiement::where('type', $depense->mode_paiement_id)
                     ->where('montant', -$depense->montant)
-                    ->where('source', 'depense')
+                    ->where('source', 'part_medecin')
                     ->delete();
             }
 
@@ -410,9 +412,10 @@ class EtatCaisseController extends Controller
                 // Vérifier que mode_paiement_id n'est pas null
                 if (!empty($depense->mode_paiement_id)) {
                     // Supprimer l'enregistrement ModePaiement correspondant
+                    // Utiliser 'part_medecin' comme source car c'est ainsi qu'ils sont créés lors de la validation
                     \App\Models\ModePaiement::where('type', $depense->mode_paiement_id)
                         ->where('montant', -$depense->montant)
-                        ->where('source', 'depense')
+                        ->where('source', 'part_medecin')
                         ->delete();
                 }
 
