@@ -19,10 +19,12 @@
             <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Détails du Rendez-vous</h1>
             <div class="flex space-x-2">
                 @if(Auth::user() && Auth::user()->role?->name === 'superadmin')
+                @if(!$rendezVous->isPaid() && $rendezVous->statut !== 'annule' && !$rendezVous->isExpired())
                 <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.edit', $rendezVous->id) : route('rendezvous.edit', $rendezVous->id) }}"
                     class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
                     <i class="fas fa-edit mr-2"></i>Modifier
                 </a>
+                @endif
                 <form
                     action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.destroy', $rendezVous->id) : route('rendezvous.destroy', $rendezVous->id) }}"
                     method="POST" class="inline">
@@ -68,7 +70,12 @@
                         <div>
                             <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Statut</h3>
                             <div class="mb-3">
-                                @if($rendezVous->statut === 'annule')
+                                @if($rendezVous->isPaid())
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                                    <i class="fas fa-check-circle mr-2"></i>Terminé
+                                </span>
+                                @elseif($rendezVous->statut === 'annule')
                                 <span
                                     class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
                                     <i class="fas fa-times mr-2"></i>Annulé
@@ -87,7 +94,6 @@
                                     class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                                     <i class="fas fa-check mr-2"></i>Confirmé
                                 </span>
-                                @if(!$rendezVous->isPaid())
                                 <form
                                     action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.change-status', $rendezVous->id) : route('rendezvous.change-status', $rendezVous->id) }}"
                                     method="POST" class="inline-block mt-2">
@@ -99,7 +105,6 @@
                                         Annuler
                                     </button>
                                 </form>
-                                @endif
                                 @endif
                                 @endif
                             </div>
@@ -262,10 +267,12 @@
                         @endif
 
                         @if(Auth::user() && Auth::user()->role?->name === 'superadmin')
+                        @if(!$rendezVous->isPaid() && $rendezVous->statut !== 'annule' && !$rendezVous->isExpired())
                         <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.edit', $rendezVous->id) : route('rendezvous.edit', $rendezVous->id) }}"
                             class="w-full bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center">
                             <i class="fas fa-edit mr-2"></i>Modifier
                         </a>
+                        @endif
                         <form
                             action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.destroy', $rendezVous->id) : route('rendezvous.destroy', $rendezVous->id) }}"
                             method="POST" class="w-full">
