@@ -47,6 +47,8 @@
                     <option value="">Tous les statuts</option>
                     <option value="confirme" {{ request('statut')=='confirme' ? 'selected' : '' }}>Confirmé</option>
                     <option value="annule" {{ request('statut')=='annule' ? 'selected' : '' }}>Annulé</option>
+                    <option value="paye" {{ request('statut')=='paye' ? 'selected' : '' }}>Terminé(payé)</option>
+                    <option value="expire" {{ request('statut')=='expire' ? 'selected' : '' }}>Expiré</option>
                 </select>
             </div>
             <div class="flex-1 min-w-[180px]">

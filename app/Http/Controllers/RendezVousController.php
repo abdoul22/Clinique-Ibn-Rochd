@@ -9,6 +9,7 @@ use App\Models\Motif;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,7 +32,47 @@ class RendezVousController extends Controller
         }
 
         if ($request->filled('statut')) {
-            $query->where('statut', $request->statut);
+            $statut = $request->statut;
+            
+            if ($statut === 'paye') {
+                // Filtrer les RDV payés (qui ont des caisses associées)
+                // Utiliser une sous-requête pour vérifier l'existence de caisses correspondantes
+                $query->whereExists(function ($subquery) {
+                    $subquery->select(DB::raw(1))
+                        ->from('caisses')
+                        ->whereColumn('caisses.numero_entre', 'rendez_vous.numero_entree')
+                        ->whereColumn('caisses.medecin_id', 'rendez_vous.medecin_id')
+                        ->whereColumn('caisses.gestion_patient_id', 'rendez_vous.patient_id')
+                        ->whereRaw('DATE(caisses.created_at) = DATE(rendez_vous.date_rdv)');
+                });
+            } elseif ($statut === 'expire') {
+                // Filtrer les RDV expirés (statut confirmé mais date passée, et non payés)
+                $query->where('statut', 'confirme')
+                    ->whereDate('date_rdv', '<', now()->startOfDay())
+                    ->whereNotExists(function ($subquery) {
+                        $subquery->select(DB::raw(1))
+                            ->from('caisses')
+                            ->whereColumn('caisses.numero_entre', 'rendez_vous.numero_entree')
+                            ->whereColumn('caisses.medecin_id', 'rendez_vous.medecin_id')
+                            ->whereColumn('caisses.gestion_patient_id', 'rendez_vous.patient_id')
+                            ->whereRaw('DATE(caisses.created_at) = DATE(rendez_vous.date_rdv)');
+                    });
+            } elseif ($statut === 'confirme') {
+                // Filtrer les RDV confirmés et non expirés (date >= aujourd'hui, et non payés)
+                $query->where('statut', 'confirme')
+                    ->whereDate('date_rdv', '>=', now()->startOfDay())
+                    ->whereNotExists(function ($subquery) {
+                        $subquery->select(DB::raw(1))
+                            ->from('caisses')
+                            ->whereColumn('caisses.numero_entre', 'rendez_vous.numero_entree')
+                            ->whereColumn('caisses.medecin_id', 'rendez_vous.medecin_id')
+                            ->whereColumn('caisses.gestion_patient_id', 'rendez_vous.patient_id')
+                            ->whereRaw('DATE(caisses.created_at) = DATE(rendez_vous.date_rdv)');
+                    });
+            } else {
+                // Filtres standards (annule)
+                $query->where('statut', $statut);
+            }
         }
 
         if ($request->filled('patient_phone')) {
