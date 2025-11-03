@@ -440,7 +440,7 @@ class CaisseController extends Controller
 
     public function show($id)
     {
-        $caisse = Caisse::with(['patient', 'medecin', 'prescripteur', 'examen', 'service'])->find($id);
+        $caisse = Caisse::with(['patient', 'medecin', 'prescripteur', 'examen', 'service', 'etatCaisse', 'mode_paiements'])->find($id);
 
         if (!$caisse) {
             abort(404, 'Caisse non trouvée.');

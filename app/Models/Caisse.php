@@ -69,6 +69,12 @@ class Caisse extends Model
     {
         return $this->hasOne(ModePaiement::class);
     }
+
+    public function etatCaisse()
+    {
+        return $this->hasOne(EtatCaisse::class);
+    }
+
     protected static function booted()
     {
         static::creating(function ($caisse) {

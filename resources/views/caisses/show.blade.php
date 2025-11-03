@@ -143,12 +143,16 @@
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Caissier:</span> {{
                     $caisse->nom_caissier }}</p>
             </div>
-            @if($caisse->paiements)
-            <p class="text-gray-800 dark:text-gray-200"><strong>Mode de paiement :</strong> {{ $caisse->paiements->type
-                }} ({{ number_format($caisse->paiements->montant, 0, ',', ' ') }} MRU)</p>
+            @if($caisse->mode_paiements && $caisse->mode_paiements->count() > 0)
+            @php
+                // Utiliser la recette réelle depuis EtatCaisse si disponible, sinon le total de la caisse
+                $montantPaiement = $caisse->etatCaisse ? $caisse->etatCaisse->recette : ($caisse->total ?? 0);
+                // Récupérer le premier mode de paiement pour afficher le type
+                $premierPaiement = $caisse->mode_paiements->first();
+            @endphp
+            <p class="text-gray-800 dark:text-gray-200"><strong>Mode de paiement :</strong> {{ $premierPaiement->type }} ({{ number_format($montantPaiement, 0, ',', ' ') }} MRU)</p>
             @if($caisse->couverture !== null)
-            <p class="text-gray-800 dark:text-gray-200"><strong>Couverture assurance :</strong> {{ $caisse->couverture
-                }}%</p>
+            <p class="text-gray-800 dark:text-gray-200"><strong>Couverture assurance :</strong> {{ $caisse->couverture }}%</p>
             @endif
             @endif
         </div>

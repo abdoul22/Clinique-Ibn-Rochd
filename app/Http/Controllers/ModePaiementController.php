@@ -68,10 +68,103 @@ class ModePaiementController extends Controller
         $queryAllResults = clone $query;
         $allResults = $queryAllResults->get();
 
-        // Calculer les totaux pour TOUS les résultats (avant pagination)
-        $totalPaiements = $allResults->sum('montant');
-        $totalEspeces = $allResults->where('type', 'espèces')->sum('montant');
-        $totalNumeriques = $allResults->whereIn('type', ['bankily', 'masrivi', 'sedad'])->sum('montant');
+        // Créer une méthode helper pour appliquer les filtres de date à une requête EtatCaisse
+        $applyDateFilterToEtatCaisse = function($queryEtatCaisse) use ($period, $request) {
+            if ($period === 'day' && $request->filled('date')) {
+                $queryEtatCaisse->whereDate('created_at', $request->date);
+            } elseif ($period === 'week' && $request->filled('week')) {
+                $parts = explode('-W', $request->week);
+                if (count($parts) === 2) {
+                    $start = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->startOfWeek();
+                    $end = \Carbon\Carbon::now()->setISODate($parts[0], $parts[1])->endOfWeek();
+                    $queryEtatCaisse->whereBetween('created_at', [$start, $end]);
+                }
+            } elseif ($period === 'month' && $request->filled('month')) {
+                $parts = explode('-', $request->month);
+                if (count($parts) === 2) {
+                    $queryEtatCaisse->whereYear('created_at', $parts[0])
+                        ->whereMonth('created_at', $parts[1]);
+                }
+            } elseif ($period === 'year' && $request->filled('year')) {
+                $queryEtatCaisse->whereYear('created_at', $request->year);
+            } elseif ($period === 'range' && $request->filled('date_start') && $request->filled('date_end')) {
+                $queryEtatCaisse->whereBetween('created_at', [$request->date_start, $request->date_end]);
+            }
+        };
+
+        // Calculer les totaux pour les factures (caisse_id non null) en utilisant EtatCaisse->recette
+        $totalPaiementsFactures = 0;
+        $totalEspecesFactures = 0;
+        $totalNumeriquesFactures = 0;
+        
+        // Ne calculer les factures que si aucun filtre source n'est appliqué ou si source = 'facture'
+        $sourceFilter = $request->filled('source') ? $request->source : null;
+        if (!$sourceFilter || $sourceFilter === 'facture') {
+            // Récupérer les caisses_id uniques pour éviter les doublons
+            $caissesIds = $allResults->whereNotNull('caisse_id')->pluck('caisse_id')->unique();
+            
+            if ($caissesIds->count() > 0) {
+                $queryEtatCaisseFactures = EtatCaisse::whereNotNull('caisse_id')
+                    ->whereIn('caisse_id', $caissesIds);
+                
+                // Appliquer les filtres de date
+                $applyDateFilterToEtatCaisse($queryEtatCaisseFactures);
+                
+                // Appliquer le filtre de type de paiement si présent
+                if ($request->filled('type')) {
+                    $queryEtatCaisseFactures->whereHas('caisse.mode_paiements', function ($q) use ($request) {
+                        $q->where('type', $request->type);
+                    });
+                }
+                
+                $totalPaiementsFactures = $queryEtatCaisseFactures->sum('recette');
+                
+                // Calculer par type
+                foreach (['espèces', 'bankily', 'masrivi', 'sedad'] as $type) {
+                    if (!$request->filled('type') || $request->type === $type) {
+                        $queryEtatCaisseType = EtatCaisse::whereNotNull('caisse_id')
+                            ->whereIn('caisse_id', $caissesIds)
+                            ->whereHas('caisse.mode_paiements', function ($q) use ($type) {
+                                $q->where('type', $type);
+                            });
+                        $applyDateFilterToEtatCaisse($queryEtatCaisseType);
+                        
+                        if ($type === 'espèces') {
+                            $totalEspecesFactures = $queryEtatCaisseType->sum('recette');
+                        } else {
+                            $totalNumeriquesFactures += $queryEtatCaisseType->sum('recette');
+                        }
+                    }
+                }
+            }
+        }
+
+        // Calculer les totaux pour les autres sources (depense, part_medecin, credit_assurance)
+        // Ne calculer que si le filtre source correspond ou si aucun filtre n'est appliqué
+        $totalPaiementsAutres = 0;
+        $totalEspecesAutres = 0;
+        $totalNumeriquesAutres = 0;
+        
+        if (!$sourceFilter || in_array($sourceFilter, ['depense', 'part_medecin', 'credit_assurance'])) {
+            $paiementsAutres = $allResults->whereNull('caisse_id');
+            
+            if ($sourceFilter === 'depense') {
+                $paiementsAutres = $paiementsAutres->where('source', 'depense');
+            } elseif ($sourceFilter === 'part_medecin') {
+                $paiementsAutres = $paiementsAutres->where('source', 'part_medecin');
+            } elseif ($sourceFilter === 'credit_assurance') {
+                $paiementsAutres = $paiementsAutres->where('source', 'credit_assurance');
+            }
+            
+            $totalPaiementsAutres = $paiementsAutres->sum('montant');
+            $totalEspecesAutres = $paiementsAutres->where('type', 'espèces')->sum('montant');
+            $totalNumeriquesAutres = $paiementsAutres->whereIn('type', ['bankily', 'masrivi', 'sedad'])->sum('montant');
+        }
+        
+        // Combiner les totaux
+        $totalPaiements = $totalPaiementsFactures + $totalPaiementsAutres;
+        $totalEspeces = $totalEspecesFactures + $totalEspecesAutres;
+        $totalNumeriques = $totalNumeriquesFactures + $totalNumeriquesAutres;
         $totalDepenses = abs($allResults->where('source', 'depense')->sum('montant'));
 
         // Calculer Part Médecin avec les mêmes filtres de date
