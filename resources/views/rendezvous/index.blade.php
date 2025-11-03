@@ -211,10 +211,17 @@
                             @else
                             @switch($rdv->statut)
                             @case('confirme')
+                            @if($rdv->isExpired())
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-purple-300 dark:border-purple-600">
+                                <i class="fas fa-clock mr-1"></i>Expiré
+                            </span>
+                            @else
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                                 Confirmé
                             </span>
+                            @endif
                             @break
                             @case('annule')
                             <span
@@ -254,7 +261,7 @@
                                 </form>
                                 @endif
                                 @if(Auth::user() && Auth::user()->role?->name === 'admin' &&
-                                !request()->routeIs('admin.*') && $rdv->statut === 'confirme')
+                                !request()->routeIs('admin.*') && $rdv->statut === 'confirme' && !$rdv->isExpired())
                                 <form
                                     action="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.change-status', $rdv->id) : route('rendezvous.change-status', $rdv->id) }}"
                                     method="POST" class="inline">

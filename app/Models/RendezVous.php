@@ -105,6 +105,21 @@ class RendezVous extends Model
         return $this->caisses()->exists();
     }
 
+    // Méthode pour vérifier si le rendez-vous est expiré (date passée)
+    public function isExpired()
+    {
+        // Un RDV est expiré si sa date est antérieure à aujourd'hui
+        // On compare seulement la date (sans l'heure) car un RDV du jour même est encore valide
+        return $this->date_rdv && $this->date_rdv->startOfDay()->lt(now()->startOfDay());
+    }
+
+    // Méthode pour vérifier si le rendez-vous peut être payé
+    public function canBePaid()
+    {
+        // Un RDV peut être payé s'il n'est pas payé, pas annulé, et pas expiré
+        return !$this->isPaid() && $this->statut === 'confirme' && !$this->isExpired();
+    }
+
     // Méthode pour récupérer la facture associée
     public function getFacture()
     {

@@ -131,6 +131,21 @@ class CaisseController extends Controller
         if ($request->has('from_rdv')) {
             $fromRdv = \App\Models\RendezVous::find($request->from_rdv);
             if ($fromRdv) {
+                // Vérifier que le RDV peut être payé (pas annulé, pas expiré, pas déjà payé)
+                if (!$fromRdv->canBePaid()) {
+                    $routeName = auth()->user()->role?->name === 'admin' ? 'admin.rendezvous.show' : 'rendezvous.show';
+                    if ($fromRdv->statut === 'annule') {
+                        return redirect()->route($routeName, $fromRdv->id)
+                            ->with('error', 'Ce rendez-vous ne peut pas être payé car il a été annulé.');
+                    } elseif ($fromRdv->isExpired()) {
+                        return redirect()->route($routeName, $fromRdv->id)
+                            ->with('error', 'Ce rendez-vous ne peut pas être payé car il a expiré.');
+                    } elseif ($fromRdv->isPaid()) {
+                        return redirect()->route($routeName, $fromRdv->id)
+                            ->with('error', 'Ce rendez-vous a déjà été payé.');
+                    }
+                }
+                
                 $prefilledPatient = $fromRdv->patient;
                 $prefilledMedecin = $fromRdv->medecin;
                 $prefilledNumeroEntree = $fromRdv->numero_entree;

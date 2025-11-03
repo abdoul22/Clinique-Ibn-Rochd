@@ -5,6 +5,16 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto">
+        @if(session('error'))
+        <div class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-6">
+            <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+        </div>
+        @endif
+        @if(session('success'))
+        <div class="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-200 px-4 py-3 rounded mb-6">
+            <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+        </div>
+        @endif
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Détails du Rendez-vous</h1>
             <div class="flex space-x-2">
@@ -67,6 +77,12 @@
                                     @endif
                                 </span>
                                 @elseif($rendezVous->statut === 'confirme')
+                                @if($rendezVous->isExpired())
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-purple-300 dark:border-purple-600">
+                                    <i class="fas fa-clock mr-2"></i>Expiré
+                                </span>
+                                @else
                                 <span
                                     class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                                     <i class="fas fa-check mr-2"></i>Confirmé
@@ -83,6 +99,7 @@
                                         Annuler
                                     </button>
                                 </form>
+                                @endif
                                 @endif
                                 @endif
                             </div>
@@ -218,6 +235,17 @@
                                 <div class="font-semibold">❌ Rendez-vous annulé</div>
                                 <div class="text-sm mt-1">
                                     Ce rendez-vous ne peut pas être payé car il a été annulé
+                                </div>
+                            </div>
+                        </div>
+                        @elseif($rendezVous->isExpired())
+                        <div
+                            class="w-full bg-gray-100 dark:bg-gray-800 border border-purple-300 dark:border-purple-600 text-gray-700 dark:text-gray-300 px-4 py-3 rounded flex items-center justify-center">
+                            <i class="fas fa-clock mr-2"></i>
+                            <div class="text-center">
+                                <div class="font-semibold">❌ Rendez-vous expiré</div>
+                                <div class="text-sm mt-1">
+                                    Ce rendez-vous ne peut pas être payé car il a expiré
                                 </div>
                             </div>
                         </div>
