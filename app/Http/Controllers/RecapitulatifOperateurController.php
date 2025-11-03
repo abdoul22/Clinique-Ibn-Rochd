@@ -151,11 +151,30 @@ class RecapitulatifOperateurController extends Controller
             return (object) $item;
         });
 
-        // Trier et paginer
-        $recapOperateurs = $recaps->sortByDesc('jour')
-            ->sortBy('medecin_id')
-            ->sortBy('examen_id')
-            ->values();
+        // Trier par date décroissante (plus récent au plus ancien), puis par médecin, puis par examen
+        $recapOperateurs = $recaps->sort(function ($a, $b) {
+            // Comparer d'abord par date (ordre décroissant)
+            $dateA = $a->jour ? strtotime($a->jour) : 0;
+            $dateB = $b->jour ? strtotime($b->jour) : 0;
+            
+            if ($dateA !== $dateB) {
+                return $dateB <=> $dateA; // Ordre décroissant (plus récent en premier)
+            }
+            
+            // Si même date, trier par médecin_id
+            $medecinA = $a->medecin_id ?? 0;
+            $medecinB = $b->medecin_id ?? 0;
+            
+            if ($medecinA !== $medecinB) {
+                return $medecinA <=> $medecinB;
+            }
+            
+            // Si même médecin, trier par examen_id
+            $examenA = is_numeric($a->examen_id) ? $a->examen_id : 0;
+            $examenB = is_numeric($b->examen_id) ? $b->examen_id : 0;
+            
+            return $examenA <=> $examenB;
+        })->values();
 
         // Pagination manuelle
         $perPage = 15;
