@@ -130,28 +130,28 @@
                             @if($paiementsEnLigne->has('bankily'))
                             <div class="flex justify-between items-center">
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">BANKILY</span>
-                                <input type="text" value="{{ number_format($paiementsEnLigne->get('bankily')->total ?? 0, 0, ',', ' ') }}"
+                                <input type="text"
                                     class="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right text-sm bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                             </div>
                             @endif
                             @if($paiementsEnLigne->has('masrivi'))
                             <div class="flex justify-between items-center">
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">MASRIVI</span>
-                                <input type="text" value="{{ number_format($paiementsEnLigne->get('masrivi')->total ?? 0, 0, ',', ' ') }}"
+                                <input type="text"
                                     class="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right text-sm bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                             </div>
                             @endif
                             @if($paiementsEnLigne->has('sedad'))
                             <div class="flex justify-between items-center">
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">SEDAD</span>
-                                <input type="text" value="{{ number_format($paiementsEnLigne->get('sedad')->total ?? 0, 0, ',', ' ') }}"
+                                <input type="text"
                                     class="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right text-sm bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                             </div>
                             @endif
                             <div
                                 class="flex justify-between items-center pt-2 border-t border-gray-300 dark:border-gray-600">
                                 <span class="text-sm font-bold text-gray-800 dark:text-white">TOTAL</span>
-                                <input type="text" value="{{ number_format($totalPaiementsEnLigne, 0, ',', ' ') }}"
+                                <input type="text"
                                     class="w-24 px-2 py-1 border-2 border-gray-400 dark:border-gray-500 rounded text-right text-sm font-bold bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                             </div>
                         </div>
@@ -235,7 +235,7 @@
                                 </td>
                                 @if($hasOnlinePayments)
                                 <td class="px-4 py-4 text-center">
-                                    <input type="text" value="{{ number_format($totalPaiementsEnLigne, 0, ',', ' ') }}"
+                                    <input type="text"
                                         class="w-24 px-2 py-2 border-2 border-gray-400 dark:border-gray-500 rounded text-center font-semibold bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
                                 </td>
                                 @endif
