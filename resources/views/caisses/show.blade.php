@@ -76,8 +76,40 @@
                 @endif
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Service:</span>
                     @php
-                    $svc = $caisse->service;
-                    $serviceLabel = $svc && $svc->type_service === 'PHARMACIE' ? 'PHARMACIE' : ($svc->nom ?? 'N/A');
+                    $servicesList = [];
+                    
+                    // Si la facture a plusieurs examens (examens_data)
+                    if ($caisse->examens_data) {
+                        $examensData = is_string($caisse->examens_data) ? json_decode($caisse->examens_data, true) : $caisse->examens_data;
+                        foreach ($examensData as $examenData) {
+                            $examen = \App\Models\Examen::find($examenData['id']);
+                            if ($examen && $examen->service) {
+                                $service = $examen->service;
+                                // Déterminer le nom du service
+                                if ($service->type_service === 'PHARMACIE' || strtoupper($service->nom ?? '') === 'PHARMACIE' || $service->pharmacie_id !== null) {
+                                    $serviceName = 'PHARMACIE';
+                                } else {
+                                    $serviceName = $service->nom;
+                                }
+                                // Ajouter le service à la liste s'il n'est pas déjà présent
+                                if (!in_array($serviceName, $servicesList)) {
+                                    $servicesList[] = $serviceName;
+                                }
+                            }
+                        }
+                    } else {
+                        // Facture avec un seul examen (ancien format)
+                        $svc = $caisse->service;
+                        if ($svc) {
+                            $serviceLabel = $svc && $svc->type_service === 'PHARMACIE' ? 'PHARMACIE' : ($svc->nom ?? 'N/A');
+                            $servicesList[] = $serviceLabel;
+                        } else {
+                            $servicesList[] = 'N/A';
+                        }
+                    }
+                    
+                    // Afficher les services séparés par " - "
+                    $serviceLabel = !empty($servicesList) ? implode(' - ', $servicesList) : 'N/A';
                     @endphp
                     {{ $serviceLabel }}
                 </p>

@@ -18,83 +18,175 @@ class SituationJournaliereController extends Controller
         $dateCarbon = Carbon::parse($date);
 
         // Get caisses for the selected date with all relationships
+        // Charger aussi les examens avec leurs services pour éviter les requêtes N+1
         $caisses = Caisse::whereDate('date_examen', $date)
             ->with(['service', 'examen.service', 'medecin', 'mode_paiements'])
             ->get();
+        
+        // Précharger tous les examens qui seront utilisés depuis examens_data pour éviter les requêtes N+1
+        $examensIds = [];
+        foreach ($caisses as $caisse) {
+            if ($caisse->examens_data) {
+                $examensData = is_string($caisse->examens_data) ? json_decode($caisse->examens_data, true) : $caisse->examens_data;
+                foreach ($examensData as $examenData) {
+                    if (isset($examenData['id'])) {
+                        $examensIds[] = $examenData['id'];
+                    }
+                }
+            }
+        }
+        
+        // Charger tous les examens avec leurs services en une seule requête et les mettre en cache
+        $examensMap = [];
+        if (!empty($examensIds)) {
+            $examens = \App\Models\Examen::whereIn('id', array_unique($examensIds))->with('service')->get();
+            foreach ($examens as $examen) {
+                $examensMap[$examen->id] = $examen;
+            }
+        }
 
         // Build data structure grouped by actual service
         $servicesData = [];
 
         foreach ($caisses as $caisse) {
-            // Get the actual service - PRIORITY:
-            // 1. From examen->service (via idsvc) - THIS IS THE REAL SERVICE
-            // 2. From caisse->service (direct relationship) - FALLBACK
-            $service = null;
-
-            // First try to get from examen (most reliable)
-            if ($caisse->examen && $caisse->examen->service) {
-                $service = $caisse->examen->service;
-            }
-            // Fallback to caisse service
-            elseif ($caisse->service) {
-                $service = $caisse->service;
-            }
-
-            // Skip if no service found
-            if (!$service) {
-                continue;
-            }
-
             $medecin = $caisse->medecin;
-            $examen = $caisse->examen;
-
+            
             if (!$medecin) {
                 continue;
             }
 
-            // Check if this is a pharmaceutical product
-            // Group all pharmacy items under "PHARMACIE" service
-            $serviceName = $service->nom;
-
-            // Use the centralized method to detect PHARMACIE service
-            if ($this->isPharmacieService($service, $examen)) {
-                $serviceName = 'PHARMACIE';
-                // Use a consistent service ID for all pharmacy items
-                $serviceId = 'pharmacie-group';
-            } else {
-                $serviceId = $service->id;
-            }
-
             $medecinId = $medecin->id;
 
-            // Initialize service if not exists
-            if (!isset($servicesData[$serviceId])) {
-                $servicesData[$serviceId] = [
-                    'service_name' => $serviceName,
-                    'medecins' => [],
-                    'total_actes' => 0,
-                ];
-            }
+            // Check if this caisse has multiple exams (examens_data)
+            if ($caisse->examens_data) {
+                // Mode examens multiples - traiter chaque examen séparément
+                $examensData = is_string($caisse->examens_data) ? json_decode($caisse->examens_data, true) : $caisse->examens_data;
+                
+                foreach ($examensData as $examenData) {
+                    // Utiliser la map préchargée si disponible, sinon faire une requête
+                    $examen = isset($examensMap[$examenData['id']]) 
+                        ? $examensMap[$examenData['id']] 
+                        : \App\Models\Examen::find($examenData['id']);
+                    
+                    if (!$examen) {
+                        continue;
+                    }
 
-            // Initialize medecin if not exists
-            if (!isset($servicesData[$serviceId]['medecins'][$medecinId])) {
-                $servicesData[$serviceId]['medecins'][$medecinId] = [
-                    'nom' => $medecin->nomcomplet,
-                    'examens' => [],
-                    'nombre_actes' => 0,
-                ];
-            }
+                    // Get the service for this examen
+                    $service = $examen->service;
+                    
+                    if (!$service) {
+                        continue;
+                    }
 
-            // Track examen
-            $examenNom = $examen ? $examen->nom : 'Examen inconnu';
-            if (!isset($servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom])) {
-                $servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom] = 0;
-            }
-            $servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom] += 1;
+                    // Determine service name and ID
+                    $serviceName = $service->nom;
+                    
+                    // Use the centralized method to detect PHARMACIE service
+                    if ($this->isPharmacieService($service, $examen)) {
+                        $serviceName = 'PHARMACIE';
+                        // Use a consistent service ID for all pharmacy items
+                        $serviceId = 'pharmacie-group';
+                    } else {
+                        $serviceId = $service->id;
+                    }
 
-            // Count acts
-            $servicesData[$serviceId]['medecins'][$medecinId]['nombre_actes'] += 1;
-            $servicesData[$serviceId]['total_actes'] += 1;
+                    // Initialize service if not exists
+                    if (!isset($servicesData[$serviceId])) {
+                        $servicesData[$serviceId] = [
+                            'service_name' => $serviceName,
+                            'medecins' => [],
+                            'total_actes' => 0,
+                        ];
+                    }
+
+                    // Initialize medecin if not exists
+                    if (!isset($servicesData[$serviceId]['medecins'][$medecinId])) {
+                        $servicesData[$serviceId]['medecins'][$medecinId] = [
+                            'nom' => $medecin->nomcomplet,
+                            'examens' => [],
+                            'nombre_actes' => 0,
+                        ];
+                    }
+
+                    // Track examen with quantity
+                    $examenNom = $examen->nom;
+                    $quantite = $examenData['quantite'] ?? 1;
+                    
+                    if (!isset($servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom])) {
+                        $servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom] = 0;
+                    }
+                    $servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom] += $quantite;
+
+                    // Count acts
+                    $servicesData[$serviceId]['medecins'][$medecinId]['nombre_actes'] += $quantite;
+                    $servicesData[$serviceId]['total_actes'] += $quantite;
+                }
+            } else {
+                // Mode examen unique (ancien format) - compatibilité avec les anciennes factures
+                // Get the actual service - PRIORITY:
+                // 1. From examen->service (via idsvc) - THIS IS THE REAL SERVICE
+                // 2. From caisse->service (direct relationship) - FALLBACK
+                $service = null;
+
+                // First try to get from examen (most reliable)
+                if ($caisse->examen && $caisse->examen->service) {
+                    $service = $caisse->examen->service;
+                }
+                // Fallback to caisse service
+                elseif ($caisse->service) {
+                    $service = $caisse->service;
+                }
+
+                // Skip if no service found
+                if (!$service) {
+                    continue;
+                }
+
+                $examen = $caisse->examen;
+
+                // Check if this is a pharmaceutical product
+                // Group all pharmacy items under "PHARMACIE" service
+                $serviceName = $service->nom;
+
+                // Use the centralized method to detect PHARMACIE service
+                if ($this->isPharmacieService($service, $examen)) {
+                    $serviceName = 'PHARMACIE';
+                    // Use a consistent service ID for all pharmacy items
+                    $serviceId = 'pharmacie-group';
+                } else {
+                    $serviceId = $service->id;
+                }
+
+                // Initialize service if not exists
+                if (!isset($servicesData[$serviceId])) {
+                    $servicesData[$serviceId] = [
+                        'service_name' => $serviceName,
+                        'medecins' => [],
+                        'total_actes' => 0,
+                    ];
+                }
+
+                // Initialize medecin if not exists
+                if (!isset($servicesData[$serviceId]['medecins'][$medecinId])) {
+                    $servicesData[$serviceId]['medecins'][$medecinId] = [
+                        'nom' => $medecin->nomcomplet,
+                        'examens' => [],
+                        'nombre_actes' => 0,
+                    ];
+                }
+
+                // Track examen
+                $examenNom = $examen ? $examen->nom : 'Examen inconnu';
+                if (!isset($servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom])) {
+                    $servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom] = 0;
+                }
+                $servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom] += 1;
+
+                // Count acts
+                $servicesData[$serviceId]['medecins'][$medecinId]['nombre_actes'] += 1;
+                $servicesData[$serviceId]['total_actes'] += 1;
+            }
         }
 
         // Convert medecins arrays to indexed arrays for the view
