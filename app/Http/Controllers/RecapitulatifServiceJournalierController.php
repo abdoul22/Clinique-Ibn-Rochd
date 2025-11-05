@@ -8,6 +8,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Caisse;
+use Carbon\Carbon;
 
 class RecapitulatifServiceJournalierController extends Controller
 {
@@ -125,10 +126,14 @@ class RecapitulatifServiceJournalierController extends Controller
             }
         }
 
-        // Trier et paginer
-        $recaps = $recaps->sortByDesc('jour')
-            ->sortBy('service_key')
-            ->values();
+        // Trier uniquement par date décroissante (plus récent au plus ancien)
+        $recaps = $recaps->sortByDesc(function ($item) {
+            try {
+                return $item->jour ? Carbon::parse($item->jour)->timestamp : 0;
+            } catch (\Exception $e) {
+                return 0;
+            }
+        })->values();
 
         // Pagination manuelle
         $perPage = 15;
