@@ -205,7 +205,7 @@
                                 @if($totalPartMedecin > 0)
                                 <th class="px-4 py-3 text-center font-bold text-white uppercase">PART MÉDECIN</th>
                                 @endif
-                                <th class="px-4 py-3 text-center font-bold text-white uppercase">DEPENCES</th>
+                                <th class="px-4 py-3 text-center font-bold text-white uppercase">DEPENCES + Part Médecin</th>
                                 <th class="px-4 py-3 text-center font-bold text-white uppercase">CREDIT</th>
                                 @if($hasOnlinePayments)
                                 <th class="px-4 py-3 text-center font-bold text-white uppercase">PAIEMENT EN LIGNE</th>
