@@ -125,7 +125,7 @@
                             <select name="motif" id="motif"
                                 class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md px-3 py-2 @error('motif') border-red-500 @enderror"
                                 required>
-                                <option value="premier visite" selected>premier visite</option>
+                                <option value="premier visite" selected>PREMIERE VISITE</option>
                                 @foreach($motifs as $motif)
                                 <option value="{{ $motif->nom }}" {{ old('motif')==$motif->nom ? 'selected' : '' }}>
                                     {{ $motif->nom }}
