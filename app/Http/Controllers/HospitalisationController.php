@@ -412,7 +412,48 @@ class HospitalisationController extends Controller
                 ]);
             }
 
-            // Créer la caisse
+            // Construire examens_data à partir des charges pour permettre la décomposition par service
+            $examensData = [];
+            $examensMap = []; // Pour éviter les doublons d'examens
+
+            foreach ($charges as $charge) {
+                $examenId = null;
+                $quantite = $charge->quantity ?? 1;
+
+                if ($charge->is_pharmacy) {
+                    // Charge de pharmacie : trouver ou créer un Examen pour le médicament
+                    $pharmacie = Pharmacie::find($charge->source_id);
+                    if ($pharmacie) {
+                        $examenPharma = $this->findOrCreateExamenForPharmacy($pharmacie, $medecinId);
+                        $examenId = $examenPharma->id;
+                    }
+                } elseif ($charge->type === 'room_day') {
+                    // Charge de chambre : utiliser l'examen Hospitalisation
+                    $examenId = $examen->id;
+                } else {
+                    // Charge d'examen/service : utiliser l'examen existant
+                    $examenId = $charge->source_id;
+                }
+
+                if ($examenId) {
+                    // Regrouper les quantités pour le même examen
+                    if (isset($examensMap[$examenId])) {
+                        $examensMap[$examenId] += $quantite;
+                    } else {
+                        $examensMap[$examenId] = $quantite;
+                    }
+                }
+            }
+
+            // Construire le tableau examens_data au format JSON
+            foreach ($examensMap as $examenId => $quantite) {
+                $examensData[] = [
+                    'id' => $examenId,
+                    'quantite' => $quantite
+                ];
+            }
+
+            // Créer la caisse avec examens_data
             $caisse = Caisse::create([
                 'numero_facture' => $prochainNumero,
                 'numero_entre' => $numeroEntree,
@@ -426,6 +467,7 @@ class HospitalisationController extends Controller
                 'nom_caissier' => \Illuminate\Support\Facades\Auth::user()->name,
                 'assurance_id' => $assuranceId,
                 'couverture' => $assuranceId ? (int) $couverture : null,
+                'examens_data' => !empty($examensData) ? json_encode($examensData) : null,
             ]);
 
             // Etat de caisse - La recette = montant du paiement (total des charges)
@@ -1256,5 +1298,55 @@ class HospitalisationController extends Controller
             'success' => true,
             'patients' => $patients
         ]);
+    }
+
+    /**
+     * Trouve ou crée un Examen pour un médicament de pharmacie
+     * 
+     * @param \App\Models\Pharmacie $pharmacie
+     * @param int $medecinId
+     * @return \App\Models\Examen
+     */
+    private function findOrCreateExamenForPharmacy($pharmacie, $medecinId)
+    {
+        // Chercher un service de type PHARMACIE lié à ce médicament
+        $servicePharmacie = Service::where('pharmacie_id', $pharmacie->id)
+            ->where('type_service', 'PHARMACIE')
+            ->first();
+
+        // Si pas de service, chercher un service PHARMACIE générique
+        if (!$servicePharmacie) {
+            $servicePharmacie = Service::where('type_service', 'PHARMACIE')
+                ->whereNull('pharmacie_id')
+                ->first();
+        }
+
+        // Si toujours pas de service, créer un service PHARMACIE générique
+        if (!$servicePharmacie) {
+            $servicePharmacie = Service::create([
+                'nom' => 'PHARMACIE',
+                'type_service' => 'PHARMACIE',
+                'pharmacie_id' => null,
+            ]);
+        }
+
+        // Chercher un examen existant pour ce médicament
+        $examen = Examen::where('nom', $pharmacie->nom_medicament)
+            ->where('idsvc', $servicePharmacie->id)
+            ->first();
+
+        // Si pas d'examen, en créer un
+        if (!$examen) {
+            $examen = Examen::create([
+                'nom' => $pharmacie->nom_medicament,
+                'idsvc' => $servicePharmacie->id,
+                'medecin_id' => $medecinId,
+                'tarif' => $pharmacie->prix_vente,
+                'part_cabinet' => $pharmacie->prix_vente,
+                'part_medecin' => 0, // PHARMACIE: pas de part médecin
+            ]);
+        }
+
+        return $examen;
     }
 }

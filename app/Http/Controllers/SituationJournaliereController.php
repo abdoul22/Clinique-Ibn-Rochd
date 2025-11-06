@@ -124,14 +124,23 @@ class SituationJournaliereController extends Controller
                 }
             } else {
                 // Mode examen unique (ancien format) - compatibilité avec les anciennes factures
+                
+                // Vérifier si c'est une hospitalisation sans examens_data
+                $examen = $caisse->examen;
+                if ($examen && strtolower($examen->nom) === 'hospitalisation' && !$caisse->examens_data) {
+                    // Décomposer l'hospitalisation en charges individuelles
+                    $this->decomposeHospitalisationCharges($caisse, $servicesData, $medecinId, $medecin);
+                    continue; // Passer à la caisse suivante
+                }
+
                 // Get the actual service - PRIORITY:
                 // 1. From examen->service (via idsvc) - THIS IS THE REAL SERVICE
                 // 2. From caisse->service (direct relationship) - FALLBACK
                 $service = null;
 
                 // First try to get from examen (most reliable)
-                if ($caisse->examen && $caisse->examen->service) {
-                    $service = $caisse->examen->service;
+                if ($examen && $examen->service) {
+                    $service = $examen->service;
                 }
                 // Fallback to caisse service
                 elseif ($caisse->service) {
@@ -142,8 +151,6 @@ class SituationJournaliereController extends Controller
                 if (!$service) {
                     continue;
                 }
-
-                $examen = $caisse->examen;
 
                 // Check if this is a pharmaceutical product
                 // Group all pharmacy items under "PHARMACIE" service
@@ -353,5 +360,162 @@ class SituationJournaliereController extends Controller
         }
 
         return false;
+    }
+
+    /**
+     * Décompose une hospitalisation en charges individuelles pour la situation journalière
+     * Utilisé comme fallback pour les anciennes factures sans examens_data
+     * 
+     * @param \App\Models\Caisse $caisse
+     * @param array &$servicesData
+     * @param int $medecinId
+     * @param \App\Models\Medecin $medecin
+     * @return void
+     */
+    private function decomposeHospitalisationCharges($caisse, &$servicesData, $medecinId, $medecin)
+    {
+        // Récupérer l'hospitalisation associée à cette caisse
+        $hospitalisation = \App\Models\Hospitalisation::where('gestion_patient_id', $caisse->gestion_patient_id)
+            ->whereDate('date_entree', $caisse->date_examen)
+            ->first();
+
+        if (!$hospitalisation) {
+            // Si pas d'hospitalisation trouvée, traiter comme un examen normal HOSPITALISATION
+            $serviceId = 'HOSPITALISATION';
+            if (!isset($servicesData[$serviceId])) {
+                $servicesData[$serviceId] = [
+                    'service_name' => 'HOSPITALISATION',
+                    'medecins' => [],
+                    'total_actes' => 0,
+                ];
+            }
+            if (!isset($servicesData[$serviceId]['medecins'][$medecinId])) {
+                $servicesData[$serviceId]['medecins'][$medecinId] = [
+                    'nom' => $medecin->nomcomplet,
+                    'examens' => [],
+                    'nombre_actes' => 0,
+                ];
+            }
+            $servicesData[$serviceId]['medecins'][$medecinId]['examens']['Hospitalisation'] = 1;
+            $servicesData[$serviceId]['medecins'][$medecinId]['nombre_actes'] += 1;
+            $servicesData[$serviceId]['total_actes'] += 1;
+            return;
+        }
+
+        // Récupérer les charges facturées de cette hospitalisation liées à cette caisse
+        $charges = \App\Models\HospitalisationCharge::where('hospitalisation_id', $hospitalisation->id)
+            ->where('caisse_id', $caisse->id)
+            ->where('is_billed', true)
+            ->get();
+
+        // Si pas de charges trouvées via caisse_id, essayer de récupérer toutes les charges facturées
+        if ($charges->isEmpty()) {
+            $charges = \App\Models\HospitalisationCharge::where('hospitalisation_id', $hospitalisation->id)
+                ->where('is_billed', true)
+                ->whereDate('billed_at', $caisse->date_examen)
+                ->get();
+        }
+
+        foreach ($charges as $charge) {
+            // Classifier la charge selon son type
+            $serviceKey = $this->classifyChargeForService($charge);
+            
+            // Déterminer le service ID
+            if ($serviceKey === 'PHARMACIE') {
+                $serviceId = 'pharmacie-group';
+            } else {
+                // Pour les autres services, utiliser le service ID réel si disponible
+                $serviceId = $serviceKey;
+            }
+
+            // Initialiser le service si nécessaire
+            if (!isset($servicesData[$serviceId])) {
+                $servicesData[$serviceId] = [
+                    'service_name' => $serviceKey,
+                    'medecins' => [],
+                    'total_actes' => 0,
+                ];
+            }
+
+            // Initialiser le médecin si nécessaire
+            if (!isset($servicesData[$serviceId]['medecins'][$medecinId])) {
+                $servicesData[$serviceId]['medecins'][$medecinId] = [
+                    'nom' => $medecin->nomcomplet,
+                    'examens' => [],
+                    'nombre_actes' => 0,
+                ];
+            }
+
+            // Ajouter l'examen/charge
+            $examenNom = $charge->description_snapshot;
+            $quantite = $charge->quantity ?? 1;
+
+            if (!isset($servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom])) {
+                $servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom] = 0;
+            }
+            $servicesData[$serviceId]['medecins'][$medecinId]['examens'][$examenNom] += $quantite;
+
+            // Compter les actes
+            $servicesData[$serviceId]['medecins'][$medecinId]['nombre_actes'] += $quantite;
+            $servicesData[$serviceId]['total_actes'] += $quantite;
+        }
+    }
+
+    /**
+     * Classifie une charge d'hospitalisation selon son type de service
+     * Aligné avec la logique de RecapitulatifServiceJournalierController::classifyCharge()
+     * 
+     * @param \App\Models\HospitalisationCharge $charge
+     * @return string
+     */
+    private function classifyChargeForService($charge)
+    {
+        $description = strtolower($charge->description_snapshot);
+
+        // Identifier les médicaments
+        if (
+            $charge->is_pharmacy ||
+            $charge->type === 'pharmacy' ||
+            strpos($description, 'flagyl') !== false ||
+            strpos($description, 'novalgin') !== false ||
+            strpos($description, 'ssi') !== false ||
+            strpos($description, 'kit') !== false ||
+            strpos($description, 'mg') !== false
+        ) {
+            return 'PHARMACIE';
+        }
+
+        // Identifier les examens d'exploration fonctionnelle
+        if (
+            strpos($description, 'ecg') !== false ||
+            strpos($description, 'echo') !== false ||
+            strpos($description, 'radiologie') !== false ||
+            strpos($description, 'scanner') !== false ||
+            strpos($description, 'eeg') !== false
+        ) {
+            return 'EXPLORATIONS FONCTIONNELLES';
+        }
+
+        // Identifier les consultations
+        if (
+            strpos($description, 'consultation') !== false ||
+            strpos($description, 'cs') !== false ||
+            strpos($description, 'dr.') !== false
+        ) {
+            return 'CONSULTATIONS EXTERNES';
+        }
+
+        // Identifier les chambres (ROOM_DAY)
+        if (
+            $charge->type === 'room_day' ||
+            strpos($description, 'chambre') !== false ||
+            strpos($description, 'room_day') !== false ||
+            strpos($description, 'lit') !== false
+        ) {
+            return 'HOSPITALISATION';
+        }
+
+        // Par défaut, retourner le type de charge en majuscules
+        return strtoupper($charge->type ?? 'HOSPITALISATION');
     }
 }
