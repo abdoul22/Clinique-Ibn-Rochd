@@ -311,7 +311,7 @@
                                     {{ $paiement->source === 'part_medecin' ? 'bg-rose-100 dark:bg-rose-500/30 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-400/50' : '' }}
                                     {{ $paiement->source === 'depense' ? 'bg-red-600 dark:bg-red-900 text-white dark:text-white border border-red-700 dark:border-red-700' : '' }}
                                     {{ $paiement->source === 'facture' ? 'bg-blue-100 dark:bg-blue-500/30 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-400/50' : '' }}
-                                    {{ $paiement->source === 'credit_assurance' ? 'bg-indigo-100 dark:bg-indigo-500/30 text-indigo-800 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-400/50' : '' }}
+                                    {{ $paiement->source === 'credit_assurance' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700/50' : '' }}
                                 ">
                                     @if($paiement->source === 'part_medecin')
                                     Part Médecin
@@ -327,7 +327,7 @@
                                     @elseif($paiement->source === 'facture')
                                     📋 Facture
                                     @elseif($paiement->source === 'credit_assurance')
-                                    🏥 Crédit Assurance
+                                    Crédit Assurance
                                     @else
                                     {{ ucfirst($paiement->source ?? 'N/A') }}
                                     @endif
@@ -349,8 +349,8 @@
                                 </span>
                                 @elseif($paiement->source === 'credit_assurance')
                                 <span
-                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-500/30 text-indigo-800 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-400/50">
-                                    🏥 Crédit Assurance
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700/50">
+                                    Crédit Assurance
                                 </span>
                                 @elseif($paiement->caisse_id)
                                 <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.caisses.show', $paiement->caisse_id) : route('caisses.show', $paiement->caisse_id) }}"

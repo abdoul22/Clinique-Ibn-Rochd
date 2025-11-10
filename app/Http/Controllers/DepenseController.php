@@ -254,6 +254,21 @@ class DepenseController extends Controller
         }
 
         $depense = Depense::findOrFail($id);
+        
+        // Supprimer le ModePaiement associé si la dépense a un mode_paiement_id
+        if (!empty($depense->mode_paiement_id)) {
+            // Supprimer l'enregistrement ModePaiement correspondant (montant négatif pour sortie)
+            // Utiliser 'depense' comme source car c'est ainsi qu'ils sont créés lors de la création de dépense
+            ModePaiement::where('type', $depense->mode_paiement_id)
+                ->where('montant', -$depense->montant)
+                ->where('source', 'depense')
+                ->whereBetween('created_at', [
+                    $depense->created_at->copy()->subMinutes(1),
+                    $depense->created_at->copy()->addMinutes(1)
+                ])
+                ->delete();
+        }
+        
         $depense->delete();
         return redirect()->route('depenses.index')->with('success', 'Dépense supprimée.');
     }
