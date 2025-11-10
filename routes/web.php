@@ -217,6 +217,10 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     Route::get('situation-journaliere', [SituationJournaliereController::class, 'index'])->name('situation-journaliere.index');
     Route::get('situation-journaliere/print', [SituationJournaliereController::class, 'print'])->name('situation-journaliere.print');
     Route::get('situation-journaliere/export-pdf', [SituationJournaliereController::class, 'exportPdf'])->name('situation-journaliere.exportPdf');
+
+    // Dépenses - Seulement création pour admin
+    Route::get('depenses/create', [DepenseController::class, 'create'])->name('depenses.create');
+    Route::post('depenses', [DepenseController::class, 'store'])->name('depenses.store');
 });
 
 // Route pour afficher la liste des patients (accessible depuis les dashboards)
@@ -285,7 +289,7 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
     Route::get('assurances/export/pdf', [AssuranceController::class, 'exportPdf'])->name('assurances.exportPdf');
     Route::get('assurances/print', [AssuranceController::class, 'print'])->name('assurances.print');
 
-    // depences
+    // Dépenses - Routes complètes pour superadmin uniquement
     Route::resource('depenses', DepenseController::class);
     Route::get('depenses-export-pdf', [DepenseController::class, 'exportPdf'])->name('depenses.exportPdf');
     Route::get('depenses-print', [DepenseController::class, 'print'])->name('depenses.print');

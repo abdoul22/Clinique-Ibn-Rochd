@@ -7,11 +7,19 @@ use App\Models\PaymentMode;
 use App\Models\ModePaiement;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DepenseController extends Controller
 {
     public function index(Request $request)
     {
+        // Bloquer l'accès pour les admins
+        if (Auth::check() && Auth::user()->role && Auth::user()->role->name === 'admin') {
+            abort(403, 'Accès refusé. Les administrateurs ne peuvent pas consulter la liste des dépenses.');
+        }
+
         $period = $request->input('period', 'day');
         $date = $request->input('date');
         $week = $request->input('week');
@@ -20,18 +28,10 @@ class DepenseController extends Controller
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
 
-        $query = Depense::with(['modePaiement', 'credit']);
+        $query = Depense::with(['modePaiement', 'credit', 'creator']);
         $query->where('rembourse', false);
 
-        // Ancienne exclusion supprimée :
-        // $query->where(function ($q) {
-        //     $q->whereNull('credit_id')
-        //         ->orWhereHas('credit', function ($creditQuery) {
-        //             $creditQuery->where('source_type', '!=', \App\Models\Personnel::class);
-        //         });
-        // });
-
-        // Filtrage par période
+        // Filtrage par période - seulement si les paramètres sont fournis
         if ($period === 'day' && $date) {
             $query->whereDate('created_at', $date);
         } elseif ($period === 'week' && $week) {
@@ -55,6 +55,7 @@ class DepenseController extends Controller
         } elseif ($period === 'range' && $dateStart && $dateEnd) {
             $query->whereBetween('created_at', [$dateStart, $dateEnd]);
         }
+        // Si period=day mais pas de date, afficher toutes les dépenses (pas de filtre)
 
         if ($request->has('search')) {
             $query->where('nom', 'like', '%' . $request->search . '%');
@@ -94,13 +95,16 @@ class DepenseController extends Controller
 
         $request->validate([
             'nom' => 'required|string|max:255',
-            'montant' => 'required|string|max:255',
+            'montant' => 'required|numeric|min:0',
             'mode_paiement_id' => "required|string|in:$modesString",
         ]);
 
         if (str_contains(request('nom'), 'Part médecin')) {
             abort(403, 'Création manuelle des parts médecin interdite.');
         }
+
+        // Convertir le montant en nombre (entier car la colonne est integer)
+        $montant = (int) round((float) $request->montant);
 
         // Vérification du solde du mode de paiement (aligné au dashboard)
         $entree = \App\Models\EtatCaisse::whereNotNull('caisse_id')->whereHas('caisse.mode_paiements', function ($query) use ($request) {
@@ -120,44 +124,118 @@ class DepenseController extends Controller
 
         $soldeDisponible = $entree - $sortie;
 
-        if ($request->montant > $soldeDisponible) {
+        if ($montant > $soldeDisponible) {
             return back()->withErrors([
                 'mode_paiement_id' => "Fonds insuffisants dans le mode de paiement {$request->mode_paiement_id}. Solde disponible : " . number_format($soldeDisponible, 2) . " MRU"
-            ]);
+            ])->withInput();
         }
 
         // Le contrôle par mode est suffisant et cohérent avec le dashboard.
 
-        // Créer un nouvel enregistrement ModePaiement pour la sortie
-        \App\Models\ModePaiement::create([
-            'type' => $request->mode_paiement_id,
-            'montant' => -$request->montant, // Montant négatif pour sortie
-            'source' => 'depense'
-        ]);
+        // Utiliser une transaction pour s'assurer que les deux créations réussissent ou échouent ensemble
+        try {
+            DB::beginTransaction();
 
-        Depense::create([
-            'nom' => $request->nom,
-            'montant' => $request->montant,
-            'mode_paiement_id' => $request->mode_paiement_id,
-            'source' => 'manuelle',
-        ]);
-        return redirect()->route('depenses.index')->with('success', 'Dépense ajoutée avec succès.');
+            // Créer un nouvel enregistrement ModePaiement pour la sortie
+            $modePaiement = ModePaiement::create([
+                'type' => $request->mode_paiement_id,
+                'montant' => -$montant, // Montant négatif pour sortie
+                'source' => 'depense'
+            ]);
+
+            // Log pour débogage
+            Log::info('ModePaiement créé', [
+                'mode_paiement_id' => $modePaiement->id,
+                'type' => $modePaiement->type,
+                'montant' => $modePaiement->montant,
+                'user_id' => Auth::id(),
+                'user_role' => Auth::user()->role?->name ?? 'N/A'
+            ]);
+
+            // Créer la dépense
+            $depense = Depense::create([
+                'nom' => $request->nom,
+                'montant' => $montant,
+                'mode_paiement_id' => $request->mode_paiement_id,
+                'source' => 'manuelle',
+                'created_by' => Auth::id(),
+            ]);
+
+            // Log pour débogage
+            Log::info('Depense créée', [
+                'depense_id' => $depense->id,
+                'nom' => $depense->nom,
+                'montant' => $depense->montant,
+                'mode_paiement_id' => $depense->mode_paiement_id,
+                'created_by' => $depense->created_by,
+                'user_role' => Auth::user()->role?->name ?? 'N/A'
+            ]);
+
+            DB::commit();
+
+            // Rediriger vers le dashboard admin si admin, sinon vers index
+            if (Auth::check() && Auth::user()->role && Auth::user()->role->name === 'admin') {
+                return redirect()->route('dashboard.admin')->with('success', 'Dépense ajoutée avec succès.');
+            }
+            
+            return redirect()->route('depenses.index')->with('success', 'Dépense ajoutée avec succès.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            // Log l'erreur pour débogage
+            Log::error('Erreur lors de la création de la dépense', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id(),
+                'user_role' => Auth::user()->role?->name ?? 'N/A',
+                'request_data' => $request->all()
+            ]);
+
+            return back()->withErrors([
+                'error' => 'Une erreur est survenue lors de la création de la dépense. Veuillez réessayer.'
+            ])->withInput();
+        }
     }
 
     public function show($id)
     {
-        $depense = Depense::findOrFail($id);
-        return view('depenses.show', compact('depense'));
+        // Bloquer l'accès pour les admins
+        if (Auth::check() && Auth::user()->role && Auth::user()->role->name === 'admin') {
+            abort(403, 'Accès refusé. Les administrateurs ne peuvent pas consulter les détails des dépenses.');
+        }
+
+        try {
+            $depense = Depense::with(['creator.role', 'credit'])->findOrFail($id);
+            return view('depenses.show', compact('depense'));
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'affichage de la dépense', [
+                'depense_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            abort(500, 'Une erreur est survenue lors du chargement de la dépense.');
+        }
     }
 
     public function edit($id)
     {
+        // Bloquer l'accès pour les admins
+        if (Auth::check() && Auth::user()->role && Auth::user()->role->name === 'admin') {
+            abort(403, 'Accès refusé. Les administrateurs ne peuvent pas modifier les dépenses.');
+        }
+
         $depense = Depense::findOrFail($id);
         return view('depenses.edit', compact('depense'));
     }
 
     public function update(Request $request, $id)
     {
+        // Bloquer l'accès pour les admins
+        if (Auth::check() && Auth::user()->role && Auth::user()->role->name === 'admin') {
+            abort(403, 'Accès refusé. Les administrateurs ne peuvent pas modifier les dépenses.');
+        }
+
         $request->validate([
             'nom' => 'required|string|max:255',
             'montant' => 'required|string|max:255',
@@ -170,6 +248,11 @@ class DepenseController extends Controller
 
     public function destroy($id)
     {
+        // Bloquer l'accès pour les admins
+        if (Auth::check() && Auth::user()->role && Auth::user()->role->name === 'admin') {
+            abort(403, 'Accès refusé. Les administrateurs ne peuvent pas supprimer les dépenses.');
+        }
+
         $depense = Depense::findOrFail($id);
         $depense->delete();
         return redirect()->route('depenses.index')->with('success', 'Dépense supprimée.');

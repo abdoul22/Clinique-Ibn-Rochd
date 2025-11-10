@@ -64,6 +64,13 @@
             <p class="text-sm" style="color: #ffffff !important;">Rapport quotidien du caissier : recettes, dépenses, crédits et liquidités.</p>
         </a>
 
+        {{-- Dépenses --}}
+        <a href="{{ route('admin.depenses.create') }}"
+            class="bg-red-600 text-white rounded-2xl p-6 shadow hover:bg-red-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Dépenses</h2>
+            <p class="text-sm text-red-100">Enregistrer les dépenses opérationnelles.</p>
+        </a>
+
     </div>
 </div>
 @endsection
