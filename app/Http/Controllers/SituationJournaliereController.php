@@ -6,6 +6,7 @@ use App\Models\Caisse;
 use App\Models\ModePaiement;
 use App\Models\Credit;
 use App\Models\EtatCaisse;
+use App\Models\Depense;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -279,6 +280,15 @@ class SituationJournaliereController extends Controller
             return 0;
         });
 
+        // Get depenses for the selected date (only non-reimbursed expenses)
+        $depenses = Depense::whereDate('created_at', $date)
+            ->where('rembourse', false)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Calculate total depenses for the date
+        $totalDepenses = $depenses->sum('montant');
+
         return view('situation-journaliere.index', compact(
             'date',
             'dateCarbon',
@@ -290,7 +300,9 @@ class SituationJournaliereController extends Controller
             'creditsPersonnel',
             'creditsAssurance',
             'totalPartMedecin',
-            'totalPharmacie'
+            'totalPharmacie',
+            'depenses',
+            'totalDepenses'
         ));
     }
 

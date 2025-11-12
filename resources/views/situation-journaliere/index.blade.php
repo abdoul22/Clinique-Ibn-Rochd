@@ -189,9 +189,25 @@
                         <h3
                             class="font-bold text-gray-800 dark:text-white mb-3 text-center border-b border-gray-300 dark:border-gray-600 pb-2">
                             DÉPENSE</h3>
-                        <div class="flex justify-center items-center h-20">
-                            <input type="text"
-                                class="w-32 px-3 py-2 border-2 border-gray-400 dark:border-gray-500 rounded text-center font-bold bg-white text-gray-900 dark:bg-gray-700 dark:text-white">
+                        <div class="space-y-2">
+                            @if($depenses->count() > 0)
+                                @foreach($depenses as $depense)
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $depense->nom }}</span>
+                                    <span class="text-sm font-semibold text-gray-800 dark:text-white">{{ number_format($depense->montant, 0, ',', ' ') }} MRU</span>
+                                </div>
+                                @endforeach
+                                <div class="flex justify-between items-center pt-2 border-t border-gray-300 dark:border-gray-600">
+                                    <span class="text-sm font-bold text-gray-800 dark:text-white">TOTAL</span>
+                                    <input type="text" value="{{ number_format($totalDepenses, 0, ',', ' ') }}"
+                                        class="w-32 px-3 py-2 border-2 border-gray-400 dark:border-gray-500 rounded text-center font-bold bg-white text-gray-900 dark:bg-gray-700 dark:text-white" readonly>
+                                </div>
+                            @else
+                                <div class="flex justify-center items-center h-20">
+                                    <input type="text" value="0"
+                                        class="w-32 px-3 py-2 border-2 border-gray-400 dark:border-gray-500 rounded text-center font-bold bg-white text-gray-900 dark:bg-gray-700 dark:text-white" readonly>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
