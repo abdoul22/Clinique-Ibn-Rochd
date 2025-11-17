@@ -280,9 +280,12 @@ class SituationJournaliereController extends Controller
             return 0;
         });
 
-        // Get depenses for the selected date (only non-reimbursed expenses)
+        // Get depenses for the selected date (only manual expenses, excluding "Part médecin")
+        // Only show expenses created manually from /admin/depenses/create or /depenses/create
         $depenses = Depense::whereDate('created_at', $date)
             ->where('rembourse', false)
+            ->where('source', 'manuelle')
+            ->where('nom', 'NOT LIKE', '%Part médecin%')
             ->orderBy('created_at', 'desc')
             ->get();
 
