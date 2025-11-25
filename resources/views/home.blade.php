@@ -1,93 +1,264 @@
 @extends('layouts.app')
 @section('title', 'Accueil - Clinique Ibn Rochd')
+
 @section('content')
-<!-- Hero Section -->
-<section
-    class="hero-section text-white relative overflow-hidden bg-gradient-to-b from-primary-700 to-primary-900 dark:from-gray-900 dark:to-gray-950 min-h-[350px] flex items-center justify-center py-12 sm:py-20 md:py-28">
-    <div class="max-w-3xl mx-auto px-2 sm:px-4 text-center relative z-10 animate-fade-in">
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-6 leading-tight drop-shadow-lg">
-            Système de gestion médicale<br>
-            <span class="font-extrabold text-4xl sm:text-5xl md:text-6xl">Clinique </span>
-            <span class="text-secondary-200 font-extrabold text-4xl sm:text-5xl md:text-6xl">Ibn Rochd</span>
-        </h1>
-        <a href="{{ route('patients.index') }}"
-            class="inline-block bg-white dark:bg-gray-800 text-primary-600 dark:text-white font-bold px-8 py-4 sm:px-10 sm:py-5 rounded-full shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 text-lg sm:text-xl mt-4">
-            <i class="fas fa-users mr-2"></i>Voir les patients
-        </a>
+<style>
+    /* Animations Douces & Premium */
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-15px); }
+        100% { transform: translateY(0px); }
+    }
+
+    @keyframes float-delayed {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    @keyframes pulse-soft {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+        70% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+
+    @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-float-delayed { animation: float-delayed 7s ease-in-out infinite 1s; }
+    .animate-fade-in-up { animation: fade-in-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+
+    /* Glassmorphism & 3D Cards */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95); /* Plus opaque pour light mode */
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 1);
+        box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.15); /* Ombre plus marquée */
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Dark Mode Support pour Glassmorphism - Renforcé */
+    .dark .glass-card {
+        background-color: rgba(17, 24, 39, 0.8) !important; /* Gray-900 + Opacity */
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.7) !important;
+        color: #e5e7eb !important; /* text-gray-200 */
+    }
+
+    .dark .glass-card h3 {
+        color: #ffffff !important;
+    }
+
+    .dark .glass-card p, 
+    .dark .glass-card .text-gray-500 {
+        color: #9ca3af !important; /* text-gray-400 */
+    }
+
+    .glass-card:hover {
+        transform: translateY(-8px) scale(1.01);
+        box-shadow: 0 30px 60px -15px rgba(59, 130, 246, 0.25);
+        border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .dark .glass-card:hover {
+        background-color: rgba(30, 41, 59, 0.9) !important; /* Slate-800 */
+        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8) !important;
+        border-color: rgba(59, 130, 246, 0.5) !important;
+    }
+
+    .icon-3d-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-3d-wrapper::before {
+        content: '';
+        position: absolute;
+        inset: -10px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+        border-radius: 50%;
+        z-index: 0;
+    }
+    
+    .text-gradient {
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+</style>
+
+<!-- Hero Section Premium -->
+<div class="relative min-h-[90vh] flex items-center overflow-hidden bg-slate-50 dark:bg-gray-900">
+    <!-- Background Abstract Shapes -->
+    <div class="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 animate-float"></div>
+    <div class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-cyan-100/40 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 animate-float-delayed"></div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <!-- Text Content -->
+        <div class="text-left animate-fade-in-up">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-semibold text-sm mb-6">
+                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                <span>Solution Hospitalière Intelligente</span>
+            </div>
+            
+            <h1 class="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-6 leading-[1.1]">
+                L'Excellence <br>
+                <span class="text-gradient">Médicale</span> Digitalisée
+            </h1>
+            
+            <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-lg leading-relaxed">
+                Une plateforme unifiée pour une gestion clinique sans faille. Du dossier patient à la facturation, simplifiez chaque étape avec élégance et précision.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="{{ route('patients.index') }}" class="group relative px-8 py-4 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-900/20 transition-all hover:shadow-blue-700/30 overflow-hidden">
+                    <span class="relative z-10 flex items-center gap-3 text-lg">
+                        Accéder au Portail
+                        <i class="fas fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                    </span>
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </a>
+                
+                <a href="#features" class="px-8 py-4 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center justify-center gap-3 text-lg">
+                    <i class="fas fa-layer-group text-blue-500"></i>
+                    Découvrir les modules
+                </a>
+            </div>
+        </div>
+
+        <!-- 3D Illustration Area -->
+        <div class="relative h-[500px] hidden lg:flex items-center justify-center perspective-1000 animate-fade-in-up delay-200">
+            <!-- Central Card (Patient) -->
+            <div class="glass-card absolute z-20 w-80 p-6 rounded-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-float">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg">
+                        <i class="fas fa-user-injured text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="h-3 w-24 bg-gray-200 rounded-full mb-2"></div>
+                        <div class="h-2 w-16 bg-gray-100 rounded-full"></div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="h-10 w-full bg-blue-50 rounded-xl flex items-center px-3">
+                        <div class="h-2 w-1/3 bg-blue-200 rounded-full"></div>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="h-16 w-1/2 bg-gray-50 rounded-xl"></div>
+                        <div class="h-16 w-1/2 bg-gray-50 rounded-xl"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating Card 1 (Stats) -->
+            <div class="glass-card absolute z-10 w-64 p-5 rounded-3xl top-20 right-10 animate-float-delayed">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm font-bold text-gray-500 dark:text-gray-400">Activité</span>
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full dark:bg-green-900 dark:text-green-300">+12%</span>
+                </div>
+                <div class="h-24 flex items-end justify-between gap-1">
+                    <div class="w-full bg-blue-100 dark:bg-blue-900/40 rounded-t-sm h-[40%]"></div>
+                    <div class="w-full bg-blue-200 dark:bg-blue-800/50 rounded-t-sm h-[60%]"></div>
+                    <div class="w-full bg-blue-500 rounded-t-sm h-[80%] shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+                    <div class="w-full bg-blue-300 dark:bg-blue-700/60 rounded-t-sm h-[50%]"></div>
+                    <div class="w-full bg-blue-100 dark:bg-blue-900/40 rounded-t-sm h-[30%]"></div>
+                </div>
+            </div>
+
+            <!-- Floating Card 2 (Secure) -->
+            <div class="glass-card absolute z-10 w-56 p-4 rounded-3xl bottom-20 left-10 animate-float" style="animation-delay: -2s;">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-gray-800 dark:text-gray-200">Données Sécurisées</div>
+                        <div class="text-xs text-green-600 dark:text-green-400">Chiffrement AES-256</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <!-- Waves divider -->
-    <div class="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"
-            class="fill-current text-white dark:text-gray-900">
-            <path
-                d="M0 0v46.29c47.79 22.2 103.59 32.17 158 28 70.36-5.37 136.33-33.31 206.8-37.5 73.84-4.36 147.54 16.88 218.2 35.26 69.27 18 138.3 24.88 209.4 13.08 36.15-6 69.85-17.84 104.45-29.34C989.49 25 1113-14.29 1200 52.47V0z"
-                opacity=".25" />
-            <path
-                d="M0 0v15.81c13 21.11 27.64 41.05 47.69 56.24C99.41 111.27 165 111 224.58 91.58c31.15-10.15 60.09-26.07 89.67-39.8 40.92-19 84.73-46 130.83-49.67 36.26-2.85 70.9 9.42 98.6 31.56 31.77 25.39 62.32 62 103.63 73 40.44 10.79 81.35-6.69 119.13-24.28s75.16-39 116.92-43.05c59.73-5.85 113.28 22.88 168.9 38.84 30.2 8.66 59 6.17 87.09-7.5 22.43-10.89 48-26.93 60.65-49.24V0z"
-                opacity=".5" />
-            <path
-                d="M0 0v5.63C149.93 59 314.09 71.32 475.83 42.57c43-7.64 84.23-20.12 127.61-26.46 59-8.63 112.48 12.24 165.56 35.4C827.93 77.22 886 95.24 951.2 90c86.53-7 172.46-45.71 248.8-84.81V0z" />
-        </svg>
+</div>
+
+<!-- Features Grid -->
+<section id="features" class="py-24 bg-white dark:bg-gray-900 relative overflow-hidden transition-colors duration-300">
+    <div class="container mx-auto px-4 sm:px-6">
+        <div class="text-center max-w-3xl mx-auto mb-20 animate-fade-in-up delay-100">
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4">L'écosystème complet</h2>
+            <p class="text-lg text-gray-500 dark:text-gray-400">Tout ce dont votre clinique a besoin, centralisé dans une interface unique et intuitive.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Card 1 -->
+            <div class="glass-card p-8 rounded-3xl group animate-fade-in-up delay-100">
+                <div class="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Dossier Médical</h3>
+                <p class="leading-relaxed">Historique complet, consultations, ordonnances et imagerie. Tout le parcours patient en un coup d'œil.</p>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="glass-card p-8 rounded-3xl group animate-fade-in-up delay-200">
+                <div class="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Facturation & Caisse</h3>
+                <p class="leading-relaxed">Gestion fluide des paiements, devis, et remboursements assurances. Une traçabilité financière totale.</p>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="glass-card p-8 rounded-3xl group animate-fade-in-up delay-300">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-flask"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Laboratoire</h3>
+                <p class="leading-relaxed">Demandes d'examens et résultats intégrés directement au dossier patient. Zéro papier, zéro perte.</p>
+            </div>
+
+             <!-- Card 4 -->
+             <div class="glass-card p-8 rounded-3xl group animate-fade-in-up delay-100">
+                <div class="w-14 h-14 rounded-2xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-procedures"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Hospitalisation</h3>
+                <p class="leading-relaxed">Gestion des lits, admissions et sorties. Vue en temps réel de l'occupation des services.</p>
+            </div>
+
+             <!-- Card 5 -->
+             <div class="glass-card p-8 rounded-3xl group animate-fade-in-up delay-200">
+                <div class="w-14 h-14 rounded-2xl bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Rapports & Stats</h3>
+                <p class="leading-relaxed">Tableaux de bord décisionnels pour suivre la performance de votre clinique au jour le jour.</p>
+            </div>
+
+             <!-- Card 6 -->
+             <div class="glass-card p-8 rounded-3xl group animate-fade-in-up delay-300">
+                <div class="w-14 h-14 rounded-2xl bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Admin & Sécurité</h3>
+                <p class="leading-relaxed">Gestion fine des rôles (Médecin, Caissier, Admin) et traçabilité complète des actions.</p>
+            </div>
+        </div>
     </div>
 </section>
-<!-- Features -->
-<section class="max-w-7xl mx-auto px-2 sm:px-4 py-10 sm:py-16">
-    <div class="text-center mb-10 sm:mb-16">
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-primary-700 dark:text-white mb-4">
-            Gestion médicale simplifiée
-        </h2>
+
+<!-- Footer Simple -->
+<footer class="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-12">
+    <div class="container mx-auto px-4 text-center">
+        <p class="text-gray-400 text-sm">© {{ date('Y') }} {{ config('clinique.name') }}. Tous droits réservés.</p>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-        <!-- Feature 1 -->
-        <div
-            class="card-hover bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl flex flex-col items-center text-center">
-            <div class="feature-icon bg-blue-50 dark:bg-blue-900/20 mb-4">
-                <i class="fas fa-user-injured text-primary-600 dark:text-primary-300 text-4xl"></i>
-            </div>
-            <h3 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Suivi des patients</h3>
-            <p class="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
-                Accédez rapidement aux informations médicales et administratives de chaque patient grâce à une interface
-                intuitive.
-            </p>
-        </div>
-        <!-- Feature 2 -->
-        <div
-            class="card-hover bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl flex flex-col items-center text-center">
-            <div class="feature-icon bg-orange-50 dark:bg-orange-900/20 mb-4">
-                <i class="fas fa-calendar-check text-orange-500 dark:text-orange-300 text-4xl"></i>
-            </div>
-            <h3 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Gestion des rendez-vous</h3>
-            <p class="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
-                Planifiez et gérez les rendez-vous en toute simplicité avec notre système de calendrier intelligent.
-            </p>
-        </div>
-        <!-- Feature 3 -->
-        <div
-            class="card-hover bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl flex flex-col items-center text-center">
-            <div class="feature-icon bg-green-50 dark:bg-green-900/20 mb-4">
-                <i class="fas fa-file-invoice-dollar text-green-500 dark:text-green-300 text-4xl"></i>
-            </div>
-            <h3 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Facturation claire</h3>
-            <p class="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
-                Générez des factures précises pour chaque patient en un seul clic et simplifiez votre gestion
-                financière.
-            </p>
-        </div>
-    </div>
-</section>
-<!-- CTA Section -->
-<section
-    class="bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-900 dark:to-primary-800 text-white py-10 sm:py-16">
-    <div class="max-w-4xl mx-auto px-2 sm:px-4 text-center">
-        <h2 class="text-xl sm:text-2xl md:text-3xl font-extrabold mb-4 text-white">Prêt à transformer votre gestion
-            médicale ?</h2>
-        <p class="text-indigo-100 dark:text-indigo-300 text-base sm:text-xl mb-6 max-w-2xl mx-auto">
-            Rejoignez des centaines de professionnels de santé qui utilisent déjà Ibn Rochd
-        </p>
-        <a href="{{ route('patients.index') }}"
-            class="inline-block bg-white dark:bg-gray-800 text-primary-700 dark:text-white font-bold px-8 py-4 sm:px-10 sm:py-5 rounded-full shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 text-lg sm:text-xl">
-            <i class="fas fa-play-circle mr-2"></i>Commencer maintenant
-        </a>
-    </div>
-</section>
+</footer>
 @endsection

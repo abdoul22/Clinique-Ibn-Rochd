@@ -39,7 +39,8 @@ class HospitalisationController extends Controller
     {
         $patients = GestionPatient::all();
         // Organiser les médecins par fonction : Pr, Dr, Tss, SGF, IDE
-        $medecins = Medecin::orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
+        $medecins = Medecin::where('statut', 'actif')
+            ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
             ->orderBy('nom')
             ->get();
         $services = Service::all();
@@ -265,10 +266,11 @@ class HospitalisationController extends Controller
                 ->where('stock', '>', 0)
                 ->orderBy('nom_medicament')
                 ->get();
-            $medecins = Medecin::orderBy('nom')->get();
+            $medecins = Medecin::where('statut', 'actif')->orderBy('nom')->get();
 
             // Récupérer uniquement les pharmaciens (médecins avec fonction Pharmacien)
             $pharmaciens = Medecin::where('fonction', 'Phr')
+                ->where('statut', 'actif')
                 ->orderBy('nom')
                 ->get();
 
@@ -518,7 +520,7 @@ class HospitalisationController extends Controller
     {
         $hospitalisation = Hospitalisation::with(['lit.chambre'])->findOrFail($id);
         $patients = GestionPatient::all();
-        $medecins = Medecin::all();
+        $medecins = Medecin::where('statut', 'actif')->get();
         $services = Service::all();
         $chambres = Chambre::active()->with(['lits' => function ($q) use ($hospitalisation) {
             // Inclure le lit actuel de l'hospitalisation même s'il n'est pas libre

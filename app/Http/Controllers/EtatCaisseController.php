@@ -50,6 +50,13 @@ class EtatCaisseController extends Controller
             ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
             ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
             ->when($request->medecin_id, fn($q) => $q->where('medecin_id', $request->medecin_id))
+            ->when($request->statut, function ($q) use ($request) {
+                if ($request->statut === 'valide') {
+                    $q->where('validated', true);
+                } elseif ($request->statut === 'non_valide') {
+                    $q->where('validated', false);
+                }
+            })
             ->latest()->paginate(10);
 
         $personnels = Personnel::all();
@@ -643,6 +650,13 @@ class EtatCaisseController extends Controller
             ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
             ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
             ->when($request->medecin_id, fn($q) => $q->where('medecin_id', $request->medecin_id))
+            ->when($request->statut, function ($q) use ($request) {
+                if ($request->statut === 'valide') {
+                    $q->where('validated', true);
+                } elseif ($request->statut === 'non_valide') {
+                    $q->where('validated', false);
+                }
+            })
             ->latest()->get(); // Pas de pagination pour le PDF
 
         // Calculer les résumés avec filtres
@@ -699,6 +713,13 @@ class EtatCaisseController extends Controller
             ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
             ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
             ->when($request->medecin_id, fn($q) => $q->where('medecin_id', $request->medecin_id))
+            ->when($request->statut, function ($q) use ($request) {
+                if ($request->statut === 'valide') {
+                    $q->where('validated', true);
+                } elseif ($request->statut === 'non_valide') {
+                    $q->where('validated', false);
+                }
+            })
             ->latest()->get(); // Pas de pagination pour l'impression
 
         // Calculer les résumés avec filtres
@@ -720,6 +741,7 @@ class EtatCaisseController extends Controller
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
         $medecinId = $request->input('medecin_id');
+        $statut = $request->input('statut');
 
         // Construire la requête de base pour les résumés
         $etatCaisseQuery = EtatCaisse::query();
@@ -730,6 +752,15 @@ class EtatCaisseController extends Controller
         // Filtrer par médecin si fourni
         if ($medecinId) {
             $etatCaisseQuery->where('medecin_id', $medecinId);
+        }
+
+        // Filtrer par statut si fourni
+        if ($statut) {
+            if ($statut === 'valide') {
+                $etatCaisseQuery->where('validated', true);
+            } elseif ($statut === 'non_valide') {
+                $etatCaisseQuery->where('validated', false);
+            }
         }
 
         // Appliquer les filtres de date

@@ -66,18 +66,15 @@
                         </div>
                         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
                             <p class="text-sm font-medium text-gray-500 dark:text-gray-300">Cette semaine</p>
-                            <p class="text-xl font-semibold text-gray-900 dark:text-white mt-1">{{
-                                $examensHebdo->sum('total') }}</p>
+                            <p class="text-xl font-semibold text-gray-900 dark:text-white mt-1">{{ $totalSemaine }}</p>
                         </div>
                         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
                             <p class="text-sm font-medium text-gray-500 dark:text-gray-300">Ce mois</p>
-                            <p class="text-xl font-semibold text-gray-900 dark:text-white mt-1">{{
-                                $examensMensuels->sum('total') }}</p>
+                            <p class="text-xl font-semibold text-gray-900 dark:text-white mt-1">{{ $totalMois }}</p>
                         </div>
                         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
                             <p class="text-sm font-medium text-gray-500 dark:text-gray-300">Cette année</p>
-                            <p class="text-xl font-semibold text-gray-900 dark:text-white mt-1">{{
-                                $examensAnnuels->sum('total') }}</p>
+                            <p class="text-xl font-semibold text-gray-900 dark:text-white mt-1">{{ $totalAnnee }}</p>
                         </div>
                         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
                             <p class="text-sm font-medium text-gray-500 dark:text-gray-300">Total</p>

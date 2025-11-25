@@ -49,11 +49,24 @@ class DossierMedicalController extends Controller
             $query->where('derniere_visite', '<=', $dateFin);
         }
 
+        // Calculer les statistiques globales (Indépendantes de la pagination et des filtres)
+        // On utilise des requêtes légères (count/sum) directes en base
+        $totalDossiers = DossierMedical::count();
+        $dossiersActifs = DossierMedical::where('statut', 'actif')->count();
+        $visitesCeMois = DossierMedical::where('derniere_visite', '>=', now()->startOfMonth())->count();
+        $volumeGlobal = DossierMedical::sum('total_depense');
+
         $dossiers = $query->orderBy('derniere_visite', 'desc')
             ->orderBy('nombre_visites', 'desc')
             ->paginate(10);
 
-        return view('dossiermedical.index', compact('dossiers'));
+        return view('dossiermedical.index', compact(
+            'dossiers', 
+            'totalDossiers', 
+            'dossiersActifs', 
+            'visitesCeMois', 
+            'volumeGlobal'
+        ));
     }
 
     /**

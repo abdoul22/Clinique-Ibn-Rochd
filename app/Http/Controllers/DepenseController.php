@@ -99,8 +99,11 @@ class DepenseController extends Controller
             'mode_paiement_id' => "required|string|in:$modesString",
         ]);
 
-        if (str_contains(request('nom'), 'Part médecin')) {
-            abort(403, 'Création manuelle des parts médecin interdite.');
+        // Modification douce : Interdire explicitement "Part médecin" dans le nom
+        // pour garantir que les dépenses manuelles sont bien distinctes des parts médecins système
+        if (str_contains(strtolower($request->nom), 'part médecin') || 
+            str_contains(strtolower($request->nom), 'part medecin')) {
+            return back()->withErrors(['nom' => "Le nom de la dépense ne peut pas contenir 'Part médecin'. Ce type de dépense est réservé au système."])->withInput();
         }
 
         // Convertir le montant en nombre (entier car la colonne est integer)
@@ -159,6 +162,7 @@ class DepenseController extends Controller
                 'mode_paiement_id' => $request->mode_paiement_id,
                 'source' => 'manuelle',
                 'created_by' => Auth::id(),
+                'rembourse' => false, // Explicite pour éviter toute ambiguïté
             ]);
 
             // Log pour débogage

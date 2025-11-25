@@ -151,6 +151,19 @@
                             @endforeach
                         </select>
                     </div>
+
+                    <!-- Filtre Statut -->
+                    <div>
+                        <label for="statut" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-check-circle mr-1"></i>Statut
+                        </label>
+                        <select name="statut" id="statut"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                            <option value="">Tous</option>
+                            <option value="valide" {{ request('statut') == 'valide' ? 'selected' : '' }}>Validé</option>
+                            <option value="non_valide" {{ request('statut') == 'non_valide' ? 'selected' : '' }}>Non Validé</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Plage personnalisée -->
@@ -357,6 +370,7 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
     function updateFiltrerButtonState() {
         const period = document.getElementById('period').value;
         const medecinSelected = !!(document.getElementById('medecin_id') && document.getElementById('medecin_id').value);
+        const statutSelected = !!(document.getElementById('statut') && document.getElementById('statut').value);
         let hasValidPeriod = false;
         if (period === 'day') {
             hasValidPeriod = !!document.querySelector('input[name="date"]').value;
@@ -371,7 +385,7 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
             const end = document.querySelector('input[name="date_end"]').value;
             hasValidPeriod = !!start && !!end && start <= end;
         }
-        const valid = hasValidPeriod || medecinSelected; // Autoriser filtre par médecin seul
+        const valid = hasValidPeriod || medecinSelected || statutSelected; // Autoriser filtre par médecin ou statut seul
         document.getElementById('btn-filtrer').disabled = !valid;
         document.getElementById('btn-filtrer').classList.toggle('opacity-50', !valid);
         document.getElementById('btn-filtrer').classList.toggle('cursor-not-allowed', !valid);
@@ -402,6 +416,14 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
     const medecinSelect = document.getElementById('medecin_id');
     if (medecinSelect) {
         medecinSelect.addEventListener('change', function() {
+            updateFiltrerButtonState();
+        });
+    }
+
+    // Mise à jour quand le statut change
+    const statutSelect = document.getElementById('statut');
+    if (statutSelect) {
+        statutSelect.addEventListener('change', function() {
             updateFiltrerButtonState();
         });
     }

@@ -177,10 +177,25 @@ class MedecinController extends Controller
             ->orderBy('annee')
             ->pluck('total', 'annee');
 
-        $totalJour = $examensParJour->sum();
-        $totalSemaine = $examensHebdo->sum();
-        $totalMois = $examensMensuels->sum();
-        $totalAnnee = $examensAnnuels->sum();
+        // Calculs STATIQUES pour les compteurs (indépendants du filtre date)
+        $now = Carbon::now();
+
+        $totalJour = Caisse::where('medecin_id', $id)
+            ->whereDate('date_examen', $now->toDateString())
+            ->count();
+
+        $totalSemaine = Caisse::where('medecin_id', $id)
+            ->whereBetween('date_examen', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()])
+            ->count();
+
+        $totalMois = Caisse::where('medecin_id', $id)
+            ->whereMonth('date_examen', $now->month)
+            ->whereYear('date_examen', $now->year)
+            ->count();
+
+        $totalAnnee = Caisse::where('medecin_id', $id)
+            ->whereYear('date_examen', $now->year)
+            ->count();
 
         return view('medecins.stats', compact(
             'medecin',
