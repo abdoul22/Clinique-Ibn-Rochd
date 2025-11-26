@@ -124,4 +124,22 @@ class Medecin extends Model
     {
         return $this->hasMany(RendezVous::class);
     }
+
+    // Relation avec les utilisateurs (médecins ayant un compte)
+    public function user()
+    {
+        return $this->hasOne(User::class);
+    }
+
+    // Relation avec les consultations
+    public function consultations()
+    {
+        return $this->hasMany(Consultation::class);
+    }
+
+    // Relation avec les ordonnances
+    public function ordonnances()
+    {
+        return $this->hasMany(Ordonnance::class);
+    }
 }

@@ -16,6 +16,11 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function medecin(): BelongsTo
+    {
+        return $this->belongsTo(Medecin::class);
+    }
+
     public function isSuperAdmin()
     {
         return $this->role->name === 'super_admin';
@@ -24,6 +29,11 @@ class User extends Authenticatable
     public function isAdmin()
     {
         return $this->role->name === 'admin' || $this->isSuperAdmin();
+    }
+
+    public function isMedecin()
+    {
+        return $this->role->name === 'medecin';
     }
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -38,6 +48,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'medecin_id',
         'is_approved',
         'last_login_at',
         'fonction',

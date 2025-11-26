@@ -27,6 +27,9 @@ use App\Http\Controllers\HospitalisationController;
 use App\Http\Controllers\ChambreController;
 use App\Http\Controllers\LitController;
 use App\Http\Controllers\SituationJournaliereController;
+use App\Http\Controllers\Medecin\DashboardController as MedecinDashboardController;
+use App\Http\Controllers\Medecin\ConsultationController as MedecinConsultationController;
+use App\Http\Controllers\Medecin\OrdonnanceController as MedecinOrdonnanceController;
 
 require __DIR__ . '/auth.php';
 
@@ -45,6 +48,7 @@ Route::get('/dashboard', function () {
     return match ($role) {
         'superadmin' => redirect()->route('dashboard.superadmin'),
         'admin' => redirect()->route('dashboard.admin'),
+        'medecin' => redirect()->route('dashboard.medecin'),
         default => redirect()->route('login'),
     };
 })->middleware(['auth', 'is.approved']);
@@ -221,6 +225,26 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     // Dépenses - Seulement création pour admin
     Route::get('depenses/create', [DepenseController::class, 'create'])->name('depenses.create');
     Route::post('depenses', [DepenseController::class, 'store'])->name('depenses.store');
+});
+
+// Routes pour MEDECIN
+Route::middleware(['auth', 'role:medecin', 'is.approved'])->prefix('medecin')->name('medecin.')->group(function () {
+    // Dashboard médecin
+    Route::get('/dashboard', [MedecinDashboardController::class, 'index'])->name('dashboard');
+
+    // Consultations
+    Route::get('/consultations/search-patients', [MedecinConsultationController::class, 'searchPatients'])->name('consultations.search-patients');
+    Route::get('/consultations/{id}/print', [MedecinConsultationController::class, 'printPdf'])->name('consultations.print');
+    Route::resource('consultations', MedecinConsultationController::class);
+
+    // Ordonnances
+    Route::get('/ordonnances/search-medicaments', [MedecinOrdonnanceController::class, 'searchMedicaments'])->name('ordonnances.search-medicaments');
+    Route::get('/ordonnances/{id}/print', [MedecinOrdonnanceController::class, 'printPdf'])->name('ordonnances.print');
+    Route::resource('ordonnances', MedecinOrdonnanceController::class);
+
+    // Liste des patients (lecture seule pour les médecins)
+    Route::get('/patients', [GestionPatientController::class, 'index'])->name('patients.index');
+    Route::get('/patients/{id}', [GestionPatientController::class, 'show'])->name('patients.show');
 });
 
 // Route pour afficher la liste des patients (accessible depuis les dashboards)

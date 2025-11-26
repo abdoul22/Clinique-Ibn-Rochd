@@ -40,6 +40,18 @@ class GestionPatient extends Model
         return $this->hasOne(DossierMedical::class, 'patient_id');
     }
 
+    // Relation avec les consultations
+    public function consultations()
+    {
+        return $this->hasMany(Consultation::class, 'patient_id');
+    }
+
+    // Relation avec les ordonnances
+    public function ordonnances()
+    {
+        return $this->hasMany(Ordonnance::class, 'patient_id');
+    }
+
     // Accesseurs pour compatibilité avec les vues
     public function getNomAttribute()
     {

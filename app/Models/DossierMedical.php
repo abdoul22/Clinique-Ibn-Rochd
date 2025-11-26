@@ -47,6 +47,12 @@ class DossierMedical extends Model
         return $this->hasMany(RendezVous::class, 'patient_id', 'patient_id');
     }
 
+    // Relation avec les consultations
+    public function consultations()
+    {
+        return $this->hasMany(Consultation::class);
+    }
+
     // Méthode pour calculer les statistiques du dossier
     public function calculerStatistiques()
     {
