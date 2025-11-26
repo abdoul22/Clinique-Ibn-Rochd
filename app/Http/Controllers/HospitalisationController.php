@@ -1206,10 +1206,16 @@ class HospitalisationController extends Controller
         // Calculer le total des charges facturées
         $totalCharges = $chargesFacturees->sum('total_price');
 
+        // Déterminer l'URL de retour en fonction du rôle
+        $backUrl = auth()->user()->role->name === 'admin' 
+            ? route('admin.hospitalisations.index') 
+            : route('hospitalisations.index');
+
         return view('hospitalisations.print', compact(
             'hospitalisation',
             'chargesFacturees',
-            'totalCharges'
+            'totalCharges',
+            'backUrl'
         ));
     }
 
