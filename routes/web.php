@@ -244,6 +244,7 @@ Route::middleware(['auth', 'role:medecin', 'is.approved'])->prefix('medecin')->n
 
     // Liste des patients du médecin (seulement ceux qu'il a consultés)
     Route::get('/patients', [MedecinDashboardController::class, 'mesPatients'])->name('patients.index');
+    Route::get('/patients/export/pdf', [MedecinDashboardController::class, 'exportPatientsPdf'])->name('patients.export.pdf');
     Route::get('/patients/{id}', [GestionPatientController::class, 'show'])->name('patients.show');
 });
 

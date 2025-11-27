@@ -30,7 +30,7 @@
                 </div>
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Total Patients</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $patients->total() }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $stats['total_patients'] }}</p>
                 </div>
             </div>
         </div>
@@ -42,7 +42,7 @@
                 </div>
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Consultations</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $patients->sum('consultations_count') }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $stats['total_consultations'] }}</p>
                 </div>
             </div>
         </div>
@@ -53,11 +53,74 @@
                     <i class="fas fa-user-check text-green-600 dark:text-green-400 text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Patients Actifs</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $patients->total() }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Patients Actifs (6 mois)</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $stats['patients_actifs'] }}</p>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Barre de Recherche et Filtres -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-6">
+        <form method="GET" action="{{ route('medecin.patients.index') }}" class="flex flex-col lg:flex-row gap-3">
+            <!-- Recherche -->
+            <div class="flex-grow">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" 
+                           name="search" 
+                           value="{{ request('search') }}" 
+                           class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors shadow-sm"
+                           placeholder="Rechercher un patient (Nom, Téléphone)...">
+                </div>
+            </div>
+
+            <!-- Filtre par Période -->
+            <div>
+                <select name="periode" 
+                        class="block w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                    <option value="">Toutes les périodes</option>
+                    <option value="aujourdhui" {{ request('periode') == 'aujourdhui' ? 'selected' : '' }}>Aujourd'hui</option>
+                    <option value="semaine" {{ request('periode') == 'semaine' ? 'selected' : '' }}>Cette semaine</option>
+                    <option value="mois" {{ request('periode') == 'mois' ? 'selected' : '' }}>Ce mois</option>
+                    <option value="3mois" {{ request('periode') == '3mois' ? 'selected' : '' }}>3 derniers mois</option>
+                    <option value="6mois" {{ request('periode') == '6mois' ? 'selected' : '' }}>6 derniers mois</option>
+                    <option value="annee" {{ request('periode') == 'annee' ? 'selected' : '' }}>Cette année</option>
+                </select>
+            </div>
+
+            <!-- Boutons -->
+            <div class="flex gap-2">
+                <button type="submit" 
+                        class="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all shadow-sm flex-shrink-0">
+                    <i class="fas fa-filter mr-2"></i>Filtrer
+                </button>
+                
+                @if(request()->has('search') || request()->has('periode'))
+                <a href="{{ route('medecin.patients.index') }}" 
+                   class="px-4 py-2.5 bg-gray-500 text-white border border-gray-600 font-medium rounded-lg hover:bg-gray-600 transition-all flex-shrink-0 flex items-center">
+                    <i class="fas fa-times mr-2"></i>Réinitialiser
+                </a>
+                @endif
+            </div>
+        </form>
+    </div>
+
+    <!-- Boutons d'Export -->
+    <div class="flex justify-end gap-3 mb-4">
+        <!-- Export PDF -->
+        <a href="{{ route('medecin.patients.export.pdf', request()->query()) }}" 
+           class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow">
+            <i class="fas fa-file-pdf mr-2"></i>Exporter PDF
+        </a>
+        
+        <!-- Imprimer -->
+        <button onclick="window.print()" 
+                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow">
+            <i class="fas fa-print mr-2"></i>Imprimer
+        </button>
     </div>
 
     <!-- Tableau des patients -->
@@ -188,6 +251,171 @@
         </div>
         @endif
     </div>
+
+    <!-- Graphiques de Suivi -->
+    @if($patients->count() > 0)
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
+        <!-- Graphique : Consultations par patient (Top 10) -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                <i class="fas fa-chart-bar text-blue-600 mr-2"></i>
+                Top 10 Patients (Nb Consultations)
+            </h3>
+            <canvas id="chartConsultations"></canvas>
+        </div>
+
+        <!-- Graphique : Évolution des consultations -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                <i class="fas fa-chart-line text-green-600 mr-2"></i>
+                Répartition par Activité
+            </h3>
+            <canvas id="chartActivite"></canvas>
+        </div>
+    </div>
+    @endif
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+    @if($patients->count() > 0)
+    // Données pour le graphique consultations
+    const topPatients = @json($patients->take(10)->map(function($patient) {
+        return [
+            'name' => $patient->first_name . ' ' . $patient->last_name,
+            'count' => $patient->consultations_count
+        ];
+    }));
+
+    // Graphique : Top 10 Consultations
+    const ctxConsultations = document.getElementById('chartConsultations').getContext('2d');
+    new Chart(ctxConsultations, {
+        type: 'bar',
+        data: {
+            labels: topPatients.map(p => p.name),
+            datasets: [{
+                label: 'Nombre de Consultations',
+                data: topPatients.map(p => p.count),
+                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Graphique : Répartition par Activité
+    const totalPatients = {{ $stats['total_patients'] }};
+    const patientsActifs = {{ $stats['patients_actifs'] }};
+    const patientsInactifs = totalPatients - patientsActifs;
+
+    const ctxActivite = document.getElementById('chartActivite').getContext('2d');
+    new Chart(ctxActivite, {
+        type: 'doughnut',
+        data: {
+            labels: ['Patients Actifs (6 mois)', 'Patients Inactifs'],
+            datasets: [{
+                data: [patientsActifs, patientsInactifs],
+                backgroundColor: [
+                    'rgba(34, 197, 94, 0.7)',
+                    'rgba(249, 115, 22, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(34, 197, 94, 1)',
+                    'rgba(249, 115, 22, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    @endif
+</script>
+
+<!-- Styles pour l'impression -->
+<style>
+    @media print {
+        /* Masquer les éléments non imprimables */
+        .no-print,
+        button,
+        a[href*="export"],
+        form,
+        nav,
+        header,
+        footer,
+        .pagination {
+            display: none !important;
+        }
+
+        /* Optimiser pour l'impression */
+        body {
+            background: white;
+            color: black;
+        }
+
+        .bg-white,
+        .dark\\:bg-gray-800 {
+            background: white !important;
+        }
+
+        .text-gray-900,
+        .dark\\:text-white {
+            color: black !important;
+        }
+
+        table {
+            page-break-inside: auto;
+        }
+
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        /* Titre de la page */
+        h1::before {
+            content: "📋 LISTE DE MES PATIENTS - Dr. {{ $medecin->nom_complet_avec_prenom }}";
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #1e40af;
+            padding-bottom: 10px;
+        }
+    }
+</style>
+
 @endsection
 
