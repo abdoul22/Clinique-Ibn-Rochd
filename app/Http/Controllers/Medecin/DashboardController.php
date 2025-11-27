@@ -64,5 +64,36 @@ class DashboardController extends Controller
             'consultationsAVenir'
         ));
     }
+
+    /**
+     * Afficher la liste des patients du médecin
+     * (Seulement les patients qu'il a déjà consultés)
+     */
+    public function mesPatients()
+    {
+        $user = Auth::user();
+        $medecin = $user->medecin;
+
+        if (!$medecin) {
+            return redirect()->route('login')->with('error', 'Aucun profil médecin associé à votre compte.');
+        }
+
+        // Récupérer tous les patients uniques consultés par ce médecin
+        $patients = GestionPatient::whereHas('consultations', function ($query) use ($medecin) {
+            $query->where('medecin_id', $medecin->id);
+        })
+        ->withCount(['consultations' => function ($query) use ($medecin) {
+            $query->where('medecin_id', $medecin->id);
+        }])
+        ->with(['consultations' => function ($query) use ($medecin) {
+            $query->where('medecin_id', $medecin->id)
+                ->latest('date_consultation')
+                ->limit(1);
+        }])
+        ->orderBy('first_name')
+        ->paginate(20);
+
+        return view('medecin.patients.index', compact('medecin', 'patients'));
+    }
 }
 

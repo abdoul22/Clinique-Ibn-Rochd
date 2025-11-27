@@ -242,8 +242,8 @@ Route::middleware(['auth', 'role:medecin', 'is.approved'])->prefix('medecin')->n
     Route::get('/ordonnances/{id}/print', [MedecinOrdonnanceController::class, 'printPdf'])->name('ordonnances.print');
     Route::resource('ordonnances', MedecinOrdonnanceController::class);
 
-    // Liste des patients (lecture seule pour les médecins)
-    Route::get('/patients', [GestionPatientController::class, 'index'])->name('patients.index');
+    // Liste des patients du médecin (seulement ceux qu'il a consultés)
+    Route::get('/patients', [MedecinDashboardController::class, 'mesPatients'])->name('patients.index');
     Route::get('/patients/{id}', [GestionPatientController::class, 'show'])->name('patients.show');
 });
 
