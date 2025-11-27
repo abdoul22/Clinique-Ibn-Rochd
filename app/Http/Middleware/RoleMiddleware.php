@@ -35,8 +35,9 @@ class RoleMiddleware
             return match ($user->role->name) {
                 'superadmin' => redirect()->route('dashboard.superadmin'),
                 'admin' => redirect()->route('dashboard.admin'),
+                'medecin' => redirect()->route('medecin.dashboard'),
                 'user' => redirect()->route('dashboard.user'),
-                default => abort(403, 'Rôle non reconnu.')
+                default => abort(403, 'Rôle non reconnu: ' . $user->role->name . '. Veuillez contacter un administrateur.')
             };
         }
 
