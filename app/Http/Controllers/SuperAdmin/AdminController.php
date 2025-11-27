@@ -16,9 +16,20 @@ class AdminController extends Controller
 
         $admins = User::whereHas('role', function ($query) {
             $query->where('name', 'admin');
-        })->with('role')->get();
+        })->with('role', 'medecin')->get();
 
-        return view('superadmin.admins.index', compact('superadmins', 'admins'));
+        // NOUVEAU : Récupérer aussi les utilisateurs médecins
+        $medecins = User::whereHas('role', function ($query) {
+            $query->where('name', 'medecin');
+        })->with('role', 'medecin')->get();
+
+        // NOUVEAU : Récupérer la liste de tous les médecins pour le dropdown
+        $medecinsList = \App\Models\Medecin::where('statut', 'actif')
+            ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
+            ->orderBy('nom')
+            ->get();
+
+        return view('superadmin.admins.index', compact('superadmins', 'admins', 'medecins', 'medecinsList'));
     }
 
 
@@ -105,15 +116,36 @@ class AdminController extends Controller
     {
         $admin = User::findOrFail($id);
         $fonction = $request->input('fonction');
+        $medecinId = $request->input('medecin_id'); // Nouveau champ optionnel
+        $userRole = $request->input('user_role'); // Nouveau : 'admin' ou 'medecin'
 
-        // Mettre à jour la fonction de l'utilisateur
+        // NOUVELLE LOGIQUE : Si la fonction est "Médecin" OU si user_role = 'medecin'
+        // Alors on change le rôle vers "medecin" et on assigne un medecin_id
+        if ($fonction === 'Médecin' || $userRole === 'medecin') {
+            // Obtenir l'ID du rôle "medecin"
+            $medecinRoleId = \App\Models\Role::where('name', 'medecin')->first()?->id;
+            
+            if ($medecinRoleId) {
+                $admin->role_id = $medecinRoleId;
+                
+                // Si un medecin_id est fourni, l'assigner
+                if ($medecinId) {
+                    $admin->medecin_id = $medecinId;
+                }
+            }
+        }
+
+        // Mettre à jour la fonction de l'utilisateur (compatibilité avec l'ancien système)
         $admin->fonction = $fonction;
         $admin->save();
 
-        // Synchroniser avec le module personnel (crée ou met à jour selon l'état d'approbation)
-        $this->syncWithPersonnel($admin, $fonction);
+        // Synchroniser avec le module personnel SEULEMENT si ce n'est pas un médecin
+        // (les médecins ont leur propre table 'medecins')
+        if ($fonction !== 'Médecin' && $userRole !== 'medecin') {
+            $this->syncWithPersonnel($admin, $fonction);
+        }
 
-        return redirect()->back()->with('success', 'Fonction attribuée avec succès.');
+        return redirect()->back()->with('success', 'Rôle et fonction attribués avec succès.');
     }
 
     /**

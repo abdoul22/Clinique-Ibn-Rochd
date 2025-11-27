@@ -229,32 +229,81 @@
                                     $admin->email }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <form action="{{ route('superadmin.admins.assignRole', $admin->id) }}"
-                                        method="POST">
+                                        method="POST" id="admin-form-{{ $admin->id }}">
                                         @csrf
-                                        <select name="fonction" onchange="this.form.submit()"
-                                            class="text-sm border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                                            <option value="">-- Choisir --</option>
-                                            <option value="Caissier" {{ $admin->fonction == 'Caissier' ? 'selected' : ''
-                                                }}>Caissier</option>
-                                            <option value="RH" {{ $admin->fonction == 'RH' ? 'selected' : '' }}>RH
-                                            </option>
-                                            <option value="Support" {{ $admin->fonction == 'Support' ? 'selected' : ''
-                                                }}>Support</option>
-                                            <option value="Infirmier" {{ $admin->fonction == 'Infirmier' ? 'selected' :
-                                                ''
-                                                }}>Infirmier</option>
-                                            <option value="Médecin" {{ $admin->fonction == 'Médecin' ? 'selected' : ''
-                                                }}>Médecin</option>
-                                            <option value="Réceptionniste" {{ $admin->fonction == 'Réceptionniste' ?
-                                                'selected' : ''
-                                                }}>Réceptionniste</option>
-                                        </select>
+                                        
+                                        <!-- Sélection du Rôle -->
+                                        <div class="mb-2">
+                                            <label class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Rôle</label>
+                                            <select name="user_role" 
+                                                class="text-sm border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white w-full"
+                                                onchange="toggleMedecinSelect{{ $admin->id }}(this.value)">
+                                                <option value="admin" {{ $admin->role?->name === 'admin' ? 'selected' : '' }}>Admin</option>
+                                                <option value="medecin" {{ $admin->role?->name === 'medecin' ? 'selected' : '' }}>Médecin</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Sélection de la Fonction (pour admins) -->
+                                        <div id="fonction-select-{{ $admin->id }}" style="{{ $admin->role?->name === 'medecin' ? 'display:none' : '' }}">
+                                            <label class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Fonction</label>
+                                            <select name="fonction"
+                                                class="text-sm border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white w-full">
+                                                <option value="">-- Choisir --</option>
+                                                <option value="Caissier" {{ $admin->fonction == 'Caissier' ? 'selected' : '' }}>Caissier</option>
+                                                <option value="RH" {{ $admin->fonction == 'RH' ? 'selected' : '' }}>RH</option>
+                                                <option value="Support" {{ $admin->fonction == 'Support' ? 'selected' : '' }}>Support</option>
+                                                <option value="Infirmier" {{ $admin->fonction == 'Infirmier' ? 'selected' : '' }}>Infirmier</option>
+                                                <option value="Réceptionniste" {{ $admin->fonction == 'Réceptionniste' ? 'selected' : '' }}>Réceptionniste</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Sélection du Médecin Associé (pour médecins seulement) -->
+                                        <div id="medecin-select-{{ $admin->id }}" style="{{ $admin->role?->name === 'medecin' ? '' : 'display:none' }}">
+                                            <label class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Médecin Associé</label>
+                                            <select name="medecin_id"
+                                                class="text-sm border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white w-full">
+                                                <option value="">-- Choisir un médecin --</option>
+                                                @foreach($medecinsList as $medecinItem)
+                                                    <option value="{{ $medecinItem->id }}" {{ $admin->medecin_id == $medecinItem->id ? 'selected' : '' }}>
+                                                        {{ $medecinItem->nom_complet_avec_prenom }} - {{ $medecinItem->specialite ?? 'Médecin' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <!-- Bouton Sauvegarder -->
+                                        <button type="submit" class="mt-2 w-full text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-2 rounded">
+                                            <i class="fas fa-save mr-1"></i>Sauvegarder
+                                        </button>
                                     </form>
-                                    @if($admin->fonction)
+
+                                    @if($admin->fonction || $admin->role?->name === 'medecin')
                                     <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        <i class="fas fa-sync-alt mr-1"></i>Synchronisé avec le personnel
+                                        @if($admin->role?->name === 'medecin')
+                                            <i class="fas fa-user-md mr-1"></i>Compte Médecin
+                                            @if($admin->medecin)
+                                                <br><span class="text-indigo-600 dark:text-indigo-400">→ {{ $admin->medecin->nom_complet_avec_prenom }}</span>
+                                            @endif
+                                        @else
+                                            <i class="fas fa-sync-alt mr-1"></i>Synchronisé avec le personnel
+                                        @endif
                                     </div>
                                     @endif
+
+                                    <script>
+                                        function toggleMedecinSelect{{ $admin->id }}(role) {
+                                            const fonctionDiv = document.getElementById('fonction-select-{{ $admin->id }}');
+                                            const medecinDiv = document.getElementById('medecin-select-{{ $admin->id }}');
+                                            
+                                            if (role === 'medecin') {
+                                                fonctionDiv.style.display = 'none';
+                                                medecinDiv.style.display = 'block';
+                                            } else {
+                                                fonctionDiv.style.display = 'block';
+                                                medecinDiv.style.display = 'none';
+                                            }
+                                        }
+                                    </script>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if($admin->is_approved)
