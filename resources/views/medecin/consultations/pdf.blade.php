@@ -14,21 +14,21 @@
             font-size: 12px;
             line-height: 1.5;
             color: #333;
-            background-color: #fce4ec;
+            background-color: #e3f2fd;
             padding: 20px;
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background-color: #fff5f7;
+            background-color: #f5f9ff;
             padding: 30px;
-            border: 1px solid #f8bbd0;
+            border: 1px solid #90caf9;
         }
         .header {
             display: table;
             width: 100%;
             margin-bottom: 30px;
-            border-bottom: 2px solid #e91e63;
+            border-bottom: 2px solid #1e40af;
             padding-bottom: 15px;
         }
         .header-left {
@@ -43,7 +43,7 @@
             vertical-align: top;
         }
         .logo {
-            color: #e91e63;
+            color: #1e40af;
             font-weight: bold;
             font-size: 18px;
             margin-bottom: 5px;
@@ -55,7 +55,7 @@
         }
         .patient-info {
             background-color: #fff;
-            border: 1px solid #f8bbd0;
+            border: 1px solid #90caf9;
             padding: 15px;
             margin-bottom: 20px;
         }
@@ -75,7 +75,7 @@
             font-size: 16px;
             font-weight: bold;
             margin: 25px 0;
-            color: #c2185b;
+            color: #1e40af;
             text-transform: uppercase;
         }
         .section {
@@ -84,12 +84,12 @@
         .section-title {
             font-weight: bold;
             margin-bottom: 8px;
-            color: #880e4f;
+            color: #1565c0;
             font-size: 12px;
         }
         .section-content {
             background-color: #fff;
-            border: 1px solid #f8bbd0;
+            border: 1px solid #90caf9;
             padding: 12px;
             min-height: 60px;
             font-size: 11px;
@@ -114,21 +114,18 @@
         <!-- En-tête -->
         <div class="header">
             <div class="header-left">
-                <div class="logo">CLINIQUE L'HUMANITÉ</div>
+                <div class="logo">{{ config('clinique.name') }}</div>
                 <div class="contact-info">
-                    TEL : 36634648 - 34343240<br>
-                    WhatsApp : 20171380 - 36194343<br>
-                    Email : cliniquehumanite@gmail.com<br>
-                    NOUADHIBOU-DOUBAI P5 N° 109
+                    {{ config('clinique.phone') }}<br>
+                    {{ config('clinique.address') }}<br>
+                    {{ config('clinique.website') }}
                 </div>
             </div>
             <div class="header-right">
                 <div class="contact-info">
-                    <strong>مصحــــة الإنسـانية</strong><br>
-                    الهاتف: 34343240 - 36634648<br>
-                    واتساب: 36194343 - 20171380<br>
-                    com.gmail@cliniquehumanite<br>
-                    نواذيبو : حي بئي 109 PS N° نواذيبو
+                    <strong>مركز ابن رشد</strong><br>
+                    {{ config('clinique.phone') }}<br>
+                    {{ config('clinique.address') }}
                 </div>
             </div>
         </div>

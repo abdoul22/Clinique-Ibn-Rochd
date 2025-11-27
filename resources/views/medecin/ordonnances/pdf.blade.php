@@ -14,22 +14,22 @@
             font-size: 12px;
             line-height: 1.5;
             color: #333;
-            background-color: #fce4ec;
+            background-color: #e3f2fd;
             padding: 20px;
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background-color: #fff5f7;
+            background-color: #f5f9ff;
             padding: 30px;
-            border: 1px solid #f8bbd0;
+            border: 1px solid #90caf9;
             min-height: 800px;
         }
         .header {
             display: table;
             width: 100%;
             margin-bottom: 30px;
-            border-bottom: 2px solid #e91e63;
+            border-bottom: 2px solid #1e40af;
             padding-bottom: 15px;
         }
         .header-left {
@@ -44,7 +44,7 @@
             vertical-align: top;
         }
         .logo {
-            color: #e91e63;
+            color: #1e40af;
             font-weight: bold;
             font-size: 18px;
             margin-bottom: 5px;
@@ -57,14 +57,14 @@
         .patient-box {
             display: table;
             width: 100%;
-            border: 1px solid #f8bbd0;
+            border: 1px solid #90caf9;
             margin-bottom: 20px;
         }
         .patient-left {
             display: table-cell;
             width: 50%;
             padding: 15px;
-            border-right: 1px solid #f8bbd0;
+            border-right: 1px solid #90caf9;
             background-color: #fff;
         }
         .patient-right {
@@ -76,7 +76,7 @@
         .patient-label {
             font-weight: bold;
             font-size: 10px;
-            color: #880e4f;
+            color: #1565c0;
         }
         .patient-value {
             font-size: 11px;
@@ -87,20 +87,20 @@
             font-size: 18px;
             font-weight: bold;
             margin: 30px 0;
-            color: #c2185b;
+            color: #1e40af;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         .prescription {
             background-color: #fff;
-            border: 1px solid #f8bbd0;
+            border: 1px solid #90caf9;
             padding: 20px;
             min-height: 400px;
         }
         .medication {
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 1px dotted #f8bbd0;
+            border-bottom: 1px dotted #90caf9;
         }
         .medication:last-child {
             border-bottom: none;
@@ -108,7 +108,7 @@
         .medication-name {
             font-weight: bold;
             font-size: 13px;
-            color: #c2185b;
+            color: #1e40af;
             margin-bottom: 5px;
         }
         .medication-details {
@@ -119,7 +119,7 @@
         }
         .notes {
             background-color: #fff;
-            border: 1px solid #f8bbd0;
+            border: 1px solid #90caf9;
             padding: 15px;
             margin-top: 20px;
             font-size: 10px;
@@ -141,21 +141,18 @@
         <!-- En-tête -->
         <div class="header">
             <div class="header-left">
-                <div class="logo">CLINIQUE L'HUMANITÉ</div>
+                <div class="logo">{{ config('clinique.name') }}</div>
                 <div class="contact-info">
-                    TEL : 36634648 - 34343240<br>
-                    WhatsApp : 20171380 - 36194343<br>
-                    Email : cliniquehumanite@gmail.com<br>
-                    NOUADHIBOU-DOUBAI P5 N° 109
+                    {{ config('clinique.phone') }}<br>
+                    {{ config('clinique.address') }}<br>
+                    {{ config('clinique.website') }}
                 </div>
             </div>
             <div class="header-right">
                 <div class="contact-info">
-                    <strong>مصحــــة الإنسـانية</strong><br>
-                    الهاتف: 34343240 - 36634648<br>
-                    واتساب: 36194343 - 20171380<br>
-                    com.gmail@cliniquehumanite<br>
-                    نواذيبو : حي بئي 109 PS N° نواذيبو
+                    <strong>مركز ابن رشد</strong><br>
+                    {{ config('clinique.phone') }}<br>
+                    {{ config('clinique.address') }}
                 </div>
             </div>
         </div>

@@ -112,15 +112,15 @@
             Imprimer
         </button>
         @if(isset($backUrl))
-            <a href="{{ $backUrl }}"
-                class="bg-gray-500 text-white px-4 py-2 rounded shadow hover:bg-gray-600 font-medium inline-flex items-center">
-                Retour
-            </a>
+        <a href="{{ $backUrl }}"
+            class="bg-gray-500 text-white px-4 py-2 rounded shadow hover:bg-gray-600 font-medium inline-flex items-center">
+            Retour
+        </a>
         @else
-            <button onclick="history.back()"
-                class="bg-gray-500 text-white px-4 py-2 rounded shadow hover:bg-gray-600 font-medium">
-                Retour
-            </button>
+        <button onclick="history.back()"
+            class="bg-gray-500 text-white px-4 py-2 rounded shadow hover:bg-gray-600 font-medium">
+            Retour
+        </button>
         @endif
     </div>
 
