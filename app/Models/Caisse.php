@@ -67,7 +67,14 @@ class Caisse extends Model
     }
     public function paiements()
     {
-        return $this->hasOne(ModePaiement::class);
+        // Récupérer UNIQUEMENT le paiement initial du patient (caisse_id = this->id)
+        // Exclure les parts médecin (source = 'part_medecin') qui ont montant négatif
+        return $this->hasOne(ModePaiement::class, 'caisse_id')
+                    ->where(function($query) {
+                        $query->whereNull('source')
+                              ->orWhere('source', '!=', 'part_medecin');
+                    })
+                    ->where('montant', '>', 0); // Montant positif = paiement du patient
     }
 
     public function etatCaisse()
