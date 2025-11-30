@@ -43,7 +43,7 @@ class AuthController extends Controller
             return match ($role) {
                 'superadmin' => redirect()->route('dashboard.superadmin'),
                 'admin'      => redirect()->route('dashboard.admin'),
-                'medecin'    => redirect()->route('dashboard.medecin'),
+                'medecin'    => redirect()->route('medecin.dashboard'),
                 'patient'    => redirect()->route('dashboard.patient'),
                 default      => redirect('/')->with('error', 'Rôle non reconnu'),
             };

@@ -263,6 +263,14 @@
                                             <select name="medecin_id"
                                                 class="text-sm border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white w-full">
                                                 <option value="">-- Choisir un médecin --</option>
+                                                
+                                                @if($admin->medecin && !$medecinsList->contains('id', $admin->medecin_id))
+                                                    {{-- Afficher le médecin actuellement associé même s'il n'est plus disponible --}}
+                                                    <option value="{{ $admin->medecin->id }}" selected>
+                                                        {{ $admin->medecin->nom_complet_avec_prenom }} - {{ $admin->medecin->specialite ?? 'Médecin' }} (Actuel)
+                                                    </option>
+                                                @endif
+                                                
                                                 @foreach($medecinsList as $medecinItem)
                                                     <option value="{{ $medecinItem->id }}" {{ $admin->medecin_id == $medecinItem->id ? 'selected' : '' }}>
                                                         {{ $medecinItem->nom_complet_avec_prenom }} - {{ $medecinItem->specialite ?? 'Médecin' }}
@@ -390,8 +398,164 @@
             </div>
         </div>
 
+        <!-- Section Médecins -->
+        <div class="mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-green-600 dark:bg-green-700 px-6 py-4">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <i class="fas fa-user-md mr-3"></i>Médecins
+                        <span class="ml-3 bg-green-500 text-white text-sm px-2 py-1 rounded-full">{{ $medecins->count() }}</span>
+                    </h2>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Utilisateur</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Email</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Fonction</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Statut</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Dernière connexion</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            @forelse($medecins as $medecin)
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div
+                                                class="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                                                <i class="fas fa-user-md text-green-600 dark:text-green-400"></i>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-200">{{
+                                                $medecin->name }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                @if($medecin->medecin)
+                                                    {{ $medecin->medecin->nom_complet_avec_prenom }}
+                                                @else
+                                                    Médecin
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{
+                                    $medecin->email }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                        <i class="fas fa-user-md mr-1"></i>
+                                        @if($medecin->medecin)
+                                            {{ $medecin->medecin->specialite ?? 'Médecin' }}
+                                        @else
+                                            Médecin
+                                        @endif
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($medecin->is_approved)
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                        <i class="fas fa-check mr-1"></i>Approuvé
+                                    </span>
+                                    @else
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+                                        <i class="fas fa-clock mr-1"></i>En attente
+                                    </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                                    @if($medecin->last_login_at)
+                                    <div class="flex items-center">
+                                        <i class="fas fa-clock mr-2 text-gray-400"></i>
+                                        <span>{{ $medecin->last_login_at->format('d/m/Y H:i') }}</span>
+                                    </div>
+                                    @else
+                                    <span class="text-gray-400 italic">Jamais connecté</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    @if(!$medecin->is_approved)
+                                    <div class="flex justify-end space-x-2">
+                                        <form action="{{ route('superadmin.admins.approve', $medecin->id) }}"
+                                            method="POST" class="inline">
+                                            @csrf
+                                            <button
+                                                class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-1"
+                                                title="Approuver">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('superadmin.admins.reject', $medecin->id) }}" method="POST"
+                                            class="inline">
+                                            @csrf
+                                            <button
+                                                class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1"
+                                                title="Rejeter">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    @else
+                                    <div class="flex justify-end space-x-2">
+                                        <a href="{{ route('superadmin.admins.show', $medecin->id) }}"
+                                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1"
+                                            title="Voir">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ route('superadmin.admins.edit', $medecin->id) }}"
+                                            class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1"
+                                            title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="{{ route('superadmin.admins.destroy', $medecin->id) }}"
+                                            method="POST" class="inline"
+                                            onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur médecin ?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1"
+                                                title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                    <i class="fas fa-info-circle mr-2"></i>Aucun médecin trouvé
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Statistiques -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
@@ -424,15 +588,29 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-md text-green-600 dark:text-green-400"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Médecins</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ $medecins->count() }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
                         <div
-                            class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                            <i class="fas fa-users text-green-600 dark:text-green-400"></i>
+                            class="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                            <i class="fas fa-users text-indigo-600 dark:text-indigo-400"></i>
                         </div>
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ $superadmins->count() +
-                            $admins->count() }}</p>
+                            $admins->count() + $medecins->count() }}</p>
                     </div>
                 </div>
             </div>

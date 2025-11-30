@@ -48,7 +48,7 @@ Route::get('/dashboard', function () {
     return match ($role) {
         'superadmin' => redirect()->route('dashboard.superadmin'),
         'admin' => redirect()->route('dashboard.admin'),
-        'medecin' => redirect()->route('dashboard.medecin'),
+        'medecin' => redirect()->route('medecin.dashboard'),
         default => redirect()->route('login'),
     };
 })->middleware(['auth', 'is.approved']);

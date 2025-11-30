@@ -24,7 +24,11 @@ class SuperAdminController extends Controller
         })->with('role', 'medecin')->get();
 
         // NOUVEAU : Récupérer la liste de tous les médecins pour le dropdown
+        // Exclure les médecins déjà associés à un compte utilisateur
+        $medecinsAssocies = User::whereNotNull('medecin_id')->pluck('medecin_id')->toArray();
+        
         $medecinsList = \App\Models\Medecin::where('statut', 'actif')
+            ->whereNotIn('id', $medecinsAssocies)
             ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
             ->orderBy('nom')
             ->get();
@@ -65,19 +69,36 @@ class SuperAdminController extends Controller
         // Alors on change le rôle vers "medecin" et on assigne un medecin_id
         if ($fonction === 'Médecin' || $userRole === 'medecin') {
             // Obtenir l'ID du rôle "medecin"
-            $medecinRoleId = \App\Models\Role::where('name', 'medecin')->first()?->id;
+            $medecinRole = \App\Models\Role::where('name', 'medecin')->first();
             
-            if ($medecinRoleId) {
-                $admin->role_id = $medecinRoleId;
-                
-                // Si un medecin_id est fourni, l'assigner
-                if ($medecinId) {
-                    $admin->medecin_id = $medecinId;
-                }
+            if (!$medecinRole) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['user_role' => 'Le rôle "medecin" n\'existe pas dans la base de données. Veuillez d\'abord créer ce rôle.']);
+            }
+
+            // Vérifier que medecin_id est fourni
+            if (!$medecinId) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['medecin_id' => 'Un médecin doit être sélectionné lorsque la fonction est "Médecin".']);
+            }
+
+            $admin->role_id = $medecinRole->id;
+            $admin->medecin_id = $medecinId;
+        } else {
+            // Si user_role = 'admin' ou fonction n'est pas "Médecin"
+            // Changer le rôle vers "admin" et retirer l'association medecin_id
+            $adminRoleId = \App\Models\Role::where('name', 'admin')->first()?->id;
+            
+            if ($adminRoleId) {
+                $admin->role_id = $adminRoleId;
+                $admin->medecin_id = null; // Retirer l'association avec le profil médecin
             }
         }
 
         // Mettre à jour la fonction de l'utilisateur (compatibilité avec l'ancien système)
+        // Seulement si le rôle a été correctement assigné
         $admin->fonction = $fonction;
         $admin->save();
 
