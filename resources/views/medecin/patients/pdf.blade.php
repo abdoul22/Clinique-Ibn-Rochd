@@ -139,12 +139,12 @@
                 <div class="label">Patients</div>
             </div>
             <div class="stat-box">
-                <div class="number">{{ $patients->sum('consultations_count') }}</div>
-                <div class="label">Consultations</div>
+                <div class="number">{{ $patients->sum('caisses_count') }}</div>
+                <div class="label">Caisses</div>
             </div>
             <div class="stat-box">
-                <div class="number">{{ number_format($patients->avg('consultations_count'), 1) }}</div>
-                <div class="label">Moy. Consultations</div>
+                <div class="number">{{ number_format($patients->avg('caisses_count'), 1) }}</div>
+                <div class="label">Moy. Caisses</div>
             </div>
         </div>
 
@@ -156,8 +156,8 @@
                     <th>Patient</th>
                     <th>Téléphone</th>
                     <th>Âge</th>
-                    <th class="text-center">Nb Consultations</th>
-                    <th>Dernière Consultation</th>
+                    <th class="text-center">Nb Caisses</th>
+                    <th>Dernière Caisse</th>
                 </tr>
             </thead>
             <tbody>
@@ -176,11 +176,11 @@
                         @endif
                     </td>
                     <td class="text-center">
-                        <strong>{{ $patient->consultations_count }}</strong>
+                        <strong>{{ $patient->caisses_count }}</strong>
                     </td>
                     <td>
-                        @if($patient->consultations->count() > 0)
-                            {{ $patient->consultations->first()->date_consultation->format('d/m/Y') }}
+                        @if($patient->caisses->count() > 0)
+                            {{ $patient->caisses->first()->date_examen->format('d/m/Y') }}
                         @else
                             -
                         @endif

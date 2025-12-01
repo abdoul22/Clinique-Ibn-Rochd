@@ -89,12 +89,16 @@ class SuperAdminController extends Controller
         } else {
             // Si user_role = 'admin' ou fonction n'est pas "Médecin"
             // Changer le rôle vers "admin" et retirer l'association medecin_id
-            $adminRoleId = \App\Models\Role::where('name', 'admin')->first()?->id;
+            $adminRole = \App\Models\Role::where('name', 'admin')->first();
             
-            if ($adminRoleId) {
-                $admin->role_id = $adminRoleId;
-                $admin->medecin_id = null; // Retirer l'association avec le profil médecin
+            if (!$adminRole) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['user_role' => 'Le rôle "admin" n\'existe pas dans la base de données. Veuillez d\'abord créer ce rôle.']);
             }
+
+            $admin->role_id = $adminRole->id;
+            $admin->medecin_id = null; // Retirer l'association avec le profil médecin
         }
 
         // Mettre à jour la fonction de l'utilisateur (compatibilité avec l'ancien système)

@@ -190,6 +190,8 @@ class GestionPatientController extends Controller
                 return redirect()->route('superadmin.patients.index')->with('success', 'Patient mis à jour !');
             } elseif ($role === 'admin') {
                 return redirect()->route('admin.patients.index')->with('success', 'Patient mis à jour !');
+            } elseif ($role === 'medecin') {
+                return redirect()->route('medecin.patients.show', $patient->id)->with('success', 'Patient mis à jour !');
             }
 
             return redirect()->route('patients.index')->with('success', 'Patient mis à jour !');
@@ -209,6 +211,8 @@ class GestionPatientController extends Controller
                 return redirect()->route('superadmin.patients.index')->with('success', 'Patient supprimé !');
             } elseif ($role === 'admin') {
                 return redirect()->route('admin.patients.index')->with('success', 'Patient supprimé !');
+            } elseif ($role === 'medecin') {
+                return redirect()->route('medecin.patients.index')->with('success', 'Patient supprimé !');
             }
 
             return redirect()->route('patients.index')->with('success', 'Patient supprimé !');

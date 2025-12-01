@@ -24,7 +24,7 @@
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Aujourd'hui</p>
                     <p class="text-3xl font-bold text-gray-800 dark:text-white">{{ $stats['consultations_aujourdhui'] }}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Consultations</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Caisses</p>
                 </div>
                 <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
                     <svg class="w-8 h-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Ce mois</p>
                     <p class="text-3xl font-bold text-gray-800 dark:text-white">{{ $stats['consultations_mois'] }}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Consultations</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Caisses</p>
                 </div>
                 <div class="bg-green-100 dark:bg-green-900 p-3 rounded-full">
                     <svg class="w-8 h-8 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,34 +143,38 @@
         </a>
     </div>
 
-    <!-- Dernières consultations -->
+    <!-- Dernières caisses -->
     @if($dernieresConsultations->count() > 0)
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Dernières Consultations</h2>
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Dernières Caisses</h2>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Patient</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Motif</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Examen</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Montant</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    @foreach($dernieresConsultations as $consultation)
+                    @foreach($dernieresConsultations as $caisse)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                            {{ $consultation->date_consultation->format('d/m/Y') }}
+                            {{ $caisse->date_examen->format('d/m/Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-300">
-                            {{ $consultation->patient->first_name }} {{ $consultation->patient->last_name }}
+                            {{ $caisse->patient->first_name }} {{ $caisse->patient->last_name }}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                            {{ Str::limit($consultation->motif, 50) }}
+                            {{ $caisse->examen->nom ?? 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                            {{ number_format($caisse->total, 2) }} MAD
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('medecin.consultations.show', $consultation->id) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Voir</a>
+                            <a href="{{ route('medecin.patients.show', $caisse->patient->id) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Voir</a>
                         </td>
                     </tr>
                     @endforeach

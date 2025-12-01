@@ -32,9 +32,12 @@
             class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             @php
             $role = Auth::user()->role->name;
-            $route = $role === 'superadmin'
-            ? route('superadmin.patients.update', ['patient' => $patient->id])
-            : route('admin.patients.update', ['patient' => $patient->id]);
+            $route = match($role) {
+                'superadmin' => route('superadmin.patients.update', ['patient' => $patient->id]),
+                'admin' => route('admin.patients.update', ['patient' => $patient->id]),
+                'medecin' => route('medecin.patients.update', ['patient' => $patient->id]),
+                default => route('admin.patients.update', ['patient' => $patient->id])
+            };
             @endphp
             <form method="POST" action="{{ $route }}">
                 @csrf

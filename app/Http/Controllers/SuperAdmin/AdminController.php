@@ -59,10 +59,10 @@ class AdminController extends Controller
         return redirect()->route('superadmin.admins.index')->with('success', 'Admin créé avec succès.');
     }
 
-    // Affichage d’un admin
+    // Affichage d'un admin
     public function show($id)
     {
-        $admin = User::findOrFail($id);
+        $admin = User::with('role', 'medecin')->findOrFail($id);
         return view('superadmin.admins.show', compact('admin'));
     }
 
@@ -125,11 +125,16 @@ class AdminController extends Controller
             // Si la fonction n'est PAS "Médecin" et que l'utilisateur avait le rôle medecin
             // Le repasser en admin et retirer l'association medecin_id
             if ($admin->role && $admin->role->name === 'medecin') {
-                $adminRoleId = \App\Models\Role::where('name', 'admin')->first()?->id;
-                if ($adminRoleId) {
-                    $admin->role_id = $adminRoleId;
-                    $admin->medecin_id = null; // Retirer l'association avec le profil médecin
+                $adminRole = \App\Models\Role::where('name', 'admin')->first();
+                
+                if (!$adminRole) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['fonction' => 'Le rôle "admin" n\'existe pas dans la base de données. Veuillez d\'abord créer ce rôle.']);
                 }
+
+                $admin->role_id = $adminRole->id;
+                $admin->medecin_id = null; // Retirer l'association avec le profil médecin
             }
         }
 
@@ -200,12 +205,16 @@ class AdminController extends Controller
         } else {
             // Si user_role = 'admin' ou fonction n'est pas "Médecin"
             // Changer le rôle vers "admin" et retirer l'association medecin_id
-            $adminRoleId = \App\Models\Role::where('name', 'admin')->first()?->id;
-
-            if ($adminRoleId) {
-                $admin->role_id = $adminRoleId;
-                $admin->medecin_id = null; // Retirer l'association avec le profil médecin
+            $adminRole = \App\Models\Role::where('name', 'admin')->first();
+            
+            if (!$adminRole) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['user_role' => 'Le rôle "admin" n\'existe pas dans la base de données. Veuillez d\'abord créer ce rôle.']);
             }
+
+            $admin->role_id = $adminRole->id;
+            $admin->medecin_id = null; // Retirer l'association avec le profil médecin
         }
 
         // Mettre à jour la fonction de l'utilisateur (compatibilité avec l'ancien système)

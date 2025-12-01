@@ -20,15 +20,15 @@ class DashboardController extends Controller
             return redirect()->route('login')->with('error', 'Aucun profil médecin associé à votre compte.');
         }
 
-        // Statistiques
+        // Statistiques basées sur les caisses
         $stats = [
-            'consultations_aujourdhui' => Consultation::parMedecin($medecin->id)
-                ->whereDate('date_consultation', Carbon::today())
+            'consultations_aujourdhui' => \App\Models\Caisse::where('medecin_id', $medecin->id)
+                ->whereDate('date_examen', Carbon::today())
                 ->count(),
             
-            'consultations_mois' => Consultation::parMedecin($medecin->id)
-                ->whereYear('date_consultation', Carbon::now()->year)
-                ->whereMonth('date_consultation', Carbon::now()->month)
+            'consultations_mois' => \App\Models\Caisse::where('medecin_id', $medecin->id)
+                ->whereYear('date_examen', Carbon::now()->year)
+                ->whereMonth('date_examen', Carbon::now()->month)
                 ->count(),
             
             'ordonnances_mois' => Ordonnance::parMedecin($medecin->id)
@@ -36,19 +36,19 @@ class DashboardController extends Controller
                 ->whereMonth('date_ordonnance', Carbon::now()->month)
                 ->count(),
             
-            'patients_total' => Consultation::parMedecin($medecin->id)
-                ->distinct('patient_id')
-                ->count('patient_id'),
+            'patients_total' => GestionPatient::whereHas('caisses', function ($q) use ($medecin) {
+                $q->where('medecin_id', $medecin->id);
+            })->count(),
         ];
 
-        // Dernières consultations
-        $dernieresConsultations = Consultation::parMedecin($medecin->id)
-            ->with(['patient', 'dossierMedical'])
-            ->latest('date_consultation')
+        // Dernières caisses (remplace les consultations)
+        $dernieresConsultations = \App\Models\Caisse::where('medecin_id', $medecin->id)
+            ->with(['patient', 'examen'])
+            ->latest('date_examen')
             ->limit(5)
             ->get();
 
-        // Consultations à venir (si RDV existe)
+        // Consultations à venir (si RDV existe) - garder les consultations pour les rendez-vous
         $consultationsAVenir = Consultation::parMedecin($medecin->id)
             ->where('statut', 'en_cours')
             ->whereDate('date_consultation', '>=', Carbon::today())
@@ -67,7 +67,7 @@ class DashboardController extends Controller
 
     /**
      * Afficher la liste des patients du médecin
-     * (Seulement les patients qu'il a déjà consultés)
+     * (Seulement les patients qui ont des caisses associées à ce médecin)
      */
     public function mesPatients(\Illuminate\Http\Request $request)
     {
@@ -78,8 +78,8 @@ class DashboardController extends Controller
             return redirect()->route('login')->with('error', 'Aucun profil médecin associé à votre compte.');
         }
 
-        // Construire la requête de base
-        $query = GestionPatient::whereHas('consultations', function ($q) use ($medecin) {
+        // Construire la requête de base - filtrer par caisses au lieu de consultations
+        $query = GestionPatient::whereHas('caisses', function ($q) use ($medecin) {
             $q->where('medecin_id', $medecin->id);
         });
 
@@ -93,61 +93,61 @@ class DashboardController extends Controller
             });
         }
 
-        // Filtre par période de dernière consultation
+        // Filtre par période de dernière caisse (date_examen)
         if ($request->filled('periode')) {
             $periode = $request->periode;
-            $query->whereHas('consultations', function ($q) use ($medecin, $periode) {
+            $query->whereHas('caisses', function ($q) use ($medecin, $periode) {
                 $q->where('medecin_id', $medecin->id);
                 
                 switch ($periode) {
                     case 'aujourdhui':
-                        $q->whereDate('date_consultation', Carbon::today());
+                        $q->whereDate('date_examen', Carbon::today());
                         break;
                     case 'semaine':
-                        $q->whereBetween('date_consultation', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                        $q->whereBetween('date_examen', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
                         break;
                     case 'mois':
-                        $q->whereMonth('date_consultation', Carbon::now()->month)
-                          ->whereYear('date_consultation', Carbon::now()->year);
+                        $q->whereMonth('date_examen', Carbon::now()->month)
+                          ->whereYear('date_examen', Carbon::now()->year);
                         break;
                     case '3mois':
-                        $q->where('date_consultation', '>=', Carbon::now()->subMonths(3));
+                        $q->where('date_examen', '>=', Carbon::now()->subMonths(3));
                         break;
                     case '6mois':
-                        $q->where('date_consultation', '>=', Carbon::now()->subMonths(6));
+                        $q->where('date_examen', '>=', Carbon::now()->subMonths(6));
                         break;
                     case 'annee':
-                        $q->whereYear('date_consultation', Carbon::now()->year);
+                        $q->whereYear('date_examen', Carbon::now()->year);
                         break;
                 }
             });
         }
 
-        // Récupérer les patients avec leurs statistiques
+        // Récupérer les patients avec leurs statistiques basées sur les caisses
         $patients = $query
-            ->withCount(['consultations' => function ($q) use ($medecin) {
+            ->withCount(['caisses' => function ($q) use ($medecin) {
                 $q->where('medecin_id', $medecin->id);
             }])
-            ->with(['consultations' => function ($q) use ($medecin) {
+            ->with(['caisses' => function ($q) use ($medecin) {
                 $q->where('medecin_id', $medecin->id)
-                    ->latest('date_consultation')
+                    ->latest('date_examen')
                     ->limit(1);
             }])
             ->orderBy('first_name')
             ->paginate(20)
             ->appends($request->query());
 
-        // Statistiques globales
+        // Statistiques globales basées sur les caisses
         $stats = [
-            'total_patients' => GestionPatient::whereHas('consultations', function ($q) use ($medecin) {
+            'total_patients' => GestionPatient::whereHas('caisses', function ($q) use ($medecin) {
                 $q->where('medecin_id', $medecin->id);
             })->count(),
             
-            'total_consultations' => Consultation::where('medecin_id', $medecin->id)->count(),
+            'total_consultations' => \App\Models\Caisse::where('medecin_id', $medecin->id)->count(),
             
-            'patients_actifs' => GestionPatient::whereHas('consultations', function ($q) use ($medecin) {
+            'patients_actifs' => GestionPatient::whereHas('caisses', function ($q) use ($medecin) {
                 $q->where('medecin_id', $medecin->id)
-                  ->where('date_consultation', '>=', Carbon::now()->subMonths(6));
+                  ->where('date_examen', '>=', Carbon::now()->subMonths(6));
             })->count(),
         ];
 
@@ -166,8 +166,8 @@ class DashboardController extends Controller
             return redirect()->route('login')->with('error', 'Aucun profil médecin associé à votre compte.');
         }
 
-        // Récupérer tous les patients (sans pagination pour l'export)
-        $query = GestionPatient::whereHas('consultations', function ($q) use ($medecin) {
+        // Récupérer tous les patients (sans pagination pour l'export) - filtrer par caisses
+        $query = GestionPatient::whereHas('caisses', function ($q) use ($medecin) {
             $q->where('medecin_id', $medecin->id);
         });
 
@@ -183,40 +183,40 @@ class DashboardController extends Controller
 
         if ($request->filled('periode')) {
             $periode = $request->periode;
-            $query->whereHas('consultations', function ($q) use ($medecin, $periode) {
+            $query->whereHas('caisses', function ($q) use ($medecin, $periode) {
                 $q->where('medecin_id', $medecin->id);
                 
                 switch ($periode) {
                     case 'aujourdhui':
-                        $q->whereDate('date_consultation', Carbon::today());
+                        $q->whereDate('date_examen', Carbon::today());
                         break;
                     case 'semaine':
-                        $q->whereBetween('date_consultation', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                        $q->whereBetween('date_examen', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
                         break;
                     case 'mois':
-                        $q->whereMonth('date_consultation', Carbon::now()->month)
-                          ->whereYear('date_consultation', Carbon::now()->year);
+                        $q->whereMonth('date_examen', Carbon::now()->month)
+                          ->whereYear('date_examen', Carbon::now()->year);
                         break;
                     case '3mois':
-                        $q->where('date_consultation', '>=', Carbon::now()->subMonths(3));
+                        $q->where('date_examen', '>=', Carbon::now()->subMonths(3));
                         break;
                     case '6mois':
-                        $q->where('date_consultation', '>=', Carbon::now()->subMonths(6));
+                        $q->where('date_examen', '>=', Carbon::now()->subMonths(6));
                         break;
                     case 'annee':
-                        $q->whereYear('date_consultation', Carbon::now()->year);
+                        $q->whereYear('date_examen', Carbon::now()->year);
                         break;
                 }
             });
         }
 
         $patients = $query
-            ->withCount(['consultations' => function ($q) use ($medecin) {
+            ->withCount(['caisses' => function ($q) use ($medecin) {
                 $q->where('medecin_id', $medecin->id);
             }])
-            ->with(['consultations' => function ($q) use ($medecin) {
+            ->with(['caisses' => function ($q) use ($medecin) {
                 $q->where('medecin_id', $medecin->id)
-                    ->latest('date_consultation')
+                    ->latest('date_examen')
                     ->limit(1);
             }])
             ->orderBy('first_name')

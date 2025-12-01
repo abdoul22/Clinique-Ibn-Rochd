@@ -246,6 +246,9 @@ Route::middleware(['auth', 'role:medecin', 'is.approved'])->prefix('medecin')->n
     Route::get('/patients', [MedecinDashboardController::class, 'mesPatients'])->name('patients.index');
     Route::get('/patients/export/pdf', [MedecinDashboardController::class, 'exportPatientsPdf'])->name('patients.export.pdf');
     Route::get('/patients/{id}', [GestionPatientController::class, 'show'])->name('patients.show');
+    Route::get('/patients/{id}/edit', [GestionPatientController::class, 'edit'])->name('patients.edit');
+    Route::put('/patients/{id}', [GestionPatientController::class, 'update'])->name('patients.update');
+    Route::delete('/patients/{id}', [GestionPatientController::class, 'destroy'])->name('patients.destroy');
 });
 
 // Route pour afficher la liste des patients (accessible depuis les dashboards)

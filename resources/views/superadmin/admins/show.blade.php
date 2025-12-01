@@ -11,7 +11,13 @@
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div class="mb-4 md:mb-0">
                         <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
-                            <i class="fas fa-user-shield mr-3"></i>Détails de l'Administrateur
+                            @if($admin->role && $admin->role->name === 'medecin')
+                                <i class="fas fa-user-md mr-3"></i>Détails du Médecin
+                            @elseif($admin->role && $admin->role->name === 'superadmin')
+                                <i class="fas fa-crown mr-3"></i>Détails du Super Administrateur
+                            @else
+                                <i class="fas fa-user-shield mr-3"></i>Détails de l'Administrateur
+                            @endif
                         </h1>
                         <p class="text-blue-100 text-lg">Informations complètes de l'utilisateur</p>
                     </div>
@@ -51,12 +57,23 @@
                 <div class="p-6 space-y-4">
                     <div class="flex items-center">
                         <div
-                            class="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-4">
-                            <i class="fas fa-user-shield text-blue-600 dark:text-blue-400 text-xl"></i>
+                            class="w-16 h-16 {{ $admin->role && $admin->role->name === 'medecin' ? 'bg-green-100 dark:bg-green-900' : ($admin->role && $admin->role->name === 'superadmin' ? 'bg-purple-100 dark:bg-purple-900' : 'bg-blue-100 dark:bg-blue-900') }} rounded-full flex items-center justify-center mr-4">
+                            @if($admin->role && $admin->role->name === 'medecin')
+                                <i class="fas fa-user-md {{ $admin->role && $admin->role->name === 'medecin' ? 'text-green-600 dark:text-green-400' : '' }} text-xl"></i>
+                            @elseif($admin->role && $admin->role->name === 'superadmin')
+                                <i class="fas fa-crown text-purple-600 dark:text-purple-400 text-xl"></i>
+                            @else
+                                <i class="fas fa-user-shield text-blue-600 dark:text-blue-400 text-xl"></i>
+                            @endif
                         </div>
                         <div>
                             <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ $admin->name }}</h3>
                             <p class="text-gray-600 dark:text-gray-400">{{ $admin->email }}</p>
+                            @if($admin->role && $admin->role->name === 'medecin' && $admin->medecin)
+                                <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                                    {{ $admin->medecin->nom_complet_avec_prenom }}
+                                </p>
+                            @endif
                         </div>
                     </div>
 
@@ -93,17 +110,26 @@
                 <div class="p-6 space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                            <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                            <div class="text-lg font-bold text-green-600 dark:text-green-400 capitalize">
                                 {{ $admin->role->name ?? 'Admin' }}
                             </div>
                             <div class="text-sm text-gray-600 dark:text-gray-400">Rôle</div>
                         </div>
-                        <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                {{ $admin->fonction ?: 'Non définie' }}
+                        @if($admin->role && $admin->role->name === 'medecin')
+                            <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                    {{ $admin->medecin && $admin->medecin->specialite ? $admin->medecin->specialite : 'Médecin' }}
+                                </div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">Spécialité</div>
                             </div>
-                            <div class="text-sm text-gray-600 dark:text-gray-400">Fonction</div>
-                        </div>
+                        @else
+                            <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                    {{ $admin->fonction ?: 'Non définie' }}
+                                </div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">Fonction</div>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="space-y-3">
@@ -122,19 +148,113 @@
                             @endif
                         </div>
 
-                        @if($admin->fonction)
-                        <div class="flex items-center justify-between">
-                            <span class="text-gray-600 dark:text-gray-400">Synchronisation :</span>
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                                <i class="fas fa-sync-alt mr-1"></i>Avec le personnel
-                            </span>
-                        </div>
+                        @if($admin->role && $admin->role->name === 'medecin' && $admin->medecin)
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600 dark:text-gray-400">Profil médical :</span>
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                    <i class="fas fa-stethoscope mr-1"></i>Associé au profil médecin
+                                </span>
+                            </div>
+                            @if($admin->medecin->fonction)
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600 dark:text-gray-400">Titre :</span>
+                                <span class="text-gray-900 dark:text-white font-semibold">
+                                    {{ $admin->medecin->fonction_complet }}
+                                </span>
+                            </div>
+                            @endif
+                        @elseif($admin->fonction)
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600 dark:text-gray-400">Synchronisation :</span>
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                                    <i class="fas fa-sync-alt mr-1"></i>Avec le personnel
+                                </span>
+                            </div>
                         @endif
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Informations médicales pour les médecins -->
+        @if($admin->role && $admin->role->name === 'medecin' && $admin->medecin)
+        <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
+            <div class="bg-green-600 dark:bg-green-700 px-6 py-4">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <i class="fas fa-stethoscope mr-3"></i>Informations Médicales
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-user-md mr-1"></i>Nom complet
+                        </label>
+                        <p class="text-gray-900 dark:text-white font-semibold">
+                            {{ $admin->medecin->nom_complet_avec_prenom }}
+                        </p>
+                    </div>
+                    
+                    @if($admin->medecin->specialite)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-certificate mr-1"></i>Spécialité
+                        </label>
+                        <p class="text-gray-900 dark:text-white font-semibold">
+                            {{ $admin->medecin->specialite }}
+                        </p>
+                    </div>
+                    @endif
+
+                    @if($admin->medecin->fonction)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-graduation-cap mr-1"></i>Titre
+                        </label>
+                        <p class="text-gray-900 dark:text-white font-semibold">
+                            {{ $admin->medecin->fonction_complet }}
+                        </p>
+                    </div>
+                    @endif
+
+                    @if($admin->medecin->telephone)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-phone mr-1"></i>Téléphone
+                        </label>
+                        <p class="text-gray-900 dark:text-white">
+                            {{ $admin->medecin->telephone }}
+                        </p>
+                    </div>
+                    @endif
+
+                    @if($admin->medecin->email)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-envelope mr-1"></i>Email professionnel
+                        </label>
+                        <p class="text-gray-900 dark:text-white">
+                            {{ $admin->medecin->email }}
+                        </p>
+                    </div>
+                    @endif
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-info-circle mr-1"></i>Statut
+                        </label>
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $admin->medecin->statut === 'actif' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200' }}">
+                            {{ ucfirst($admin->medecin->statut ?? 'actif') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
 
         <!-- Actions rapides -->
         @if(auth()->user()->isSuperAdmin())

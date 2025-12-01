@@ -14,10 +14,12 @@
                         <p class="text-blue-100 text-lg">Informations complètes du patient</p>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3">
+                        @if(auth()->user()->role->name !== 'medecin')
                         <a href="{{ route(auth()->user()->role->name . '.patients.edit', $patient->id) }}"
                             class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center">
                             <i class="fas fa-edit mr-2"></i>Modifier
                         </a>
+                        @endif
                         <a href="{{ route(auth()->user()->role->name . '.patients.index') }}"
                             class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center">
                             <i class="fas fa-arrow-left mr-2"></i>Retour
@@ -138,16 +140,19 @@
                         Actions
                     </h3>
                     <div class="flex flex-wrap gap-3">
+                        @if(auth()->user()->role->name !== 'medecin')
                         <a href="{{ route(auth()->user()->role->name . '.patients.edit', $patient->id) }}"
                             class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
                             <i class="fas fa-edit mr-2"></i>
                             Modifier le patient
                         </a>
+                        @endif
                         <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.create', ['patient_id' => $patient->id]) : route('rendezvous.create', ['patient_id' => $patient->id]) }}"
                             class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200">
                             <i class="fas fa-calendar-plus mr-2"></i>
                             Nouveau rendez-vous
                         </a>
+                        @if(auth()->user()->role->name !== 'medecin')
                         <form action="{{ route(auth()->user()->role->name . '.patients.destroy', $patient->id) }}"
                             method="POST" class="inline"
                             onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce patient ?')">
@@ -159,6 +164,7 @@
                                 Supprimer le patient
                             </button>
                         </form>
+                        @endif
                     </div>
                 </div>
             </div>
