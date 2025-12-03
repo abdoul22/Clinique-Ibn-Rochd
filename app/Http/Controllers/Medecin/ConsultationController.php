@@ -115,7 +115,7 @@ class ConsultationController extends Controller
 
         return redirect()
             ->route('medecin.consultations.show', $consultation->id)
-            ->with('success', 'Rapport de consultation créé avec succès.');
+            ->with('success', 'Rapport médical créé avec succès.');
     }
 
     public function show($id)
@@ -126,7 +126,7 @@ class ConsultationController extends Controller
         $consultation = Consultation::with(['patient', 'medecin', 'dossierMedical', 'ordonnances'])
             ->findOrFail($id);
 
-        // Vérifier que la consultation appartient bien au médecin connecté
+        // Vérifier que le rapport médical appartient bien au médecin connecté
         if ($consultation->medecin_id !== $medecin->id) {
             abort(403, 'Accès non autorisé');
         }
@@ -141,7 +141,7 @@ class ConsultationController extends Controller
 
         $consultation = Consultation::with(['patient'])->findOrFail($id);
 
-        // Vérifier que la consultation appartient bien au médecin connecté
+        // Vérifier que le rapport médical appartient bien au médecin connecté
         if ($consultation->medecin_id !== $medecin->id) {
             abort(403, 'Accès non autorisé');
         }
@@ -158,7 +158,7 @@ class ConsultationController extends Controller
 
         $consultation = Consultation::findOrFail($id);
 
-        // Vérifier que la consultation appartient bien au médecin connecté
+        // Vérifier que le rapport médical appartient bien au médecin connecté
         if ($consultation->medecin_id !== $medecin->id) {
             abort(403, 'Accès non autorisé');
         }
@@ -179,7 +179,7 @@ class ConsultationController extends Controller
 
         return redirect()
             ->route('medecin.consultations.show', $consultation->id)
-            ->with('success', 'Consultation mise à jour avec succès.');
+            ->with('success', 'Rapport médical mis à jour avec succès.');
     }
 
     public function destroy($id)
@@ -189,7 +189,7 @@ class ConsultationController extends Controller
 
         $consultation = Consultation::findOrFail($id);
 
-        // Vérifier que la consultation appartient bien au médecin connecté
+        // Vérifier que le rapport médical appartient bien au médecin connecté
         if ($consultation->medecin_id !== $medecin->id) {
             abort(403, 'Accès non autorisé');
         }
@@ -198,7 +198,7 @@ class ConsultationController extends Controller
 
         return redirect()
             ->route('medecin.consultations.index')
-            ->with('success', 'Consultation supprimée avec succès.');
+            ->with('success', 'Rapport médical supprimé avec succès.');
     }
 
     public function printPdf($id)
@@ -208,14 +208,14 @@ class ConsultationController extends Controller
 
         $consultation = Consultation::with(['patient', 'medecin'])->findOrFail($id);
 
-        // Vérifier que la consultation appartient bien au médecin connecté
+        // Vérifier que le rapport médical appartient bien au médecin connecté
         if ($consultation->medecin_id !== $medecin->id) {
             abort(403, 'Accès non autorisé');
         }
 
         $pdf = Pdf::loadView('medecin.consultations.pdf', compact('consultation'));
         
-        return $pdf->stream('rapport-consultation-' . $consultation->id . '.pdf');
+        return $pdf->stream('rapport-medical-' . $consultation->id . '.pdf');
     }
 
     public function searchPatients(Request $request)

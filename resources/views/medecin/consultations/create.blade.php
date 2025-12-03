@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Nouvelle Consultation')
+@section('title', 'Nouveau Rapport Médical')
 
 @section('content')
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-8">
@@ -9,7 +9,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">📋 Rapport d'Observation</h1>
-                    <p class="text-gray-600 dark:text-gray-400 mt-1">Créer un nouveau rapport de consultation</p>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Créer un nouveau rapport médical</p>
                 </div>
                 <a href="{{ route('medecin.consultations.index') }}" 
                    class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
@@ -55,7 +55,7 @@
                     <!-- Date -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Date de consultation <span class="text-red-500">*</span>
+                            Date du rapport médical <span class="text-red-500">*</span>
                         </label>
                         <input type="date" name="date_consultation" value="{{ old('date_consultation', date('Y-m-d')) }}" required
                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -149,7 +149,7 @@
                             Résumé
                         </label>
                         <textarea name="resume" rows="3" 
-                                  placeholder="Résumé de la consultation..."
+                                  placeholder="Résumé du rapport médical..."
                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">{{ old('resume') }}</textarea>
                     </div>
                 </div>

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Facture Hospitalisation IBN ROCHD</title>
+    <title>Facture Hospitalisation {{ config('clinique.name') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
@@ -299,23 +299,21 @@
         <!-- En-tête bilingue -->
         <div class="header">
             <div class="fr">
-                <div>CENTRE IBN ROCHD</div>
-                <div>Dr Brahim Ould Ntaghry</div>
-                <div>Spécialiste en Imagerie Médicale</div>
-                <div class="muted">Centre Imagerie Médicale</div>
-                <div class="muted">Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire
-                </div>
+                <div>{{ config('clinique.name') }}</div>
+                <div>{{ config('clinique.director_name') }}</div>
+                <div>{{ config('clinique.director_specialty') }}</div>
+                <div class="muted">{{ config('clinique.center_type') }}</div>
+                <div class="muted">{{ config('clinique.services_description') }}</div>
             </div>
             <div class="logo-container">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo IBN ROCHD">
+                <img src="{{ asset(config('clinique.logo_path')) }}" alt="Logo {{ config('clinique.name') }}">
             </div>
             <div class="ar">
-                <div>مركز ابن رشد</div>
-                <div>الدكتور إبراهيم ولد نْتَغري</div>
-                <div>اختصاصي في التشخيص الطبي والأشعة</div>
-                <div class="muted">مركز التشخيص الطبي</div>
-                <div class="muted">فحص بالأشعة – تصوير بالموجات فوق الصوتية – أشعة عامة – تصوير الثدي – أشعة الأسنان
-                    البانورامية</div>
+                <div>{{ config('clinique.name_ar') }}</div>
+                <div>{{ config('clinique.director_name_ar') }}</div>
+                <div>{{ config('clinique.director_specialty_ar') }}</div>
+                <div class="muted">{{ config('clinique.center_type_ar') }}</div>
+                <div class="muted">{{ config('clinique.services_description_ar') }}</div>
             </div>
         </div>
 

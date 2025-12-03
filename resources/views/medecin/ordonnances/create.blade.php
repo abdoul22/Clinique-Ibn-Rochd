@@ -98,17 +98,23 @@
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">💊 Contenu de l'ordonnance</h2>
                 
                 <!-- Ajouter un médicament -->
-                <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 mb-6">
+                <div class="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 mb-6 border border-purple-200 dark:border-purple-800">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Médicament
-                            </label>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Médicament
+                                </label>
+                                <button type="button" onclick="ouvrirModalMedicament()" 
+                                        class="text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition">
+                                    + Nouveau
+                                </button>
+                            </div>
                             <select id="medicament-select" 
-                                    class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm">
+                                    class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                                 <option value="">-- Sélectionner --</option>
                                 @foreach($medicaments as $med)
-                                    <option value="{{ $med->id }}" data-nom="{{ $med->nom }}" data-forme="{{ $med->forme }}">
+                                    <option value="{{ $med->id }}" data-nom="{{ $med->nom }}" data-forme="{{ $med->forme }}" data-dosage="{{ $med->dosage ?? '' }}">
                                         {{ $med->nom_complet }}
                                     </option>
                                 @endforeach
@@ -168,8 +174,76 @@
     </div>
 </div>
 
+<!-- Modal pour créer un nouveau médicament -->
+<div id="modal-medicament" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Nouveau Médicament</h3>
+            <button onclick="fermerModalMedicament()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="form-nouveau-medicament" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nom du médicament <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="medicament-nom" required
+                       class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                       placeholder="Ex: Paracétamol">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Forme
+                </label>
+                <input type="text" id="medicament-forme"
+                       class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                       placeholder="Ex: comprimé, sirop, gélule">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Dosage
+                </label>
+                <input type="text" id="medicament-dosage"
+                       class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                       placeholder="Ex: 500mg, 5ml">
+            </div>
+            
+            <div class="flex items-center justify-end space-x-3 pt-4">
+                <button type="button" onclick="fermerModalMedicament()" 
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                    Annuler
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                    Créer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 let medicamentIndex = 0;
+
+// Remplir automatiquement le dosage quand un médicament est sélectionné
+document.getElementById('medicament-select').addEventListener('change', function() {
+    const select = this;
+    const dosageInput = document.getElementById('dosage-input');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (select.value && selectedOption.dataset.dosage) {
+        dosageInput.value = selectedOption.dataset.dosage;
+    } else if (!select.value) {
+        // Si aucun médicament n'est sélectionné, vider le champ dosage
+        dosageInput.value = '';
+    }
+});
 
 function ajouterMedicament() {
     const select = document.getElementById('medicament-select');
@@ -233,6 +307,79 @@ function supprimerMedicament(button) {
         emptyMessage.style.display = 'block';
     }
 }
+
+function ouvrirModalMedicament() {
+    document.getElementById('modal-medicament').classList.remove('hidden');
+}
+
+function fermerModalMedicament() {
+    document.getElementById('modal-medicament').classList.add('hidden');
+    document.getElementById('form-nouveau-medicament').reset();
+}
+
+// Gérer la soumission du formulaire de nouveau médicament
+document.getElementById('form-nouveau-medicament').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const nom = document.getElementById('medicament-nom').value;
+    const forme = document.getElementById('medicament-forme').value;
+    const dosage = document.getElementById('medicament-dosage').value;
+    
+    if (!nom.trim()) {
+        alert('Le nom du médicament est requis');
+        return;
+    }
+    
+    try {
+        const response = await fetch('{{ route("medecin.ordonnances.medicament.store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                nom: nom,
+                forme: forme || null,
+                dosage: dosage || null
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Ajouter le nouveau médicament au select
+            const select = document.getElementById('medicament-select');
+            const option = document.createElement('option');
+            option.value = data.medicament.id;
+            option.dataset.nom = data.medicament.nom;
+            option.dataset.forme = data.medicament.forme || '';
+            option.dataset.dosage = data.medicament.dosage || '';
+            
+            let texte = data.medicament.nom;
+            if (data.medicament.forme) {
+                texte += ' - ' + data.medicament.forme;
+            }
+            option.textContent = texte;
+            
+            select.appendChild(option);
+            select.value = data.medicament.id;
+            
+            // Remplir automatiquement le dosage si disponible
+            const dosageInput = document.getElementById('dosage-input');
+            if (data.medicament.dosage) {
+                dosageInput.value = data.medicament.dosage;
+            }
+            
+            // Fermer la modal
+            fermerModalMedicament();
+        } else {
+            alert(data.message || 'Erreur lors de la création du médicament');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la création du médicament');
+    }
+});
 </script>
 @endsection
 

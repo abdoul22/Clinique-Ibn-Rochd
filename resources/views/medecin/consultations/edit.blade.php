@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Modifier Consultation')
+@section('title', 'Modifier Rapport Médical')
 
 @section('content')
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-8">
@@ -8,8 +8,8 @@
         <div class="mb-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">✏️ Modifier Consultation</h1>
-                    <p class="text-gray-600 dark:text-gray-400 mt-1">Mettre à jour le rapport de consultation</p>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">✏️ Modifier Rapport Médical</h1>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Mettre à jour le rapport médical</p>
                 </div>
                 <a href="{{ route('medecin.consultations.show', $consultation->id) }}" 
                    class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
@@ -40,7 +40,7 @@
                     <!-- Date -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Date de consultation <span class="text-red-500">*</span>
+                            Date du rapport médical <span class="text-red-500">*</span>
                         </label>
                         <input type="date" name="date_consultation" 
                                value="{{ old('date_consultation', $consultation->date_consultation->format('Y-m-d')) }}" 

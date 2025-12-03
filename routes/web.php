@@ -239,6 +239,8 @@ Route::middleware(['auth', 'role:medecin', 'is.approved'])->prefix('medecin')->n
 
     // Ordonnances
     Route::get('/ordonnances/search-medicaments', [MedecinOrdonnanceController::class, 'searchMedicaments'])->name('ordonnances.search-medicaments');
+    Route::post('/ordonnances/medicament/store', [MedecinOrdonnanceController::class, 'storeMedicament'])->name('ordonnances.medicament.store');
+    Route::get('/ordonnances/{id}/print-page', [MedecinOrdonnanceController::class, 'print'])->name('ordonnances.print-page');
     Route::get('/ordonnances/{id}/print', [MedecinOrdonnanceController::class, 'printPdf'])->name('ordonnances.print');
     Route::resource('ordonnances', MedecinOrdonnanceController::class);
 

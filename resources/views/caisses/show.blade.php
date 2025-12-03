@@ -7,27 +7,25 @@
         <div class="flex items-start justify-between text-sm mb-4">
             <!-- Section française -->
             <div class="text-left flex-1">
-                <div class="font-semibold">CENTRE IBN ROCHD</div>
-                <div>Dr Brahim Ould Ntaghry</div>
-                <div>Spécialiste en Imagerie Médicale</div>
-                <div class="text-xs text-blue-200 mt-1">Centre Imagerie Médicale</div>
-                <div class="text-xs text-blue-200">Scanner – Echographie – Radiologie Générale – Mammographie –
-                    Panoramique Dentaire</div>
+                <div class="font-semibold">{{ config('clinique.name') }}</div>
+                <div>{{ config('clinique.director_name') }}</div>
+                <div>{{ config('clinique.director_specialty') }}</div>
+                <div class="text-xs text-blue-200 mt-1">{{ config('clinique.center_type') }}</div>
+                <div class="text-xs text-blue-200">{{ config('clinique.services_description') }}</div>
             </div>
 
             <!-- Logo centré -->
             <div class="flex-shrink-0 mx-6">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo IBN ROCHD" class="h-16 w-auto">
+                <img src="{{ asset(config('clinique.logo_path')) }}" alt="Logo {{ config('clinique.name') }}" class="h-16 w-auto">
             </div>
 
             <!-- Section arabe -->
             <div class="text-right flex-1" style="direction: rtl;">
-                <div class="font-semibold">مركز ابن رشد</div>
-                <div>الدكتور إبراهيم ولد نْتَغري</div>
-                <div>اختصاصي في التشخيص الطبي والأشعة</div>
-                <div class="text-xs text-blue-200 mt-1">مركز التشخيص الطبي</div>
-                <div class="text-xs text-blue-200">فحص بالأشعة – تصوير بالموجات فوق الصوتية – أشعة عامة – تصوير الثدي –
-                    أشعة الأسنان البانورامية</div>
+                <div class="font-semibold">{{ config('clinique.name_ar') }}</div>
+                <div>{{ config('clinique.director_name_ar') }}</div>
+                <div>{{ config('clinique.director_specialty_ar') }}</div>
+                <div class="text-xs text-blue-200 mt-1">{{ config('clinique.center_type_ar') }}</div>
+                <div class="text-xs text-blue-200">{{ config('clinique.services_description_ar') }}</div>
             </div>
         </div>
 

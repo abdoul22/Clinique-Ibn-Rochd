@@ -44,7 +44,7 @@ class DashboardController extends Controller
         // Dernières caisses (remplace les consultations)
         $dernieresConsultations = \App\Models\Caisse::where('medecin_id', $medecin->id)
             ->with(['patient', 'examen'])
-            ->latest('date_examen')
+            ->latest('created_at')
             ->limit(5)
             ->get();
 
@@ -130,7 +130,7 @@ class DashboardController extends Controller
             }])
             ->with(['caisses' => function ($q) use ($medecin) {
                 $q->where('medecin_id', $medecin->id)
-                    ->latest('date_examen')
+                    ->latest('created_at')
                     ->limit(1);
             }])
             ->orderBy('first_name')
@@ -216,7 +216,7 @@ class DashboardController extends Controller
             }])
             ->with(['caisses' => function ($q) use ($medecin) {
                 $q->where('medecin_id', $medecin->id)
-                    ->latest('date_examen')
+                    ->latest('created_at')
                     ->limit(1);
             }])
             ->orderBy('first_name')

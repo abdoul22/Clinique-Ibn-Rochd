@@ -1,0 +1,92 @@
+[
+  {
+    "id": "TC001",
+    "title": "verify_caisse_api_numero_entree_medecin",
+    "description": "Test the API endpoint /api/caisses/numero-entree/{medecin_id} to verify it returns the correct next entry number for a specific doctor's financial transactions."
+  },
+  {
+    "id": "TC002",
+    "title": "verify_caisse_transaction_creation",
+    "description": "Test creating a caisse transaction (facture) and verify that it correctly calculates total, creates EtatCaisse with recette, part_medecin, and part_clinique."
+  },
+  {
+    "id": "TC003",
+    "title": "verify_caisse_doctor_share_calculation",
+    "description": "Test that part_medecin is correctly calculated from examen.part_medecin multiplied by quantity when creating a caisse transaction."
+  },
+  {
+    "id": "TC004",
+    "title": "verify_caisse_clinic_share_calculation",
+    "description": "Test that part_clinique (part_cabinet) is correctly calculated from examen.part_cabinet multiplied by quantity when creating a caisse transaction."
+  },
+  {
+    "id": "TC005",
+    "title": "verify_caisse_insurance_coverage",
+    "description": "Test that when a caisse transaction includes insurance (assurance_id), it correctly calculates recette as total minus insurance coverage percentage, and creates a Credit for the insurance company."
+  },
+  {
+    "id": "TC006",
+    "title": "verify_etatcaisse_recette_tracking",
+    "description": "Test that EtatCaisse correctly tracks recette (revenue from patient payments) and that it equals total minus insurance coverage when applicable."
+  },
+  {
+    "id": "TC007",
+    "title": "verify_etatcaisse_validation",
+    "description": "Test the validation and unvalidation of EtatCaisse entries, and verify that validated part_medecin is correctly tracked in totals."
+  },
+  {
+    "id": "TC008",
+    "title": "verify_modepaiement_creation",
+    "description": "Test creating ModePaiement entries for caisse transactions and verify that payment type (espèces, bankily, masrivi, sedad) is correctly stored."
+  },
+  {
+    "id": "TC009",
+    "title": "verify_modepaiement_source_tracking",
+    "description": "Test that ModePaiement correctly tracks source (facture, depense, part_medecin, credit_assurance) and filters work correctly."
+  },
+  {
+    "id": "TC010",
+    "title": "verify_modepaiement_totals_calculation",
+    "description": "Test that ModePaiement dashboard correctly calculates totals by payment type (espèces vs numérique) and by source (factures vs depenses vs part_medecin)."
+  },
+  {
+    "id": "TC011",
+    "title": "verify_depense_creation",
+    "description": "Test creating a Depense entry with payment mode and verify that it's correctly stored and linked to ModePaiement."
+  },
+  {
+    "id": "TC012",
+    "title": "verify_depense_part_medecin_source",
+    "description": "Test that depenses with source 'part_medecin' are correctly identified and filtered, and that they represent doctor share payments."
+  },
+  {
+    "id": "TC013",
+    "title": "verify_credit_creation_for_assurance",
+    "description": "Test that when a caisse transaction includes insurance, a Credit is automatically created for the Assurance with correct montant calculation (total * couverture / 100)."
+  },
+  {
+    "id": "TC014",
+    "title": "verify_credit_payment_processing",
+    "description": "Test credit payment processing (payer) and verify that montant_paye is correctly updated and status changes accordingly."
+  },
+  {
+    "id": "TC015",
+    "title": "verify_etatcaisse_general_generation",
+    "description": "Test generating general EtatCaisse report (/etatcaisse/generer/general) and verify it includes correct totals for recette, part_medecin, part_clinique, depenses, and credits."
+  },
+  {
+    "id": "TC016",
+    "title": "verify_situation_journaliere_daily_report",
+    "description": "Test the daily situation report (/situation-journaliere) and verify it correctly breaks down financial data by service categories with doctor shares and clinic shares."
+  },
+  {
+    "id": "TC017",
+    "title": "verify_multiple_examens_in_caisse",
+    "description": "Test creating a caisse transaction with multiple examinations (examens_data) and verify that part_medecin and part_clinique are correctly summed from all examinations."
+  },
+  {
+    "id": "TC018",
+    "title": "verify_caisse_pdf_export",
+    "description": "Test PDF export functionality for caisse transactions (/caisses/{caisse}/exportPdf) and verify it includes all financial details including parts médecin and clinique."
+  }
+]

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Document') - {{ config('clinique.name', 'CLINIQUE IBN ROCHD') }}</title>
+    <title>@yield('title', 'Document') - {{ config('clinique.name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media print {
@@ -141,9 +141,9 @@
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 uppercase tracking-wider"
                         style="color: {{ config('clinique.primary_color', '#1f2937') }}">
-                        {{ config('clinique.name', 'CLINIQUE IBN ROCHD') }}
+                        {{ config('clinique.name') }}
                     </h1>
-                    <p class="text-sm text-gray-600">{{ config('clinique.address', 'Nouakchott, Mauritanie') }}</p>
+                    <p class="text-sm text-gray-600">{{ config('clinique.address') }}</p>
                     <p class="text-sm text-gray-600">{{ config('clinique.phone') }}</p>
                 </div>
             </div>

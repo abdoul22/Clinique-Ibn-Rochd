@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Facture IBN ROCHD</title>
+    <title>Facture {{ config('clinique.name') }}</title>
     <style>
         :root {
             --fs-xs: 10px;
@@ -126,22 +126,22 @@
         <!-- En-tête -->
         <div class="header">
             <div class="header-row">
-                <div class="bold" style="font-size: var(--fs-m);">CENTRE IBN ROCHD</div>
-                <div>Dr Brahim Ould Ntaghry</div>
-                <div>Spécialiste en Imagerie Médicale</div>
+                <div class="bold" style="font-size: var(--fs-m);">{{ config('clinique.name') }}</div>
+                <div>{{ config('clinique.director_name') }}</div>
+                <div>{{ config('clinique.director_specialty') }}</div>
             </div>
             <div class="muted">
-                Centre Imagerie Médicale<br>
-                Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire
+                {{ config('clinique.center_type') }}<br>
+                {{ config('clinique.services_description') }}
             </div>
         </div>
 
         <!-- Logo centré -->
-        <div class="logo-text">IBN ROCHD</div>
+        <div class="logo-text">{{ config('clinique.name') }}</div>
 
         <div class="muted center">
-            Urgences Tél. 43 45 54 23 – 22 30 56 26<br>
-            Avenue John Kennedy, en face de la Polyclinique – Nouakchott
+            {{ config('clinique.phone') }}<br>
+            {{ config('clinique.address') }}
         </div>
 
         <div class="divider"></div>
@@ -224,7 +224,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Facture IBN ROCHD</title>
+    <title>Facture {{ config('clinique.name') }}</title>
     <style>
         :root {
             --fs-xs: 10px;
@@ -347,22 +347,22 @@
         <!-- En-tête -->
         <div class="header">
             <div class="header-row">
-                <div class="bold" style="font-size: var(--fs-m);">CENTRE IBN ROCHD</div>
-                <div>Dr Brahim Ould Ntaghry</div>
-                <div>Spécialiste en Imagerie Médicale</div>
+                <div class="bold" style="font-size: var(--fs-m);">{{ config('clinique.name') }}</div>
+                <div>{{ config('clinique.director_name') }}</div>
+                <div>{{ config('clinique.director_specialty') }}</div>
             </div>
             <div class="muted">
-                Centre Imagerie Médicale<br>
-                Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire
+                {{ config('clinique.center_type') }}<br>
+                {{ config('clinique.services_description') }}
             </div>
         </div>
 
         <!-- Logo centré -->
-        <div class="logo-text">IBN ROCHD</div>
+        <div class="logo-text">{{ config('clinique.name') }}</div>
 
         <div class="muted center">
-            Urgences Tél. 43 45 54 23 – 22 30 56 26<br>
-            Avenue John Kennedy, en face de la Polyclinique – Nouakchott
+            {{ config('clinique.phone') }}<br>
+            {{ config('clinique.address') }}
         </div>
 
         <div class="divider"></div>

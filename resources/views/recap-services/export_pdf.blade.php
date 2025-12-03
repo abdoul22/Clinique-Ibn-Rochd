@@ -128,7 +128,7 @@
 <body>
     <div class="header">
         <h2>Récapitulatif Journalier des Services</h2>
-        <p style="color: #6b7280; margin: 3px 0; font-size: 11px;">Clinique Ibn Rochd</p>
+        <p style="color: #6b7280; margin: 3px 0; font-size: 11px;">{{ config('clinique.name') }}</p>
     </div>
 
     @if(isset($resume))

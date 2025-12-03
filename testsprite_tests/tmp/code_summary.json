@@ -1,0 +1,167 @@
+{
+  "project_name": "Clinique Ibn Rochd - Modules Financiers",
+  "project_type": "backend",
+  "description": "Modules financiers de la clinique : Caisse, Comptabilité, Modes de paiement, Parts médecin/clinique, Dépenses",
+  "tech_stack": {
+    "backend": {
+      "framework": "Laravel 12.0",
+      "language": "PHP 8.2+",
+      "database": "SQLite (development), MySQL/MariaDB (production)",
+      "authentication": "Laravel Auth (required for most endpoints)",
+      "authorization": "Role-based (superadmin, admin)"
+    }
+  },
+  "main_features": [
+    {
+      "name": "Cashier (Caisse)",
+      "description": "Financial transactions management with doctor and clinic share calculations",
+      "routes": [
+        "/superadmin/caisses",
+        "/admin/caisses",
+        "/caisses",
+        "/caisses/{id}",
+        "/caisses/{caisse}/exportPdf",
+        "/caisses/{id}/print",
+        "/api/caisses/numero-entree/{medecin_id}",
+        "/api/next-numero-entree"
+      ],
+      "key_functionality": [
+        "Create financial transactions (factures)",
+        "Calculate doctor share (part_medecin) and clinic share (part_clinique)",
+        "Handle multiple examinations in one transaction",
+        "Support insurance coverage calculations",
+        "Generate receipts and PDF exports",
+        "Track entry numbers per doctor"
+      ]
+    },
+    {
+      "name": "Accounting (Comptabilité) - EtatCaisse",
+      "description": "Cash state management with recette, part_medecin, part_clinique tracking",
+      "routes": [
+        "/etatcaisse",
+        "/etatcaisse/generer/general",
+        "/etatcaisse/generer/personnel/{id}",
+        "/etatcaisse/generer/assurance/{id}",
+        "/etatcaisse/generer/journalier",
+        "/etatcaisse/{id}/valider",
+        "/etatcaisse/{id}/unvalider",
+        "/etatcaisse-export-pdf",
+        "/etatcaisse-print"
+      ],
+      "key_functionality": [
+        "Track recette (revenue from patient payments)",
+        "Calculate and track part_medecin (doctor share)",
+        "Calculate and track part_clinique (clinic share)",
+        "Generate general, personnel, insurance, and daily states",
+        "Validate/unvalidate states",
+        "Export PDF reports"
+      ]
+    },
+    {
+      "name": "Payment Modes (ModePaiement)",
+      "description": "Payment method management for transactions",
+      "routes": [
+        "/modepaiements",
+        "/mode-paiements/dashboard",
+        "/mode-paiements/historique"
+      ],
+      "key_functionality": [
+        "Manage payment types (espèces, bankily, masrivi, sedad)",
+        "Track payments by source (facture, depense, part_medecin, credit_assurance)",
+        "Calculate totals by payment type",
+        "Filter by period and source",
+        "Dashboard with financial summaries"
+      ]
+    },
+    {
+      "name": "Credits Management",
+      "description": "Credit tracking for personnel and insurance companies",
+      "routes": [
+        "/credits",
+        "/credits/create",
+        "/credits/{credit}/payer",
+        "/credits/{credit}/payer-salaire",
+        "/credits/{id}/statut/{statut}"
+      ],
+      "key_functionality": [
+        "Create credits for personnel and insurance",
+        "Track payment status (payé, partiellement payé, non payé)",
+        "Process payments (full or partial)",
+        "Filter by type, status, and period",
+        "Calculate outstanding balances"
+      ]
+    },
+    {
+      "name": "Expenses (Depenses)",
+      "description": "Expense tracking and management",
+      "routes": [
+        "/depenses",
+        "/depenses/create",
+        "/depenses-export-pdf",
+        "/depenses-print"
+      ],
+      "key_functionality": [
+        "Record expenses with payment mode",
+        "Track expense sources (manuelle, automatique, part_medecin)",
+        "Filter by period, source, and payment mode",
+        "Calculate total expenses",
+        "Export PDF reports",
+        "Mark expenses as reimbursed (rembourse)"
+      ]
+    },
+    {
+      "name": "Daily Situation Report",
+      "description": "Daily cashier situation with service breakdown",
+      "routes": [
+        "/superadmin/situation-journaliere",
+        "/admin/situation-journaliere",
+        "/situation-journaliere/print",
+        "/situation-journaliere/export-pdf"
+      ],
+      "key_functionality": [
+        "Generate daily financial reports",
+        "Breakdown by service categories",
+        "Show doctor shares and clinic shares",
+        "Export and print reports"
+      ]
+    }
+  ],
+  "financial_calculations": {
+    "doctor_share": {
+      "description": "Part médecin calculated from examen.part_medecin multiplied by quantity",
+      "calculation": "examen.part_medecin * quantite",
+      "stored_in": "EtatCaisse.part_medecin"
+    },
+    "clinic_share": {
+      "description": "Part clinique (cabinet) calculated from examen.part_cabinet multiplied by quantity",
+      "calculation": "examen.part_cabinet * quantite",
+      "stored_in": "EtatCaisse.part_clinique"
+    },
+    "revenue": {
+      "description": "Recette is the amount paid by patient (total - insurance coverage)",
+      "calculation": "total - (total * couverture / 100) if assurance_id exists",
+      "stored_in": "EtatCaisse.recette"
+    },
+    "insurance_coverage": {
+      "description": "When assurance_id exists, creates Credit for insurance company",
+      "calculation": "total * (couverture / 100)",
+      "stored_in": "Credit.montant for Assurance"
+    }
+  },
+  "api_endpoints": [
+    "/api/caisses/numero-entree/{medecin_id}",
+    "/api/next-numero-entree"
+  ],
+  "database_models": [
+    "Caisse",
+    "EtatCaisse",
+    "ModePaiement",
+    "Credit",
+    "Depense",
+    "Examen",
+    "Medecin",
+    "Assurance",
+    "Personnel"
+  ],
+  "testing_focus": "Financial modules: Caisse, Comptabilité, Modes de paiement, Parts médecin/clinique, Dépenses"
+}

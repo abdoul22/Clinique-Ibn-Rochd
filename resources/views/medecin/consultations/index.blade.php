@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Mes Consultations')
+@section('title', 'Mes Rapports Médicaux')
 
 @section('content')
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-8">
@@ -7,12 +7,12 @@
         <!-- En-tête -->
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">📋 Mes Consultations</h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-1">Historique de vos consultations médicales</p>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">📋 Mes Rapports Médicaux</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Historique de vos rapports médicaux</p>
             </div>
             <a href="{{ route('medecin.consultations.create') }}" 
                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition transform hover:scale-105 font-semibold">
-                + Nouvelle Consultation
+                + Nouveau Rapport Médical
             </a>
         </div>
 
@@ -36,7 +36,7 @@
             </form>
         </div>
 
-        <!-- Liste des consultations -->
+        <!-- Liste des rapports médicaux -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
             @if($consultations->count() > 0)
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -97,10 +97,10 @@
                     <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    <p class="text-gray-500 dark:text-gray-400">Aucune consultation trouvée</p>
+                    <p class="text-gray-500 dark:text-gray-400">Aucun rapport médical trouvé</p>
                     <a href="{{ route('medecin.consultations.create') }}" 
                        class="mt-4 inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                        Créer votre première consultation
+                        Créer votre premier rapport médical
                     </a>
                 </div>
             @endif

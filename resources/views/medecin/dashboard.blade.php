@@ -7,7 +7,7 @@
     <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 mb-6 text-white shadow-lg">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold mb-2">Bienvenue Dr. {{ $medecin->nom_complet_avec_prenom }}</h1>
+                <h1 class="text-3xl font-bold mb-2">Bienvenue {{ $medecin->nom_complet_avec_prenom }}</h1>
                 <p class="text-blue-100">{{ $medecin->specialite ?? 'Médecin' }}</p>
             </div>
             <div class="text-right">
@@ -24,7 +24,7 @@
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Aujourd'hui</p>
                     <p class="text-3xl font-bold text-gray-800 dark:text-white">{{ $stats['consultations_aujourdhui'] }}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Caisses</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Visites</p>
                 </div>
                 <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
                     <svg class="w-8 h-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Ce mois</p>
                     <p class="text-3xl font-bold text-gray-800 dark:text-white">{{ $stats['consultations_mois'] }}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Caisses</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Visites</p>
                 </div>
                 <div class="bg-green-100 dark:bg-green-900 p-3 rounded-full">
                     <svg class="w-8 h-8 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,16 +82,16 @@
 
     <!-- Actions rapides -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        <!-- Nouvelle consultation -->
+        <!-- Nouveau rapport médical -->
         <a href="{{ route('medecin.consultations.create') }}"
             class="bg-blue-600 text-white rounded-2xl p-6 shadow-lg hover:bg-blue-700 transition transform hover:scale-105">
             <div class="flex items-center mb-2">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
-                <h2 class="text-xl font-semibold">Nouvelle Consultation</h2>
+                <h2 class="text-xl font-semibold">Nouveau Rapport Médical</h2>
             </div>
-            <p class="text-sm text-blue-100">Créer un rapport de consultation pour un patient</p>
+            <p class="text-sm text-blue-100">Créer un rapport médical pour un patient</p>
         </a>
 
         <!-- Nouvelle ordonnance -->
@@ -106,16 +106,16 @@
             <p class="text-sm text-purple-100">Prescrire des médicaments à un patient</p>
         </a>
 
-        <!-- Mes consultations -->
+        <!-- Mes rapports médicaux -->
         <a href="{{ route('medecin.consultations.index') }}"
             class="bg-green-600 text-white rounded-2xl p-6 shadow-lg hover:bg-green-700 transition transform hover:scale-105">
             <div class="flex items-center mb-2">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                 </svg>
-                <h2 class="text-xl font-semibold">Mes Consultations</h2>
+                <h2 class="text-xl font-semibold">Mes Rapports Médicaux</h2>
             </div>
-            <p class="text-sm text-green-100">Historique de vos consultations médicales</p>
+            <p class="text-sm text-green-100">Historique de vos rapports médicaux</p>
         </a>
 
         <!-- Mes ordonnances -->
@@ -143,10 +143,10 @@
         </a>
     </div>
 
-    <!-- Dernières caisses -->
+    <!-- Dernières visites -->
     @if($dernieresConsultations->count() > 0)
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Dernières Caisses</h2>
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Dernières Visites</h2>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
@@ -162,7 +162,7 @@
                     @foreach($dernieresConsultations as $caisse)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                            {{ $caisse->date_examen->format('d/m/Y') }}
+                            {{ $caisse->created_at->format('d/m/Y à H:i') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-300">
                             {{ $caisse->patient->first_name }} {{ $caisse->patient->last_name }}

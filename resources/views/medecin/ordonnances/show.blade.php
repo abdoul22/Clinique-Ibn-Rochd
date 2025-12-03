@@ -16,10 +16,15 @@
                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
                         ← Retour
                     </a>
+                    <a href="{{ route('medecin.ordonnances.print-page', $ordonnance->id) }}" 
+                       target="_blank"
+                       class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        🖨️ Imprimer
+                    </a>
                     <a href="{{ route('medecin.ordonnances.print', $ordonnance->id) }}" 
                        target="_blank"
                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                        🖨️ Imprimer PDF
+                        📄 PDF
                     </a>
                 </div>
             </div>
@@ -58,10 +63,10 @@
 
             @if($ordonnance->consultation)
             <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p class="text-sm text-gray-600 dark:text-gray-400">Consultation liée</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Rapport médical lié</p>
                 <a href="{{ route('medecin.consultations.show', $ordonnance->consultation->id) }}" 
                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 font-semibold">
-                    Voir la consultation du {{ $ordonnance->consultation->date_consultation->format('d/m/Y') }}
+                    Voir le rapport médical du {{ $ordonnance->consultation->date_consultation->format('d/m/Y') }}
                 </a>
             </div>
             @endif
@@ -72,24 +77,24 @@
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">💊 Médicaments prescrits</h2>
             <div class="space-y-4">
                 @foreach($ordonnance->medicaments as $index => $med)
-                <div class="border-l-4 border-purple-600 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-r-lg">
+                <div class="border-l-4 border-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:border-purple-700 p-4 rounded-r-lg">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <p class="font-bold text-lg text-gray-900 dark:text-white">
                                 {{ $index + 1 }}. {{ $med->medicament_nom }}
                             </p>
                             @if($med->dosage)
-                            <p class="text-gray-700 dark:text-gray-300 mt-1">
-                                <span class="font-semibold">Dosage:</span> {{ $med->dosage }}
+                            <p class="text-gray-700 dark:text-gray-200 mt-1">
+                                <span class="font-semibold text-gray-800 dark:text-gray-100">Dosage:</span> {{ $med->dosage }}
                             </p>
                             @endif
                             @if($med->duree)
-                            <p class="text-gray-700 dark:text-gray-300">
-                                <span class="font-semibold">Durée:</span> {{ $med->duree }}
+                            <p class="text-gray-700 dark:text-gray-200">
+                                <span class="font-semibold text-gray-800 dark:text-gray-100">Durée:</span> {{ $med->duree }}
                             </p>
                             @endif
                             @if($med->note)
-                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-2 italic">
+                            <p class="text-gray-600 dark:text-gray-300 text-sm mt-2 italic">
                                 {{ $med->note }}
                             </p>
                             @endif

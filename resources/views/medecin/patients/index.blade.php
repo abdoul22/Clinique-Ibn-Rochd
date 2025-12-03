@@ -11,7 +11,7 @@
                     <i class="fas fa-users text-yellow-600 mr-2"></i>Mes Patients
                 </h1>
                 <p class="text-gray-600 dark:text-gray-400 mt-1">
-                    Liste des patients ayant des caisses associées à votre compte
+                    Liste des patients ayant des visites associées à votre compte
                 </p>
             </div>
             <a href="{{ route('medecin.dashboard') }}" 
@@ -41,7 +41,7 @@
                     <i class="fas fa-clipboard-list text-blue-600 dark:text-blue-400 text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Caisses</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Visites</p>
                     <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $stats['total_consultations'] }}</p>
                 </div>
             </div>
@@ -136,10 +136,10 @@
                             Contact
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Dernière Caisse
+                            Dernière Visite
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Nb Caisses
+                            Nb Visites
                         </th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Actions
@@ -185,16 +185,16 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($patient->caisses->count() > 0)
                                 @php
-                                    $lastCaisse = $patient->caisses->first();
+                                    $lastCaisse = $patient->caisses->sortByDesc('created_at')->first();
                                 @endphp
                                 <div class="text-sm text-gray-900 dark:text-white">
-                                    {{ $lastCaisse->date_examen->format('d/m/Y') }}
+                                    {{ $lastCaisse->created_at->format('d/m/Y à H:i') }}
                                 </div>
                                 <div class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ $lastCaisse->date_examen->diffForHumans() }}
+                                    {{ $lastCaisse->created_at->diffForHumans() }}
                                 </div>
                             @else
-                                <span class="text-sm text-gray-400">Aucune caisse</span>
+                                <span class="text-sm text-gray-400">Aucune visite</span>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -211,11 +211,11 @@
                                 Voir
                             </a>
                             
-                            <!-- Nouvelle consultation pour ce patient -->
+                            <!-- Nouveau rapport médical pour ce patient -->
                             <a href="{{ route('medecin.consultations.create', ['patient_id' => $patient->id]) }}" 
                                class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                                 <i class="fas fa-plus mr-1"></i>
-                                Consulter
+                                Rapport Médical
                             </a>
                         </td>
                     </tr>
@@ -230,11 +230,11 @@
                                     Aucun patient trouvé
                                 </h3>
                                 <p class="text-gray-500 dark:text-gray-400 mb-4">
-                                    Vous n'avez pas encore de patients avec des caisses associées.
+                                    Vous n'avez pas encore de patients avec des visites associées.
                                 </p>
                                 <a href="{{ route('medecin.consultations.create') }}" 
                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                                    <i class="fas fa-plus mr-2"></i>Créer une consultation
+                                    <i class="fas fa-plus mr-2"></i>Créer un rapport médical
                                 </a>
                             </div>
                         </td>
@@ -255,16 +255,16 @@
     <!-- Graphiques de Suivi -->
     @if($patients->count() > 0)
     <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
-        <!-- Graphique : Consultations par patient (Top 10) -->
+        <!-- Graphique : Rapports médicaux par patient (Top 10) -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
             <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
                 <i class="fas fa-chart-bar text-blue-600 mr-2"></i>
-                Top 10 Patients (Nb Caisses)
+                Top 10 Patients (Nb Visites)
             </h3>
             <canvas id="chartConsultations"></canvas>
         </div>
 
-        <!-- Graphique : Évolution des consultations -->
+        <!-- Graphique : Évolution des rapports médicaux -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
             <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
                 <i class="fas fa-chart-line text-green-600 mr-2"></i>
@@ -281,7 +281,7 @@
 
 <script>
     @if($patients->count() > 0)
-    // Données pour le graphique caisses
+    // Données pour le graphique visites
     const topPatients = @json($patients->take(10)->map(function($patient) {
         return [
             'name' => $patient->first_name . ' ' . $patient->last_name,
@@ -289,14 +289,14 @@
         ];
     }));
 
-    // Graphique : Top 10 Caisses
+    // Graphique : Top 10 Visites
     const ctxConsultations = document.getElementById('chartConsultations').getContext('2d');
     new Chart(ctxConsultations, {
         type: 'bar',
         data: {
             labels: topPatients.map(p => p.name),
             datasets: [{
-                label: 'Nombre de Caisses',
+                label: 'Nombre de Visites',
                 data: topPatients.map(p => p.count),
                 backgroundColor: 'rgba(59, 130, 246, 0.7)',
                 borderColor: 'rgba(59, 130, 246, 1)',

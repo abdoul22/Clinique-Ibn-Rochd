@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Accueil - Clinique Ibn Rochd')
+@section('title', 'Accueil - ' . config('clinique.name'))
 
 @section('content')
 <style>

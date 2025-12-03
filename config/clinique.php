@@ -23,6 +23,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Informations du Médecin Directeur
+    |--------------------------------------------------------------------------
+    */
+
+    'director_name' => env('CLINIQUE_DIRECTOR_NAME', 'Dr Brahim Ould Ntaghry'),
+
+    'director_specialty' => env('CLINIQUE_DIRECTOR_SPECIALTY', 'Spécialiste en Imagerie Médicale'),
+
+    'center_type' => env('CLINIQUE_CENTER_TYPE', 'Centre Imagerie Médicale'),
+
+    'services_description' => env('CLINIQUE_SERVICES_DESCRIPTION', 'Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Informations en Arabe
+    |--------------------------------------------------------------------------
+    */
+
+    'name_ar' => env('CLINIQUE_NAME_AR', 'مركز ابن رشد'),
+
+    'director_name_ar' => env('CLINIQUE_DIRECTOR_NAME_AR', 'الدكتور إبراهيم ولد نْتَغري'),
+
+    'director_specialty_ar' => env('CLINIQUE_DIRECTOR_SPECIALTY_AR', 'اختصاصي في التشخيص الطبي والأشعة'),
+
+    'center_type_ar' => env('CLINIQUE_CENTER_TYPE_AR', 'مركز التشخيص الطبي'),
+
+    'services_description_ar' => env('CLINIQUE_SERVICES_DESCRIPTION_AR', 'فحص بالأشعة – تصوير بالموجات فوق الصوتية – أشعة عامة – تصوير الثدي – أشعة الأسنان البانورامية'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Identité Visuelle
     |--------------------------------------------------------------------------
     */

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Détails Consultation')
+@section('title', 'Détails Rapport Médical')
 
 @section('content')
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-8">
@@ -8,7 +8,7 @@
         <div class="mb-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">📋 Consultation</h1>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">📋 Rapport Médical</h1>
                     <p class="text-gray-600 dark:text-gray-400 mt-1">{{ $consultation->date_consultation->format('d/m/Y') }}</p>
                 </div>
                 <div class="flex space-x-3">
@@ -128,7 +128,7 @@
         @else
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
             <p class="text-center text-gray-500 dark:text-gray-400">
-                Aucune ordonnance associée à cette consultation
+                Aucune ordonnance associée à ce rapport médical
             </p>
             <div class="text-center mt-4">
                 <a href="{{ route('medecin.ordonnances.create', ['consultation_id' => $consultation->id]) }}" 

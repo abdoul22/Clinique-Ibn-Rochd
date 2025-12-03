@@ -6,11 +6,11 @@
     <div class="px-4 pt-4 pb-2 border-b-2 border-gray-800 flex justify-between items-start" style="direction: ltr;">
         <!-- Français -->
         <div class="text-left" style="font-size: 10px; line-height: 1.2;">
-            <div class="font-bold text-xs">CENTRE IBN ROCHD</div>
-            <div>Dr Brahim Ould Ntaghry</div>
-            <div>Spécialiste en Imagerie Médicale</div>
-            <div class="text-gray-500 mt-1">Centre Imagerie Médicale</div>
-            <div class="text-gray-500 w-48">Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire</div>
+            <div class="font-bold text-xs">{{ config('clinique.name') }}</div>
+            <div>{{ config('clinique.director_name') }}</div>
+            <div>{{ config('clinique.director_specialty') }}</div>
+            <div class="text-gray-500 mt-1">{{ config('clinique.center_type') }}</div>
+            <div class="text-gray-500 w-48">{{ config('clinique.services_description') }}</div>
         </div>
 
         <!-- Logo -->
@@ -22,11 +22,11 @@
 
         <!-- Arabe -->
         <div class="text-right" style="font-size: 10px; line-height: 1.2; direction: rtl;">
-            <div class="font-bold text-xs">مركز ابن رشد</div>
-            <div>الدكتور إبراهيم ولد نْتَغري</div>
-            <div>اختصاصي في التشخيص الطبي والأشعة</div>
-            <div class="text-gray-500 mt-1">مركز التشخيص الطبي</div>
-            <div class="text-gray-500 w-48">فحص بالأشعة – تصوير بالموجات فوق الصوتية – أشعة عامة – تصوير الثدي – أشعة الأسنان البانورامية</div>
+            <div class="font-bold text-xs">{{ config('clinique.name_ar') }}</div>
+            <div>{{ config('clinique.director_name_ar') }}</div>
+            <div>{{ config('clinique.director_specialty_ar') }}</div>
+            <div class="text-gray-500 mt-1">{{ config('clinique.center_type_ar') }}</div>
+            <div class="text-gray-500 w-48">{{ config('clinique.services_description_ar') }}</div>
         </div>
     </div>
 

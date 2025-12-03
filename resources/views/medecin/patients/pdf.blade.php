@@ -140,11 +140,11 @@
             </div>
             <div class="stat-box">
                 <div class="number">{{ $patients->sum('caisses_count') }}</div>
-                <div class="label">Caisses</div>
+                <div class="label">Visites</div>
             </div>
             <div class="stat-box">
                 <div class="number">{{ number_format($patients->avg('caisses_count'), 1) }}</div>
-                <div class="label">Moy. Caisses</div>
+                <div class="label">Moy. Visites</div>
             </div>
         </div>
 
@@ -156,8 +156,8 @@
                     <th>Patient</th>
                     <th>Téléphone</th>
                     <th>Âge</th>
-                    <th class="text-center">Nb Caisses</th>
-                    <th>Dernière Caisse</th>
+                    <th class="text-center">Nb Visites</th>
+                    <th>Dernière Visite</th>
                 </tr>
             </thead>
             <tbody>
@@ -180,7 +180,10 @@
                     </td>
                     <td>
                         @if($patient->caisses->count() > 0)
-                            {{ $patient->caisses->first()->date_examen->format('d/m/Y') }}
+                            @php
+                                $lastCaisse = $patient->caisses->sortByDesc('created_at')->first();
+                            @endphp
+                            {{ $lastCaisse->created_at->format('d/m/Y à H:i') }}
                         @else
                             -
                         @endif

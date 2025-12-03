@@ -389,24 +389,24 @@
         <!-- Header pour impression uniquement -->
         <div class="print-header">
             <div class="fr">
-                <div class="clinic-name">CENTRE IBN ROCHD</div>
-                <div class="clinic-doctor">Dr Brahim Ould Ntaghry</div>
-                <div class="clinic-speciality">Spécialiste en Imagerie Médicale</div>
-                <div class="clinic-speciality">Centre Imagerie Médicale</div>
+                <div class="clinic-name">{{ config('clinique.name') }}</div>
+                <div class="clinic-doctor">{{ config('clinique.director_name') }}</div>
+                <div class="clinic-speciality">{{ config('clinique.director_specialty') }}</div>
+                <div class="clinic-speciality">{{ config('clinique.center_type') }}</div>
                 <div class="clinic-services">
-                    Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire
+                    {{ config('clinique.services_description') }}
                 </div>
             </div>
             <div class="logo-container">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo">
+                <img src="{{ asset(config('clinique.logo_path')) }}" alt="Logo">
             </div>
             <div class="ar">
-                <div class="clinic-name-ar">مركز ابن رشد</div>
-                <div class="clinic-doctor-ar">الدكتور إبراهيم ولد نْتَغري</div>
-                <div class="clinic-speciality-ar">اختصاصي في التشخيص الطبي والأشعة</div>
-                <div class="clinic-speciality-ar">مركز التشخيص الطبي</div>
+                <div class="clinic-name-ar">{{ config('clinique.name_ar') }}</div>
+                <div class="clinic-doctor-ar">{{ config('clinique.director_name_ar') }}</div>
+                <div class="clinic-speciality-ar">{{ config('clinique.director_specialty_ar') }}</div>
+                <div class="clinic-speciality-ar">{{ config('clinique.center_type_ar') }}</div>
                 <div class="clinic-services-ar">
-                    فحص بالأشعة – تصوير بالموجات فوق الصوتية – أشعة عامة – تصوير الثدي – أشعة الأسنان
+                    {{ config('clinique.services_description_ar') }}
                 </div>
             </div>
         </div>
@@ -415,7 +415,7 @@
         <div class="header">
             <div>
                 <h1><i class="fas fa-calendar-check"></i> Impression des Rendez-vous</h1>
-                <p style="color: #666; margin-top: 5px; font-size: 14px;">Clinique Ibn Rochd - Gestion Médicale</p>
+                <p style="color: #666; margin-top: 5px; font-size: 14px;">{{ config('clinique.name') }} - Gestion Médicale</p>
             </div>
             <button class="print-btn" onclick="window.print()">
                 <i class="fas fa-print mr-2"></i> Imprimer
@@ -564,7 +564,7 @@
 
         <!-- Footer pour impression -->
         <div style="text-align: center; margin-top: 40px; color: #999; font-size: 12px; border-top: 1px solid #eee; padding-top: 20px;">
-            <p>Clinique Ibn Rochd - Gestion Médicale</p>
+            <p>{{ config('clinique.name') }} - Gestion Médicale</p>
             <p>Imprimé le {{ now()->format('d/m/Y à H:i:s') }} par {{ auth()->user()->name ?? 'Système' }}</p>
         </div>
     </div>

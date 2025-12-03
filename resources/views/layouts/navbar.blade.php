@@ -6,13 +6,13 @@
             <div class="flex-shrink-0">
                 <a href="{{ route('dashboard.superadmin') }}" class="flex items-center space-x-2 group">
                     <div class="my-1 sm:my-2">
-                        <img src="{{ asset('images/logo.png') }}" alt="Logo Clinique"
+                        <img src="{{ asset(config('clinique.logo_path')) }}" alt="Logo {{ config('clinique.name') }}"
                             class="h-12 w-12 p-1 sm:h-20 sm:w-20 sm:p-2">
                     </div>
                     <div class="block">
                         <h1
                             class="text-base sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                            Clinique Ibn Rochd
+                            {{ config('clinique.name') }}
                         </h1>
                         <p class="text-xs text-gray-500 dark:text-gray-400 -mt-1">Gestion Médicale</p>
                     </div>

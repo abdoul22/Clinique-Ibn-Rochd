@@ -150,7 +150,7 @@
             </div>
             <div class="header-right">
                 <div class="contact-info">
-                    <strong>مركز ابن رشد</strong><br>
+                    <strong>{{ config('clinique.name_ar') }}</strong><br>
                     {{ config('clinique.phone') }}<br>
                     {{ config('clinique.address') }}
                 </div>

@@ -270,6 +270,23 @@ class OrdonnanceController extends Controller
         return $pdf->stream('ordonnance-' . $ordonnance->reference . '.pdf');
     }
 
+    public function print($id)
+    {
+        $user = Auth::user();
+        $medecin = $user->medecin;
+
+        $ordonnance = Ordonnance::with(['patient', 'medecin', 'medicaments'])->findOrFail($id);
+
+        // Vérifier que l'ordonnance appartient bien au médecin connecté
+        if ($ordonnance->medecin_id !== $medecin->id) {
+            abort(403, 'Accès non autorisé');
+        }
+
+        $formatClass = request('format', 'a5') === 'a4' ? 'format-a4' : 'format-a5';
+
+        return view('medecin.ordonnances.print', compact('ordonnance', 'formatClass'));
+    }
+
     public function searchMedicaments(Request $request)
     {
         $search = $request->get('q', '');
@@ -289,6 +306,34 @@ class OrdonnanceController extends Controller
             });
 
         return response()->json($medicaments);
+    }
+
+    public function storeMedicament(Request $request)
+    {
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'forme' => 'nullable|string|max:255',
+            'dosage' => 'nullable|string|max:255',
+        ]);
+
+        $medicament = Medicament::create([
+            'nom' => $validated['nom'],
+            'forme' => $validated['forme'] ?? null,
+            'dosage' => $validated['dosage'] ?? null,
+            'actif' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Médicament créé avec succès',
+            'medicament' => [
+                'id' => $medicament->id,
+                'nom' => $medicament->nom,
+                'forme' => $medicament->forme,
+                'dosage' => $medicament->dosage,
+                'nom_complet' => $medicament->nom_complet,
+            ]
+        ]);
     }
 }
 

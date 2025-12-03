@@ -1,0 +1,366 @@
+{
+  "meta": {
+    "project": "Clinique Ibn Rochd",
+    "date": "2025-11-19",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "Clinique Ibn Rochd is a comprehensive web-based clinic management system tailored for the Centre Ibn Rochd medical imaging center in Nouakchott, Mauritania. It integrates administrative, medical, and financial workflows into a centralized digital platform enhancing operational efficiency and data traceability.",
+  "core_goals": [
+    "Digitize and centralize all clinical and administrative processes to reduce manual workload.",
+    "Provide complete patient management including registration, medical records, and history.",
+    "Enable doctors to manage consultations and prescriptions seamlessly with PDF export capabilities.",
+    "Support hospital resources management including rooms, beds, and hospitalizations with billing features.",
+    "Manage financial transactions including cashier operations, credits, expenses, payroll, and generate detailed financial reports.",
+    "Offer role-based access control to ensure secure and appropriate data access for superadmins, admins, and doctors.",
+    "Ensure responsive and bilingual interfaces supporting French and partial Arabic.",
+    "Deliver professional PDF document generation for all key medical and financial reports.",
+    "Support up to 100+ concurrent users with optimized performance and security standards."
+  ],
+  "key_features": [
+    "Patient Management: Complete dossier and medical record management with advanced search and PDF exports.",
+    "Doctor Management: Doctor profiles, specializations, user accounts, schedules, and real-time statistics.",
+    "Medical Consultations: Detailed consultation reports with complete medical details and PDF generation.",
+    "Prescriptions Module: Integrated medication database with smart search and professional printable prescriptions.",
+    "Medical Examinations Handling: Capture and manage diagnostic exams linked to patients, doctors, and prescribers plus stock checking.",
+    "Hospitalization Management: Room and bed assignments, charge tracking, billing, and PDF export.",
+    "Cashier System: Financial transaction entries with unique numbering by doctor, receipt printing, multi-payment modes, and integration with insurance.",
+    "Pharmacy Stock Control: Medication inventory with real-time stock deduction, alerts, and search capabilities.",
+    "Appointment Scheduling: Create, modify, and track patient appointments preventing overlaps, integrated calendar view and PDF print/export.",
+    "Service Catalog Management: CRUD management of medical services including pricing and category classification.",
+    "Insurance Company Admin: Manage insurance partners, track reimbursements, and generate account statements.",
+    "User and Role Management: Creation and approval of users with role-based access and middleware permissions.",
+    "Reports and Analytics: Generate daily situation report, service and operator recaps, financial state summaries, and export them in PDF.",
+    "Multi-language Support: French as primary language with partial Arabic interface support.",
+    "Security: Strong authentication, session management, data validation, and audit logging."
+  ],
+  "user_flow_summary": [
+    "User Authentication Flow including registration, role-based approval by superadmin, login, and session management.",
+    "Patient Lifecycle Flow from registration, consultation booking, examination recording, hospitalization, prescribing medications, to billing and follow-up.",
+    "Doctor Workflow from login to viewing assigned patients, conducting consultations, creating prescriptions, viewing statistics, and managing appointments.",
+    "Admin and Superadmin Workflow covering full CRUD management of users, doctors, patients, services, financial transactions, and configurations with report generation.",
+    "Pharmacy Workflow including medication stock management, sales processing, stock deduction, and alerts.",
+    "Financial Workflow encompassing recording transactions, managing credits and expenses, payroll processing, and generating comprehensive financial reports.",
+    "Appointment Scheduling Flow with creation, status updates, date-based filtering, and conflict prevention.",
+    "Hospitalization Flow from bed and room availability checking, patient admission, charge additions, billing, and payments.",
+    "Report Generation and Export Flow for printing or exporting all key documents in PDF format with clinic branding and bilingual support."
+  ],
+  "validation_criteria": [
+    "All core functionalities implemented and fully functional across roles.",
+    "Search operations return results within 1-2 seconds and pages load under 2 seconds.",
+    "PDF generations complete within 5 seconds and comply with professional medical standards.",
+    "Role-based access controls enforced strictly with superadmin approval workflow verified.",
+    "User can create patient, doctor, appointment, consultation, prescription, examination, hospitalization, and financial entries with valid data.",
+    "The system prevents scheduling conflicts and disallows transactions with insufficient medication stock.",
+    "All financial transactions generate unique numbers and receipts with accurate totals and printable documents.",
+    "Hospital bed and room assignments reflect real-time availability and status changes.",
+    "Reports including daily situations, recaps, payroll, and expenses generate accurate data and export correctly to PDF.",
+    "Application performs securely with hashed passwords, CSRF, rate limiting, input validation, XSS protection, and proper audit logs.",
+    "Compatible and responsive UI on desktops, tablets, and mobiles with multilingual support (French/Arabic).",
+    "At least 100 concurrent users supported without notable performance degradation."
+  ],
+  "code_summary": {
+    "project_name": "Clinique Ibn Rochd",
+    "project_type": "full-stack",
+    "description": "A comprehensive clinic management system for Centre Ibn Rochd medical imaging center in Nouakchott, Mauritania",
+    "tech_stack": {
+      "backend": {
+        "framework": "Laravel 12.0",
+        "language": "PHP 8.2+",
+        "database": "SQLite (development), MySQL/MariaDB (production)",
+        "authentication": "Laravel Auth",
+        "authorization": "Role-based (superadmin, admin, medecin)",
+        "additional": [
+          "Livewire/Volt",
+          "Redis (Predis)",
+          "Pest PHP (testing)",
+          "Laravel Pail",
+          "Laravel Pint"
+        ]
+      },
+      "frontend": {
+        "framework": "Blade Templates",
+        "ui_library": "Livewire Flux",
+        "styling": "Tailwind CSS",
+        "build_tool": "Vite",
+        "javascript": "Vanilla JS with Axios"
+      },
+      "pdf_generation": "dompdf",
+      "deployment": "Production-ready with deployment scripts"
+    },
+    "main_features": [
+      {
+        "name": "Patient Management",
+        "description": "Complete patient registration, medical records, and dossier management",
+        "routes": [
+          "/patients",
+          "/superadmin/patients",
+          "/admin/patients",
+          "/medecin/patients"
+        ]
+      },
+      {
+        "name": "Doctor Management",
+        "description": "Doctor registration, profiles, and statistics",
+        "routes": [
+          "/superadmin/medecins",
+          "/admin/medecins",
+          "/medecins/{id}/stats"
+        ]
+      },
+      {
+        "name": "Medical Consultations",
+        "description": "Doctor consultations with detailed medical reports and PDF generation",
+        "routes": [
+          "/medecin/consultations",
+          "/medecin/consultations/{id}/print"
+        ]
+      },
+      {
+        "name": "Prescriptions (Ordonnances)",
+        "description": "Medical prescriptions with medication database and PDF generation",
+        "routes": [
+          "/medecin/ordonnances",
+          "/medecin/ordonnances/{id}/print"
+        ]
+      },
+      {
+        "name": "Examinations",
+        "description": "Medical examination management (Echography, Radiology, etc.)",
+        "routes": [
+          "/superadmin/examens",
+          "/admin/examens",
+          "/examens/print",
+          "/examens/export-pdf"
+        ]
+      },
+      {
+        "name": "Hospitalization",
+        "description": "Room and bed management, hospitalization tracking, billing",
+        "routes": [
+          "/superadmin/hospitalisations",
+          "/admin/hospitalisations",
+          "/hospitalisations/{id}/print",
+          "/hospitalisations/{id}/facturer",
+          "/hospitalisations/{id}/payer-tout"
+        ]
+      },
+      {
+        "name": "Cashier (Caisse)",
+        "description": "Financial transactions, receipts, payment tracking",
+        "routes": [
+          "/superadmin/caisses",
+          "/admin/caisses",
+          "/caisses/{id}/print",
+          "/caisses/{caisse}/exportPdf"
+        ]
+      },
+      {
+        "name": "Pharmacy",
+        "description": "Medication inventory, stock management, sales",
+        "routes": [
+          "/pharmacie",
+          "/pharmacie-api/medicaments",
+          "/pharmacie-api/medicament/{id}/deduire-stock"
+        ]
+      },
+      {
+        "name": "Appointments (Rendez-vous)",
+        "description": "Appointment scheduling and management",
+        "routes": [
+          "/superadmin/rendezvous",
+          "/admin/rendezvous",
+          "/rendezvous/{id}/change-status",
+          "/rendezvous/get-by-date"
+        ]
+      },
+      {
+        "name": "Services Management",
+        "description": "Medical services catalog (Echography, Radiology, Generalist, Specialist, etc.)",
+        "routes": [
+          "/superadmin/services",
+          "/admin/services",
+          "/services/print",
+          "/services/export-pdf"
+        ]
+      },
+      {
+        "name": "Daily Situation Report",
+        "description": "Daily cashier situation report with service-based breakdown",
+        "routes": [
+          "/superadmin/situation-journaliere",
+          "/admin/situation-journaliere",
+          "/situation-journaliere/print",
+          "/situation-journaliere/export-pdf"
+        ]
+      },
+      {
+        "name": "Reports and Summaries",
+        "description": "Service summaries, operator summaries, cash states",
+        "routes": [
+          "/recap-services",
+          "/recap-operateurs",
+          "/etatcaisse"
+        ]
+      },
+      {
+        "name": "Expenses Management",
+        "description": "Expense tracking and reporting",
+        "routes": [
+          "/depenses",
+          "/depenses-export-pdf",
+          "/depenses-print"
+        ]
+      },
+      {
+        "name": "Credits Management",
+        "description": "Credit tracking and payment management",
+        "routes": [
+          "/credits",
+          "/credits/{credit}/payer",
+          "/credits/{credit}/payer-salaire"
+        ]
+      },
+      {
+        "name": "Payroll",
+        "description": "Salary management and payment processing",
+        "routes": [
+          "/salaires",
+          "/salaires/pdf",
+          "/salaires/payer-tout",
+          "/salaires/{personnelId}/payer"
+        ]
+      },
+      {
+        "name": "Insurance Management",
+        "description": "Insurance company management",
+        "routes": [
+          "/assurances",
+          "/assurances/export/pdf",
+          "/assurances/print"
+        ]
+      },
+      {
+        "name": "User Management",
+        "description": "User administration, role assignment, approval system",
+        "routes": [
+          "/superadmin/admins",
+          "/superadmin/admins/{id}/approve",
+          "/superadmin/admins/{id}/reject"
+        ]
+      }
+    ],
+    "user_roles": [
+      {
+        "role": "superadmin",
+        "description": "Full system access, can manage admins",
+        "dashboard": "/dashboard/superadmin"
+      },
+      {
+        "role": "admin",
+        "description": "Administrative access to most modules",
+        "dashboard": "/dashboard/admin"
+      },
+      {
+        "role": "medecin",
+        "description": "Doctor access to consultations and prescriptions",
+        "dashboard": "/medecin/dashboard"
+      }
+    ],
+    "authentication": {
+      "login_route": "/login",
+      "register_route": "/register",
+      "logout_route": "/logout",
+      "approval_system": true,
+      "approval_waiting_route": "/waiting-approval"
+    },
+    "api_endpoints": [
+      "/api/caisses/numero-entree/{medecin_id}",
+      "/api/examens/{id}/stock-info",
+      "/api/next-numero-entree",
+      "/api/next-numero-entree-rdv",
+      "/hospitalisations/search-patients-by-phone",
+      "/hospitalisations/lits-disponibles",
+      "/chambres-api/disponibles",
+      "/lits-api/disponibles",
+      "/pharmacie-api/medicaments",
+      "/medecin/consultations/search-patients",
+      "/medecin/ordonnances/search-medicaments"
+    ],
+    "print_and_export": {
+      "pdf_generation": "dompdf",
+      "printable_documents": [
+        "Consultations",
+        "Prescriptions",
+        "Examinations",
+        "Receipts (Caisses)",
+        "Hospitalizations",
+        "Services",
+        "Prescripteurs",
+        "Assurances",
+        "Daily Situation Reports",
+        "Reports and Summaries",
+        "Expenses",
+        "Payroll"
+      ]
+    },
+    "database_models": [
+      "User",
+      "Role",
+      "GestionPatient",
+      "DossierMedical",
+      "Medecin",
+      "Consultation",
+      "Ordonnance",
+      "Medicament",
+      "OrdonnanceMedicament",
+      "Examen",
+      "Service",
+      "Caisse",
+      "Credit",
+      "Depense",
+      "EtatCaisse",
+      "Hospitalisation",
+      "HospitalisationCharge",
+      "HospitalizationRoomStay",
+      "Chambre",
+      "Lit",
+      "RendezVous",
+      "Motif",
+      "Prescripteur",
+      "Assurance",
+      "Pharmacie",
+      "Personnel",
+      "Payroll",
+      "ModePaiement",
+      "PaymentMode",
+      "RecapitulatifOperateur",
+      "RecapitulatifServiceJournalier"
+    ],
+    "configuration": {
+      "clinic_name": "CENTRE IBN ROCHD",
+      "clinic_name_ar": "مركز ابن رشد",
+      "address": "Avenue John Kennedy, en face de la Polyclinique – Nouakchott",
+      "phone": "Urgences Tél. 43 45 54 23 – 22 30 56 26",
+      "website": "ibnrochd.pro",
+      "director": "Dr Brahim Ould Ntaghry",
+      "center_type": "Centre Imagerie Médicale",
+      "services": "Scanner – Echographie – Radiologie Générale – Mammographie – Panoramique Dentaire"
+    },
+    "testing": {
+      "framework": "Pest PHP",
+      "test_location": "tests/",
+      "existing_tests": [
+        "Feature tests",
+        "Unit tests"
+      ]
+    },
+    "deployment": {
+      "scripts": [
+        "deploy.sh",
+        "deploy-production.sh",
+        "deploy-production.ps1"
+      ],
+      "environment": "Production-ready with deployment guides"
+    }
+  }
+}

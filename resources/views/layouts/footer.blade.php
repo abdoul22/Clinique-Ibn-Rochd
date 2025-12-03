@@ -6,7 +6,7 @@
 
             {{-- Nom / Logo --}}
             <div class="text-lg font-semibold text-gray-800 dark:text-white">
-                Clinique <br class="mr-2"><strong> Ibn Rochd</strong>
+                {{ config('clinique.name') }}
             </div>
 
             {{-- Liens (superadmin uniquement) --}}
@@ -35,7 +35,7 @@
 
         {{-- Copyright --}}
         <div class="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
-            &copy; {{ date('Y') }} <strong><br class="mr-2"> Ibn Rochd</strong>. Tous droits réservés.
+            &copy; {{ date('Y') }} <strong>{{ config('clinique.name') }}</strong>. Tous droits réservés.
         </div>
     </div>
 </footer>
