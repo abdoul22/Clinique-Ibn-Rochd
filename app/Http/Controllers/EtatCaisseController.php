@@ -602,7 +602,31 @@ class EtatCaisseController extends Controller
         ]);
 
         $etatcaisse = EtatCaisse::findOrFail($id);
+        $oldDate = $etatcaisse->created_at;
+        
         $etatcaisse->update($request->all());
+
+        // Si la date de création a changé, on met à jour la dépense et le paiement liés
+        // Cela permet de "déplacer" une opération dans le passé ou le futur tout en gardant l'équilibre
+        $newDate = $etatcaisse->refresh()->created_at;
+        
+        if ($oldDate->format('Y-m-d') !== $newDate->format('Y-m-d')) {
+            // Mettre à jour la dépense liée
+            if ($etatcaisse->depense) {
+                $etatcaisse->depense->created_at = $newDate;
+                $etatcaisse->depense->updated_at = $newDate;
+                $etatcaisse->depense->save();
+            }
+
+            // Mettre à jour le paiement lié (recherche par montant et source 'part_medecin')
+            // C'est une approximation si on n'a pas d'ID direct, mais c'est le mieux qu'on puisse faire avec la structure actuelle
+            if ($etatcaisse->part_medecin > 0) {
+                \App\Models\ModePaiement::where('source', 'part_medecin')
+                    ->where('montant', -$etatcaisse->part_medecin)
+                    ->whereDate('created_at', $oldDate)
+                    ->update(['created_at' => $newDate, 'updated_at' => $newDate]);
+            }
+        }
 
         return redirect()->route('etatcaisse.index')->with('success', 'État de caisse mis à jour avec succès.');
     }
