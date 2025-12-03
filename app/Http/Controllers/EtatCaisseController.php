@@ -269,8 +269,8 @@ class EtatCaisseController extends Controller
             $modePaiement->decrement('montant', $etat->part_medecin);
         }
 
-        // Récupérer la date de création de la facture
-        $dateFacture = $etat->caisse?->created_at ?? now();
+        // Utiliser la date de création de l'état de caisse pour aligner dépense et part médecin dans le rapport
+        $dateFacture = $etat->created_at;
 
         // Créer un enregistrement ModePaiement pour la sortie (montant négatif)
         $modePaiementRecord = new \App\Models\ModePaiement([
@@ -317,8 +317,8 @@ class EtatCaisseController extends Controller
         // Utiliser le mode de paiement sélectionné depuis la modale
         $modePaiementType = $request->mode_paiement;
 
-        // Récupérer la date de création de la facture
-        $dateFacture = $etat->caisse?->created_at ?? now();
+        // Utiliser la date de création de l'état de caisse pour aligner dépense et part médecin dans le rapport
+        $dateFacture = $etat->created_at;
 
         // Créer un enregistrement ModePaiement pour la sortie (montant négatif) avec la date de la facture
         $modePaiementRecord = new \App\Models\ModePaiement([
