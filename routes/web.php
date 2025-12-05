@@ -454,3 +454,6 @@ Route::middleware(['auth', 'is.approved'])->group(function () {
 
 // API pour récupérer le prochain numéro d'entrée d'un médecin
 Route::get('/api/caisses/numero-entree/{medecin_id}', [CaisseController::class, 'getNextNumeroEntree'])->name('caisses.getNextNumeroEntree');
+
+// Route pour le manifest PWA dynamique
+Route::get('/manifest.webmanifest', App\Http\Controllers\ManifestController::class)->name('manifest');

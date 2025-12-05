@@ -62,4 +62,20 @@ return [
 
     // Couleur principale pour les titres et bordures (Hex)
     'primary_color' => env('CLINIQUE_PRIMARY_COLOR', '#1e40af'), // Bleu roi de l'en-tête
+
+    /*
+    |--------------------------------------------------------------------------
+    | Configuration PWA (Progressive Web App)
+    |--------------------------------------------------------------------------
+    */
+
+    // Nom court pour l'icône de l'application (max 12 caractères recommandé)
+    'short_name' => env('CLINIQUE_SHORT_NAME', null), // Si null, sera généré automatiquement depuis 'name'
+
+    // Couleur de fond pour le splash screen PWA
+    'pwa_background_color' => env('CLINIQUE_PWA_BACKGROUND_COLOR', '#ffffff'),
+
+    // Chemins des icônes PWA personnalisées (optionnel, utilise le logo par défaut)
+    'pwa_icon_192' => env('CLINIQUE_PWA_ICON_192', null), // Ex: 'images/pwa-icon-192.png'
+    'pwa_icon_512' => env('CLINIQUE_PWA_ICON_512', null), // Ex: 'images/pwa-icon-512.png'
 ];

@@ -8,6 +8,16 @@
     <title>@yield('title', 'Gestion des Patients')</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    {{-- PWA Dynamique --}}
+    @php
+    $cliniqueConfig = config('clinique');
+    $themeColor = $cliniqueConfig['primary_color'] ?? '#1e40af';
+    $logoPath = $cliniqueConfig['logo_path'] ?? 'images/logo.png';
+    $pwaIcon = $cliniqueConfig['pwa_icon_192'] ?? (file_exists(public_path($logoPath)) ? $logoPath : 'pwa-192x192.png');
+    @endphp
+    <meta name="theme-color" content="{{ $themeColor }}">
+    <link rel="apple-touch-icon" href="{{ asset($pwaIcon) }}">
+    <link rel="manifest" href="{{ route('manifest') }}">
     {{-- Script pour initialiser le dark mode immédiatement (anti-FOUC) --}}
     <script>
         // Initialisation immédiate du dark mode pour éviter le FOUC
