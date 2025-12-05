@@ -12,12 +12,16 @@
     @php
     $cliniqueConfig = config('clinique');
     $themeColor = $cliniqueConfig['primary_color'] ?? '#1e40af';
-    $logoPath = $cliniqueConfig['logo_path'] ?? 'images/logo.png';
-    $pwaIcon = $cliniqueConfig['pwa_icon_192'] ?? (file_exists(public_path($logoPath)) ? $logoPath : 'pwa-192x192.png');
+    // Utiliser les icônes PWA par défaut (pas le logo directement)
+    $pwaIcon = $cliniqueConfig['pwa_icon_192'] ?? 'pwa-192x192.png';
+    // Vérifier que l'icône existe, sinon utiliser la valeur par défaut
+    if (!file_exists(public_path($pwaIcon))) {
+    $pwaIcon = 'pwa-192x192.png';
+    }
     @endphp
     <meta name="theme-color" content="{{ $themeColor }}">
     <link rel="apple-touch-icon" href="{{ asset($pwaIcon) }}">
-    <link rel="manifest" href="{{ route('manifest') }}">
+    <link rel="manifest" href="{{ url(route('manifest')) }}">
     {{-- Script pour initialiser le dark mode immédiatement (anti-FOUC) --}}
     <script>
         // Initialisation immédiate du dark mode pour éviter le FOUC
