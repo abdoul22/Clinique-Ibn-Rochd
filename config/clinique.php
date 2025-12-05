@@ -11,13 +11,13 @@ return [
     |
     */
 
-    'name' => env('CLINIQUE_NAME', 'CENTRE IBN ROCHD'), // Mis à jour selon l'image
+    'name' => env('CLINIQUE_NAME', 'CLINIQUE CENTRE IBN ROCHD'), // Mis à jour selon l'image
 
     'address' => env('CLINIQUE_ADDRESS', 'Avenue John Kennedy, en face de la Polyclinique – Nouakchott'),
 
     'phone' => env('CLINIQUE_PHONE', 'Urgences Tél. 43 45 54 23 – 22 30 56 26'),
 
-    'email' => env('CLINIQUE_EMAIL', 'contact@clinique.com'), // À confirmer si différent
+    'email' => env('CLINIQUE_EMAIL', 'contact@ibnrochd.pro'), // À confirmer si différent
 
     'website' => env('CLINIQUE_WEBSITE', 'ibnrochd.pro'),
 

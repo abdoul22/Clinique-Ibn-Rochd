@@ -29,11 +29,11 @@ class ManifestController extends Controller
         // Déterminer le chemin de base (pour les installations dans un sous-dossier)
         $baseUrl = $request->getSchemeAndHttpHost();
         $basePath = $request->getBasePath(); // Récupère le chemin de base (ex: /ibnrochd/public)
-        
+
         // Nettoyer le basePath pour enlever index.php s'il est présent
         $basePath = str_replace('/index.php', '', $basePath);
         $basePath = rtrim($basePath, '/'); // Enlever le slash final s'il existe
-        
+
         $startUrl = $basePath ? $basePath . '/' : '/';
         $scope = $basePath ? $basePath . '/' : '/';
 
