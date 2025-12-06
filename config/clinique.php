@@ -11,7 +11,7 @@ return [
     |
     */
 
-    'name' => env('CLINIQUE_NAME', 'CLINIQUE CENTRE IBN ROCHD'), // Mis à jour selon l'image
+    'name' => env('CLINIQUE_NAME', 'CLINIQUE IBN ROCHD'), // Mis à jour selon l'image
 
     'address' => env('CLINIQUE_ADDRESS', 'Avenue John Kennedy, en face de la Polyclinique – Nouakchott'),
 
