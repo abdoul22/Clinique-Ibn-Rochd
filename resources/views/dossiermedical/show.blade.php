@@ -17,11 +17,24 @@
                     </p>
                 </div>
                 <div class="flex space-x-2">
-                    <a href="{{ route('dossiers.edit', $dossier->id) }}"
+                    @php
+                        $role = auth()->user()->role?->name;
+                        $routePrefix = match($role) {
+                            'superadmin' => 'superadmin',
+                            'admin' => 'admin',
+                            'medecin' => '',
+                            default => ''
+                        };
+                        $editRoute = $routePrefix ? "{$routePrefix}.dossiers.edit" : 'dossiers.edit';
+                        $indexRoute = $routePrefix ? "{$routePrefix}.dossiers.index" : 'dossiers.index';
+                    @endphp
+                    @if($role !== 'medecin')
+                    <a href="{{ route($editRoute, $dossier->id) }}"
                         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         <i class="fas fa-edit mr-2"></i>Modifier
                     </a>
-                    <a href="{{ route('dossiers.index') }}"
+                    @endif
+                    <a href="{{ route($indexRoute) }}"
                         class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                         <i class="fas fa-arrow-left mr-2"></i>Retour
                     </a>
@@ -113,11 +126,13 @@
                         <span class="text-lg font-semibold text-indigo-600 dark:text-indigo-400">{{
                             $statistiques['medecins_consultes'] }}</span>
                     </div>
+                    @if(auth()->user()->role->name !== 'medecin')
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-gray-600 dark:text-gray-400">Total dépenses</span>
                         <span class="text-lg font-semibold text-red-600 dark:text-red-400">{{
                             number_format($statistiques['total_depense'], 0, ',', ' ') }} MRU</span>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -189,12 +204,14 @@
                         <th
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Prescripteur</th>
+                        @if(auth()->user()->role->name !== 'medecin')
                         <th
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Montant</th>
                         <th
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Actions</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -221,6 +238,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
                             {{ $examen->prescripteur->nom ?? 'N/A' }} {{ $examen->prescripteur->prenom ?? '' }}
                         </td>
+                        @if(auth()->user()->role->name !== 'medecin')
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
                             {{ number_format($examen->total, 0, ',', ' ') }} MRU
                         </td>
@@ -230,6 +248,7 @@
                                 <i class="fas fa-eye"></i> Voir
                             </a>
                         </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>

@@ -14,9 +14,9 @@
         </a>
 
         <!-- Boutons Export/Print -->
-        <a href="{{ route('depenses.exportPdf') }}"
+        <a href="{{ route('depenses.exportPdf', request()->query()) }}"
             class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition">PDF</a>
-        <a href="{{ route('depenses.print') }}" target="_blank"
+        <a href="{{ route('depenses.print', request()->query()) }}" target="_blank"
             class="bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded transition">Imprimer</a>
     </div>
 </div>
@@ -142,6 +142,13 @@
         <a href="{{ route('depenses.index') }}" class="ml-2 text-sm text-gray-600 dark:text-gray-400 underline">Afficher
             tous</a>
     </form>
+
+    <!-- Total des dépenses réactif -->
+    <div class="card mb-6">
+        <div class="font-bold text-lg text-gray-900 dark:text-white">
+            Total des dépenses : {{ number_format($totalDepenses ?? 0, 0, ',', ' ') }} MRU
+        </div>
+    </div>
 
     <!-- Filtres supplémentaires -->
     <form method="GET" action="" class="flex flex-wrap gap-2 items-center mt-4" autocomplete="off">

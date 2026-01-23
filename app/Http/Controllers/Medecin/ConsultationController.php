@@ -62,10 +62,12 @@ class ConsultationController extends Controller
             $patient = GestionPatient::find($request->patient_id);
         }
 
-        // Recherche de patients
+        // Recherche de patients - UNIQUEMENT ceux examinés par ce médecin (via caisses)
         $patients = GestionPatient::query()
+            ->whereHas('caisses', function($q) use ($medecin) {
+                $q->where('medecin_id', $medecin->id);
+            })
             ->orderBy('first_name')
-            ->limit(100)
             ->get();
 
         return view('medecin.consultations.create', compact('medecin', 'patient', 'patients'));
@@ -86,7 +88,6 @@ class ConsultationController extends Controller
             'heure_consultation' => 'nullable',
             'motif' => 'nullable|string',
             'antecedents' => 'nullable|string',
-            'ras' => 'nullable|string',
             'histoire_maladie' => 'nullable|string',
             'examen_clinique' => 'nullable|string',
             'conduite_tenir' => 'nullable|string',
@@ -146,7 +147,13 @@ class ConsultationController extends Controller
             abort(403, 'Accès non autorisé');
         }
 
-        $patients = GestionPatient::orderBy('first_name')->limit(100)->get();
+        // Recherche de patients - UNIQUEMENT ceux examinés par ce médecin (via caisses)
+        $patients = GestionPatient::query()
+            ->whereHas('caisses', function($q) use ($medecin) {
+                $q->where('medecin_id', $medecin->id);
+            })
+            ->orderBy('first_name')
+            ->get();
 
         return view('medecin.consultations.edit', compact('consultation', 'medecin', 'patients'));
     }
@@ -168,7 +175,6 @@ class ConsultationController extends Controller
             'heure_consultation' => 'nullable',
             'motif' => 'nullable|string',
             'antecedents' => 'nullable|string',
-            'ras' => 'nullable|string',
             'histoire_maladie' => 'nullable|string',
             'examen_clinique' => 'nullable|string',
             'conduite_tenir' => 'nullable|string',
@@ -213,16 +219,25 @@ class ConsultationController extends Controller
             abort(403, 'Accès non autorisé');
         }
 
-        $pdf = Pdf::loadView('medecin.consultations.pdf', compact('consultation'));
-        
-        return $pdf->stream('rapport-medical-' . $consultation->id . '.pdf');
+        return view('medecin.consultations.print', compact('consultation'));
     }
 
     public function searchPatients(Request $request)
     {
+        $user = Auth::user();
+        $medecin = $user->medecin;
+
+        if (!$medecin) {
+            return response()->json([]);
+        }
+
         $search = $request->get('q', '');
         
+        // Recherche UNIQUEMENT parmi les patients examinés par ce médecin (via caisses)
         $patients = GestionPatient::query()
+            ->whereHas('caisses', function($q) use ($medecin) {
+                $q->where('medecin_id', $medecin->id);
+            })
             ->where(function($query) use ($search) {
                 $query->where('first_name', 'like', "%{$search}%")
                       ->orWhere('last_name', 'like', "%{$search}%")

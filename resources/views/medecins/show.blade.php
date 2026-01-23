@@ -126,7 +126,14 @@
                             </h3>
 
                             <div class="space-y-3">
-                                @if($medecin->email)
+                                @php
+                                    $emailMedecin = $medecin->email;
+                                    // Si pas d'email dans medecin, chercher dans le User associé
+                                    if (!$emailMedecin && $medecin->user) {
+                                        $emailMedecin = $medecin->user->email;
+                                    }
+                                @endphp
+                                @if($emailMedecin)
                                 <div class="flex items-center">
                                     <div
                                         class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-3">
@@ -134,7 +141,7 @@
                                     </div>
                                     <div>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                                        <p class="font-medium text-gray-900 dark:text-white">{{ $medecin->email }}</p>
+                                        <p class="font-medium text-gray-900 dark:text-white">{{ $emailMedecin }}</p>
                                     </div>
                                 </div>
                                 @endif

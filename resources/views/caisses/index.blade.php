@@ -288,26 +288,51 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <div class="flex justify-center space-x-2">
+                            <div class="flex justify-center space-x-2 items-center">
                                 @php
                                 $role = auth()->user()->role->name;
                                 $showRoute = $role === 'superadmin' || $role === 'admin' ? $role . '.caisses.show' :
                                 'caisses.show';
+                                $editRoute = $role === 'superadmin' || $role === 'admin' ? $role . '.caisses.edit' :
+                                'caisses.edit';
                                 $destroyRoute = $role === 'superadmin' || $role === 'admin' ? $role . '.caisses.destroy'
                                 : 'caisses.destroy';
                                 @endphp
 
+                                @php
+                                    $isValidated = $caisse->etatCaisse && $caisse->etatCaisse->validated;
+                                @endphp
+                                
                                 <a href="{{ route($showRoute, $caisse->id) }}"
-                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1">
+                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1 relative z-20"
+                                    title="Voir les détails">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                @if($role === 'superadmin')
+                                
+                                @if($isValidated)
+                                    <span class="text-gray-400 dark:text-gray-500 p-1 cursor-not-allowed relative group"
+                                        title="Facture verrouillée">
+                                        <i class="fas fa-lock"></i>
+                                        <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-30 pointer-events-none">
+                                            Facture validée
+                                        </span>
+                                    </span>
+                                @else
+                                    <a href="{{ route($editRoute, [$caisse->id, 'page' => request('page', 1)]) }}"
+                                        class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 p-1"
+                                        title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                @endif
+                                
+                                @if($role === 'superadmin' && !$isValidated)
                                 <form action="{{ route($destroyRoute, $caisse->id) }}" method="POST" class="inline"
                                     onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
-                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1">
+                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1"
+                                        title="Supprimer">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>

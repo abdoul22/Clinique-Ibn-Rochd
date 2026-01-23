@@ -134,7 +134,7 @@
         <!-- Contact Support -->
         <div class="mt-8 text-center">
             <p class="text-gray-600 dark:text-gray-300 mb-4">Vous ne trouvez pas ce que vous cherchez ?</p>
-            <a href="mailto:support@clinique-ibnrochd.com"
+            <a href="mailto:support@medicaire.com"
                 class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
                 <i class="fas fa-envelope mr-2"></i>
                 Contacter le Support

@@ -173,14 +173,6 @@
         </div>
         @endif
 
-        <!-- RAS -->
-        @if($consultation->ras)
-        <div class="section">
-            <div class="section-title">RAS :</div>
-            <div class="section-content">{{ $consultation->ras }}</div>
-        </div>
-        @endif
-
         <!-- Histoire du malade -->
         @if($consultation->histoire_maladie)
         <div class="section">

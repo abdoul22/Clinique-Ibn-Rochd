@@ -6,6 +6,7 @@
     <form action="{{ route('services.update', $service->id) }}" method="POST">
         @csrf
         @method('PUT')
+        <input type="hidden" name="return_page" value="{{ $page ?? 1 }}">
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Nom</label>
             <input type="text" name="nom" value="{{ old('nom', $service->nom) }}" required
@@ -17,7 +18,7 @@
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded mt-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">{{ old('observation', $service->observation) }}</textarea>
         </div>
         <div class="flex justify-end space-x-2">
-            <a href="{{ route('services.index') }}"
+            <a href="{{ route('services.index', ['page' => $page ?? 1]) }}"
                 class="bg-gray-600 dark:bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-700 dark:hover:bg-gray-800">Annuler</a>
             <button type="submit" id="submitBtn"
                 class="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-800"

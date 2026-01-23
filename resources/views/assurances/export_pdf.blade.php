@@ -36,13 +36,23 @@
             <tr>
                 <th>ID</th>
                 <th>Nom</th>
+                <th>Crédit Assurance (MRU)</th>
             </tr>
         </thead>
         <tbody>
             @foreach($assurances as $assurance)
+            @php
+                $creditAssurance = \App\Models\Caisse::where('assurance_id', $assurance->id)
+                    ->where('couverture', '>', 0)
+                    ->get()
+                    ->sum(function($caisse) {
+                        return $caisse->total * ($caisse->couverture / 100);
+                    });
+            @endphp
             <tr>
                 <td>{{ $assurance->id }}</td>
                 <td>{{ $assurance->nom }}</td>
+                <td>{{ number_format($creditAssurance, 0, ',', ' ') }}</td>
             </tr>
             @endforeach
         </tbody>

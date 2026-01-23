@@ -39,7 +39,7 @@ class AdminController extends Controller
         return view('superadmin.admins.create');
     }
 
-    // Enregistrement d’un nouvel admin
+    // Enregistrement d'un nouvel admin
     public function store(Request $request)
     {
         $request->validate([
@@ -52,11 +52,12 @@ class AdminController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
-            'role_id' => 2, // Admin
-            'is_approved' => true,
+            'role_id' => 2, // Admin par défaut
+            'is_approved' => false, // L'utilisateur doit être approuvé avant de se connecter
+            'fonction' => null, // La fonction sera assignée lors de l'approbation
         ]);
 
-        return redirect()->route('superadmin.admins.index')->with('success', 'Admin créé avec succès.');
+        return redirect()->route('superadmin.admins.index')->with('success', 'Utilisateur créé avec succès. N\'oubliez pas de l\'approuver et de lui assigner une fonction avant qu\'il puisse se connecter.');
     }
 
     // Affichage d'un admin
@@ -202,6 +203,7 @@ class AdminController extends Controller
 
             $admin->role_id = $medecinRole->id;
             $admin->medecin_id = $medecinId;
+            $admin->fonction = 'Médecin'; // IMPORTANT : Assigner la fonction "Médecin"
         } else {
             // Si user_role = 'admin' ou fonction n'est pas "Médecin"
             // Changer le rôle vers "admin" et retirer l'association medecin_id
@@ -215,11 +217,9 @@ class AdminController extends Controller
 
             $admin->role_id = $adminRole->id;
             $admin->medecin_id = null; // Retirer l'association avec le profil médecin
+            $admin->fonction = $fonction; // Assigner la fonction pour les admins (Caissier, Secrétaire, etc.)
         }
 
-        // Mettre à jour la fonction de l'utilisateur (compatibilité avec l'ancien système)
-        // Seulement si le rôle a été correctement assigné
-        $admin->fonction = $fonction;
         $admin->save();
 
         // Synchroniser avec le module personnel SEULEMENT si ce n'est pas un médecin
@@ -270,6 +270,12 @@ class AdminController extends Controller
     public function approve($id)
     {
         $admin = User::findOrFail($id);
+        
+        // Vérifier que l'utilisateur a bien un rôle assigné
+        if (!$admin->role_id) {
+            return redirect()->back()->with('error', 'Impossible d\'approuver cet utilisateur : aucun rôle n\'a été assigné. Veuillez d\'abord lui assigner un rôle.');
+        }
+        
         $admin->is_approved = true;
         $admin->save();
 

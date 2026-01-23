@@ -35,14 +35,46 @@ class Pharmacie extends Model
     {
         parent::boot();
 
-        // Ne plus créer automatiquement un service lors de la création d'un médicament
+        // Créer automatiquement un examen lors de la création d'un médicament
         static::created(function ($pharmacie) {
-            // Intentionnellement vide pour éviter les créations automatiques dans services
+            // Récupérer ou créer un service PHARMACIE générique
+            $servicePharmacie = \App\Models\Service::where('type_service', 'PHARMACIE')
+                ->whereNull('pharmacie_id')
+                ->first();
+            
+            if (!$servicePharmacie) {
+                $servicePharmacie = \App\Models\Service::create([
+                    'nom' => 'Pharmacie',
+                    'type_service' => 'PHARMACIE',
+                    'description' => 'Service générique pour les médicaments',
+                ]);
+            }
+            
+            // Créer un examen pour ce médicament
+            \App\Models\Examen::create([
+                'nom' => $pharmacie->nom_medicament,
+                'idsvc' => $servicePharmacie->id,
+                'tarif' => $pharmacie->prix_vente,
+                'part_cabinet' => $pharmacie->prix_vente,
+                'part_medecin' => 0,
+            ]);
         });
 
-        // Quand un médicament est supprimé, supprimer automatiquement les services et examens liés
+        // Quand un médicament est supprimé, supprimer les examens liés
         static::deleting(function ($pharmacie) {
-            // Supprimer les services liés
+            // Récupérer le service PHARMACIE générique
+            $servicePharmacie = \App\Models\Service::where('type_service', 'PHARMACIE')
+                ->whereNull('pharmacie_id')
+                ->first();
+            
+            if ($servicePharmacie) {
+                // Supprimer les examens avec le même nom dans le service PHARMACIE
+                \App\Models\Examen::where('nom', $pharmacie->nom_medicament)
+                    ->where('idsvc', $servicePharmacie->id)
+                    ->delete();
+            }
+            
+            // Supprimer les services liés (ancienne logique)
             $pharmacie->services()->delete();
 
             // Supprimer les examens liés aux services de ce médicament
@@ -52,9 +84,23 @@ class Pharmacie extends Model
             }
         });
 
-        // Quand un médicament est mis à jour, mettre à jour le service correspondant
+        // Quand un médicament est mis à jour, mettre à jour l'examen correspondant
         static::updated(function ($pharmacie) {
-            // Ne plus synchroniser automatiquement avec services
+            // Récupérer le service PHARMACIE générique
+            $servicePharmacie = \App\Models\Service::where('type_service', 'PHARMACIE')
+                ->whereNull('pharmacie_id')
+                ->first();
+            
+            if ($servicePharmacie) {
+                // Mettre à jour l'examen correspondant
+                \App\Models\Examen::where('nom', $pharmacie->nom_medicament)
+                    ->where('idsvc', $servicePharmacie->id)
+                    ->update([
+                        'tarif' => $pharmacie->prix_vente,
+                        'part_cabinet' => $pharmacie->prix_vente,
+                        'part_medecin' => 0,
+                    ]);
+            }
         });
     }
 
@@ -113,14 +159,15 @@ class Pharmacie extends Model
     }
 
     /**
-     * Vérifier si le médicament expire bientôt (dans les 30 jours)
+     * Vérifier si le médicament expire bientôt (dans les 180 jours / 6 mois)
      */
     public function getExpireBientotAttribute(): bool
     {
         if (!$this->date_expiration) {
             return false;
         }
-        return $this->date_expiration->diffInDays(now()) <= 30;
+        // Vérifier si la date d'expiration est dans moins de 180 jours (6 mois)
+        return $this->date_expiration->isFuture() && $this->date_expiration->diffInDays(now()) <= 180;
     }
 
     /**

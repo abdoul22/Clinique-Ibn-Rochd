@@ -62,6 +62,7 @@
                 class="p-6">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="return_page" value="{{ request('page', 1) }}">
 
                 <!-- Messages d'erreur -->
                 @if ($errors->any())

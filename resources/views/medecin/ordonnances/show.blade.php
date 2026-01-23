@@ -21,11 +21,6 @@
                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                         🖨️ Imprimer
                     </a>
-                    <a href="{{ route('medecin.ordonnances.print', $ordonnance->id) }}" 
-                       target="_blank"
-                       class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                        📄 PDF
-                    </a>
                 </div>
             </div>
         </div>

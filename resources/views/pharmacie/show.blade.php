@@ -74,7 +74,17 @@
                                     d'Expiration:</span>
                                 <span class="ml-2 text-gray-900 dark:text-gray-200">
                                     {{ $pharmacie->date_expiration->format('d/m/Y') }}
-                                    @if($pharmacie->expire_bientot)
+                                    @php
+                                        // Vérifier manuellement si expire bientôt (dans moins de 180 jours)
+                                        $dateExpiration = \Carbon\Carbon::parse($pharmacie->date_expiration);
+                                        $now = \Carbon\Carbon::now();
+                                        // Calculer le nombre de jours entre maintenant et la date d'expiration
+                                        // Si la date est dans le futur, diffInDays() retourne un nombre positif
+                                        $joursRestants = $now->diffInDays($dateExpiration, false);
+                                        // Expire bientôt si la date est dans le futur ET dans moins de 180 jours
+                                        $expireBientot = $dateExpiration->isFuture() && $joursRestants > 0 && $joursRestants <= 180;
+                                    @endphp
+                                    @if($expireBientot)
                                     <span class="text-red-600 dark:text-red-400 ml-2">(Expire bientôt!)</span>
                                     @endif
                                 </span>

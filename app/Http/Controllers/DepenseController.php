@@ -73,12 +73,12 @@ class DepenseController extends Controller
             $query->where('mode_paiement_id', $request->mode_paiement);
         }
 
+        // Calculer le total des dépenses avec les mêmes filtres (avant pagination)
+        $totalDepenses = (clone $query)->sum('montant');
+
         $depenses = $query->latest()->paginate(10)->withQueryString();
 
-        // Calculer le total des dépenses (excluant les crédits personnel et assurance)
-        $totalDepenses = Depense::where('rembourse', false)->sum('montant');
-
-        return view('depenses.index', ['depenses' => $depenses]);
+        return view('depenses.index', ['depenses' => $depenses, 'totalDepenses' => $totalDepenses]);
     }
 
     public function create()
@@ -277,16 +277,122 @@ class DepenseController extends Controller
         return redirect()->route('depenses.index')->with('success', 'Dépense supprimée.');
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $depenses = Depense::all();
+        // Appliquer les mêmes filtres que dans index()
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
+        $query = Depense::with(['modePaiement', 'credit', 'creator']);
+        $query->where('rembourse', false);
+
+        // Filtrage par période - seulement si les paramètres sont fournis
+        if ($period === 'day' && $date) {
+            $query->whereDate('created_at', $date);
+        } elseif ($period === 'week' && $week) {
+            $parts = explode('-W', $week);
+            if (count($parts) === 2) {
+                $yearW = (int)$parts[0];
+                $weekW = (int)$parts[1];
+                $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
+                $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+                $query->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+            }
+        } elseif ($period === 'month' && $month) {
+            $parts = explode('-', $month);
+            if (count($parts) === 2) {
+                $yearM = (int)$parts[0];
+                $monthM = (int)$parts[1];
+                $query->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+            }
+        } elseif ($period === 'year' && $year) {
+            $query->whereYear('created_at', $year);
+        } elseif ($period === 'range' && $dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($request->has('search')) {
+            $query->where('nom', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->has('source') && in_array($request->source, ['manuelle', 'automatique', 'part_medecin'])) {
+            if ($request->source === 'part_medecin') {
+                $query->where('nom', 'like', '%Part médecin%');
+            } else {
+                $query->where('source', $request->source);
+            }
+        }
+
+        if ($request->has('mode_paiement') && in_array($request->mode_paiement, ['espèces', 'bankily', 'masrivi', 'sedad'])) {
+            $query->where('mode_paiement_id', $request->mode_paiement);
+        }
+
+        $depenses = $query->latest()->get();
         $pdf = Pdf::loadView('depenses.export_pdf', compact('depenses'));
         return $pdf->download('depenses.pdf');
     }
 
-    public function print()
+    public function print(Request $request)
     {
-        $depenses = Depense::all();
+        // Appliquer les mêmes filtres que dans index()
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
+        $query = Depense::with(['modePaiement', 'credit', 'creator']);
+        $query->where('rembourse', false);
+
+        // Filtrage par période - seulement si les paramètres sont fournis
+        if ($period === 'day' && $date) {
+            $query->whereDate('created_at', $date);
+        } elseif ($period === 'week' && $week) {
+            $parts = explode('-W', $week);
+            if (count($parts) === 2) {
+                $yearW = (int)$parts[0];
+                $weekW = (int)$parts[1];
+                $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
+                $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+                $query->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+            }
+        } elseif ($period === 'month' && $month) {
+            $parts = explode('-', $month);
+            if (count($parts) === 2) {
+                $yearM = (int)$parts[0];
+                $monthM = (int)$parts[1];
+                $query->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+            }
+        } elseif ($period === 'year' && $year) {
+            $query->whereYear('created_at', $year);
+        } elseif ($period === 'range' && $dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($request->has('search')) {
+            $query->where('nom', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->has('source') && in_array($request->source, ['manuelle', 'automatique', 'part_medecin'])) {
+            if ($request->source === 'part_medecin') {
+                $query->where('nom', 'like', '%Part médecin%');
+            } else {
+                $query->where('source', $request->source);
+            }
+        }
+
+        if ($request->has('mode_paiement') && in_array($request->mode_paiement, ['espèces', 'bankily', 'masrivi', 'sedad'])) {
+            $query->where('mode_paiement_id', $request->mode_paiement);
+        }
+
+        $depenses = $query->latest()->get();
         return view('depenses.print', compact('depenses'));
     }
 }

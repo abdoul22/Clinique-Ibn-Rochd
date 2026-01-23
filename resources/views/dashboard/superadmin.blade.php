@@ -36,7 +36,7 @@
         </a>
 
         {{-- E) Dossier médical électronique --}}
-        <a href="{{ route('dossiers.index') }}"
+        <a href="{{ route('superadmin.dossiers.index') }}"
             class="bg-red-500 text-white rounded-2xl p-6 shadow hover:bg-red-600 transition">
             <h2 class="text-xl font-semibold mb-2">Dossier Médical</h2>
             <p class="text-sm text-red-100">Consulter et modifier les dossiers médicaux des patients.</p>
@@ -145,8 +145,49 @@
         <a href="{{ route('superadmin.situation-journaliere.index') }}"
             class="bg-rose-700 text-white rounded-2xl p-6 shadow hover:bg-rose-800 transition"
             style="background-color: #be123c !important;">
-            <h2 class="text-xl font-semibold mb-2" style="color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Situation Journalière</h2>
-            <p class="text-sm" style="color: #ffffff !important;">Rapport quotidien du caissier : recettes, dépenses, crédits et liquidités.</p>
+            <h2 class="text-xl font-semibold mb-2"
+                style="color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Situation Journalière</h2>
+            <p class="text-sm" style="color: #ffffff !important;">Rapport quotidien du caissier : recettes, dépenses,
+                crédits et liquidités.</p>
+        </a>
+
+        {{-- ========================================
+        NOUVEAUX MODULES MÉDICAUX SUPERADMIN
+        ======================================== --}}
+
+        {{-- 13) Récapitulatif Médecins --}}
+        <a href="{{ route('superadmin.medical.recap-medecins.index') }}"
+            class="bg-indigo-600 text-white rounded-2xl p-6 shadow hover:bg-indigo-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Recap Médecins</h2>
+            <p class="text-sm text-indigo-100">Vue d'ensemble des activités médicales, statistiques et graphiques par
+                médecin.</p>
+        </a>
+
+
+
+        {{-- 15) Mes Rapports Médicaux --}}
+        <a href="{{ route('superadmin.medical.consultations.index') }}"
+            class="bg-cyan-600 text-white rounded-2xl p-6 shadow hover:bg-cyan-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Rapports Médicaux</h2>
+            <p class="text-sm text-cyan-100">Créer, consulter et gérer tous les rapports médicaux et consultations.</p>
+        </a>
+
+        {{-- 15) Mes Ordonnances --}}
+        <a href="{{ route('superadmin.medical.ordonnances.index') }}"
+            class="bg-violet-600 text-white rounded-2xl p-6 shadow hover:bg-violet-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Ordonnances</h2>
+            <p class="text-sm text-violet-100">Prescrire et gérer toutes les ordonnances médicales de la clinique.</p>
+        </a>
+        {{-- 14) Récapitulatif Caissiers --}}
+        <a href="{{ route('superadmin.recap-caissiers.index') }}"
+            class="bg-gray-900 text-white rounded-2xl p-6 shadow bg-gray-700">
+            <h2 class="text-xl font-semibold mb-2 flex items-center">
+                Recap Caissiers
+                <span class="ml-2 px-2 py-0.5 text-xs bg-white/20 rounded-full">PERFOMANCE</span>
+            </h2>
+            <p class="text-sm text-amber-50">Analyse complète des performances, statistiques avancées et suivi détaillé
+                des
+                caissiers.</p>
         </a>
     </div>
 </div>

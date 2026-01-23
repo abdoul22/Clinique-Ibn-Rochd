@@ -76,6 +76,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_approved' => 'boolean',
             'last_login_at' => 'datetime',
+            'password_changed_at' => 'datetime',
         ];
     }
 

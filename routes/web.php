@@ -30,6 +30,7 @@ use App\Http\Controllers\SituationJournaliereController;
 use App\Http\Controllers\Medecin\DashboardController as MedecinDashboardController;
 use App\Http\Controllers\Medecin\ConsultationController as MedecinConsultationController;
 use App\Http\Controllers\Medecin\OrdonnanceController as MedecinOrdonnanceController;
+use App\Http\Controllers\Medecin\RendezVousController as MedecinRendezVousController;
 
 require __DIR__ . '/auth.php';
 
@@ -82,6 +83,14 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->group(function ()
 
 // Routes communes pour SUPERADMIN avec préfixe
 Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    // Dossiers médicaux pour superadmin (avec préfixe superadmin)
+    Route::get('dossiers/synchroniser', [DossierMedicalController::class, 'synchroniser'])->name('dossiers.synchroniser');
+    Route::get('dossiers/{id}/edit', [DossierMedicalController::class, 'edit'])->name('dossiers.edit');
+    Route::put('dossiers/{id}', [DossierMedicalController::class, 'update'])->name('dossiers.update');
+    Route::delete('dossiers/{id}', [DossierMedicalController::class, 'destroy'])->name('dossiers.destroy');
+    Route::get('dossiers', [DossierMedicalController::class, 'index'])->name('dossiers.index');
+    Route::get('dossiers/{id}', [DossierMedicalController::class, 'show'])->name('dossiers.show');
+    
     // Patients
     Route::resource('patients', GestionPatientController::class);
     // Médecins
@@ -94,16 +103,16 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmi
     Route::resource('services', ServiceController::class);
     Route::get('/services/export-pdf', [ServiceController::class, 'exportPdf'])->name('services.exportPdf');
     Route::get('/services/print', [ServiceController::class, 'print'])->name('services.print');
-    // Prescripteurs
-    Route::resource('prescripteurs', PrescripteurController::class);
+    // Prescripteurs - Routes spécifiques AVANT le resource pour éviter les 404
     Route::get('/prescripteurs/print', [PrescripteurController::class, 'print'])->name('prescripteurs.print');
-    Route::get('prescripteurs/export-pdf', [PrescripteurController::class, 'exportPdf'])->name('prescripteurs.exportPdf');
+    Route::get('/prescripteurs/export-pdf', [PrescripteurController::class, 'exportPdf'])->name('prescripteurs.exportPdf');
+    Route::resource('prescripteurs', PrescripteurController::class);
     // Assurances
     Route::resource('assurances', AssuranceController::class);
     Route::get('assurances/export/pdf', [AssuranceController::class, 'exportPdf'])->name('assurances.exportPdf');
     Route::get('assurances/print', [AssuranceController::class, 'print'])->name('assurances.print');
     // Caisse
-    Route::resource('caisses', CaisseController::class)->parameters(['caisses' => 'caisse']);
+    Route::resource('caisses', CaisseController::class);
     Route::get('/caisses/{caisse}/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
     Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
     // API pour numéro d'entrée
@@ -147,6 +156,41 @@ Route::middleware(['auth', 'role:superadmin', 'is.approved'])->prefix('superadmi
     Route::get('situation-journaliere', [SituationJournaliereController::class, 'index'])->name('situation-journaliere.index');
     Route::get('situation-journaliere/print', [SituationJournaliereController::class, 'print'])->name('situation-journaliere.print');
     Route::get('situation-journaliere/export-pdf', [SituationJournaliereController::class, 'exportPdf'])->name('situation-journaliere.exportPdf');
+
+    // ========================================
+    // NOUVEAUX MODULES MÉDICAUX SUPERADMIN
+    // ========================================
+
+    // Consultations / Rapports médicaux (SuperAdmin)
+    Route::prefix('medical')->name('medical.')->group(function () {
+        // Récapitulatif des médecins
+        Route::get('recap-medecins', [App\Http\Controllers\SuperAdmin\MedicalDashboardController::class, 'index'])->name('recap-medecins.index');
+        Route::get('recap-medecins/export-pdf', [App\Http\Controllers\SuperAdmin\MedicalDashboardController::class, 'exportPdf'])->name('recap-medecins.exportPdf');
+        Route::get('recap-medecins/{id}', [App\Http\Controllers\SuperAdmin\MedicalDashboardController::class, 'show'])->name('recap-medecins.show');
+
+        // Routes pour afficher les consultations, ordonnances et patients d'un médecin spécifique
+        Route::get('recap-medecins/{medecinId}/consultations', [App\Http\Controllers\SuperAdmin\MedicalDashboardController::class, 'consultationsByMedecin'])->name('recap-medecins.consultations');
+        Route::get('recap-medecins/{medecinId}/ordonnances', [App\Http\Controllers\SuperAdmin\MedicalDashboardController::class, 'ordonnancesByMedecin'])->name('recap-medecins.ordonnances');
+        Route::get('recap-medecins/{medecinId}/patients', [App\Http\Controllers\SuperAdmin\MedicalDashboardController::class, 'patientsByMedecin'])->name('recap-medecins.patients');
+
+        // Routes consultations
+        Route::get('consultations/{id}/print', [App\Http\Controllers\SuperAdmin\ConsultationController::class, 'print'])->name('consultations.print');
+        Route::get('consultations/export-pdf/{id}', [App\Http\Controllers\SuperAdmin\ConsultationController::class, 'exportPdf'])->name('consultations.export-pdf');
+        Route::resource('consultations', App\Http\Controllers\SuperAdmin\ConsultationController::class);
+
+        // Routes ordonnances
+        Route::get('ordonnances/{id}/print', [App\Http\Controllers\SuperAdmin\OrdonnanceController::class, 'print'])->name('ordonnances.print');
+        Route::resource('ordonnances', App\Http\Controllers\SuperAdmin\OrdonnanceController::class);
+    });
+
+    // ========================================
+    // MODULE RECAP CAISSIERS
+    // ========================================
+    
+    // Récapitulatif des caissiers
+    Route::get('recap-caissiers', [App\Http\Controllers\SuperAdmin\RecapCaissierController::class, 'index'])->name('recap-caissiers.index');
+    Route::get('recap-caissiers/export-pdf', [App\Http\Controllers\SuperAdmin\RecapCaissierController::class, 'exportPdf'])->name('recap-caissiers.exportPdf');
+    Route::get('recap-caissiers/{id}', [App\Http\Controllers\SuperAdmin\RecapCaissierController::class, 'show'])->name('recap-caissiers.show');
 });
 
 // Routes pour ADMIN
@@ -157,6 +201,14 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->group(function () {
 
 // Routes communes pour ADMIN avec préfixe
 Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name('admin.')->group(function () {
+    // Dossiers médicaux pour admin (avec préfixe admin)
+    Route::get('dossiers/synchroniser', [DossierMedicalController::class, 'synchroniser'])->name('dossiers.synchroniser');
+    Route::get('dossiers/{id}/edit', [DossierMedicalController::class, 'edit'])->name('dossiers.edit');
+    Route::put('dossiers/{id}', [DossierMedicalController::class, 'update'])->name('dossiers.update');
+    Route::delete('dossiers/{id}', [DossierMedicalController::class, 'destroy'])->name('dossiers.destroy');
+    Route::get('dossiers', [DossierMedicalController::class, 'index'])->name('dossiers.index');
+    Route::get('dossiers/{id}', [DossierMedicalController::class, 'show'])->name('dossiers.show');
+    
     // Patients
     Route::resource('patients', GestionPatientController::class);
     // Médecins
@@ -169,10 +221,10 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     Route::resource('services', ServiceController::class);
     Route::get('/services/export-pdf', [ServiceController::class, 'exportPdf'])->name('services.exportPdf');
     Route::get('/services/print', [ServiceController::class, 'print'])->name('services.print');
-    // Prescripteurs
-    Route::resource('prescripteurs', PrescripteurController::class);
+    // Prescripteurs - Routes spécifiques AVANT le resource pour éviter les 404
     Route::get('/prescripteurs/print', [PrescripteurController::class, 'print'])->name('prescripteurs.print');
-    Route::get('prescripteurs/export-pdf', [PrescripteurController::class, 'exportPdf'])->name('prescripteurs.exportPdf');
+    Route::get('/prescripteurs/export-pdf', [PrescripteurController::class, 'exportPdf'])->name('prescripteurs.exportPdf');
+    Route::resource('prescripteurs', PrescripteurController::class);
     // Assurances
     Route::resource('assurances', AssuranceController::class);
     Route::get('assurances/export/pdf', [AssuranceController::class, 'exportPdf'])->name('assurances.exportPdf');
@@ -184,8 +236,6 @@ Route::middleware(['auth', 'role:admin', 'is.approved'])->prefix('admin')->name(
     Route::get('rendezvous/get-by-date', [RendezVousController::class, 'getRendezVousByDate'])->name('rendezvous.get-by-date');
     // Autres ressources pour admin
     Route::resource('caisses', CaisseController::class);
-    Route::get('dossiers/synchroniser', [DossierMedicalController::class, 'synchroniser'])->name('dossiers.synchroniser');
-    Route::resource('dossiers', DossierMedicalController::class)->parameters(['dossiers' => 'dossier']);
     // Caisse
     Route::get('/caisses/{caisse}/exportPdf', [CaisseController::class, 'exportPdf'])->name('caisses.exportPdf');
     Route::get('/caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
@@ -251,6 +301,15 @@ Route::middleware(['auth', 'role:medecin', 'is.approved'])->prefix('medecin')->n
     Route::get('/patients/{id}/edit', [GestionPatientController::class, 'edit'])->name('patients.edit');
     Route::put('/patients/{id}', [GestionPatientController::class, 'update'])->name('patients.update');
     Route::delete('/patients/{id}', [GestionPatientController::class, 'destroy'])->name('patients.destroy');
+
+    // Prescripteurs (lecture + création)
+    Route::get('/prescripteurs', [PrescripteurController::class, 'index'])->name('prescripteurs.index');
+    Route::get('/prescripteurs/create', [PrescripteurController::class, 'create'])->name('prescripteurs.create');
+    Route::post('/prescripteurs', [PrescripteurController::class, 'store'])->name('prescripteurs.store');
+
+    // Mes Rendez-vous
+    Route::get('/rendezvous', [MedecinRendezVousController::class, 'index'])->name('rendezvous.index');
+    Route::get('/rendezvous/{id}', [MedecinRendezVousController::class, 'show'])->name('rendezvous.show');
 });
 
 // Route pour afficher la liste des patients (accessible depuis les dashboards)
@@ -263,13 +322,15 @@ Route::middleware(['auth', 'is.approved'])->group(function () {
     Route::get('caisses/{id}/print', [CaisseController::class, 'printSingle'])->name('caisses.printSingle');
 });
 
+// Dossiers médicaux (routes communes pour medecin uniquement - sans préfixe)
+Route::middleware(['auth', 'role:medecin', 'is.approved'])->group(function () {
+    Route::get('dossiers', [DossierMedicalController::class, 'index'])->name('dossiers.index');
+    Route::get('dossiers/{id}', [DossierMedicalController::class, 'show'])->name('dossiers.show');
+});
+
 // Routes communes pour ADMIN et SUPERADMIN (protégées par auth et is.approved)
 Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(function () {
     Route::resource('personnels', PersonnelController::class);
-
-    // Dossiers médicaux (routes communes pour admin et superadmin)
-    Route::get('dossiers/synchroniser', [DossierMedicalController::class, 'synchroniser'])->name('dossiers.synchroniser');
-    Route::resource('dossiers', DossierMedicalController::class)->parameters(['dossiers' => 'dossier']);
 
     // Services
     // Routes personnalisées pour export PDF et impression
@@ -277,10 +338,10 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
     Route::get('/services/export-pdf', [ServiceController::class, 'exportPdf'])->name('services.exportPdf');
     Route::get('/services/print', [ServiceController::class, 'print'])->name('services.print');
 
-    //prescripteurs
-    Route::resource('prescripteurs', PrescripteurController::class);
+    //prescripteurs - Routes spécifiques AVANT le resource pour éviter les 404
     Route::get('/prescripteurs/print', [PrescripteurController::class, 'print'])->name('prescripteurs.print');
-    Route::get('prescripteurs/export-pdf', [PrescripteurController::class, 'exportPdf'])->name('prescripteurs.exportPdf');
+    Route::get('/prescripteurs/export-pdf', [PrescripteurController::class, 'exportPdf'])->name('prescripteurs.exportPdf');
+    Route::resource('prescripteurs', PrescripteurController::class);
 
     //Examens
     Route::resource('examens', ExamenController::class);
@@ -324,13 +385,23 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
     Route::get('depenses-export-pdf', [DepenseController::class, 'exportPdf'])->name('depenses.exportPdf');
     Route::get('depenses-print', [DepenseController::class, 'print'])->name('depenses.print');
 
-    // états de caisse
-    Route::resource('etatcaisse', EtatCaisseController::class);
+    // états de caisse - Routes spécifiques AVANT le resource pour éviter les conflits
+    Route::get('/etatcaisse/non-validated-ids', [EtatCaisseController::class, 'getNonValidatedIds'])
+        ->middleware('role:superadmin')
+        ->name('etatcaisse.getNonValidatedIds');
+    Route::post('/etatcaisse/valider-en-masse', [EtatCaisseController::class, 'validerEnMasse'])
+        ->middleware('role:superadmin')
+        ->name('etatcaisse.validerEnMasse');
+    Route::post('/etatcaisse/{id}/valider', [EtatCaisseController::class, 'valider'])
+        ->middleware('role:superadmin')
+        ->name('etatcaisse.valider');
+    Route::post('/etatcaisse/{id}/unvalider', [EtatCaisseController::class, 'unvalider'])->name('etatcaisse.unvalider');
     Route::get('etatcaisse-export-pdf', [EtatCaisseController::class, 'exportPdf'])->name('etatcaisse.exportPdf');
     Route::get('etatcaisse-print', [EtatCaisseController::class, 'print'])->name('etatcaisse.print');
-
-    // Générer l'état général (ancien et nouveau)
     Route::post('/etatcaisse/generer/general', [EtatCaisseController::class, 'generateGeneral'])->name('etatcaisse.generer.general');
+
+    // Resource route en dernier
+    Route::resource('etatcaisse', EtatCaisseController::class);
     Route::post('/etatcaisse/generer/etat-general', [EtatCaisseController::class, 'genererEtatGeneral'])->name('etatcaisse.generer.etat_general');
     // Générer pour un personnel (un seul)
     Route::post('/etatcaisse/generer/personnel/{id}', [EtatCaisseController::class, 'generateForPersonnel'])->name('etatcaisse.generer.personnel');
@@ -420,15 +491,14 @@ Route::middleware(['auth', 'is.approved'])->group(function () {
     Route::get('/help', function () {
         return view('profile.help');
     })->name('profile.help');
+
+    // Password change routes
+    Route::get('/password/edit', [\App\Http\Controllers\PasswordController::class, 'edit'])->name('password.edit');
+    Route::put('/password', [\App\Http\Controllers\PasswordController::class, 'update'])->name('password.update');
 });
 
 // Routes spécifiques (protégées par auth et is.approved)
 Route::middleware(['auth', 'is.approved'])->group(function () {
-    Route::post('/etatcaisse/{id}/valider', [EtatCaisseController::class, 'valider'])
-        ->middleware('role:superadmin')
-        ->name('etatcaisse.valider');
-    Route::post('/etatcaisse/{id}/unvalider', [EtatCaisseController::class, 'unvalider'])->name('etatcaisse.unvalider');
-
     Route::resource('modepaiements', ModePaiementController::class);
     Route::resource('credits', CreditController::class);
 
@@ -440,6 +510,12 @@ Route::middleware(['auth', 'is.approved'])->group(function () {
 
     Route::get('mode-paiements/historique', [App\Http\Controllers\ModePaiementController::class, 'historique'])
         ->name('modepaiements.historique');
+
+    Route::get('mode-paiements/print', [App\Http\Controllers\ModePaiementController::class, 'print'])
+        ->name('modepaiements.print');
+
+    Route::get('mode-paiements/export-pdf', [App\Http\Controllers\ModePaiementController::class, 'exportPdf'])
+        ->name('modepaiements.exportPdf');
 
     // Salaires (liste, PDF, paiement global/individuel)
     Route::get('salaires', [App\Http\Controllers\PayrollController::class, 'index'])->name('salaires.index');

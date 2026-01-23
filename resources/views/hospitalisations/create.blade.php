@@ -73,16 +73,17 @@
                                 </div>
                                 Patient *
                             </label>
-                            <select name="gestion_patient_id" id="patient-select" required
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg shadow-sm synchronized-field"
-                                style="background-color: white; color: #111827; border-color: #d1d5db;"
-                                data-dark-bg="#1f2937" data-dark-text="#f9fafb" data-dark-border="#4b5563">
-                                <option value="">Sélectionner un patient</option>
+                            <input type="text" name="patient_search" id="patient-search" list="patients-list"
+                                placeholder="Tapez le nom du patient..."
+                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg shadow-sm">
+                            <input type="hidden" name="gestion_patient_id" id="gestion_patient_id" required>
+                            <datalist id="patients-list">
                                 @foreach($patients as $patient)
-                                <option value="{{ $patient->id }}" data-telephone="{{ $patient->phone ?? '' }}">{{
-                                    $patient->nom }} {{ $patient->prenom }}</option>
+                                <option value="{{ $patient->nom }} {{ $patient->prenom }}" 
+                                    data-id="{{ $patient->id }}" 
+                                    data-telephone="{{ $patient->phone ?? '' }}">
                                 @endforeach
-                            </select>
+                            </datalist>
                         </div>
 
                         <!-- Téléphone -->
@@ -100,10 +101,18 @@
                                 </div>
                                 Téléphone
                             </label>
-                            <input type="text" id="telephone-input" placeholder="Tapez le numéro de téléphone"
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg shadow-sm synchronized-field"
-                                style="background-color: white; color: #111827; border-color: #d1d5db;"
-                                data-dark-bg="#1f2937" data-dark-text="#f9fafb" data-dark-border="#4b5563">
+                            <input type="text" id="telephone-input" list="telephones-list"
+                                placeholder="Tapez le numéro de téléphone..."
+                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg shadow-sm">
+                            <datalist id="telephones-list">
+                                @foreach($patients as $patient)
+                                @if($patient->phone)
+                                <option value="{{ $patient->phone }}" 
+                                    data-id="{{ $patient->id }}" 
+                                    data-nom="{{ $patient->nom }} {{ $patient->prenom }}">
+                                @endif
+                                @endforeach
+                            </datalist>
                         </div>
 
 
@@ -122,14 +131,15 @@
                                 </div>
                                 Service *
                             </label>
-                            <select name="service_id" required
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-200 text-lg shadow-sm">
-                                <option value="">Sélectionner un service</option>
+                            <select name="service_id" required disabled
+                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white cursor-not-allowed text-lg shadow-sm">
                                 @foreach($services as $service)
-                                <option value="{{ $service->id }}" {{ $defaultServiceId==$service->id ? 'selected' : ''
-                                    }}>{{ $service->nom }}</option>
+                                @if($defaultServiceId == $service->id)
+                                <option value="{{ $service->id }}" selected>{{ $service->nom }}</option>
+                                @endif
                                 @endforeach
                             </select>
+                            <input type="hidden" name="service_id" value="{{ $defaultServiceId }}">
                         </div>
 
                         <!-- Statut -->
@@ -146,12 +156,11 @@
                                 </div>
                                 Statut *
                             </label>
-                            <select name="statut" required
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/20 transition-all duration-200 text-lg shadow-sm">
-                                <option value="en cours">En cours</option>
-                                <option value="terminé">Terminé</option>
-                                <option value="annulé">Annulé</option>
+                            <select name="statut" required disabled
+                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white cursor-not-allowed text-lg shadow-sm">
+                                <option value="en cours" selected>En cours</option>
                             </select>
+                            <input type="hidden" name="statut" value="en cours">
                         </div>
                     </div>
                 </div>
@@ -168,11 +177,11 @@
                         </div>
                         Période d'Hospitalisation
                     </h2>
-                    <p class="text-white mt-2">Définissez les dates d'entrée et de sortie</p>
+                    <p class="text-white mt-2">Définissez la date d'entrée</p>
                 </div>
 
                 <div class="p-8">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-1 gap-8">
                         <!-- Date d'entrée -->
                         <div class="space-y-2">
                             <label
@@ -188,62 +197,10 @@
                                 </div>
                                 Date d'entrée *
                             </label>
-                            <input type="date" name="date_entree" id="date_entree" required
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg shadow-sm">
-                        </div>
-
-                        <!-- Date de sortie -->
-                        <div class="space-y-2">
-                            <label
-                                class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
-                                <div
-                                    class="w-5 h-5 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mr-2">
-                                    <svg class="w-3 h-3 text-green-600 dark:text-green-400" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                                Date de sortie (optionnelle)
-                            </label>
-                            <input type="date" name="date_sortie" id="date_sortie"
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg shadow-sm">
-                        </div>
-
-                        <!-- Motif -->
-                        <div class="space-y-2">
-                            <label
-                                class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
-                                <div
-                                    class="w-5 h-5 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mr-2">
-                                    <svg class="w-3 h-3 text-purple-600 dark:text-purple-400" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                Motif
-                            </label>
-                            <input type="text" name="motif" placeholder="Motif de l'hospitalisation"
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-200 text-lg shadow-sm">
-                        </div>
-                    </div>
-
-                    <!-- Indicateur de durée -->
-                    <div id="duree-indicator"
-                        class="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-700 hidden">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-blue-800 dark:text-blue-200">Durée du séjour</p>
-                                <p id="duree-text" class="text-blue-600 dark:text-blue-300"></p>
-                            </div>
+                            <input type="date" name="date_entree" id="date_entree" required disabled
+                                value="{{ date('Y-m-d') }}"
+                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white cursor-not-allowed text-lg shadow-sm">
+                            <input type="hidden" name="date_entree" value="{{ date('Y-m-d') }}">
                         </div>
                     </div>
                 </div>
@@ -371,29 +328,6 @@
                     </div>
                 </div>
 
-                <!-- Section 4: Observations -->
-                <div class="bg-gradient-to-r from-gray-500 to-slate-600 p-6">
-                    <h2 class="text-2xl font-bold text-white flex items-center">
-                        <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                        </div>
-                        Observations Médicales
-                    </h2>
-                    <p class="text-white mt-2">Notes et observations supplémentaires</p>
-                </div>
-
-                <div class="p-8">
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Observations</label>
-                        <textarea name="observation" rows="4"
-                            placeholder="Observations supplémentaires, notes médicales, instructions particulières..."
-                            class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-gray-500 focus:ring-4 focus:ring-gray-500/20 transition-all duration-200 text-lg resize-none shadow-sm"></textarea>
-                    </div>
-                </div>
 
                 <!-- Boutons d'action -->
                 <div class="bg-gray-50 dark:bg-gray-700 px-8 py-8">
@@ -424,98 +358,8 @@
 </div>
 
 <script>
-    // Script immédiat pour éviter le flash de contenu non stylé
-    (function() {
-        const isDarkMode = document.documentElement.classList.contains('dark') ||
-                          window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        // Appliquer les styles immédiatement si les éléments existent
-        let patientSelectTemp = document.getElementById('patient-select');
-        let telephoneInputTemp = document.getElementById('telephone-input');
-
-        if (patientSelectTemp) {
-            if (isDarkMode) {
-                patientSelectTemp.style.backgroundColor = '#1f2937';
-                patientSelectTemp.style.color = '#f9fafb';
-                patientSelectTemp.style.borderColor = '#4b5563';
-            } else {
-                patientSelectTemp.style.backgroundColor = 'white';
-                patientSelectTemp.style.color = '#111827';
-                patientSelectTemp.style.borderColor = '#d1d5db';
-            }
-        }
-
-        if (telephoneInputTemp) {
-            if (isDarkMode) {
-                telephoneInputTemp.style.backgroundColor = '#1f2937';
-                telephoneInputTemp.style.color = '#f9fafb';
-                telephoneInputTemp.style.borderColor = '#4b5563';
-            } else {
-                telephoneInputTemp.style.backgroundColor = 'white';
-                telephoneInputTemp.style.color = '#111827';
-                telephoneInputTemp.style.borderColor = '#d1d5db';
-            }
-        }
-    })();
-
-    // Fonction pour appliquer les styles selon le mode sombre/clair
-    function applyThemeStyles() {
-        const isDarkMode = document.documentElement.classList.contains('dark') ||
-                          window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        let patientSelectTemp = document.getElementById('patient-select');
-        let telephoneInputTemp = document.getElementById('telephone-input');
-
-        if (patientSelectTemp) {
-            if (isDarkMode) {
-                patientSelectTemp.style.backgroundColor = patientSelectTemp.getAttribute('data-dark-bg');
-                patientSelectTemp.style.color = patientSelectTemp.getAttribute('data-dark-text');
-                patientSelectTemp.style.borderColor = patientSelectTemp.getAttribute('data-dark-border');
-            } else {
-                patientSelectTemp.style.backgroundColor = 'white';
-                patientSelectTemp.style.color = '#111827';
-                patientSelectTemp.style.borderColor = '#d1d5db';
-            }
-            // Marquer comme chargé
-            patientSelectTemp.classList.add('loaded');
-        }
-
-        if (telephoneInputTemp) {
-            if (isDarkMode) {
-                telephoneInputTemp.style.backgroundColor = telephoneInputTemp.getAttribute('data-dark-bg');
-                telephoneInputTemp.style.color = telephoneInputTemp.getAttribute('data-dark-text');
-                telephoneInputTemp.style.borderColor = telephoneInputTemp.getAttribute('data-dark-border');
-            } else {
-                telephoneInputTemp.style.backgroundColor = 'white';
-                telephoneInputTemp.style.color = '#111827';
-                telephoneInputTemp.style.borderColor = '#d1d5db';
-            }
-            // Marquer comme chargé
-            telephoneInputTemp.classList.add('loaded');
-        }
-    }
-
-    // Appliquer les styles immédiatement
-    applyThemeStyles();
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Réappliquer les styles après le chargement complet
-        applyThemeStyles();
-
-        // Observer les changements de thème
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    applyThemeStyles();
-                }
-            });
-        });
-
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
-
         // Données des chambres et lits
         const litsParChambre = @json($litsParChambre);
         const chambresData = @json($chambresData);
@@ -524,10 +368,7 @@
     const chambreSelect = document.getElementById('chambre-select');
     const litSelect = document.getElementById('lit-select');
     const dateEntree = document.getElementById('date_entree');
-    const dateSortie = document.getElementById('date_sortie');
     const montantTotal = document.getElementById('montant_total');
-    const dureeIndicator = document.getElementById('duree-indicator');
-    const dureeText = document.getElementById('duree-text');
     const tarifSummary = document.getElementById('tarif-summary');
     const prixJour = document.getElementById('prix-jour');
     const nbJours = document.getElementById('nb-jours');
@@ -535,9 +376,12 @@
     const submitBtn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submit-text');
 
-    // Éléments pour la synchronisation patient/téléphone
-    const patientSelect = document.getElementById('patient-select');
+    // Éléments pour la synchronisation patient/téléphone avec datalist
+    const patientSearch = document.getElementById('patient-search');
     const telephoneInput = document.getElementById('telephone-input');
+    const gestionPatientId = document.getElementById('gestion_patient_id');
+    const patientsList = document.getElementById('patients-list');
+    const telephonesList = document.getElementById('telephones-list');
 
     // Vérifier que tous les éléments existent
     if (!chambreSelect || !litSelect || !montantTotal) {
@@ -557,118 +401,150 @@
         }, 1000);
     }
 
-    // Fonction pour mettre à jour le select des patients
-    function updatePatientSelect(patients) {
-        console.log('updatePatientSelect appelée avec', patients.length, 'patients');
-        console.log('patientSelect element:', patientSelect);
 
-        const currentValue = patientSelect.value;
+    // Synchronisation Patient/Téléphone - Recherche intelligente avec datalist (comme Spécialité dans prescripteurs)
+    if (patientSearch && telephoneInput && gestionPatientId && patientsList && telephonesList) {
+        console.log('Initialisation de la synchronisation patient/téléphone avec datalist');
 
-        // Construire le HTML complet du select
-        let optionsHTML = '<option value="">Sélectionner un patient</option>';
+        // Stocker toutes les options originales pour les restaurer si nécessaire
+        const originalPatientsOptions = Array.from(patientsList.options).map(opt => ({
+            value: opt.value,
+            id: opt.getAttribute('data-id'),
+            telephone: opt.getAttribute('data-telephone')
+        }));
+        
+        const originalTelephonesOptions = Array.from(telephonesList.options).map(opt => ({
+            value: opt.value,
+            id: opt.getAttribute('data-id'),
+            nom: opt.getAttribute('data-nom')
+        }));
 
-        patients.forEach(patient => {
-            console.log('Ajout du patient:', patient);
-            optionsHTML += `<option value="${patient.id}" data-telephone="${patient.phone || ''}">${patient.last_name} ${patient.first_name}</option>`;
-        });
-
-        // Remplacer complètement le contenu
-        patientSelect.innerHTML = optionsHTML;
-
-        console.log('Nombre d\'options après mise à jour:', patientSelect.options.length);
-
-        // Vérifier le contenu des options
-        for (let i = 0; i < patientSelect.options.length; i++) {
-            console.log(`Option ${i}:`, patientSelect.options[i].textContent, 'Value:', patientSelect.options[i].value);
+        // Fonction pour trouver un patient par nom (correspondance exacte uniquement)
+        function findPatientByName(nom) {
+            const options = Array.from(patientsList.options);
+            return options.find(opt => opt.value === nom);
         }
 
-        // Forcer un re-render du select
-        patientSelect.style.display = 'none';
-        patientSelect.offsetHeight; // Trigger reflow
-        patientSelect.style.display = '';
-
-        // Restaurer la sélection si elle existe encore
-        if (currentValue) {
-            patientSelect.value = currentValue;
+        // Fonction pour trouver un patient par téléphone (correspondance exacte uniquement)
+        function findPatientByPhone(phone) {
+            const options = Array.from(telephonesList.options);
+            return options.find(opt => opt.value === phone);
         }
-    }
 
-    // Recherche dynamique de patients par téléphone
-    let searchTimeout;
-    function searchPatientsByPhone(phone) {
-        console.log('Recherche pour:', phone);
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            const url = `{{ route('hospitalisations.search-patients-by-phone') }}?phone=${encodeURIComponent(phone)}`;
-            console.log('URL de recherche:', url);
+        // Variable pour suivre si une sélection explicite a été faite
+        let lastSelectedPatientId = null;
+        let isUserTyping = false;
 
-            fetch(url)
-                .then(response => {
-                    console.log('Réponse reçue:', response);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Données reçues:', data);
-                    if (data.success) {
-                        updatePatientSelect(data.patients);
-
-                        // Auto-sélectionner le patient s'il n'y en a qu'un seul
-                        if (data.patients.length === 1) {
-                            patientSelect.value = data.patients[0].id;
-                            console.log('Patient auto-sélectionné:', data.patients[0].last_name, data.patients[0].first_name);
-
-                            // Mettre à jour le champ téléphone avec le numéro du patient sélectionné
-                            if (telephoneInput) {
-                                telephoneInput.value = data.patients[0].phone || '';
-                                addSyncEffect(telephoneInput);
-                            }
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur lors de la recherche:', error);
-                });
-        }, 300); // Délai de 300ms pour éviter trop de requêtes
-    }
-
-    // Synchronisation Patient/Téléphone
-    if (patientSelect && telephoneInput) {
-        console.log('Initialisation de la synchronisation patient/téléphone');
-
-        // Quand on sélectionne un patient par nom
-        patientSelect.addEventListener('change', function() {
-            console.log('Patient sélectionné:', this.value);
-            const selectedOption = this.options[this.selectedIndex];
-            const telephone = selectedOption.getAttribute('data-telephone');
-
-            if (telephone) {
-                telephoneInput.value = telephone;
-                addSyncEffect(telephoneInput);
-            } else {
-                telephoneInput.value = '';
+        // Quand l'utilisateur sélectionne explicitement un patient depuis le datalist (événement change)
+        patientSearch.addEventListener('change', function() {
+            const nomPatient = this.value.trim();
+            console.log('Patient sélectionné (change):', nomPatient);
+            
+            const patientOption = findPatientByName(nomPatient);
+            
+            if (patientOption) {
+                const patientId = patientOption.getAttribute('data-id');
+                const telephone = patientOption.getAttribute('data-telephone');
+                
+                // Mettre à jour le champ caché avec l'ID du patient
+                gestionPatientId.value = patientId;
+                lastSelectedPatientId = patientId;
+                
+                // Mettre à jour le champ téléphone
+                if (telephone) {
+                    telephoneInput.value = telephone;
+                    addSyncEffect(telephoneInput);
+                }
+                
+                addSyncEffect(patientSearch);
+                isUserTyping = false;
             }
         });
 
-        // Recherche dynamique par téléphone
-        telephoneInput.addEventListener('input', function() {
+        // Quand l'utilisateur tape dans le champ patient (événement input)
+        patientSearch.addEventListener('input', function() {
+            isUserTyping = true;
+            const nomPatient = this.value.trim();
+            
+            // Si le champ est vidé, vider aussi le téléphone et réinitialiser
+            if (nomPatient === '') {
+                telephoneInput.value = '';
+                gestionPatientId.value = '';
+                lastSelectedPatientId = null;
+                return;
+            }
+            
+            // Vérifier si la valeur correspond exactement à une option
+            const patientOption = findPatientByName(nomPatient);
+            
+            if (!patientOption) {
+                // Si la valeur ne correspond pas exactement, réinitialiser
+                gestionPatientId.value = '';
+                lastSelectedPatientId = null;
+            }
+        });
+
+        // Quand l'utilisateur sélectionne explicitement un téléphone depuis le datalist (événement change)
+        telephoneInput.addEventListener('change', function() {
             const phone = this.value.trim();
-            console.log('Téléphone saisi:', phone);
-            searchPatientsByPhone(phone);
+            console.log('Téléphone sélectionné (change):', phone);
+            
+            const phoneOption = findPatientByPhone(phone);
+            
+            if (phoneOption) {
+                const patientId = phoneOption.getAttribute('data-id');
+                const nomPatient = phoneOption.getAttribute('data-nom');
+                
+                // Mettre à jour le champ caché avec l'ID du patient
+                gestionPatientId.value = patientId;
+                lastSelectedPatientId = patientId;
+                
+                // Mettre à jour le champ patient
+                if (nomPatient) {
+                    patientSearch.value = nomPatient;
+                    addSyncEffect(patientSearch);
+                }
+                
+                addSyncEffect(telephoneInput);
+                isUserTyping = false;
+            }
+        });
+
+        // Quand l'utilisateur tape dans le champ téléphone (événement input)
+        telephoneInput.addEventListener('input', function() {
+            isUserTyping = true;
+            const phone = this.value.trim();
+            
+            // Si le champ est vidé, vider aussi le patient et réinitialiser
+            if (phone === '') {
+                patientSearch.value = '';
+                gestionPatientId.value = '';
+                lastSelectedPatientId = null;
+                return;
+            }
+            
+            // Vérifier si la valeur correspond exactement à une option
+            const phoneOption = findPatientByPhone(phone);
+            
+            if (!phoneOption) {
+                // Si la valeur ne correspond pas exactement, réinitialiser
+                gestionPatientId.value = '';
+                lastSelectedPatientId = null;
+            }
         });
     } else {
         console.error('Éléments manquants:', {
-            patientSelect: !!patientSelect,
-            telephoneInput: !!telephoneInput
+            patientSearch: !!patientSearch,
+            telephoneInput: !!telephoneInput,
+            gestionPatientId: !!gestionPatientId,
+            patientsList: !!patientsList,
+            telephonesList: !!telephonesList
         });
     }
 
     // Variables globales
     let prixParJour = 0;
     let nombreJours = 1;
-
-    // Définir la date d'entrée par défaut à aujourd'hui
-    const today = new Date().toISOString().split('T')[0];
-    dateEntree.value = today;
 
     // Gestion du changement de chambre
     chambreSelect.addEventListener('change', function() {
@@ -731,44 +607,14 @@
         }
     });
 
-    // Gestion des changements de dates
+    // Gestion des changements de date d'entrée
     dateEntree.addEventListener('change', calculerDuree);
-    dateSortie.addEventListener('change', calculerDuree);
 
     function calculerDuree() {
-        const entree = new Date(dateEntree.value);
-        const sortie = dateSortie.value ? new Date(dateSortie.value) : null;
-
         if (dateEntree.value) {
-            if (sortie && sortie >= entree) {
-                // Calculer la différence en jours - corriger le calcul pour éviter le problème de "2 jours"
-                const diffTime = Math.abs(sortie - entree);
-                nombreJours = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 pour inclure le jour d'entrée
-
-                dureeIndicator.classList.remove('hidden');
-                dureeText.textContent = `${nombreJours} jour${nombreJours > 1 ? 's' : ''} (du ${formatDate(entree)} au ${formatDate(sortie)})`;
-            } else if (!sortie) {
-                // Pas de date de sortie - pour une nouvelle hospitalisation, c'est 1 jour par défaut
-                const aujourd_hui = new Date();
-                const entreeDate = new Date(dateEntree.value);
-
-                // Si c'est aujourd'hui ou dans le futur, c'est 1 jour
-                if (entreeDate >= aujourd_hui || entreeDate.toDateString() === aujourd_hui.toDateString()) {
-                    nombreJours = 1;
-                } else {
-                    // Si c'est dans le passé, calculer depuis la date d'entrée
-                    const diffTime = Math.abs(aujourd_hui - entreeDate);
-                    nombreJours = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                }
-
-                dureeIndicator.classList.remove('hidden');
-                dureeText.textContent = `${nombreJours} jour${nombreJours > 1 ? 's' : ''} (depuis le ${formatDate(entree)})`;
-            } else {
-                dureeIndicator.classList.add('hidden');
-                nombreJours = 1;
-            }
+            // Pour une nouvelle hospitalisation, c'est toujours 1 jour par défaut
+            nombreJours = 1;
         } else {
-            dureeIndicator.classList.add('hidden');
             nombreJours = 1;
         }
 
@@ -930,43 +776,13 @@
         animation: bounce 1s infinite;
     }
 
-    /* Styles pour la synchronisation patient/téléphone */
-    .synchronized-field {
-        transition: all 0.3s ease;
-        /* Styles par défaut pour éviter le flash */
-        background-color: white !important;
-        color: #111827 !important;
-        border-color: #d1d5db !important;
-    }
-
-    .synchronized-field:focus {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-
+    /* Styles pour la synchronisation patient/téléphone avec datalist */
     .field-highlight {
         background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
         border-color: #2196f3 !important;
+        transition: all 0.3s ease;
     }
 
-    /* Styles pour le mode sombre */
-    .dark .synchronized-field {
-        background-color: #1f2937 !important;
-        color: #f9fafb !important;
-        border-color: #4b5563 !important;
-    }
-
-    /* Prévenir le flash de contenu non stylé */
-    #patient-select,
-    #telephone-input {
-        opacity: 0;
-        transition: opacity 0.1s ease-in-out;
-    }
-
-    #patient-select.loaded,
-    #telephone-input.loaded {
-        opacity: 1;
-    }
 
     @keyframes bounce {
 

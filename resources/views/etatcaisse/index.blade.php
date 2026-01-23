@@ -229,12 +229,56 @@ $employe = $personnels->where('id', request('personnel_id'))->first();
 </div>
 @endif
 
+<!-- Bouton de validation en masse (affiché dynamiquement) -->
+<div id="bulkValidationBar" class="container mx-auto px-4 mb-4 hidden">
+    <div class="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4 flex items-center justify-between shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-100 dark:bg-blue-800 p-2 rounded-full">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <span class="font-semibold text-blue-900 dark:text-blue-100 flex items-center space-x-2">
+                    <span id="selectedCount">0</span> 
+                    <span>part(s) médecin sélectionnée(s)</span>
+                    <span id="multiPageIndicator" class="hidden px-2 py-0.5 bg-blue-200 dark:bg-blue-700 text-blue-800 dark:text-blue-200 text-xs rounded-full font-medium">
+                        Multi-pages
+                    </span>
+                </span>
+                <p class="text-sm text-blue-700 dark:text-blue-300">
+                    Total: <span id="selectedTotal" class="font-bold">0</span> MRU
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button type="button" onclick="validateBulkSelection()" 
+                class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Valider la sélection</span>
+            </button>
+            <button type="button" onclick="clearSelection()" 
+                class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Tableau -->
 <div class="table-container">
     <table class="table-main border border-gray-200 dark:border-gray-700">
         <thead class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
             <tr>
-                <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">ID</th>
+                <th class="py-2 px-2 text-center font-semibold text-xs uppercase tracking-wider w-16">
+                    <input type="checkbox" id="selectAll" 
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                        title="Sélectionner toutes les parts médecin non validées de toutes les pages">
+                </th>
                 <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Désignation</th>
                 <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Recette</th>
                 <th class="py-2 px-2 text-left font-semibold text-xs uppercase tracking-wider">Part Médecin</th>
@@ -253,7 +297,7 @@ $employe = $personnels->where('id', request('personnel_id'))->first();
             </tr>
             @empty
             <tr>
-                <td colspan="9" class="text-center text-gray-500 dark:text-gray-400 py-4">Aucun état de caisse
+                <td colspan="10" class="text-center text-gray-500 dark:text-gray-400 py-4">Aucun état de caisse
                     enregistré.</td>
             </tr>
             @endforelse
@@ -344,13 +388,16 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
 
 <!-- Script pour soumettre automatiquement le form du personnel sélectionné -->
 <script>
-    document.getElementById('personnelSelect').addEventListener('change', function () {
-        if (this.value) {
-            const form = document.getElementById('personnelForm');
-            form.action = `/etatcaisse/generer/personnel/${this.value}`;
-            form.submit();
-        }
-    });
+    const personnelSelect = document.getElementById('personnelSelect');
+    if (personnelSelect) {
+        personnelSelect.addEventListener('change', function () {
+            if (this.value) {
+                const form = document.getElementById('personnelForm');
+                form.action = `/etatcaisse/generer/personnel/${this.value}`;
+                form.submit();
+            }
+        });
+    }
 </script>
 
 @push('scripts')
@@ -572,7 +619,7 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
                     </div>
                     <div>
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Mode de paiement</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Sélectionnez le mode de paiement pour la
+                        <p id="modalDescription" class="text-sm text-gray-500 dark:text-gray-400">Sélectionnez le mode de paiement pour la
                             part médecin</p>
                     </div>
                 </div>
@@ -715,9 +762,15 @@ $resume = $isFiltre ? $resumeFiltre : $resumeGlobal;
 
 <script>
     let currentEtatId = null;
+    let isBulkValidation = false;
+    let selectedEtatIds = [];
 
 function openPaymentModal(etatId, partMedecin) {
     currentEtatId = etatId;
+    isBulkValidation = false;
+
+    // Mettre à jour le texte de description
+    document.getElementById('modalDescription').textContent = 'Sélectionnez le mode de paiement pour la part médecin';
 
     // Mettre à jour le montant
     document.getElementById('partMedecinAmount').textContent = new Intl.NumberFormat('fr-FR').format(partMedecin) + ' MRU';
@@ -741,6 +794,266 @@ function openPaymentModal(etatId, partMedecin) {
     document.body.style.overflow = 'hidden';
 }
 
+// Gestion de la sélection multiple avec persistance
+function updateBulkSelection() {
+    const bar = document.getElementById('bulkValidationBar');
+    const selectAllCheckbox = document.getElementById('selectAll');
+
+    // Récupérer toutes les sélections depuis sessionStorage
+    let allSelections = JSON.parse(sessionStorage.getItem('etatcaisse_selections') || '{}');
+    
+    // Mettre à jour avec l'état actuel de la page
+    const currentPageCheckboxes = document.querySelectorAll('.part-medecin-checkbox');
+    currentPageCheckboxes.forEach(cb => {
+        const etatId = cb.dataset.etatId;
+        if (cb.checked) {
+            allSelections[etatId] = parseFloat(cb.dataset.partMedecin);
+        } else {
+            delete allSelections[etatId];
+        }
+    });
+
+    // Sauvegarder dans sessionStorage
+    sessionStorage.setItem('etatcaisse_selections', JSON.stringify(allSelections));
+
+    // Compter le total de toutes les sélections
+    const selectedIds = Object.keys(allSelections);
+    const count = selectedIds.length;
+    
+    if (count > 0) {
+        bar.classList.remove('hidden');
+        
+        // Calculer le total
+        let total = 0;
+        selectedEtatIds = [];
+        selectedIds.forEach(id => {
+            total += allSelections[id];
+            selectedEtatIds.push(id);
+        });
+
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('selectedTotal').textContent = new Intl.NumberFormat('fr-FR').format(total);
+        
+        // Afficher l'indicateur multi-pages si des sélections existent hors de la page actuelle
+        const currentPageIds = Array.from(currentPageCheckboxes).map(cb => cb.dataset.etatId);
+        const hasSelectionFromOtherPages = selectedIds.some(id => !currentPageIds.includes(id));
+        const multiPageIndicator = document.getElementById('multiPageIndicator');
+        
+        if (hasSelectionFromOtherPages) {
+            multiPageIndicator.classList.remove('hidden');
+        } else {
+            multiPageIndicator.classList.add('hidden');
+        }
+    } else {
+        bar.classList.add('hidden');
+        selectedEtatIds = [];
+        const multiPageIndicator = document.getElementById('multiPageIndicator');
+        if (multiPageIndicator) {
+            multiPageIndicator.classList.add('hidden');
+        }
+    }
+
+    // Gérer l'état du checkbox "Tout sélectionner"
+    // Il doit rester coché seulement si TOUTES les parts de la page actuelle sont cochées
+    const currentPageChecked = document.querySelectorAll('.part-medecin-checkbox:checked').length;
+    const currentPageTotal = currentPageCheckboxes.length;
+    
+    // Vérifier si toutes les parts de la page actuelle sont cochées
+    if (currentPageTotal > 0 && currentPageChecked === currentPageTotal) {
+        selectAllCheckbox.checked = true;
+    } else {
+        selectAllCheckbox.checked = false;
+    }
+}
+
+function toggleSelectAll(checkbox) {
+    if (checkbox.checked) {
+        // Lancer la sélection de toutes les pages
+        selectAllPagesAsync(checkbox);
+    } else {
+        // Désélectionner seulement les checkboxes de la page actuelle
+        const checkboxes = document.querySelectorAll('.part-medecin-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+        });
+        
+        // Retirer toutes les sélections de cette page depuis sessionStorage
+        const allSelections = JSON.parse(sessionStorage.getItem('etatcaisse_selections') || '{}');
+        checkboxes.forEach(cb => {
+            delete allSelections[cb.dataset.etatId];
+        });
+        sessionStorage.setItem('etatcaisse_selections', JSON.stringify(allSelections));
+        
+        // Mettre à jour l'affichage
+        updateBulkSelection();
+    }
+}
+
+async function selectAllPagesAsync(checkbox) {
+    // Désactiver temporairement le checkbox pendant le chargement
+    checkbox.disabled = true;
+    
+    try {
+        // Construire l'URL avec les paramètres de filtre actuels
+        const urlParams = new URLSearchParams(window.location.search);
+        const baseApiUrl = '{{ route("etatcaisse.getNonValidatedIds") }}';
+        const apiUrl = baseApiUrl + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        
+        console.log('🔍 URL de base:', baseApiUrl);
+        console.log('🔍 Paramètres:', urlParams.toString());
+        console.log('🔍 URL complète:', apiUrl);
+        
+        // Récupérer tous les IDs non validés depuis l'API
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+        
+        console.log('📡 Réponse HTTP:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Erreur serveur:', errorText);
+            throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const allNonValidatedData = await response.json();
+        console.log('✅ Données reçues:', allNonValidatedData);
+        
+        // Sauvegarder dans sessionStorage
+        sessionStorage.setItem('etatcaisse_selections', JSON.stringify(allNonValidatedData));
+        
+        // Cocher les checkboxes de la page actuelle
+        const checkboxes = document.querySelectorAll('.part-medecin-checkbox');
+        checkboxes.forEach(cb => {
+            if (allNonValidatedData[cb.dataset.etatId]) {
+                cb.checked = true;
+            }
+        });
+        
+        // Mettre à jour l'affichage
+        updateBulkSelection();
+        
+        // Réactiver le checkbox
+        checkbox.disabled = false;
+        
+        // Afficher un message de confirmation
+        const count = Object.keys(allNonValidatedData).length;
+        showNotification(`✅ ${count} part(s) médecin sélectionnée(s) sur toutes les pages`, 'success');
+        
+    } catch (error) {
+        console.error('Erreur lors de la sélection de toutes les pages:', error);
+        console.error('Détails de l\'erreur:', error.message);
+        checkbox.checked = false;
+        checkbox.disabled = false;
+        showNotification('❌ Erreur lors de la sélection: ' + error.message, 'error');
+    }
+}
+
+// Fonction pour afficher une notification temporaire
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-medium transition-all duration-300 transform translate-x-0 ${
+        type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+    }`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Animation d'entrée
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Supprimer après 3 secondes
+    setTimeout(() => {
+        notification.style.transform = 'translateX(150%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+function clearSelection() {
+    // Décocher tous les checkboxes de la page actuelle
+    const checkboxes = document.querySelectorAll('.part-medecin-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+    });
+    document.getElementById('selectAll').checked = false;
+    
+    // Vider complètement le sessionStorage
+    sessionStorage.removeItem('etatcaisse_selections');
+    
+    // Mettre à jour l'affichage
+    updateBulkSelection();
+    
+    // Notification
+    showNotification('✅ Toutes les sélections ont été effacées', 'info');
+}
+
+// Restaurer les sélections au chargement de la page
+function restoreSelections() {
+    const savedSelections = JSON.parse(sessionStorage.getItem('etatcaisse_selections') || '{}');
+    const savedIds = Object.keys(savedSelections);
+    
+    if (savedIds.length > 0) {
+        // Cocher les checkboxes correspondantes sur cette page
+        const checkboxes = document.querySelectorAll('.part-medecin-checkbox');
+        checkboxes.forEach(cb => {
+            if (savedIds.includes(cb.dataset.etatId)) {
+                cb.checked = true;
+            }
+        });
+        
+        // Mettre à jour l'affichage
+        updateBulkSelection();
+    }
+}
+
+function validateBulkSelection() {
+    if (selectedEtatIds.length === 0) {
+        alert('Veuillez sélectionner au moins une part médecin à valider.');
+        return;
+    }
+
+    isBulkValidation = true;
+    
+    // Récupérer toutes les sélections depuis sessionStorage
+    const allSelections = JSON.parse(sessionStorage.getItem('etatcaisse_selections') || '{}');
+    const selectedIds = Object.keys(allSelections);
+    let total = 0;
+    selectedIds.forEach(id => {
+        total += allSelections[id];
+    });
+
+    // Mettre à jour le texte de description pour la validation en masse
+    document.getElementById('modalDescription').textContent = `Sélectionnez le mode de paiement pour ${selectedIds.length} part(s) médecin`;
+
+    // Mettre à jour le montant dans la modal
+    document.getElementById('partMedecinAmount').textContent = new Intl.NumberFormat('fr-FR').format(total) + ' MRU';
+
+    // Mettre à jour l'action du formulaire pour la validation en masse
+    document.getElementById('paymentForm').action = '{{ route("etatcaisse.validerEnMasse") }}';
+
+    // Afficher la modale
+    const modal = document.getElementById('paymentModal');
+    const content = document.getElementById('paymentModalContent');
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+
+    document.body.style.overflow = 'hidden';
+}
+
 function closePaymentModal() {
     const modal = document.getElementById('paymentModal');
     const content = document.getElementById('paymentModalContent');
@@ -755,13 +1068,39 @@ function closePaymentModal() {
 
         // Reset form
         document.getElementById('paymentForm').reset();
+        
+        // Supprimer les champs cachés des IDs si présents
+        const oldInputs = document.querySelectorAll('input[name^="etat_ids"]');
+        oldInputs.forEach(input => input.remove());
+        
+        // Réinitialiser les variables
+        isBulkValidation = false;
+        currentEtatId = null;
+        
         updatePaymentSelection();
     }, 300);
 }
 
 // Gestion de la sélection des options de paiement
 document.addEventListener('DOMContentLoaded', function() {
+    // Si un message de succès est présent (validation réussie), nettoyer les sélections
+    @if(session('success'))
+        sessionStorage.removeItem('etatcaisse_selections');
+    @endif
+
+    // Restaurer les sélections depuis sessionStorage au chargement de la page
+    restoreSelections();
+
+    // Attacher l'événement au checkbox "Tout sélectionner"
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            toggleSelectAll(this);
+        });
+    }
+
     const paymentOptions = document.querySelectorAll('.payment-option');
+    const paymentForm = document.getElementById('paymentForm');
 
     paymentOptions.forEach(option => {
         option.addEventListener('click', function() {
@@ -769,6 +1108,24 @@ document.addEventListener('DOMContentLoaded', function() {
             radio.checked = true;
             updatePaymentSelection();
         });
+    });
+
+    // Intercepter la soumission du formulaire pour ajouter les IDs en mode validation en masse
+    paymentForm.addEventListener('submit', function(e) {
+        if (isBulkValidation && selectedEtatIds.length > 0) {
+            // Supprimer les anciens champs etat_ids s'ils existent
+            const oldInputs = paymentForm.querySelectorAll('input[name^="etat_ids"]');
+            oldInputs.forEach(input => input.remove());
+
+            // Ajouter les IDs sélectionnés
+            selectedEtatIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'etat_ids[]';
+                input.value = id;
+                paymentForm.appendChild(input);
+            });
+        }
     });
 
     // Fermer la modale en cliquant à l'extérieur

@@ -31,14 +31,14 @@
 
         <div class="text-center mt-4">
             <div class="text-xs text-blue-200">
-                Urgences Tél. 43 45 54 23 – 22 30 56 26 <br>
-                Avenue John Kennedy, en face de la Polyclinique – Nouakchott
+                {{ config('clinique.phone') }} <br>
+                {{ config('clinique.address') }}
             </div>
         </div>
 
         <div class="text-center mt-4">
             <p class="text-sm">Reçu d'examen médical</p>
-            <p class="text-xs opacity-80 mt-2">Date d'émission: {{ now()->format('d/m/Y H:i') }}</p>
+            <p class="text-xs opacity-80 mt-2">Date de création: {{ $caisse->created_at->format('d/m/Y H:i') }}</p>
         </div>
     </div>
 
@@ -57,16 +57,22 @@
                 <div>
                     <p class="font-medium text-gray-800 dark:text-gray-200">Examens effectués :</p>
                     @php
-                    $examensData = is_string($caisse->examens_data) ? json_decode($caisse->examens_data, true) :
-                    $caisse->examens_data;
+                    // Décoder le JSON si c'est une chaîne
+                    $examensData = is_string($caisse->examens_data) 
+                        ? json_decode($caisse->examens_data, true) 
+                        : $caisse->examens_data;
                     @endphp
+                    @if(is_array($examensData) && count($examensData) > 0)
                     @foreach($examensData as $examenData)
                     @php
                     $examen = \App\Models\Examen::find($examenData['id']);
                     @endphp
+                    @if($examen)
                     <p class="ml-4 text-gray-800 dark:text-gray-200">- {{ $examen->nom }} ({{ $examenData['quantite']
                         }}x) : {{ number_format($examen->tarif * $examenData['quantite'], 2) }} MRU</p>
+                    @endif
                     @endforeach
+                    @endif
                 </div>
                 @else
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Type d'examen:</span> {{
@@ -78,8 +84,12 @@
                     
                     // Si la facture a plusieurs examens (examens_data)
                     if ($caisse->examens_data) {
-                        $examensData = is_string($caisse->examens_data) ? json_decode($caisse->examens_data, true) : $caisse->examens_data;
-                        foreach ($examensData as $examenData) {
+                        // Décoder le JSON si c'est une chaîne
+                        $examensData = is_string($caisse->examens_data) 
+                            ? json_decode($caisse->examens_data, true) 
+                            : $caisse->examens_data;
+                        if (is_array($examensData)) {
+                            foreach ($examensData as $examenData) {
                             $examen = \App\Models\Examen::find($examenData['id']);
                             if ($examen && $examen->service) {
                                 $service = $examen->service;
@@ -95,9 +105,16 @@
                                 }
                             }
                         }
+                        }
                     } else {
                         // Facture avec un seul examen (ancien format)
                         $svc = $caisse->service;
+                        
+                        // Si pas de service direct, essayer via l'examen
+                        if (!$svc && $caisse->examen) {
+                            $svc = $caisse->examen->service;
+                        }
+                        
                         if ($svc) {
                             $serviceLabel = $svc && $svc->type_service === 'PHARMACIE' ? 'PHARMACIE' : ($svc->nom ?? 'N/A');
                             $servicesList[] = $serviceLabel;
@@ -117,11 +134,15 @@
                 <p class="text-lg font-bold text-center text-gray-900 dark:text-white">Total</p>
                 @if($caisse->assurance && $caisse->couverture > 0)
                 @php
-                $montantAssurance = $caisse->total * ($caisse->couverture / 100);
-                $montantPatient = $caisse->total - $montantAssurance;
+                    // Recalculer le total à partir de la couverture pour éviter les problèmes
+                    // avec les caisses créées avant la correction
+                    $totalBrut = $caisse->total;
+                    // Si le total semble être le montant brut (vérifier avec l'état de caisse)
+                    // Utiliser la recette de l'état de caisse qui est toujours correcte
+                    $totalNet = $caisse->etatCaisse ? $caisse->etatCaisse->recette : ($totalBrut * (1 - ($caisse->couverture / 100)));
                 @endphp
                 <p class="text-2xl font-bold text-blue-700 dark:text-blue-300 text-center">{{
-                    number_format($montantPatient, 2) }} MRU</p>
+                    number_format($totalNet, 2) }} MRU</p>
                 <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-1">
                     ({{ $caisse->couverture }}% pris en charge par {{ $caisse->assurance->nom }})
                 </p>
@@ -172,6 +193,10 @@
                 </p>
                 <p class="text-gray-800 dark:text-gray-200"><span class="font-medium">Caissier:</span> {{
                     $caisse->nom_caissier }}</p>
+                @if($caisse->modifier)
+                <p class="text-gray-800 dark:text-gray-200"><span class="font-medium" style="color: rgba(167, 32, 17, 1);">Modifié par:</span> {{
+                    $caisse->modifier->name }} <small class="text-xs text-gray-500 dark:text-gray-400">{{ $caisse->updated_at->format('d/m/Y à H:i') }}</small></p>
+                @endif
             </div>
             @if($caisse->mode_paiements && $caisse->mode_paiements->count() > 0)
             @php
@@ -187,32 +212,36 @@
             @endif
         </div>
 
-        <!-- Notes et observations -->
-        <div class="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
-            <h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Notes et observations</h3>
-            <p class="text-gray-800 dark:text-gray-200">{{ $caisse->observation ?? 'Aucune observation.' }}</p>
-        </div>
     </div>
 
     <!-- Pied de page -->
     <div class="bg-gray-100 dark:bg-gray-900 p-4 text-center text-sm text-gray-600 dark:text-gray-300">
-        <p>{{ config('app.name', 'Clinique Médicale') }} - Téléphone: 43 45 54 23 - Email: contact@clinique.com</p>
-        <p class="mt-1">Adresse: Nouakchott, Mauritanie</p>
+        <p>{{ config('clinique.name') }} - Téléphone: {{ config('clinique.phone') }} - Email: {{ config('clinique.email') }}</p>
+        <p class="mt-1">Adresse: {{ config('clinique.address') }}</p>
     </div>
 </div>
 <!-- Actions -->
 <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-center gap-4 mb-8 print:hidden">
 
-    <a href="{{ route(auth()->user()->role->name . '.caisses.exportPdf', $caisse) }}"
-        class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
+    <a href="{{ route(auth()->user()->role->name . '.caisses.edit', $caisse) }}"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
-        Télécharger PDF
+        Modifier
     </a>
-    <a href="{{ route(auth()->user()->role->name . '.caisses.printSingle', $caisse->id) }}"
+    @php
+        // Vérifier si cette caisse est liée à une hospitalisation
+        $hospitalisation = \App\Models\HospitalisationCharge::where('caisse_id', $caisse->id)
+            ->with('hospitalisation')
+            ->first()?->hospitalisation;
+        $printRoute = $hospitalisation 
+            ? route(auth()->user()->role->name === 'admin' ? 'admin.hospitalisations.print' : 'hospitalisations.print', $hospitalisation->id)
+            : route(auth()->user()->role->name . '.caisses.printSingle', $caisse->id);
+    @endphp
+    <a href="{{ $printRoute }}"
         class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">

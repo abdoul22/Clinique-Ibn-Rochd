@@ -9,6 +9,8 @@
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
             margin: 20px;
+            background-color: #fff;
+            color: #000;
         }
 
         h2 {
@@ -27,15 +29,26 @@
             border: 1px solid #999;
             padding: 8px;
             text-align: left;
+            color: #000;
         }
 
         th {
             background-color: #f0f0f0;
+            color: #000;
+            font-weight: bold;
+        }
+
+        th:nth-child(2),
+        td:nth-child(2) {
+            font-weight: bold;
+            font-size: 13px;
+            background-color: #e8f4f8 !important;
         }
 
         .text-right {
             text-align: right;
         }
+
     </style>
 </head>
 
@@ -48,9 +61,10 @@
             <tr>
                 <th>ID</th>
                 <th>Nom</th>
-                <th>Service</th>
                 <th>Tarif (MRU)</th>
                 <th>Part Médecins (MRU)</th>
+                <th>Part Clinique (MRU)</th>
+                <th>Service</th>
             </tr>
         </thead>
         <tbody>
@@ -58,9 +72,10 @@
             <tr>
                 <td>{{ $examen->id }}</td>
                 <td>{{ $examen->nom_affichage }}</td>
-                <td>{{ $examen->service_affichage }}</td>
                 <td class="text-right">{{ number_format($examen->tarif, 0, ',', ' ') }}</td>
                 <td class="text-right">{{ number_format($examen->part_medecin, 0, ',', ' ') }}</td>
+                <td class="text-right">{{ number_format($examen->tarif - $examen->part_medecin, 0, ',', ' ') }}</td>
+                <td>{{ $examen->service_affichage }}</td>
             </tr>
             @endforeach
         </tbody>

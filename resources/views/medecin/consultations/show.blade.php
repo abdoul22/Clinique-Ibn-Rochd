@@ -9,21 +9,32 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">📋 Rapport Médical</h1>
-                    <p class="text-gray-600 dark:text-gray-400 mt-1">{{ $consultation->date_consultation->format('d/m/Y') }}</p>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">
+                        {{ $consultation->created_at->format('d/m/Y') }} à {{ $consultation->created_at->format('H:i') }}
+                    </p>
                 </div>
-                <div class="flex space-x-3">
+                <div class="flex gap-3">
                     <a href="{{ route('medecin.consultations.index') }}" 
-                       class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
-                        ← Retour
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition shadow-md">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Retour
                     </a>
                     <a href="{{ route('medecin.consultations.edit', $consultation->id) }}" 
-                       class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition">
-                        ✏️ Modifier
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white rounded-lg transition shadow-md">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Modifier
                     </a>
                     <a href="{{ route('medecin.consultations.print', $consultation->id) }}" 
                        target="_blank"
-                       class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                        🖨️ Imprimer PDF
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg transition shadow-md">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Imprimer
                     </a>
                 </div>
             </div>
@@ -58,13 +69,6 @@
             <div class="mb-4">
                 <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Motif</h3>
                 <p class="text-gray-600 dark:text-gray-400">{{ $consultation->motif }}</p>
-            </div>
-            @endif
-
-            @if($consultation->ras)
-            <div class="mb-4">
-                <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">RAS</h3>
-                <p class="text-gray-600 dark:text-gray-400">{{ $consultation->ras }}</p>
             </div>
             @endif
 

@@ -93,9 +93,23 @@ class RecapitulatifServiceJournalierController extends Controller
                     $this->decomposeHospitalisation($caisse, $recapParService, $jour);
                 } else {
                     // Examen normal
-                    $serviceId = $caisse->service_id;
                     $service = $caisse->service;
-                    $serviceKey = $service && $service->type_service === 'PHARMACIE' ? 'PHARMACIE' : $serviceId;
+                    
+                    // Si pas de service direct, essayer via l'examen
+                    if (!$service && $examen) {
+                        $service = $examen->service;
+                    }
+                    
+                    // Déterminer le serviceId et serviceKey
+                    if ($service) {
+                        $serviceId = $service->id;
+                        // Utiliser la méthode determineServiceKey pour cohérence
+                        $serviceKey = $this->determineServiceKey($examen ?? new \App\Models\Examen(), $service, $serviceId);
+                    } else {
+                        // Fallback: si vraiment aucun service trouvé, utiliser un identifiant unique
+                        $serviceKey = 'SANS_SERVICE_' . ($caisse->id ?? 'unknown');
+                        \Illuminate\Support\Facades\Log::warning("Caisse {$caisse->id} sans service trouvé");
+                    }
 
                     if (!isset($recapParService[$serviceKey])) {
                         $recapParService[$serviceKey] = [];
@@ -171,8 +185,14 @@ class RecapitulatifServiceJournalierController extends Controller
                 } elseif (isset($map[$key])) {
                     $services[$key] = $map[$key];
                 } else {
-                    // Utiliser le service_key lui-même au lieu de "Service non assigné"
-                    $services[$key] = $key;
+                    // Essayer de récupérer le service depuis la base de données
+                    $serviceModel = \App\Models\Service::find($key);
+                    if ($serviceModel) {
+                        $services[$key] = $serviceModel->nom;
+                    } else {
+                        // Fallback: utiliser la clé elle-même
+                        $services[$key] = $key;
+                    }
                 }
             }
         }
@@ -501,20 +521,59 @@ class RecapitulatifServiceJournalierController extends Controller
     {
         $description = strtolower($charge->description_snapshot);
 
+        // PRIORITÉ 1: Essayer de récupérer le service via l'examen source
+        // Cela garantit la classification correcte pour tous les examens
+        if ($charge->type === 'examen' && $charge->source_id) {
+            $examen = \App\Models\Examen::find($charge->source_id);
+            if ($examen && $examen->service) {
+                $serviceKey = $this->determineServiceKey($examen, $examen->service, $examen->service->id);
+                return $serviceKey;
+            }
+        }
+
+        // PRIORITÉ 2: Identifier les types spécifiques par nom
+        
+        // Identifier les chambres (ROOM_DAY)
+        if (
+            strpos($description, 'chambre') !== false ||
+            strpos($description, 'room_day') !== false ||
+            $charge->type === 'room_day'
+        ) {
+            return 'HOSPITALISATION';
+        }
+
         // Identifier les médicaments
         if (
             $charge->type === 'pharmacy' ||
             strpos($description, 'flagyl') !== false ||
             strpos($description, 'novalgin') !== false ||
             strpos($description, 'ssi') !== false ||
-            strpos($description, 'mg') !== false
+            strpos($description, 'dislep') !== false ||
+            strpos($description, 'perfalgan') !== false
         ) {
             return 'PHARMACIE';
         }
 
-        // Identifier les examens d'exploration fonctionnelle
+        // Examens de laboratoire courants (fallback si pas de source_id)
+        if (
+            strpos($description, 'nfs') !== false ||
+            strpos($description, 'crp') !== false ||
+            strpos($description, 'urée') !== false ||
+            strpos($description, 'uree') !== false ||
+            strpos($description, 'glycémie') !== false ||
+            strpos($description, 'creatinine') !== false ||
+            strpos($description, 'transaminases') !== false
+        ) {
+            $serviceLabo = \App\Models\Service::where('type_service', 'LABORATOIRE')->first();
+            if ($serviceLabo) {
+                return $serviceLabo->id;
+            }
+        }
+
+        // Identifier les examens d'exploration fonctionnelle (fallback)
         if (
             strpos($description, 'ecg') !== false ||
+            strpos($description, 'egg') !== false ||
             strpos($description, 'echo') !== false ||
             strpos($description, 'radiologie') !== false ||
             strpos($description, 'scanner') !== false
@@ -525,22 +584,13 @@ class RecapitulatifServiceJournalierController extends Controller
         // Identifier les consultations
         if (
             strpos($description, 'consultation') !== false ||
-            strpos($description, 'cs') !== false ||
-            strpos($description, 'dr.') !== false
+            strpos($description, 'cs') !== false
         ) {
             return 'CONSULTATIONS_EXTERNES';
         }
 
-        // Identifier les chambres (ROOM_DAY)
-        if (
-            strpos($description, 'chambre') !== false ||
-            strpos($description, 'room_day') !== false ||
-            strpos($description, 'lit') !== false
-        ) {
-            return 'HOSPITALISATION';
-        }
-
         // Par défaut, retourner le type de charge
+        Log::warning("Charge non classifiée: {$charge->description_snapshot} (type: {$charge->type}, source_id: {$charge->source_id})");
         return strtoupper($charge->type);
     }
 }

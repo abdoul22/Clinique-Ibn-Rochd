@@ -348,6 +348,129 @@ class EtatCaisseController extends Controller
 
         return back()->with('success', 'Part médecin validée et dépense créée avec le mode de paiement: ' . ucfirst($modePaiementType));
     }
+
+    // Validation en masse des parts médecin
+    public function validerEnMasse(Request $request)
+    {
+        // Valider les données reçues
+        $request->validate([
+            'etat_ids' => 'required|array|min:1',
+            'etat_ids.*' => 'exists:etat_caisses,id',
+            'mode_paiement' => 'required|in:especes,bankily,masrivi,sedad'
+        ]);
+
+        $modePaiementType = $request->mode_paiement;
+        $etatIds = $request->etat_ids;
+        $validatedCount = 0;
+        $alreadyValidatedCount = 0;
+
+        foreach ($etatIds as $id) {
+            $etat = EtatCaisse::find($id);
+
+            if (!$etat) {
+                continue;
+            }
+
+            // Si déjà validé, passer au suivant
+            if ($etat->validated) {
+                $alreadyValidatedCount++;
+                continue;
+            }
+
+            // Utiliser la date de création de l'état de caisse
+            $dateFacture = $etat->created_at;
+
+            // Créer un enregistrement ModePaiement pour la sortie
+            $modePaiementRecord = new \App\Models\ModePaiement([
+                'type' => $modePaiementType,
+                'montant' => -$etat->part_medecin,
+                'source' => 'part_medecin'
+            ]);
+            $modePaiementRecord->created_at = $dateFacture;
+            $modePaiementRecord->updated_at = $dateFacture;
+            $modePaiementRecord->save();
+
+            // Créer la dépense
+            $depense = new Depense([
+                'nom' => 'Part médecin - ' . $etat->medecin?->nom . ' (' . ucfirst($modePaiementType) . ')',
+                'montant' => $etat->part_medecin,
+                'etat_caisse_id' => $etat->id,
+                'source' => 'générée',
+                'mode_paiement_id' => $modePaiementType,
+            ]);
+            $depense->created_at = $dateFacture;
+            $depense->updated_at = $dateFacture;
+            $depense->save();
+
+            // Valider l'état
+            $etat->validated = true;
+            $etat->depense = $etat->part_medecin;
+            $etat->save();
+
+            $validatedCount++;
+        }
+
+        $message = "✅ {$validatedCount} part(s) médecin validée(s) avec le mode de paiement: " . ucfirst($modePaiementType);
+        
+        if ($alreadyValidatedCount > 0) {
+            $message .= " | ℹ️ {$alreadyValidatedCount} part(s) déjà validée(s)";
+        }
+
+        return back()->with('success', $message);
+    }
+
+    // API pour récupérer tous les IDs non validés (avec filtres appliqués)
+    public function getNonValidatedIds(Request $request)
+    {
+        $period = $request->input('period', 'day');
+        $date = $request->input('date');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
+        $query = EtatCaisse::where('validated', false)
+            ->when($period === 'day' && $date, fn($q) => $q->whereDate('created_at', $date))
+            ->when($period === 'week' && $week, function ($q) use ($week) {
+                $parts = explode('-W', $week);
+                if (count($parts) === 2) {
+                    $yearW = (int)$parts[0];
+                    $weekW = (int)$parts[1];
+                    $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
+                    $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+                    $q->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+                }
+            })
+            ->when($period === 'month' && $month, function ($q) use ($month) {
+                $parts = explode('-', $month);
+                if (count($parts) === 2) {
+                    $yearM = (int)$parts[0];
+                    $monthM = (int)$parts[1];
+                    $q->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
+                }
+            })
+            ->when($period === 'year' && $year, fn($q) => $q->whereYear('created_at', $year))
+            ->when($period === 'range' && $dateStart && $dateEnd, fn($q) => $q->whereBetween('created_at', [$dateStart, $dateEnd]))
+            ->when($request->designation, fn($q) => $q->where('designation', 'like', "%{$request->designation}%"))
+            ->when($request->personnel_id, fn($q) => $q->where('personnel_id', $request->personnel_id))
+            ->when($request->medecin_id, fn($q) => $q->where('medecin_id', $request->medecin_id))
+            ->when($request->statut, function ($q) use ($request) {
+                if ($request->statut === 'non_valide') {
+                    $q->where('validated', false);
+                }
+            });
+
+        $etats = $query->select('id', 'part_medecin')->get();
+
+        $data = [];
+        foreach ($etats as $etat) {
+            $data[$etat->id] = floatval($etat->part_medecin);
+        }
+
+        return response()->json($data);
+    }
+
     public function annulerValidation($id)
     {
         $etat = EtatCaisse::findOrFail($id);
@@ -374,11 +497,10 @@ class EtatCaisseController extends Controller
             $depense->delete();
         }
 
-        // Remettre le montant dans le mode de paiement si c'était une validation automatique
-        $modePaiement = $etat->caisse?->mode_paiements()->latest()->first();
-        if ($modePaiement && $etat->part_medecin > 0) {
-            $modePaiement->increment('montant', $etat->part_medecin);
-        }
+        // ❌ CORRECTION : Ne pas modifier le montant du paiement de la caisse
+        // Le paiement correspond à ce que le patient a payé (= Recette)
+        // et ne doit pas être modifié lors de l'annulation de la validation
+        // de la part médecin qui est une répartition interne.
 
         $etat->validated = false;
         $etat->depense = 0; // Remettre la dépense à 0
@@ -430,11 +552,10 @@ class EtatCaisseController extends Controller
             }
         }
 
-        // Remettre le montant dans le mode de paiement si c'était une validation automatique
-        $modePaiement = $etat->caisse?->mode_paiements()->latest()->first();
-        if ($modePaiement && $etat->part_medecin > 0) {
-            $modePaiement->increment('montant', $etat->part_medecin);
-        }
+        // ❌ CORRECTION : Ne pas modifier le montant du paiement de la caisse
+        // Le paiement correspond à ce que le patient a payé (= Recette)
+        // et ne doit pas être modifié lors de l'annulation de la validation
+        // de la part médecin qui est une répartition interne.
 
         $etat->validated = false;
         $etat->depense = 0; // Remettre la dépense à 0

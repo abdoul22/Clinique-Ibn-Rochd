@@ -68,11 +68,18 @@
                         <span class="text-green-600 text-xs">(Pré-rempli depuis le rendez-vous)</span>
                         @endif
                     </label>
-                    <input type="text" id="patient_phone" name="patient_phone"
+                    <input type="text" id="patient_phone" name="patient_phone" list="telephones-list"
                         value="{{ $fromRdv && $prefilledPatient ? $prefilledPatient->phone : '' }}"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 {{ $fromRdv ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-900' }} text-gray-900 dark:text-white"
-                        placeholder="{{ $fromRdv ? '' : 'Saisir le numéro de téléphone du patient' }}" {{ $fromRdv
+                        placeholder="{{ $fromRdv ? '' : 'Tapez le numéro de téléphone du patient...' }}" {{ $fromRdv
                         ? 'disabled' : '' }}>
+                    <datalist id="telephones-list">
+                        @foreach($patients as $patient)
+                        <option value="{{ $patient->phone }}" 
+                            data-id="{{ $patient->id }}" 
+                            data-nom="{{ $patient->first_name }} {{ $patient->last_name }}">
+                        @endforeach
+                    </datalist>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -81,20 +88,19 @@
                         <span class="text-green-600 text-xs">(Pré-rempli depuis le rendez-vous)</span>
                         @endif
                     </label>
-                    <select name="gestion_patient_id" id="patient_select" required
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white {{ $fromRdv ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : '' }}"
-                        {{ $fromRdv ? 'disabled' : '' }}>
-                        <option value="">Sélectionner un patient</option>
+                    <input type="text" id="patient_search" list="patients-list"
+                        value="{{ $fromRdv && $prefilledPatient ? $prefilledPatient->first_name . ' ' . $prefilledPatient->last_name : '' }}"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 {{ $fromRdv ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-900' }} text-gray-900 dark:text-white"
+                        placeholder="{{ $fromRdv ? '' : 'Tapez le nom du patient...' }}" {{ $fromRdv ? 'disabled' : '' }}>
+                    <input type="hidden" name="gestion_patient_id" id="gestion_patient_id" 
+                        value="{{ $fromRdv && $prefilledPatient ? $prefilledPatient->id : '' }}" required>
+                    <datalist id="patients-list">
                         @foreach($patients as $patient)
-                        <option value="{{ $patient->id }}" data-phone="{{ $patient->phone }}" {{ $fromRdv &&
-                            $prefilledPatient && $patient->id == $prefilledPatient->id ? 'selected' : '' }}>
-                            {{ $patient->first_name }} {{ $patient->last_name }}
-                        </option>
+                        <option value="{{ $patient->first_name }} {{ $patient->last_name }}" 
+                            data-id="{{ $patient->id }}" 
+                            data-telephone="{{ $patient->phone }}">
                         @endforeach
-                    </select>
-                    @if($fromRdv && $prefilledPatient)
-                    <input type="hidden" name="gestion_patient_id" value="{{ $prefilledPatient->id }}">
-                    @endif
+                    </datalist>
                 </div>
 
                 <div>
@@ -104,44 +110,41 @@
                         <span class="text-green-600 text-xs">(Pré-rempli depuis le rendez-vous)</span>
                         @endif
                     </label>
-                    <select name="medecin_id" id="medecin_select" required
+                    <input type="text" id="medecin_search" list="medecins-list"
+                        value="{{ $fromRdv && $prefilledMedecin ? $prefilledMedecin->nom_complet_avec_specialite : '' }}"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 {{ $fromRdv ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-900' }} text-gray-900 dark:text-white"
-                        onchange="{{ $fromRdv ? '' : 'updateNumerosByDate();' }}" {{ $fromRdv ? 'disabled' : '' }}>
-                        <option value="">Sélectionner un médecin</option>
+                        placeholder="{{ $fromRdv ? '' : 'Tapez le nom du médecin...' }}" {{ $fromRdv ? 'disabled' : '' }}>
+                    <input type="hidden" name="medecin_id" id="medecin_id" 
+                        value="{{ $fromRdv && $prefilledMedecin ? $prefilledMedecin->id : '' }}" required>
+                    <datalist id="medecins-list">
                         @php
                         $medecinsParFonction = $medecins->groupBy('fonction');
                         $ordrefonctions = ['Pr', 'Dr', 'Tss', 'SGF', 'IDE'];
                         @endphp
                         @foreach($ordrefonctions as $fonction)
                         @if(isset($medecinsParFonction[$fonction]) && $medecinsParFonction[$fonction]->count() > 0)
-                        <optgroup label="{{ $medecinsParFonction[$fonction]->first()->fonction_complet }}s">
                             @foreach($medecinsParFonction[$fonction] as $medecin)
-                            <option value="{{ $medecin->id }}" {{ $fromRdv && $prefilledMedecin && $medecin->id ==
-                                $prefilledMedecin->id ? 'selected' : '' }}>
-                                {{ $medecin->nom_complet_avec_specialite }}
-                            </option>
+                            <option value="{{ $medecin->nom_complet_avec_specialite }}" 
+                                data-id="{{ $medecin->id }}">
                             @endforeach
-                        </optgroup>
                         @endif
                         @endforeach
-                    </select>
-
-                    @if($fromRdv && $prefilledMedecin)
-                    <input type="hidden" name="medecin_id" value="{{ $prefilledMedecin->id }}">
-                    @endif
+                    </datalist>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Prescripteur</label>
-                    <select name="prescripteur_id"
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                        <option value="">Sélectionner un prescripteur</option>
-                        <option value="extern" selected>Externe</option>
+                    <input type="text" id="prescripteur_search" list="prescripteurs-list" value="Externe"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        placeholder="Tapez le nom du prescripteur...">
+                    <input type="hidden" name="prescripteur_id" id="prescripteur_id" value="extern">
+                    <datalist id="prescripteurs-list">
+                        <option value="Externe" data-id="extern">
                         @foreach($prescripteurs as $prescripteur)
-                        <option value="{{ $prescripteur->id }}">{{ $prescripteur->nom }}{{ $prescripteur->specialite ? '
-                            - ' . $prescripteur->specialite : '' }}</option>
+                        <option value="{{ $prescripteur->nom }}{{ $prescripteur->specialite ? ' - ' . $prescripteur->specialite : '' }}" 
+                            data-id="{{ $prescripteur->id }}">
                         @endforeach
-                    </select>
+                    </datalist>
                 </div>
             </div>
 
@@ -311,25 +314,56 @@
             </div>
 
             <div class="grid grid-cols-1 gap-4">
+                <!-- Section Médicaments -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Examens
-                        disponibles</label>
-                    <select id="modal_examen_select"
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        <i class="fas fa-pills mr-1"></i> Médicaments
+                    </label>
+                    <input type="text" id="modal_medicament_search" list="medicaments-list"
+                        placeholder="Rechercher un médicament..."
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                        <option value="">Sélectionner un examen</option>
+                    <datalist id="medicaments-list">
                         @foreach($exam_types ?? [] as $examen)
-                        <option value="{{ $examen->id }}" data-nom="{{ $examen->nom }}"
-                            data-tarif="{{ $examen->tarif }}" data-part-cabinet="{{ $examen->part_cabinet }}"
+                        @if($examen->service && $examen->service->type_service === 'PHARMACIE')
+                        <option value="{{ $examen->nom }}" 
+                            data-id="{{ $examen->id }}"
+                            data-tarif="{{ $examen->tarif }}"
+                            data-part-cabinet="{{ $examen->part_cabinet }}"
                             data-part-medecin="{{ $examen->part_medecin }}"
-                            data-service-type="{{ $examen->service ? $examen->service->type_service : 'CONSULTATIONS EXTERNES' }}"
-                            data-is-pharmacie="{{ $examen->service && ($examen->service->type_service === 'PHARMACIE') ? 'true' : 'false' }}"
-                            data-stock="{{ $examen->service && $examen->service->pharmacie ? $examen->service->pharmacie->stock : '' }}">
-                            {{ $examen->nom }} - {{ number_format($examen->tarif, 2) }} MRU
+                            data-stock="{{ $examen->service->pharmacie ? $examen->service->pharmacie->stock : '' }}">
+                            {{ number_format($examen->tarif, 2) }} MRU
                         </option>
+                        @endif
                         @endforeach
-                    </select>
+                    </datalist>
                     <small class="text-gray-500 dark:text-gray-400 mt-1">
-                        Sélectionnez un examen dans la liste pour l'ajouter à votre facture.
+                        Tapez pour rechercher un médicament dans la liste.
+                    </small>
+                </div>
+
+                <!-- Section Examens -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        <i class="fas fa-stethoscope mr-1"></i> Examens disponibles
+                    </label>
+                    <input type="text" id="modal_examen_search" list="examens-list"
+                        placeholder="Rechercher un examen..."
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                    <datalist id="examens-list">
+                        @foreach($exam_types ?? [] as $examen)
+                        @if(!$examen->service || $examen->service->type_service !== 'PHARMACIE')
+                        <option value="{{ $examen->nom }}" 
+                            data-id="{{ $examen->id }}"
+                            data-tarif="{{ $examen->tarif }}"
+                            data-part-cabinet="{{ $examen->part_cabinet }}"
+                            data-part-medecin="{{ $examen->part_medecin }}">
+                            {{ number_format($examen->tarif, 2) }} MRU
+                        </option>
+                        @endif
+                        @endforeach
+                    </datalist>
+                    <small class="text-gray-500 dark:text-gray-400 mt-1">
+                        Tapez pour rechercher un examen dans la liste.
                     </small>
                 </div>
 
@@ -451,23 +485,188 @@
             }
         });
 
-        // Synchronisation patient <-> téléphone
-        const patientSelect = document.getElementById('patient_select');
+        // Synchronisation intelligente Patient/Téléphone/Médecin avec datalist
+        const patientSearch = document.getElementById('patient_search');
         const phoneInput = document.getElementById('patient_phone');
-        const patientOptions = Array.from(patientSelect.options);
-        // Quand on choisit un patient, remplir le téléphone
-        patientSelect.addEventListener('change', function() {
-            const selected = patientSelect.options[patientSelect.selectedIndex];
-            phoneInput.value = selected.getAttribute('data-phone') || '';
-        });
-        // Quand on tape un numéro, sélectionner le patient correspondant
-        phoneInput.addEventListener('input', function() {
-            const val = phoneInput.value.trim();
-            const found = patientOptions.find(opt => opt.getAttribute('data-phone') === val);
-            if (found) {
-                patientSelect.value = found.value;
-            }
-        });
+        const gestionPatientId = document.getElementById('gestion_patient_id');
+        const patientsList = document.getElementById('patients-list');
+        const telephonesList = document.getElementById('telephones-list');
+        const medecinSearch = document.getElementById('medecin_search');
+        const medecinId = document.getElementById('medecin_id');
+        const medecinsList = document.getElementById('medecins-list');
+
+        // Fonction pour ajouter un effet visuel
+        function addSyncEffect(element) {
+            element.classList.add('field-highlight');
+            setTimeout(() => {
+                element.classList.remove('field-highlight');
+            }, 1000);
+        }
+
+        // Fonction pour trouver un patient par nom
+        function findPatientByName(nom) {
+            const options = Array.from(patientsList.options);
+            return options.find(opt => opt.value === nom);
+        }
+
+        // Fonction pour trouver un patient par téléphone
+        function findPatientByPhone(phone) {
+            const options = Array.from(telephonesList.options);
+            return options.find(opt => opt.value === phone);
+        }
+
+        // Fonction pour trouver un médecin par nom
+        function findMedecinByName(nom) {
+            const options = Array.from(medecinsList.options);
+            return options.find(opt => opt.value === nom);
+        }
+
+        // Synchronisation Patient -> Téléphone
+        if (patientSearch && phoneInput && gestionPatientId && patientsList) {
+            patientSearch.addEventListener('change', function() {
+                const nomPatient = this.value.trim();
+                const patientOption = findPatientByName(nomPatient);
+                
+                if (patientOption) {
+                    const patientId = patientOption.getAttribute('data-id');
+                    const telephone = patientOption.getAttribute('data-telephone');
+                    
+                    gestionPatientId.value = patientId;
+                    
+                    if (telephone) {
+                        phoneInput.value = telephone;
+                        addSyncEffect(phoneInput);
+                    }
+                    
+                    addSyncEffect(patientSearch);
+                }
+            });
+
+            patientSearch.addEventListener('input', function() {
+                const nomPatient = this.value.trim();
+                
+                if (nomPatient === '') {
+                    phoneInput.value = '';
+                    gestionPatientId.value = '';
+                    return;
+                }
+                
+                const patientOption = findPatientByName(nomPatient);
+                if (!patientOption) {
+                    gestionPatientId.value = '';
+                }
+            });
+        }
+
+        // Synchronisation Téléphone -> Patient
+        if (phoneInput && patientSearch && gestionPatientId && telephonesList) {
+            phoneInput.addEventListener('change', function() {
+                const phone = this.value.trim();
+                const phoneOption = findPatientByPhone(phone);
+                
+                if (phoneOption) {
+                    const patientId = phoneOption.getAttribute('data-id');
+                    const nomPatient = phoneOption.getAttribute('data-nom');
+                    
+                    gestionPatientId.value = patientId;
+                    
+                    if (nomPatient) {
+                        patientSearch.value = nomPatient;
+                        addSyncEffect(patientSearch);
+                    }
+                    
+                    addSyncEffect(phoneInput);
+                }
+            });
+
+            phoneInput.addEventListener('input', function() {
+                const phone = this.value.trim();
+                
+                if (phone === '') {
+                    patientSearch.value = '';
+                    gestionPatientId.value = '';
+                    return;
+                }
+                
+                const phoneOption = findPatientByPhone(phone);
+                if (!phoneOption) {
+                    gestionPatientId.value = '';
+                }
+            });
+        }
+
+        // Synchronisation Médecin
+        if (medecinSearch && medecinId && medecinsList) {
+            medecinSearch.addEventListener('change', function() {
+                const nomMedecin = this.value.trim();
+                const medecinOption = findMedecinByName(nomMedecin);
+                
+                if (medecinOption) {
+                    const medId = medecinOption.getAttribute('data-id');
+                    medecinId.value = medId;
+                    addSyncEffect(medecinSearch);
+                    // Appeler updateNumerosByDate si elle existe
+                    if (typeof updateNumerosByDate === 'function') {
+                        updateNumerosByDate();
+                    }
+                }
+            });
+
+            medecinSearch.addEventListener('input', function() {
+                const nomMedecin = this.value.trim();
+                
+                if (nomMedecin === '') {
+                    medecinId.value = '';
+                    return;
+                }
+                
+                const medecinOption = findMedecinByName(nomMedecin);
+                if (!medecinOption) {
+                    medecinId.value = '';
+                }
+            });
+        }
+
+        // Synchronisation Prescripteur
+        const prescripteurSearch = document.getElementById('prescripteur_search');
+        const prescripteurId = document.getElementById('prescripteur_id');
+        const prescripteursList = document.getElementById('prescripteurs-list');
+
+        // Fonction pour trouver un prescripteur par nom
+        function findPrescripteurByName(nom) {
+            const options = Array.from(prescripteursList.options);
+            return options.find(opt => opt.value === nom);
+        }
+
+        if (prescripteurSearch && prescripteurId && prescripteursList) {
+            prescripteurSearch.addEventListener('change', function() {
+                const nomPrescripteur = this.value.trim();
+                const prescripteurOption = findPrescripteurByName(nomPrescripteur);
+                
+                if (prescripteurOption) {
+                    const prescId = prescripteurOption.getAttribute('data-id');
+                    prescripteurId.value = prescId;
+                    addSyncEffect(prescripteurSearch);
+                } else {
+                    // Si aucune correspondance, vider l'ID
+                    prescripteurId.value = '';
+                }
+            });
+
+            prescripteurSearch.addEventListener('input', function() {
+                const nomPrescripteur = this.value.trim();
+                
+                if (nomPrescripteur === '') {
+                    prescripteurId.value = 'extern';
+                    return;
+                }
+                
+                const prescripteurOption = findPrescripteurByName(nomPrescripteur);
+                if (!prescripteurOption) {
+                    prescripteurId.value = '';
+                }
+            });
+        }
     });
 
     // Variables globales pour les examens multiples
@@ -478,7 +677,8 @@
     function openExamenModal() {
         document.getElementById('examenModal').classList.remove('hidden');
         // Réinitialiser la sélection
-        document.getElementById('modal_examen_select').value = '';
+        document.getElementById('modal_medicament_search').value = '';
+        document.getElementById('modal_examen_search').value = '';
         document.getElementById('modal_quantite_div').style.display = 'none';
         document.getElementById('modal_quantite').value = 1;
     }
@@ -488,11 +688,36 @@
     }
 
     function ajouterExamenDeModal() {
-        const select = document.getElementById('modal_examen_select');
-        const selectedOption = select.options[select.selectedIndex];
+        const medicamentSearch = document.getElementById('modal_medicament_search').value.trim();
+        const examenSearch = document.getElementById('modal_examen_search').value.trim();
 
-        if (!select.value) {
-            alert('Veuillez sélectionner un examen.');
+        let selectedOption = null;
+        let isMedicament = false;
+
+        // Chercher dans les médicaments
+        if (medicamentSearch) {
+            const medicamentsList = document.querySelectorAll('#medicaments-list option');
+            medicamentsList.forEach(opt => {
+                if (opt.value === medicamentSearch) {
+                    selectedOption = opt;
+                    isMedicament = true;
+                }
+            });
+        }
+
+        // Chercher dans les examens
+        if (!selectedOption && examenSearch) {
+            const examensList = document.querySelectorAll('#examens-list option');
+            examensList.forEach(opt => {
+                if (opt.value === examenSearch) {
+                    selectedOption = opt;
+                    isMedicament = false;
+                }
+            });
+        }
+
+        if (!selectedOption) {
+            alert('Veuillez sélectionner un examen ou un médicament.');
             return;
         }
 
@@ -500,12 +725,12 @@
         const quantite = parseInt(quantiteInput.value) || 1;
 
         const examen = {
-            id: select.value,
-            nom: selectedOption.getAttribute('data-nom'),
+            id: selectedOption.getAttribute('data-id'),
+            nom: selectedOption.value,
             tarif: parseFloat(selectedOption.getAttribute('data-tarif')),
             quantite: quantite,
             total: parseFloat(selectedOption.getAttribute('data-tarif')) * quantite,
-            isPharmacie: selectedOption.getAttribute('data-is-pharmacie') === 'true'
+            isPharmacie: isMedicament
         };
 
         // Vérifier si l'examen existe déjà dans la liste
@@ -533,21 +758,48 @@
 
     // Gestion de la quantité pour les médicaments dans la modal
     document.addEventListener('DOMContentLoaded', function() {
-        const modalSelect = document.getElementById('modal_examen_select');
-        if (modalSelect) {
-            modalSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const quantiteDiv = document.getElementById('modal_quantite_div');
-                const stockInfo = document.getElementById('modal_stock_info');
+        const medicamentSearch = document.getElementById('modal_medicament_search');
+        const examenSearch = document.getElementById('modal_examen_search');
+        const quantiteDiv = document.getElementById('modal_quantite_div');
+        const stockInfo = document.getElementById('modal_stock_info');
 
-                if (this.value && selectedOption.getAttribute('data-is-pharmacie') === 'true') {
-                    quantiteDiv.style.display = 'block';
-                    const stock = selectedOption.getAttribute('data-stock');
-                    if (stock) {
-                        stockInfo.textContent = `Stock disponible: ${stock} unités`;
-                        stockInfo.className = parseInt(stock) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+        // Quand on sélectionne un médicament
+        if (medicamentSearch) {
+            medicamentSearch.addEventListener('input', function() {
+                const value = this.value.trim();
+                if (value) {
+                    // Effacer le champ examen
+                    examenSearch.value = '';
+                    
+                    // Trouver le médicament sélectionné
+                    const medicamentsList = document.querySelectorAll('#medicaments-list option');
+                    let selectedOption = null;
+                    medicamentsList.forEach(opt => {
+                        if (opt.value === value) {
+                            selectedOption = opt;
+                        }
+                    });
+
+                    if (selectedOption) {
+                        quantiteDiv.style.display = 'block';
+                        const stock = selectedOption.getAttribute('data-stock');
+                        if (stock) {
+                            stockInfo.textContent = `Stock disponible: ${stock} unités`;
+                            stockInfo.className = parseInt(stock) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                        }
                     }
-                } else {
+                }
+            });
+        }
+
+        // Quand on sélectionne un examen
+        if (examenSearch) {
+            examenSearch.addEventListener('input', function() {
+                const value = this.value.trim();
+                if (value) {
+                    // Effacer le champ médicament
+                    medicamentSearch.value = '';
+                    // Cacher le champ quantité (les examens n'ont pas de quantité)
                     quantiteDiv.style.display = 'none';
                     stockInfo.textContent = '';
                     document.getElementById('modal_quantite').value = 1;
@@ -816,5 +1068,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 </script>
+
+<style>
+    /* Style pour la synchronisation intelligente des champs avec effet visuel */
+    .field-highlight {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+        border-color: #2196f3 !important;
+        transition: all 0.3s ease;
+    }
+</style>
 
 @endsection

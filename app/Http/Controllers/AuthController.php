@@ -29,16 +29,35 @@ class AuthController extends Controller
             $user = Auth::user();
             $user->load('role');
 
+            // Vérifier si l'utilisateur est approuvé
+            if (!$user->is_approved) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('login')->with('error', 'Votre compte est en attente d\'approbation.');
+            }
+
+            // Vérifier si l'utilisateur a un rôle assigné
+            if (!$user->role || !$user->role_id) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('login')->with('error', 'Votre compte a été approuvé mais aucun rôle ne vous a été assigné. Veuillez contacter l\'administrateur.');
+            }
+
+            // Vérifier si l'utilisateur a une fonction assignée (sauf pour les superadmins)
+            if ($user->role->name !== 'superadmin' && !$user->fonction) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('login')->with('error', 'Votre compte a été approuvé mais aucune fonction ne vous a été assignée. Veuillez contacter l\'administrateur.');
+            }
+
             // Mettre à jour la date de dernière connexion
             $user->last_login_at = now();
             $user->save();
 
-            if (!$user->is_approved) {
-                Auth::logout();
-                return redirect()->route('login')->with('error', 'Votre compte est en attente d\'approbation.');
-            }
-
-            $role = $user->role?->name;
+            $role = $user->role->name;
 
             return match ($role) {
                 'superadmin' => redirect()->route('dashboard.superadmin'),

@@ -1,14 +1,43 @@
 <tr class="table-row">
-    <td class="table-cell py-2 px-2">{{ $etat->id }}</td>
+    <td class="table-cell py-2 px-2 text-center">
+        @if(!$etat->validated)
+        <input type="checkbox" class="part-medecin-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" 
+            data-etat-id="{{ $etat->id }}" 
+            data-part-medecin="{{ $etat->part_medecin }}"
+            onchange="updateBulkSelection()">
+        @else
+        <span class="text-gray-400" title="Déjà validé">
+            <svg class="w-4 h-4 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+            </svg>
+        </span>
+        @endif
+    </td>
 
     <td class="table-cell py-2 px-2">
         @if($etat->caisse)
-        <a href="{{ route('caisses.show', $etat->caisse_id) }}"
-            class="text-blue-600 dark:text-blue-400 hover:underline">
-            Facture n°{{ $etat->caisse->numero_facture }}
-        </a>
+            @php
+                // Vérifier si c'est une hospitalisation
+                $isHospitalisation = $etat->caisse->examen && $etat->caisse->examen->nom === 'Hospitalisation';
+                if ($isHospitalisation) {
+                    // Trouver l'hospitalisation via HospitalisationCharge
+                    $hospitalisationCharge = \App\Models\HospitalisationCharge::where('caisse_id', $etat->caisse_id)->first();
+                    $hospitalisationId = $hospitalisationCharge ? $hospitalisationCharge->hospitalisation_id : null;
+                }
+            @endphp
+            @if($isHospitalisation && isset($hospitalisationId))
+                <a href="{{ route('hospitalisations.print', $hospitalisationId) }}"
+                    class="text-blue-600 dark:text-blue-400 hover:underline">
+                    Facture n°{{ $etat->caisse->numero_facture }}
+                </a>
+            @else
+                <a href="{{ route('caisses.show', $etat->caisse_id) }}"
+                    class="text-blue-600 dark:text-blue-400 hover:underline">
+                    Facture n°{{ $etat->caisse->numero_facture }}
+                </a>
+            @endif
         @else
-        {{ $etat->designation }}
+            {{ $etat->designation }}
         @endif
     </td>
 
@@ -178,22 +207,20 @@
     <td class="table-cell py-2 px-2">
         @if($etat->medecin)
         @if($etat->caisse && $etat->caisse->examen && $etat->caisse->examen->nom === 'Hospitalisation')
-        {{-- Pour les hospitalisations, afficher un lien vers les détails des médecins --}}
+        {{-- Pour les hospitalisations, afficher un lien vers les détails --}}
         @php
-        // Chercher l'hospitalisation par patient
-        $hospitalisation = \App\Models\Hospitalisation::where('gestion_patient_id', $etat->caisse->gestion_patient_id)
-        ->first();
-        $hospitalisationId = $hospitalisation ? $hospitalisation->id : null;
+        // Trouver l'hospitalisation via HospitalisationCharge et caisse_id
+        $hospitalisationCharge = \App\Models\HospitalisationCharge::where('caisse_id', $etat->caisse_id)->first();
+        $hospitalisationId = $hospitalisationCharge ? $hospitalisationCharge->hospitalisation_id : null;
         @endphp
         @if($hospitalisationId)
-        <a href="{{ route('hospitalisations.doctors', $hospitalisationId) }}"
+        <a href="{{ route('hospitalisations.show', $hospitalisationId) }}"
             class="text-blue-600 dark:text-blue-400 hover:underline text-sm flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                </path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
             </svg>
-            Détails Médecins
+            Voir détails
         </a>
         @else
         <a href="{{ route('medecins.stats', $etat->medecin->id) }}"
@@ -218,6 +245,7 @@
                 <i class="fas fa-eye"></i>
             </a>
 
+            @if(!$etat->validated)
             <form action="{{ route('etatcaisse.destroy', $etat->id) }}" method="POST"
                 onsubmit="return confirm('Supprimer ?')" class="inline">
                 @csrf
@@ -227,6 +255,7 @@
                     <i class="fas fa-trash"></i>
                 </button>
             </form>
+            @endif
         </div>
     </td>
 </tr>

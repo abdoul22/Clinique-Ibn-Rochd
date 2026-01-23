@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Examen;
 use App\Models\Service;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ExamenController extends Controller
@@ -174,7 +175,8 @@ class ExamenController extends Controller
     {
         $examen = Examen::findOrFail($id);
         $services = Service::all();
-        return view('examens.edit', compact('examen', 'services'));
+        $page = request('page', 1); // Récupérer le paramètre page
+        return view('examens.edit', compact('examen', 'services', 'page'));
     }
 
     public function update(Request $request, $id)
@@ -202,7 +204,13 @@ class ExamenController extends Controller
 
         $examen = Examen::findOrFail($id);
         $examen->update($request->all());
-        return redirect()->route('examens.index')->with('success', 'Examen mis à jour.');
+        
+        // Conserver le paramètre de pagination et détecter le rôle
+        $page = $request->input('return_page', 1);
+        $role = Auth::user()->role->name;
+        $routeName = ($role === 'superadmin' || $role === 'admin') ? $role . '.examens.index' : 'examens.index';
+        
+        return redirect()->route($routeName, ['page' => $page])->with('success', 'Examen mis à jour.');
     }
 
     public function destroy($id)

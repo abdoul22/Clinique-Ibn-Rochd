@@ -23,12 +23,16 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Aujourd'hui</p>
-                    <p class="text-3xl font-bold text-gray-800 dark:text-white">{{ $stats['consultations_aujourdhui'] }}</p>
+                    <p class="text-3xl font-bold text-gray-800 dark:text-white">{{ $stats['consultations_aujourdhui'] }}
+                    </p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Visites</p>
                 </div>
                 <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
-                    <svg class="w-8 h-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    <svg class="w-8 h-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
                     </svg>
                 </div>
             </div>
@@ -42,8 +46,11 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400">Visites</p>
                 </div>
                 <div class="bg-green-100 dark:bg-green-900 p-3 rounded-full">
-                    <svg class="w-8 h-8 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-300" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                        </path>
                     </svg>
                 </div>
             </div>
@@ -57,8 +64,11 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400">Ce mois</p>
                 </div>
                 <div class="bg-purple-100 dark:bg-purple-900 p-3 rounded-full">
-                    <svg class="w-8 h-8 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    <svg class="w-8 h-8 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
                     </svg>
                 </div>
             </div>
@@ -72,8 +82,11 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400">Total suivis</p>
                 </div>
                 <div class="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-full">
-                    <svg class="w-8 h-8 text-yellow-600 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    <svg class="w-8 h-8 text-yellow-600 dark:text-yellow-300" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                        </path>
                     </svg>
                 </div>
             </div>
@@ -87,7 +100,8 @@
             class="bg-blue-600 text-white rounded-2xl p-6 shadow-lg hover:bg-blue-700 transition transform hover:scale-105">
             <div class="flex items-center mb-2">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
                 <h2 class="text-xl font-semibold">Nouveau Rapport Médical</h2>
             </div>
@@ -99,7 +113,9 @@
             class="bg-purple-600 text-white rounded-2xl p-6 shadow-lg hover:bg-purple-700 transition transform hover:scale-105">
             <div class="flex items-center mb-2">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
                 </svg>
                 <h2 class="text-xl font-semibold">Nouvelle Ordonnance</h2>
             </div>
@@ -111,7 +127,9 @@
             class="bg-green-600 text-white rounded-2xl p-6 shadow-lg hover:bg-green-700 transition transform hover:scale-105">
             <div class="flex items-center mb-2">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                    </path>
                 </svg>
                 <h2 class="text-xl font-semibold">Mes Rapports Médicaux</h2>
             </div>
@@ -123,7 +141,9 @@
             class="bg-indigo-600 text-white rounded-2xl p-6 shadow-lg hover:bg-indigo-700 transition transform hover:scale-105">
             <div class="flex items-center mb-2">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
                 </svg>
                 <h2 class="text-xl font-semibold">Mes Ordonnances</h2>
             </div>
@@ -132,14 +152,44 @@
 
         <!-- Liste des patients -->
         <a href="{{ route('medecin.patients.index') }}"
-            class="bg-yellow-600 text-white rounded-2xl p-6 shadow-lg hover:bg-yellow-700 transition transform hover:scale-105">
+            class="bg-cyan-600 text-white rounded-2xl p-6 shadow-lg hover:bg-cyan-700 transition transform hover:scale-105">
             <div class="flex items-center mb-2">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
                 </svg>
                 <h2 class="text-xl font-semibold">Patients</h2>
             </div>
-            <p class="text-sm text-yellow-100">Rechercher et consulter les dossiers patients</p>
+            <p class="text-sm text-cyan-100">Rechercher et consulter les dossiers patients</p>
+        </a>
+
+        <!-- Liste des prescripteurs -->
+        <a href="{{ route('medecin.prescripteurs.index') }}"
+            class="bg-teal-600 text-white rounded-2xl p-6 shadow-lg hover:bg-teal-700 transition transform hover:scale-105">
+            <div class="flex items-center mb-2">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                <h2 class="text-xl font-semibold">Prescripteurs</h2>
+            </div>
+            <p class="text-sm text-teal-100">Consulter la liste des prescripteurs</p>
+        </a>
+
+        <!-- Mes Rendez-vous -->
+        <a href="{{ route('medecin.rendezvous.index') }}"
+            class="bg-yellow-500 text-white rounded-2xl p-6 shadow-lg hover:bg-yellow-600 transition transform hover:scale-105">
+            <div class="flex items-center mb-2">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                    </path>
+                </svg>
+                <h2 class="text-xl font-semibold">Mes Rendez-vous</h2>
+            </div>
+            <p class="text-sm text-yellow-100">Consulter et gérer vos rendez-vous patients</p>
         </a>
     </div>
 
@@ -151,11 +201,21 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Patient</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Examen</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Montant</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Date</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Patient</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Examen</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Part Médecin</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -171,10 +231,15 @@
                             {{ $caisse->examen->nom ?? 'N/A' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                            {{ number_format($caisse->total, 2) }} MAD
+                            @if($caisse->etatCaisse && $caisse->etatCaisse->part_medecin > 0)
+                            {{ number_format($caisse->etatCaisse->part_medecin, 2) }} MRU
+                            @else
+                            <span class="text-gray-500 dark:text-gray-400 italic">N/A</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('medecin.patients.show', $caisse->patient->id) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Voir</a>
+                            <a href="{{ route('medecin.patients.show', $caisse->patient->id) }}"
+                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Voir</a>
                         </td>
                     </tr>
                     @endforeach
@@ -185,4 +250,3 @@
     @endif
 </div>
 @endsection
-

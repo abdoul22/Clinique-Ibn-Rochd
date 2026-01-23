@@ -180,6 +180,7 @@ class HospitalisationController extends Controller
                 'pharmacien',
                 'service',
                 'lit.chambre',
+                'assurance',
                 'roomStays' => function ($q) {
                     $q->orderBy('start_at', 'desc');
                 },
@@ -199,6 +200,29 @@ class HospitalisationController extends Controller
             $chargesNonFacturees = $hospitalisation->charges()->where('is_billed', false)->get();
             $chargesFacturees = $hospitalisation->charges()->where('is_billed', true)->get();
 
+            // Calculer le total brut des charges facturées
+            $totalFactureesBrut = $chargesFacturees->sum('total_price');
+            
+            // Trouver la caisse créée pour cette hospitalisation pour obtenir l'assurance et la couverture
+            $caisseIds = $chargesFacturees->pluck('caisse_id')->filter()->unique();
+            $caisse = null;
+            if ($caisseIds->isNotEmpty()) {
+                $caisse = \App\Models\Caisse::with('assurance')->find($caisseIds->first());
+            }
+            
+            // Utiliser l'assurance et la couverture de la caisse si disponible, sinon de l'hospitalisation
+            $assuranceId = $caisse ? ($caisse->assurance_id ?? $hospitalisation->assurance_id) : $hospitalisation->assurance_id;
+            $couverture = $caisse ? ($caisse->couverture ?? $hospitalisation->couverture ?? 0) : ($hospitalisation->couverture ?? 0);
+            
+            // Toujours calculer le total à partir des charges et de la couverture
+            $montantAssuranceFacturees = $assuranceId && $couverture > 0 ? ($totalFactureesBrut * ($couverture / 100)) : 0;
+            $totalFactureesNet = $totalFactureesBrut - $montantAssuranceFacturees;
+            
+            // Si l'hospitalisation n'a pas d'assurance chargée mais que la caisse en a une, la charger
+            if (!$hospitalisation->assurance && $caisse && $caisse->assurance) {
+                $hospitalisation->setRelation('assurance', $caisse->assurance);
+            }
+
             $totaux = [
                 'room_day' => $chargesNonFacturees->where('type', 'room_day')->sum('total_price'),
                 'examens' => $chargesNonFacturees->where('type', 'examen')->sum('total_price'),
@@ -207,8 +231,9 @@ class HospitalisationController extends Controller
                 'part_medecin' => $chargesNonFacturees->sum('part_medecin'),
                 'part_cabinet' => $chargesNonFacturees->sum('part_cabinet'),
                 'total' => $chargesNonFacturees->sum('total_price'),
-                'facturees' => $chargesFacturees->sum('total_price'),
-                'montant_total' => $chargesNonFacturees->sum('total_price') + $chargesFacturees->sum('total_price'),
+                'facturees' => $totalFactureesNet, // Total après déduction de l'assurance
+                'facturees_brut' => $totalFactureesBrut, // Total brut pour référence
+                'montant_total' => $chargesNonFacturees->sum('total_price') + $totalFactureesNet,
             ];
 
             // Calculer la durée d'hospitalisation en format lisible
@@ -277,6 +302,9 @@ class HospitalisationController extends Controller
             // Récupérer tous les médecins impliqués dans cette hospitalisation
             $medecinsImpliques = $hospitalisation->getAllInvolvedDoctors();
 
+            // Récupérer toutes les assurances
+            $assurances = \App\Models\Assurance::orderBy('nom')->get();
+
             return view('hospitalisations.show', compact(
                 'hospitalisation',
                 'chargesNonFacturees',
@@ -288,7 +316,8 @@ class HospitalisationController extends Controller
                 'pharmaciens',
                 'medecinsImpliques',
                 'joursHospitalisation',
-                'dureeSejour'
+                'dureeSejour',
+                'assurances'
             ));
         } catch (\Exception $e) {
             Log::error("HospitalisationController@show - Error: " . $e->getMessage());
@@ -456,6 +485,8 @@ class HospitalisationController extends Controller
             }
 
             // Créer la caisse avec examens_data
+            // Le total de la caisse doit être le montant après déduction de l'assurance (montantPaiement)
+            // car c'est ce que le patient doit payer
             $caisse = Caisse::create([
                 'numero_facture' => $prochainNumero,
                 'numero_entre' => $numeroEntree,
@@ -465,7 +496,7 @@ class HospitalisationController extends Controller
                 'examen_id' => $examen->id,
                 'service_id' => $serviceHosp?->id ?? $examen->idsvc,
                 'date_examen' => Carbon::now()->toDateString(),
-                'total' => $total,
+                'total' => $montantPaiement, // Total après déduction de l'assurance
                 'nom_caissier' => \Illuminate\Support\Facades\Auth::user()->name,
                 'assurance_id' => $assuranceId,
                 'couverture' => $assuranceId ? (int) $couverture : null,
@@ -510,6 +541,20 @@ class HospitalisationController extends Controller
                     'caisse_id' => $caisse->id,
                 ]);
             });
+
+            // Si toutes les charges sont facturées, mettre à jour le statut et enregistrer discharge_at
+            $chargesNonFacturees = HospitalisationCharge::where('hospitalisation_id', $hospitalisation->id)
+                ->where('is_billed', false)
+                ->count();
+            
+            if ($chargesNonFacturees === 0 && $hospitalisation->statut !== 'terminé') {
+                $updateData = ['statut' => 'terminé'];
+                if (!$hospitalisation->date_sortie) {
+                    $updateData['date_sortie'] = Carbon::now()->toDateString();
+                    $updateData['discharge_at'] = Carbon::now(); // Enregistrer l'heure exacte de sortie
+                }
+                $hospitalisation->update($updateData);
+            }
         });
 
         return redirect()->route('hospitalisations.show', $hospitalisation->id)
@@ -932,6 +977,8 @@ class HospitalisationController extends Controller
 
         $request->validate([
             'type' => 'required|string|in:espèces,bankily,masrivi,sedad,carte,virement',
+            'assurance_id' => 'nullable|exists:assurances,id',
+            'couverture' => 'nullable|integer|min:0|max:100',
         ]);
 
         $numeroFacture = null;
@@ -953,8 +1000,9 @@ class HospitalisationController extends Controller
             $partCabinet = (float) $charges->sum('part_cabinet');
             $partMedecin = (float) $charges->sum('part_medecin');
 
-            $assuranceId = $hospitalisation->assurance_id;
-            $couverture = (float) ($hospitalisation->couverture ?? 0);
+            // Utiliser l'assurance du formulaire si fournie, sinon celle de l'hospitalisation
+            $assuranceId = $request->assurance_id ?? $hospitalisation->assurance_id;
+            $couverture = $request->filled('couverture') ? (float) $request->couverture : (float) ($hospitalisation->couverture ?? 0);
             // CORRECTION: Le montant du mode de paiement = total des charges (sans déduire la part médecin)
             // La part médecin sera déduite plus tard lors de la validation dans etatcaisse
             $montantPaiement = $assuranceId ? $total * (1 - ($couverture / 100)) : $total;
@@ -1030,6 +1078,8 @@ class HospitalisationController extends Controller
             }
 
             // Créer la caisse
+            // Le total de la caisse doit être le montant après déduction de l'assurance (montantPaiement)
+            // car c'est ce que le patient doit payer
             $caisse = Caisse::create([
                 'numero_facture' => $prochainNumero,
                 'numero_entre' => $numeroEntree,
@@ -1039,7 +1089,7 @@ class HospitalisationController extends Controller
                 'examen_id' => $examen->id,
                 'service_id' => $serviceHosp?->id ?? $examen->idsvc,
                 'date_examen' => Carbon::now()->toDateString(),
-                'total' => $total,
+                'total' => $montantPaiement, // Total après déduction de l'assurance
                 'nom_caissier' => \Illuminate\Support\Facades\Auth::user()->name,
                 'assurance_id' => $assuranceId,
                 'couverture' => $assuranceId ? (int) $couverture : null,
@@ -1075,6 +1125,21 @@ class HospitalisationController extends Controller
                 'source' => 'caisse',
             ]);
 
+            // Créer un crédit si une assurance est utilisée
+            if ($assuranceId && $couverture > 0) {
+                $montantCredit = $total * ($couverture / 100);
+                
+                \App\Models\Credit::create([
+                    'source_type' => \App\Models\Assurance::class,
+                    'source_id' => $assuranceId,
+                    'caisse_id' => $caisse->id,
+                    'montant' => $montantCredit,
+                    'montant_paye' => 0,
+                    'status' => 'non payé',
+                    'statut' => 'non payé',
+                ]);
+            }
+
             // Marquer toutes les charges comme facturées
             $charges->each(function ($charge) use ($caisse) {
                 $charge->update([
@@ -1088,6 +1153,7 @@ class HospitalisationController extends Controller
             $updateData = ['statut' => 'terminé'];
             if (!$hospitalisation->date_sortie) {
                 $updateData['date_sortie'] = Carbon::now()->toDateString();
+                $updateData['discharge_at'] = Carbon::now(); // Enregistrer l'heure exacte de sortie
             }
             $hospitalisation->update($updateData);
 
@@ -1141,46 +1207,59 @@ class HospitalisationController extends Controller
     {
         // Convertir la date en format Carbon
         $targetDate = Carbon::parse($date)->startOfDay();
-        $endDate = $targetDate->copy()->endOfDay();
 
-        // Récupérer toutes les hospitalisations de cette date
-        $hospitalisations = Hospitalisation::with(['patient', 'medecin', 'service', 'lit.chambre', 'chambre'])
-            ->whereBetween('created_at', [$targetDate, $endDate])
+        // Récupérer toutes les hospitalisations de cette date (par date_entree, PAS created_at)
+        $hospitalisations = Hospitalisation::with(['patient', 'medecin', 'service', 'lit.chambre', 'chambre', 'charges'])
+            ->whereDate('date_entree', $targetDate)
             ->get();
 
         // Collecter tous les médecins impliqués dans toutes les hospitalisations de ce jour
         $allDoctors = collect();
         $totalPartMedecin = 0;
         $totalExamens = 0;
+        $totalRecettes = 0;
 
         foreach ($hospitalisations as $hospitalisation) {
             $doctors = $hospitalisation->getAllInvolvedDoctors();
+            // Calculer les recettes à partir des charges facturées
+            $chargesFacturees = $hospitalisation->charges()->where('is_billed', true)->get();
+            $totalRecettes += $chargesFacturees->sum('total_price');
 
             foreach ($doctors as $doctor) {
                 // Vérifier si ce médecin existe déjà dans la collection
-                $existingDoctor = $allDoctors->firstWhere('medecin.id', $doctor['medecin']->id);
+                $existingDoctorIndex = $allDoctors->search(function ($item) use ($doctor) {
+                    return $item['medecin']->id === $doctor['medecin']->id;
+                });
 
-                if ($existingDoctor) {
+                if ($existingDoctorIndex !== false) {
                     // Fusionner les données du médecin
+                    $existingDoctor = $allDoctors[$existingDoctorIndex];
                     $existingDoctor['part_medecin'] += $doctor['part_medecin'];
                     $existingDoctor['examens'] = array_merge($existingDoctor['examens'], $doctor['examens']);
-                    $existingDoctor['hospitalisations'][] = $hospitalisation->id;
+                    if (!in_array($hospitalisation->id, $existingDoctor['hospitalisations'])) {
+                        $existingDoctor['hospitalisations'][] = $hospitalisation->id;
+                    }
+                    $allDoctors[$existingDoctorIndex] = $existingDoctor;
                 } else {
                     // Ajouter le médecin avec les informations de l'hospitalisation
                     $doctor['hospitalisations'] = [$hospitalisation->id];
                     $allDoctors->push($doctor);
                 }
-
-                $totalPartMedecin += $doctor['part_medecin'];
-                $totalExamens += count($doctor['examens']);
             }
         }
+
+        // Calculer les totaux à partir de la collection finale
+        $totalPartMedecin = $allDoctors->sum('part_medecin');
+        $totalExamens = $allDoctors->sum(function ($doctor) {
+            return count($doctor['examens']);
+        });
 
         return view('hospitalisations.doctors-by-date', compact(
             'hospitalisations',
             'allDoctors',
             'totalPartMedecin',
             'totalExamens',
+            'totalRecettes',
             'date'
         ));
     }
@@ -1195,6 +1274,7 @@ class HospitalisationController extends Controller
             'medecin',
             'service',
             'lit.chambre',
+            'assurance',
             'charges' => function ($q) {
                 $q->where('is_billed', true)
                     ->orderBy('created_at', 'asc');
@@ -1203,8 +1283,27 @@ class HospitalisationController extends Controller
 
         $chargesFacturees = $hospitalisation->charges;
 
-        // Calculer le total des charges facturées
-        $totalCharges = $chargesFacturees->sum('total_price');
+        // Trouver la caisse créée pour cette hospitalisation pour obtenir l'assurance et la couverture
+        // car l'hospitalisation peut ne pas avoir ces informations stockées
+        $caisseIds = $chargesFacturees->pluck('caisse_id')->filter()->unique();
+        $caisse = null;
+        if ($caisseIds->isNotEmpty()) {
+            $caisse = \App\Models\Caisse::with('assurance')->find($caisseIds->first());
+        }
+        
+        // Utiliser l'assurance et la couverture de la caisse si disponible, sinon de l'hospitalisation
+        $assuranceId = $caisse ? ($caisse->assurance_id ?? $hospitalisation->assurance_id) : $hospitalisation->assurance_id;
+        $couverture = $caisse ? ($caisse->couverture ?? $hospitalisation->couverture ?? 0) : ($hospitalisation->couverture ?? 0);
+        
+        // Toujours calculer le total à partir des charges et de la couverture
+        $totalChargesBrut = $chargesFacturees->sum('total_price');
+        $montantAssurance = $assuranceId && $couverture > 0 ? ($totalChargesBrut * ($couverture / 100)) : 0;
+        $totalCharges = $totalChargesBrut - $montantAssurance;
+        
+        // Si l'hospitalisation n'a pas d'assurance chargée mais que la caisse en a une, la charger
+        if (!$hospitalisation->assurance && $caisse && $caisse->assurance) {
+            $hospitalisation->setRelation('assurance', $caisse->assurance);
+        }
 
         // Déterminer l'URL de retour en fonction du rôle
         $backUrl = auth()->user()->role->name === 'admin' 

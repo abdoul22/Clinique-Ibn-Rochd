@@ -71,6 +71,13 @@
             <p class="text-sm text-red-100">Enregistrer les dépenses opérationnelles.</p>
         </a>
 
+        {{-- Prescripteurs --}}
+        <a href="{{ route('admin.prescripteurs.index') }}"
+            class="bg-cyan-600 text-white rounded-2xl p-6 shadow hover:bg-cyan-700 transition">
+            <h2 class="text-xl font-semibold mb-2">Prescripteurs</h2>
+            <p class="text-sm text-cyan-100">Consulter la liste des prescripteurs.</p>
+        </a>
+
     </div>
 </div>
 @endsection

@@ -23,7 +23,7 @@ class CaisseController extends Controller
         $numeroPatientFilter = $request->input('numero_patient_filter');
         $medecinFilter = $request->input('medecin_filter');
 
-        $query = Caisse::with(['patient', 'medecin', 'prescripteur', 'examen', 'service']);
+        $query = Caisse::with(['patient', 'medecin', 'prescripteur', 'examen', 'service', 'etatCaisse']);
 
         // Filtrage par recherche générale
         if ($search) {
@@ -440,7 +440,7 @@ class CaisseController extends Controller
 
     public function show($id)
     {
-        $caisse = Caisse::with(['patient', 'medecin', 'prescripteur', 'examen', 'service', 'etatCaisse', 'mode_paiements'])->find($id);
+        $caisse = Caisse::with(['patient', 'medecin', 'prescripteur', 'examen', 'service', 'etatCaisse', 'mode_paiements', 'modifier'])->find($id);
 
         if (!$caisse) {
             abort(404, 'Caisse non trouvée.');
@@ -449,12 +449,34 @@ class CaisseController extends Controller
         return view('caisses.show', compact('caisse'));
     }
 
-    public function edit(Caisse $caisse, $id)
+    public function edit($id)
     {
-        $caisse = Caisse::with(['patient', 'medecin', 'prescripteur', 'examen', 'service', 'assurance'])->find($id);
+        // Charger la caisse manuellement avec findOrFail
+        $caisse = Caisse::findOrFail($id);
+        
+        // Charger les relations nécessaires
+        $caisse->load(['patient', 'medecin', 'prescripteur', 'examen', 'service', 'assurance', 'modifier', 'mode_paiements', 'paiements']);
+        
+        // Vérifier si la facture a un état de caisse validé
+        $etatCaisse = \App\Models\EtatCaisse::where('caisse_id', $caisse->id)->first();
+        
+        if ($etatCaisse && $etatCaisse->validated) {
+            // Rediriger avec message d'erreur si la part médecin est validée
+            $role = Auth::user()->role->name;
+            $routeName = $role === 'superadmin' || $role === 'admin' ? $role . '.caisses.index' : 'caisses.index';
+            
+            return redirect()->route($routeName)
+                ->with('error', 'Impossible de modifier cette facture. La part médecin a été validée. Veuillez d\'abord annuler la validation dans l\'état de caisse.');
+        }
+        
         $patients = GestionPatient::all();
-        $medecins = Medecin::all();
+        $medecins = Medecin::where('statut', 'actif')
+            ->select('id', 'nom', 'fonction', 'prenom', 'specialite')
+            ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
+            ->orderBy('nom')
+            ->get();
         $prescripteurs = Prescripteur::all();
+        $services = \App\Models\Service::all();
         // Exclure les examens d'hospitalisation automatiques des listes de sélection
         $exam_types = Examen::with('service.pharmacie')
             ->where('nom', 'NOT LIKE', 'Hospitalisation - %')
@@ -463,60 +485,168 @@ class CaisseController extends Controller
             })
             ->get();
         $assurances = \App\Models\Assurance::all();
+        $page = request('page', 1); // Récupérer le paramètre page
 
         return view('caisses.edit', compact(
             'caisse',
             'patients',
             'medecins',
             'prescripteurs',
+            'services',
             'exam_types',
-            'assurances'
+            'assurances',
+            'page'
         ));
     }
 
-    public function update(Request $request, Caisse $caisse)
+    public function update(Request $request, $id)
     {
-        $request->validate([
+        // Charger la caisse manuellement avec findOrFail
+        $caisse = Caisse::findOrFail($id);
+        
+        // Debug: logger les données reçues
+        \Log::info('=== UPDATE CAISSE #' . $caisse->id . ' ===');
+        \Log::info('examens_multiple: ' . $request->input('examens_multiple'));
+        \Log::info('examens_data: ' . $request->input('examens_data'));
+        \Log::info('total: ' . $request->input('total'));
+        \Log::info('gestion_patient_id: ' . $request->input('gestion_patient_id'));
+        \Log::info('medecin_id: ' . $request->input('medecin_id'));
+        
+        // Vérifier si c'est un mode examens multiples
+        $isMultipleExamens = $request->input('examens_multiple') === 'true';
+
+        $validationRules = [
             'gestion_patient_id' => 'required|exists:gestion_patients,id',
             'medecin_id' => 'required|exists:medecins,id',
             'prescripteur_id' => 'nullable|exists:prescripteurs,id',
-            'examen_id' => 'required|exists:examens,id',
             'date_examen' => 'required|date',
             'total' => 'required|numeric|min:0',
             'assurance_id' => 'nullable|exists:assurances,id',
             'couverture' => 'nullable|numeric|min:0|max:100',
-            'nom_caissier' => 'required|string',
             'numero_entre' => 'nullable|integer|min:1',
-        ]);
+        ];
 
-        // Obtenir les informations de l'examen pour le service_id
-        $examen = Examen::findOrFail($request->examen_id);
+        // Si ce n'est pas un mode multiple, examen_id est requis
+        if (!$isMultipleExamens) {
+            $validationRules['examen_id'] = 'required|exists:examens,id';
+        }
+
+        $request->validate($validationRules);
 
         // Filtrer les données à sauvegarder
         $data = $request->only([
             'gestion_patient_id',
             'medecin_id',
             'prescripteur_id',
-            'examen_id',
             'date_examen',
             'total',
             'assurance_id',
             'couverture',
-            'nom_caissier',
             'numero_entre'
         ]);
 
-        $data['service_id'] = $examen->idsvc ?? $examen->service_id ?? null;
+        // Gestion du mode examens multiples
+        if ($isMultipleExamens && $request->filled('examens_data')) {
+            \Log::info('Mode examens multiples détecté');
+            \Log::info('examens_data brut: ' . $request->examens_data);
+            
+            $examensData = json_decode($request->examens_data, true);
+            \Log::info('examens_data décodé: ' . json_encode($examensData));
+            \Log::info('Type: ' . gettype($examensData));
+            \Log::info('Est array: ' . (is_array($examensData) ? 'oui' : 'non'));
+            \Log::info('Count: ' . (is_array($examensData) ? count($examensData) : 0));
+            
+            if (!empty($examensData)) {
+                // Prendre le premier examen comme examen principal
+                $premierExamen = $examensData[0];
+                $data['examen_id'] = $premierExamen['id'];
+                
+                // NE PAS encoder - Laravel le fera automatiquement pour les colonnes JSON
+                $data['examens_data'] = $examensData; // Array, pas string !
+                
+                \Log::info('examens_data à sauvegarder (array): ' . json_encode($data['examens_data']));
+                
+                // Service du premier examen
+                $examen = Examen::findOrFail($premierExamen['id']);
+                $data['service_id'] = $examen->idsvc ?? $examen->service_id ?? null;
+            } else {
+                \Log::warning('examens_data vide après décodage!');
+            }
+        } else {
+            \Log::info('Mode examen simple');
+            // Mode examen simple
+            $data['examen_id'] = $request->examen_id;
+            $examen = Examen::findOrFail($request->examen_id);
+            $data['service_id'] = $examen->idsvc ?? $examen->service_id ?? null;
+            $data['examens_data'] = null; // Réinitialiser examens_data si mode simple
+        }
+
         $data['assurance_id'] = $request->filled('assurance_id') ? $request->assurance_id : null;
         $data['couverture'] = $request->couverture ?? 0;
+        
+        // Ajouter le modificateur (ne pas modifier nom_caissier original)
+        $data['modified_by'] = Auth::id();
 
         // Si le médecin a changé et qu'un nouveau numéro d'entrée est fourni, l'utiliser
         if ($request->filled('numero_entre')) {
             $data['numero_entre'] = $request->numero_entre;
         }
 
-        // Mettre à jour la caisse
-        $caisse->update($data);
+        // FORCER la sauvegarde en utilisant DB::table pour TOUT (bypass Eloquent)
+        if (isset($data['examens_data']) && is_array($data['examens_data'])) {
+            \Log::info('🔧 Sauvegarde COMPLÈTE via DB::table (bypass Eloquent)');
+            
+            $examensDataJson = json_encode($data['examens_data']);
+            $data['examens_data'] = $examensDataJson; // Remplacer l'array par la string JSON
+            $data['updated_at'] = now(); // Force updated_at
+            
+            \Log::info('Données à sauvegarder: total=' . $data['total'] . ', examens=' . substr($examensDataJson, 0, 100) . '...');
+            
+            // Mettre à jour TOUT via DB::table
+            $rowsAffected = \DB::table('caisses')
+                ->where('id', $caisse->id)
+                ->update($data);
+            
+            \Log::info('✅ Rows affected: ' . $rowsAffected);
+            
+            // Recharger le modèle
+            $caisse = Caisse::findOrFail($caisse->id);
+            \Log::info('Total après update: ' . $caisse->total);
+        } else {
+            // Pas d'examens_data, update normal
+            \Log::info('Update normal sans examens_data');
+            $caisse->update($data);
+        }
+        
+        // Recharger depuis la DB pour vérifier ce qui a été sauvegardé
+        $caisse->refresh();
+        \Log::info('=== APRÈS SAUVEGARDE ===');
+        \Log::info('Caisse #' . $caisse->id . ' total: ' . $caisse->total);
+        \Log::info('examens_data type: ' . gettype($caisse->examens_data));
+        \Log::info('examens_data is_array: ' . (is_array($caisse->examens_data) ? 'oui' : 'non'));
+        \Log::info('examens_data contenu: ' . json_encode($caisse->examens_data));
+
+        // Recalculer les parts médecin et clinique selon le/les examen(s)
+        $totalPartMedecin = 0;
+        $totalPartCabinet = 0;
+
+        if ($isMultipleExamens && $request->filled('examens_data')) {
+            $examensData = json_decode($request->examens_data, true);
+            foreach ($examensData as $examenData) {
+                $examen = Examen::find($examenData['id']);
+                if ($examen) {
+                    $quantite = $examenData['quantite'] ?? 1;
+                    $totalPartMedecin += ($examen->part_medecin ?? 0) * $quantite;
+                    $totalPartCabinet += ($examen->part_cabinet ?? 0) * $quantite;
+                }
+            }
+        } else {
+            $examen = Examen::find($data['examen_id']);
+            if ($examen) {
+                $totalPartMedecin = $examen->part_medecin ?? 0;
+                $totalPartCabinet = $examen->part_cabinet ?? 0;
+            }
+        }
 
         // Mettre à jour l'état de caisse correspondant s'il existe
         $etatCaisse = \App\Models\EtatCaisse::where('caisse_id', $caisse->id)->first();
@@ -529,13 +659,97 @@ class CaisseController extends Controller
             $montantPatient = $montantTotal - $montantAssurance;
 
             $etatCaisse->update([
-                'designation' => 'Facture caisse n°' . $caisse->id,
+                'designation' => 'Facture N°' . $caisse->numero_facture,
                 'recette' => $montantPatient,
+                'part_medecin' => $totalPartMedecin,
+                'part_clinique' => $totalPartCabinet,
                 'assurance_id' => $caisse->assurance_id && $caisse->couverture > 0 ? $caisse->assurance_id : null,
                 'medecin_id' => $caisse->medecin_id,
             ]);
+        }
 
-            // EtatCaisse mis à jour
+        // Mettre à jour le ModePaiement correspondant
+        $modePaiement = \App\Models\ModePaiement::where('caisse_id', $caisse->id)
+            ->where('source', 'caisse')
+            ->first();
+
+        if ($modePaiement) {
+            // Recalculer le montant patient (ce qui entre réellement en caisse)
+            $montantTotal = $caisse->total;
+            $couverture = $caisse->couverture ?? 0;
+            $montantPatient = $montantTotal - ($montantTotal * ($couverture / 100));
+            
+            $modePaiement->update([
+                'montant' => $montantPatient,
+                'type' => $request->input('type', $modePaiement->type), // Garder l'ancien type si non fourni
+            ]);
+            
+            \Log::info("ModePaiement #{$modePaiement->id} mis à jour: {$montantPatient} MRU (type: {$modePaiement->type})");
+        }
+
+        // Gérer les crédits d'assurance
+        if ($etatCaisse) {
+            // Récupérer et supprimer l'ancien crédit lié à cette caisse (s'il existe)
+            $oldCredit = \App\Models\Credit::where('caisse_id', $caisse->id)->first();
+            
+            if ($oldCredit) {
+                \Log::info("Suppression ancien crédit assurance #{$oldCredit->id}");
+                $oldAssuranceId = $oldCredit->source_id;
+                $oldCredit->delete();
+                
+                // Recalculer le crédit total de l'ancienne assurance
+                $oldAssurance = \App\Models\Assurance::find($oldAssuranceId);
+                if ($oldAssurance) {
+                    $oldAssurance->updateCredit();
+                }
+            }
+            
+            // Créer le nouveau crédit si une assurance est définie
+            if ($caisse->assurance_id && $caisse->couverture > 0) {
+                $montantTotal = $caisse->total;
+                $couverture = $caisse->couverture;
+                $montantAssurance = $montantTotal * ($couverture / 100);
+                
+                if ($montantAssurance > 0) {
+                    // Créer le nouveau crédit (même logique que l'Observer)
+                    $newCredit = \App\Models\Credit::create([
+                        'source_type' => \App\Models\Assurance::class,
+                        'source_id' => $caisse->assurance_id,
+                        'montant' => $montantAssurance,
+                        'montant_paye' => 0,
+                        'status' => 'non payé',
+                        'statut' => 'Non payé',
+                        'caisse_id' => $caisse->id,
+                    ]);
+                    
+                    \Log::info("Nouveau crédit assurance #{$newCredit->id} créé: {$montantAssurance} MRU");
+                    
+                    // Mettre à jour le crédit total de la nouvelle assurance
+                    $assurance = $caisse->assurance;
+                    if ($assurance) {
+                        $assurance->updateCredit();
+                    }
+                }
+            }
+        }
+
+        // Mettre à jour le mode de paiement si fourni
+        if ($request->filled('type')) {
+            $modePaiement = ModePaiement::where('caisse_id', $caisse->id)
+                ->where('source', 'caisse')
+                ->first();
+            
+            if ($modePaiement) {
+                $modePaiement->update(['type' => $request->type]);
+            } else {
+                // Si le mode de paiement n'existe pas encore, le créer
+                ModePaiement::create([
+                    'caisse_id' => $caisse->id,
+                    'type' => $request->type,
+                    'montant' => $caisse->total - ($caisse->assurance_id ? ($caisse->total * ($caisse->couverture / 100)) : 0),
+                    'source' => 'caisse'
+                ]);
+            }
         }
 
         // Caisse mise à jour avec succès
@@ -544,14 +758,25 @@ class CaisseController extends Controller
         $role = Auth::user()->role->name;
         $routeName = $role === 'superadmin' || $role === 'admin' ? $role . '.caisses.index' : 'caisses.index';
 
+        // Conserver TOUS les paramètres de requête (filtres, pagination, etc.)
+        $queryParams = $request->only(['page', 'search', 'period', 'date', 'week', 'month', 'year', 'date_start', 'date_end', 'patient_filter', 'numero_patient_filter', 'medecin_filter']);
+        
+        // Si return_page est défini, l'utiliser comme page
+        if ($request->filled('return_page')) {
+            $queryParams['page'] = $request->input('return_page');
+        }
+
         // Force le navigateur à ne pas utiliser le cache pour cette redirection
-        return redirect()->route($routeName)
-            ->with('success', 'Examen mis à jour avec succès.')
+        return redirect()->route($routeName, $queryParams)
+            ->with('success', 'Facture mise à jour avec succès.')
             ->with('timestamp', time()); // Force refresh avec timestamp
     }
 
-    public function destroy(Caisse $caisse, $id)
+    public function destroy($id)
     {
+        // Charger la caisse manuellement avec findOrFail
+        $caisse = Caisse::findOrFail($id);
+        
         // Vérifier que seul le superadmin peut supprimer une facture
         $role = Auth::user()->role->name;
 
@@ -559,7 +784,6 @@ class CaisseController extends Controller
             return back()->with('error', 'Vous n\'avez pas la permission de supprimer une facture.');
         }
 
-        $caisse = Caisse::find($id);
         if ($caisse->delete()) {
             return redirect()->route('superadmin.caisses.index')->with('success', 'Facture supprimée !');
         }
@@ -569,6 +793,9 @@ class CaisseController extends Controller
 
     public function exportPdf(Caisse $caisse)
     {
+        // Cette méthode utilise un paramètre {caisse} personnalisé dans la route
+        // donc on garde le nom $caisse ici
+        
         // Charger les relations nécessaires
         $caisse->load(['patient', 'medecin', 'prescripteur', 'examen', 'service']);
 

@@ -39,6 +39,12 @@ class SuperAdminController extends Controller
     public function approve($id)
     {
         $admin = User::findOrFail($id);
+        
+        // Vérifier que l'utilisateur a bien un rôle assigné
+        if (!$admin->role_id) {
+            return redirect()->back()->with('error', 'Impossible d\'approuver cet utilisateur : aucun rôle n\'a été assigné. Veuillez d\'abord lui assigner un rôle.');
+        }
+        
         $admin->is_approved = true;
         $admin->save();
 

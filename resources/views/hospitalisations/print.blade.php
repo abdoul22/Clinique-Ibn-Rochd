@@ -45,7 +45,7 @@
     <!-- Infos Patient -->
     <div class="text-xs mb-4 space-y-1">
         <div class="flex">
-            <span class="w-24 text-gray-600">Nom du patient :</span>
+            <span class="w-24 text-gray-600">Patient :</span>
             <span class="font-semibold">{{ $hospitalisation->patient->first_name ?? '' }} {{ $hospitalisation->patient->last_name ?? '' }}</span>
         </div>
         <div class="flex">
@@ -53,10 +53,13 @@
             <span>{{ $hospitalisation->patient->phone ?? 'N/A' }}</span>
         </div>
         <div class="flex">
-            <span class="w-24 text-gray-600">Médecin traitant :</span>
+            <span class="w-24 text-gray-600">Médecin(s) :</span>
             <span>
-                @if($hospitalisation->medecin)
-                    {{ $hospitalisation->medecin->nom_complet_avec_specialite }}
+                @php
+                    $medecinsImpliques = $hospitalisation->getAllInvolvedDoctors();
+                @endphp
+                @if($medecinsImpliques->count() > 0)
+                    {{ $medecinsImpliques->map(fn($m) => $m['medecin']->nom_complet_avec_prenom)->join(', ') }}
                 @else
                     N/A
                 @endif
@@ -74,12 +77,46 @@
         @endif
         <div class="flex">
             <span class="w-24 text-gray-600">Date d'entrée :</span>
-            <span>{{ \Carbon\Carbon::parse($hospitalisation->date_entree)->format('d/m/Y') }}</span>
+            <span>
+                @php
+                    $dateEntree = \Carbon\Carbon::parse($hospitalisation->date_entree);
+                    // Utiliser created_at pour l'heure de création de l'hospitalisation
+                    $heureEntree = $hospitalisation->created_at ? \Carbon\Carbon::parse($hospitalisation->created_at) : $dateEntree;
+                @endphp
+                {{ $dateEntree->format('d/m/Y') }} {{ $heureEntree->format('H') }}h {{ $heureEntree->format('i') }}mn
+            </span>
         </div>
         @if($hospitalisation->date_sortie)
         <div class="flex">
             <span class="w-24 text-gray-600">Date de sortie :</span>
-            <span>{{ \Carbon\Carbon::parse($hospitalisation->date_sortie)->format('d/m/Y') }}</span>
+            <span>
+                @php
+                    $dateSortie = \Carbon\Carbon::parse($hospitalisation->date_sortie);
+                    // Utiliser discharge_at si disponible (enregistré lors du paiement)
+                    // Sinon chercher la date de création de la dernière caisse (paiement)
+                    $heureSortie = null;
+                    if ($hospitalisation->discharge_at) {
+                        $heureSortie = \Carbon\Carbon::parse($hospitalisation->discharge_at);
+                    } else {
+                        // Chercher la date de création de la dernière caisse liée à cette hospitalisation
+                        $derniereCaisse = \App\Models\Caisse::where('gestion_patient_id', $hospitalisation->gestion_patient_id)
+                            ->whereHas('examen', function($q) {
+                                $q->where('nom', 'Hospitalisation');
+                            })
+                            ->orderBy('created_at', 'desc')
+                            ->first();
+                        if ($derniereCaisse && $derniereCaisse->created_at) {
+                            $heureSortie = \Carbon\Carbon::parse($derniereCaisse->created_at);
+                        } else {
+                            // Fallback sur updated_at si le statut est "terminé"
+                            $heureSortie = ($hospitalisation->statut === 'terminé' && $hospitalisation->updated_at) 
+                                ? \Carbon\Carbon::parse($hospitalisation->updated_at) 
+                                : $dateSortie;
+                        }
+                    }
+                @endphp
+                {{ $dateSortie->format('d/m/Y') }} {{ $heureSortie->format('H') }}h {{ $heureSortie->format('i') }}mn
+            </span>
         </div>
         @endif
     </div>
@@ -111,10 +148,50 @@
                 @endforelse
             </tbody>
             <tfoot class="border-t border-gray-300">
+                @php
+                    // Récupérer l'assurance et la couverture depuis la caisse si l'hospitalisation ne les a pas
+                    $caisseIds = $chargesFacturees->pluck('caisse_id')->filter()->unique();
+                    $caisse = null;
+                    if ($caisseIds->isNotEmpty()) {
+                        $caisse = \App\Models\Caisse::with('assurance')->find($caisseIds->first());
+                    }
+                    
+                    $assuranceId = $caisse ? ($caisse->assurance_id ?? $hospitalisation->assurance_id) : $hospitalisation->assurance_id;
+                    $couverture = $caisse ? ($caisse->couverture ?? $hospitalisation->couverture ?? 0) : ($hospitalisation->couverture ?? 0);
+                    $assurance = $hospitalisation->assurance ?? ($caisse ? $caisse->assurance : null);
+                    
+                    $totalBrut = $chargesFacturees->sum('total_price');
+                    $montantAssurance = $assuranceId && $couverture > 0 
+                        ? ($totalBrut * ($couverture / 100)) 
+                        : 0;
+                @endphp
+                @if($assurance && $couverture > 0)
+                {{-- Afficher le total brut --}}
+                <tr>
+                    <th colspan="2" class="py-2 text-right pr-4">Total brut</th>
+                    <th class="py-2 text-right pr-2 text-sm">{{ number_format($totalBrut, 0, ',', ' ') }} MRU</th>
+                </tr>
+                {{-- Afficher la déduction assurance --}}
+                <tr>
+                    <td colspan="2" class="py-1 text-right pr-4 text-gray-600">
+                        Couverture assurance ({{ $couverture }}% - {{ $assurance->nom }})
+                    </td>
+                    <td class="py-1 text-right pr-2 text-sm text-red-600">
+                        -{{ number_format($montantAssurance, 0, ',', ' ') }} MRU
+                    </td>
+                </tr>
+                {{-- Afficher le total net --}}
+                <tr class="border-t border-gray-400">
+                    <th colspan="2" class="py-2 text-right pr-4 font-bold">Total</th>
+                    <th class="py-2 text-right pr-2 text-sm font-bold">{{ number_format($totalCharges, 0, ',', ' ') }} MRU</th>
+                </tr>
+                @else
+                {{-- Pas d'assurance, afficher simplement le total --}}
                 <tr>
                     <th colspan="2" class="py-2 text-right pr-4">Total</th>
                     <th class="py-2 text-right pr-2 text-sm">{{ number_format($totalCharges, 0, ',', ' ') }} MRU</th>
                 </tr>
+                @endif
             </tfoot>
         </table>
     </div>

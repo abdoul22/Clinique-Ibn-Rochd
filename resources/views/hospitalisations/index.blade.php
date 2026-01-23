@@ -22,10 +22,10 @@
                 Nouvelle Hospitalisation
             </a>
             @if(auth()->user()->role->name === 'superadmin')
-            <a href="{{ route('chambres.create') }}"
+            <a href="{{ route('chambres.index') }}"
                 class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors">
-                <i class="fas fa-bed mr-2"></i>
-                Créer une Chambre
+                <i class="fas fa-list mr-2"></i>
+                Voir les chambres
             </a>
             @endif
         </div>
@@ -173,10 +173,19 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            @if($hospitalisation->medecin)
-                            {{ $hospitalisation->medecin->nom_complet_avec_prenom }}
+                            @php
+                                $medecinsImpliques = $hospitalisation->getAllInvolvedDoctors();
+                                $nbMedecins = $medecinsImpliques->count();
+                                $isTermineeEtPayee = in_array($hospitalisation->statut, ['terminé', 'payé']);
+                            @endphp
+                            @if($nbMedecins === 0)
+                                N/A
+                            @elseif($nbMedecins === 1 && $isTermineeEtPayee)
+                                {{ $medecinsImpliques->first()['medecin']->nom_complet_avec_prenom }}
+                            @elseif($nbMedecins > 1)
+                                {{ $nbMedecins }} médecins
                             @else
-                            N/A
+                                N/A
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -241,7 +250,7 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
 
-                                @if($hospitalisation->statut === 'en cours')
+                                @if(auth()->user()->role?->name === 'superadmin' || auth()->user()->role?->name === 'admin')
                                 <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.hospitalisations.edit', $hospitalisation) : route('hospitalisations.edit', $hospitalisation) }}"
                                     class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                     title="Modifier">

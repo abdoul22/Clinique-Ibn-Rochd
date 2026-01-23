@@ -156,6 +156,7 @@
 
     <!-- Actions -->
     <div class="mt-6 flex space-x-3">
+        @if(!$etatcaisse->validated)
         <form action="{{ route('etatcaisse.destroy', $etatcaisse->id) }}" method="POST" class="inline"
             onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet état de caisse ?')">
             @csrf
@@ -166,6 +167,7 @@
                 Supprimer
             </button>
         </form>
+        @endif
     </div>
 </div>
 @endsection

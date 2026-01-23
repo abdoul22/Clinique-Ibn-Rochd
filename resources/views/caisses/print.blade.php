@@ -74,8 +74,12 @@
     <div class="flex">
         <span class="w-24 text-gray-600">Date de l'examen :</span>
         <span>
-            {{ $caisse->date_examen ? \Carbon\Carbon::parse($caisse->date_examen)->format('d/m/Y') . ' ' .
-            \Carbon\Carbon::now()->format('H:i') : \Carbon\Carbon::now()->format('d/m/Y H:i') }}
+            @php
+                $dateExamen = $caisse->created_at 
+                    ? \Carbon\Carbon::parse($caisse->created_at) 
+                    : \Carbon\Carbon::now();
+            @endphp
+            {{ $dateExamen->format('d/m/Y H:i') }}
         </span>
     </div>
 </div>
@@ -87,13 +91,21 @@
     <h3 class="font-bold text-xs mb-2">Examens demandés</h3>
     <table class="w-full text-xs">
         <tbody>
-            @if($caisse->examens_data)
             @php
-            $examensData = json_decode($caisse->examens_data, true);
+                // Décoder examens_data si c'est une string JSON
+                $examensData = is_string($caisse->examens_data) 
+                    ? json_decode($caisse->examens_data, true) 
+                    : $caisse->examens_data;
             @endphp
+            @if($examensData && is_array($examensData) && count($examensData) > 0)
             @foreach($examensData as $examenData)
             <tr>
-                <td class="py-1">{{ $examenData['nom'] ?? 'N/A' }}</td>
+                <td class="py-1">
+                    {{ $examenData['nom'] ?? 'N/A' }}
+                    @if(isset($examenData['quantite']) && $examenData['quantite'] > 1)
+                        <span class="text-gray-600">(Qté: {{ $examenData['quantite'] }})</span>
+                    @endif
+                </td>
                 <td class="py-1 text-right font-medium">{{ number_format($examenData['total'] ?? 0, 0) }}</td>
             </tr>
             @endforeach
@@ -128,8 +140,8 @@
 <div class="border-b border-dashed border-gray-400 mb-4"></div>
 
 <!-- Pied de page spécifique -->
-<div class="text-xs">
-    <span class="text-gray-600">Caissier(e) :</span>
-    <span class="font-semibold">{{ $caisse->nom_caissier ?? 'N/A' }}</span>
+<div class="flex justify-between text-xs text-gray-500">
+    <span>Caissier(e) : {{ $caisse->nom_caissier ?? 'N/A' }}</span>
+    <span>Date : {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}</span>
 </div>
 @endsection

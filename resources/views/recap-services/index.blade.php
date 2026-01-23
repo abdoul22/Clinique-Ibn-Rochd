@@ -213,11 +213,21 @@
                     $displayName = $services[$key] ?? ($serviceModel->nom ?? 'Service non assigné');
                     }
                     @endphp
+                    @php
+                    // Éviter la redondance : afficher toujours le nom, 
+                    // et le badge seulement s'il est différent du nom
+                    $isSimilar = strtoupper($displayName) === strtoupper($typeKey ?? '');
+                    @endphp
+                    {{-- Toujours afficher le nom du service --}}
                     <span class="font-medium text-gray-900 dark:text-white">{{ $displayName }}</span>
-                    <span
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeClass }} ml-2">
-                        {{ $typeKey ?? '—' }}
-                    </span>
+                    
+                    {{-- Afficher le badge seulement si différent du nom --}}
+                    @if($typeKey && !$isSimilar)
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeClass }} ml-2">
+                            {{ $typeKey }}
+                        </span>
+                    @endif
                 </td>
                 <td class="py-3 px-4">
                     <span

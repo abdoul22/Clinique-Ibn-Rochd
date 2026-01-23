@@ -156,8 +156,7 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 8%;">ID</th>
-                <th style="width: 25%;">Désignation</th>
+                <th style="width: 28%;">Désignation</th>
                 <th style="width: 12%;">Recette</th>
                 <th style="width: 12%;">Part Médecin</th>
                 <th style="width: 12%;">Part Clinique</th>
@@ -169,7 +168,6 @@
         <tbody>
             @foreach ($etatcaisses as $etat)
             <tr>
-                <td class="text-center">{{ $etat->id }}</td>
                 <td>{{ $etat->designation }}</td>
                 <td class="text-right">{{ number_format($etat->recette, 0, ',', ' ') }}</td>
                 <td class="text-right">{{ number_format($etat->part_medecin, 0, ',', ' ') }}</td>
@@ -284,8 +282,7 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 8%;">ID</th>
-                <th style="width: 25%;">Désignation</th>
+                <th style="width: 28%;">Désignation</th>
                 <th style="width: 12%;">Recette</th>
                 <th style="width: 12%;">Part Médecin</th>
                 <th style="width: 12%;">Part Clinique</th>
@@ -297,7 +294,6 @@
         <tbody>
             @foreach ($etatcaisses as $etat)
             <tr>
-                <td class="text-center">{{ $etat->id }}</td>
                 <td>{{ $etat->designation }}</td>
                 <td class="text-right">{{ number_format($etat->recette, 0, ',', ' ') }}</td>
                 <td class="text-right">{{ number_format($etat->part_medecin, 0, ',', ' ') }}</td>

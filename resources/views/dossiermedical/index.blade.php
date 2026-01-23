@@ -2,6 +2,17 @@
 @section('title', 'Dossiers Médicaux')
 
 @section('content')
+@php
+    $role = auth()->user()->role?->name;
+    $routePrefix = match($role) {
+        'superadmin' => 'superadmin',
+        'admin' => 'admin',
+        default => ''
+    };
+    $indexRoute = $routePrefix ? "{$routePrefix}.dossiers.index" : 'dossiers.index';
+    $showRoute = $routePrefix ? "{$routePrefix}.dossiers.show" : 'dossiers.show';
+    $syncRoute = $routePrefix ? "{$routePrefix}.dossiers.synchroniser" : 'dossiers.synchroniser';
+@endphp
 <div class="min-h-screen bg-gray-50/50 dark:bg-gray-900 p-4 sm:p-8">
     
     <!-- En-tête Moderne -->
@@ -16,7 +27,7 @@
         </div>
         
         <div class="flex gap-3 w-full lg:w-auto">
-            <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.dossiers.synchroniser') : route('dossiers.synchroniser') }}"
+            <a href="{{ route($syncRoute) }}"
                 class="group relative inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white transition-all duration-200 bg-indigo-600 border border-transparent rounded-full shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 w-full lg:w-auto"
                 onclick="return confirm('Cette opération va scanner tous les patients pour créer leurs dossiers manquants. Continuer ?')">
                 <span class="absolute inset-0 w-full h-full mt-1 ml-1 transition-all duration-200 ease-out bg-indigo-800 rounded-full group-hover:mt-0 group-hover:ml-0"></span>
@@ -29,7 +40,7 @@
     </div>
 
     <!-- Cartes de Statistiques Intelligentes -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <!-- Total Dossiers -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
             <div class="flex justify-between items-start">
@@ -68,26 +79,11 @@
                 </div>
             </div>
         </div>
-
-        <!-- Chiffre d'Affaires Global -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 uppercase">Volume Global</p>
-                    <h3 class="text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-1 truncate" title="{{ number_format($volumeGlobal, 0, ',', ' ') }} MRU">
-                        {{ number_format($volumeGlobal, 0, ',', ' ') }} <span class="text-xs font-medium text-gray-500">MRU</span>
-                    </h3>
-                </div>
-                <div class="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-                    <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Barre de Recherche Intelligente -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-1 mb-6 border border-gray-200 dark:border-gray-700">
-        <form method="GET" action="{{ auth()->user()->role?->name === 'admin' ? route('admin.dossiers.index') : route('dossiers.index') }}" class="flex flex-col lg:flex-row gap-2 p-2">
+        <form method="GET" action="{{ route($indexRoute) }}" class="flex flex-col lg:flex-row gap-2 p-2">
             
             <div class="relative flex-grow">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -113,7 +109,7 @@
                 </button>
                 
                 @if(request()->has('search') || request()->has('statut'))
-                <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.dossiers.index') : route('dossiers.index') }}" 
+                <a href="{{ route($indexRoute) }}" 
                    class="px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all flex-shrink-0 flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     Effacer
@@ -132,7 +128,6 @@
                         <th class="px-6 py-4">Patient / Dossier</th>
                         <th class="px-6 py-4">Fréquence</th>
                         <th class="px-6 py-4">Dernière Activité</th>
-                        <th class="px-6 py-4 text-right">Total Facturé</th>
                         <th class="px-6 py-4 text-center">État</th>
                         <th class="px-6 py-4 text-center">Actions</th>
                     </tr>
@@ -193,13 +188,6 @@
                             @endif
                         </td>
 
-                        <!-- Total (Aligné droite pour chiffres) -->
-                        <td class="px-6 py-4 text-right">
-                            <div class="text-sm font-bold text-gray-900 dark:text-white font-mono">
-                                {{ number_format($dossier->total_depense, 0, ',', ' ') }} <span class="text-xs text-gray-500 font-sans">MRU</span>
-                            </div>
-                        </td>
-
                         <!-- Statut -->
                         <td class="px-6 py-4 text-center">
                             @if($dossier->statut === 'actif')
@@ -221,7 +209,7 @@
 
                         <!-- Actions -->
                         <td class="px-6 py-4 text-center">
-                            <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.dossiers.show', $dossier->id) : route('dossiers.show', $dossier->id) }}" 
+                            <a href="{{ route($showRoute, $dossier->id) }}" 
                                class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-white dark:bg-indigo-600 dark:hover:bg-indigo-500 transition-colors shadow-sm">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 Consulter
@@ -230,7 +218,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
+                        <td colspan="5" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
                                     <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>

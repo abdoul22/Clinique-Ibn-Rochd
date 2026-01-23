@@ -3,8 +3,8 @@
 @section('content')
 
 @php
-    // Détecter le rôle de l'utilisateur pour utiliser les bonnes routes
-    $routePrefix = auth()->user()->role->name === 'admin' ? 'admin.' : '';
+// Détecter le rôle de l'utilisateur pour utiliser les bonnes routes
+$routePrefix = auth()->user()->role->name === 'admin' ? 'admin.' : '';
 @endphp
 
 <div
@@ -553,7 +553,7 @@
                     <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Charges facturées</h3>
                     @if($chargesFacturees->count() > 0)
                     <div class="space-y-3">
-                        @foreach($chargesFacturees->take(5) as $charge)
+                        @foreach($chargesFacturees as $charge)
                         <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <div>
                                 <p class="font-medium text-gray-900 dark:text-white text-sm">{{
@@ -664,7 +664,7 @@
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mode de
                         paiement</label>
-                    <select name="type" required
+                    <select name="type" id="paiement_type" required
                         class="form-select w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                         <option value="">Sélectionner...</option>
                         <option value="espèces">Espèces</option>
@@ -672,6 +672,44 @@
                         <option value="masrivi">Masrivi</option>
                         <option value="sedad">Sedad</option>
                     </select>
+                </div>
+
+                <!-- Checkbox assurance -->
+                <div class="mb-4">
+                    <label class="flex items-center text-gray-700 dark:text-gray-300">
+                        <input type="checkbox" id="hasAssurance_paiement"
+                            class="mr-2 rounded border-gray-300 dark:border-gray-600">
+                        Le patient a une assurance ?
+                    </label>
+                </div>
+
+                <!-- Champs assurance -->
+                <div id="assuranceFields_paiement" style="display: none;" class="mb-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Nom de l'assurance <span class="text-red-500">*</span>
+                        </label>
+                        <select name="assurance_id" id="assurance_id_paiement" disabled
+                            class="form-select w-full rounded-lg border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                            <option value="">-- Sélectionner une assurance --</option>
+                            @foreach ($assurances as $assurance)
+                            <option value="{{ $assurance->id }}" data-couverture="{{ $assurance->taux_couverture }}">{{
+                                $assurance->nom }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Couverture (%)
+                        </label>
+                        <input type="number" name="couverture" id="couverture_paiement" disabled
+                            class="form-input w-full rounded-lg border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                            min="0" max="100" placeholder="Sélectionnez d'abord une assurance">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            <i class="fas fa-lock mr-1"></i>Ce champ sera activé après sélection d'une assurance
+                        </p>
+                    </div>
                 </div>
 
                 <div class="flex justify-end space-x-3">
@@ -825,6 +863,62 @@
     let currentMedicamentData = null;
     let hospitalisationPharmacienId = {{ $hospitalisation->pharmacien_id ?? 'null' }};
     const hospitalisationId = {{ $hospitalisation->id }};
+
+    // ========================================
+    // Gestion de l'assurance dans la modale de paiement
+    // ========================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const hasAssuranceCheckbox = document.getElementById('hasAssurance_paiement');
+        const assuranceFields = document.getElementById('assuranceFields_paiement');
+        const assuranceSelect = document.getElementById('assurance_id_paiement');
+        const couvertureInput = document.getElementById('couverture_paiement');
+
+        // Afficher/masquer les champs d'assurance
+        if (hasAssuranceCheckbox) {
+            hasAssuranceCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    assuranceFields.style.display = 'block';
+                    assuranceSelect.disabled = false;
+                    assuranceSelect.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-500', 'dark:text-gray-400');
+                    assuranceSelect.classList.add('bg-white', 'dark:bg-gray-900', 'text-gray-900', 'dark:text-white');
+                } else {
+                    assuranceFields.style.display = 'none';
+                    assuranceSelect.disabled = true;
+                    assuranceSelect.value = '';
+                    couvertureInput.disabled = true;
+                    couvertureInput.value = '';
+                    assuranceSelect.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-gray-500', 'dark:text-gray-400');
+                    assuranceSelect.classList.remove('bg-white', 'dark:bg-gray-900', 'text-gray-900', 'dark:text-white');
+                }
+            });
+        }
+
+        // Activer le champ couverture quand une assurance est sélectionnée
+        if (assuranceSelect) {
+            assuranceSelect.addEventListener('change', function() {
+                if (this.value) {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const tauxCouverture = selectedOption.getAttribute('data-couverture');
+
+                    couvertureInput.disabled = false;
+                    couvertureInput.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-500', 'dark:text-gray-400');
+                    couvertureInput.classList.add('bg-white', 'dark:bg-gray-900', 'text-gray-900', 'dark:text-white');
+                    couvertureInput.placeholder = 'Ex: 90';
+
+                    // Pré-remplir avec le taux de couverture de l'assurance si disponible
+                    if (tauxCouverture) {
+                        couvertureInput.value = tauxCouverture;
+                    }
+                } else {
+                    couvertureInput.disabled = true;
+                    couvertureInput.value = '';
+                    couvertureInput.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-gray-500', 'dark:text-gray-400');
+                    couvertureInput.classList.remove('bg-white', 'dark:bg-gray-900', 'text-gray-900', 'dark:text-white');
+                    couvertureInput.placeholder = 'Sélectionnez d\'abord une assurance';
+                }
+            });
+        }
+    });
 
     // Gestion du changement de type de charge
     document.getElementById('charge_type')?.addEventListener('change', function(){

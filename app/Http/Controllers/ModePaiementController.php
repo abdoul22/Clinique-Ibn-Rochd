@@ -551,4 +551,109 @@ class ModePaiementController extends Controller
             $query->whereBetween('created_at', [$dateConstraints['start'], $dateConstraints['end']]);
         }
     }
+
+    /**
+     * Page d'impression pour les modes de paiement
+     */
+    public function print(Request $request)
+    {
+        // Récupérer les types de modes de paiement
+        $typesModes = ModePaiement::getTypes();
+
+        // Gérer le filtrage par période
+        $period = $request->get('period', null);
+        $dateConstraints = $this->getDateConstraints($request, $period);
+
+        // Calculer les totaux par mode de paiement
+        $data = [];
+        
+        foreach ($typesModes as $type) {
+            // Calculer les entrées (recettes)
+            $queryEntree = EtatCaisse::whereNotNull('caisse_id')->whereHas('caisse.mode_paiements', function ($query) use ($type) {
+                $query->where('type', $type);
+            });
+            $this->applyDateFilter($queryEntree, $dateConstraints);
+            $entree = $queryEntree->sum('recette');
+
+            // Ajouter les paiements de crédits d'assurance
+            $queryEntreeCredits = ModePaiement::where('type', $type)
+                ->whereNull('caisse_id')
+                ->where('source', 'credit_assurance');
+            $this->applyDateFilter($queryEntreeCredits, $dateConstraints);
+            $entree += $queryEntreeCredits->sum('montant');
+
+            // Calculer les sorties (dépenses)
+            $querySortie = Depense::where('mode_paiement_id', $type)
+                ->where('rembourse', false);
+            $this->applyDateFilter($querySortie, $dateConstraints);
+            $sortie = $querySortie->sum('montant');
+
+            $solde = $entree - $sortie;
+
+            $data[] = [
+                'mode' => ucfirst($type),
+                'entree' => $entree,
+                'sortie' => $sortie,
+                'solde' => $solde
+            ];
+        }
+
+        // Calculer le total global
+        $totalGlobal = array_sum(array_column($data, 'solde'));
+
+        return view('modepaiements.print', compact('data', 'totalGlobal'));
+    }
+
+    /**
+     * Export PDF pour les modes de paiement
+     */
+    public function exportPdf(Request $request)
+    {
+        // Récupérer les types de modes de paiement
+        $typesModes = ModePaiement::getTypes();
+
+        // Gérer le filtrage par période
+        $period = $request->get('period', null);
+        $dateConstraints = $this->getDateConstraints($request, $period);
+
+        // Calculer les totaux par mode de paiement
+        $data = [];
+        
+        foreach ($typesModes as $type) {
+            // Calculer les entrées (recettes)
+            $queryEntree = EtatCaisse::whereNotNull('caisse_id')->whereHas('caisse.mode_paiements', function ($query) use ($type) {
+                $query->where('type', $type);
+            });
+            $this->applyDateFilter($queryEntree, $dateConstraints);
+            $entree = $queryEntree->sum('recette');
+
+            // Ajouter les paiements de crédits d'assurance
+            $queryEntreeCredits = ModePaiement::where('type', $type)
+                ->whereNull('caisse_id')
+                ->where('source', 'credit_assurance');
+            $this->applyDateFilter($queryEntreeCredits, $dateConstraints);
+            $entree += $queryEntreeCredits->sum('montant');
+
+            // Calculer les sorties (dépenses)
+            $querySortie = Depense::where('mode_paiement_id', $type)
+                ->where('rembourse', false);
+            $this->applyDateFilter($querySortie, $dateConstraints);
+            $sortie = $querySortie->sum('montant');
+
+            $solde = $entree - $sortie;
+
+            $data[] = [
+                'mode' => ucfirst($type),
+                'entree' => $entree,
+                'sortie' => $sortie,
+                'solde' => $solde
+            ];
+        }
+
+        // Calculer le total global
+        $totalGlobal = array_sum(array_column($data, 'solde'));
+
+        $pdf = \PDF::loadView('modepaiements.export_pdf', compact('data', 'totalGlobal'));
+        return $pdf->download('modes-paiement.pdf');
+    }
 }

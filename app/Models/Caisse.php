@@ -12,7 +12,7 @@ class Caisse extends Model
     // app/Models/Caisse.php
     protected $casts = [
         'date_examen' => 'date',
-        'examens_data' => 'array',
+        'examens_data' => 'array', // Laravel encode/décode automatiquement
     ];
 
     protected $fillable = [
@@ -26,6 +26,7 @@ class Caisse extends Model
         'date_examen',
         'total',
         'nom_caissier',
+        'modified_by',
         'couverture',
         'numero_facture',
         'examens_data',
@@ -80,6 +81,11 @@ class Caisse extends Model
     public function etatCaisse()
     {
         return $this->hasOne(EtatCaisse::class);
+    }
+
+    public function modifier()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'modified_by');
     }
 
     protected static function booted()

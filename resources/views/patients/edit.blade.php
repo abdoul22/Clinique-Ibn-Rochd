@@ -42,6 +42,7 @@
             <form method="POST" action="{{ $route }}">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="return_page" value="{{ request('page', 1) }}">
 
                 <!-- Informations personnelles -->
                 <div class="bg-blue-600 dark:bg-blue-700 px-6 py-4">
@@ -130,12 +131,11 @@
 
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <i class="fas fa-map-marker-alt mr-1"></i>Adresse *
+                                <i class="fas fa-map-marker-alt mr-1"></i>Adresse
                             </label>
                             <input type="text" name="address" value="{{ $patient->address }}"
                                 placeholder="Entrez l'adresse complète"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-200"
-                                required>
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-200">
                             @error('address')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror

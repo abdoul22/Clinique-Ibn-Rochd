@@ -6,6 +6,7 @@
     <form action="{{ route('examens.update', $examen->id) }}" method="POST">
         @csrf
         @method('PUT')
+        <input type="hidden" name="return_page" value="{{ $page ?? 1 }}">
         <!-- Nom -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Nom</label>
@@ -62,7 +63,7 @@
             @enderror
         </div>
         <div class="flex justify-end space-x-2">
-            <a href="{{ route('examens.index') }}"
+            <a href="{{ route('examens.index', ['page' => $page ?? 1]) }}"
                 class="bg-gray-600 dark:bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-700 dark:hover:bg-gray-800">Annuler</a>
             <button type="submit"
                 class="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-800">Mettre

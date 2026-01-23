@@ -71,13 +71,18 @@
                     <i class="fas fa-shield-alt mr-2"></i>Sécurité
                 </h3>
                 <div class="space-y-4">
-                    <a href="#"
+                    <a href="{{ route('password.edit') }}"
                         class="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-900 dark:text-white font-medium">Changer le mot de passe</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-300">Dernière modification il y a 30
-                                    jours</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">
+                                    @if(auth()->user()->password_changed_at)
+                                        Dernière modification {{ auth()->user()->password_changed_at->diffForHumans() }}
+                                    @else
+                                        Jamais modifié
+                                    @endif
+                                </p>
                             </div>
                             <i class="fas fa-chevron-right text-gray-400"></i>
                         </div>

@@ -147,11 +147,28 @@
                             Modifier le patient
                         </a>
                         @endif
+
+                        @if(auth()->user()->role->name === 'medecin')
+                        <a href="{{ route('medecin.rendezvous.index', ['patient_search' => $patient->phone]) }}"
+                            class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            Voir mes rendez-vous
+                        </a>
+                        @if($patient->dossierMedical)
+                        <a href="{{ route('dossiers.show', $patient->dossierMedical->id) }}"
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md">
+                            <i class="fas fa-folder-open mr-2"></i>
+                            Dossier Médical
+                        </a>
+                        @endif
+                        @else
                         <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.rendezvous.create', ['patient_id' => $patient->id]) : route('rendezvous.create', ['patient_id' => $patient->id]) }}"
                             class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200">
                             <i class="fas fa-calendar-plus mr-2"></i>
                             Nouveau rendez-vous
                         </a>
+                        @endif
+
                         @if(auth()->user()->role->name !== 'medecin')
                         <form action="{{ route(auth()->user()->role->name . '.patients.destroy', $patient->id) }}"
                             method="POST" class="inline"

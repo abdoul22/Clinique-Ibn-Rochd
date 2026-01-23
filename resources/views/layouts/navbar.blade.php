@@ -4,7 +4,15 @@
         <div class="flex justify-between items-center h-14 sm:h-16">
             <!-- Logo -->
             <div class="flex-shrink-0">
-                <a href="{{ route('dashboard.superadmin') }}" class="flex items-center space-x-2 group">
+                @auth
+                    @php
+                        $userRole = Auth::user()->role?->name;
+                        $dashboardRoute = $userRole === 'superadmin' ? 'dashboard.superadmin' : ($userRole === 'admin' ? 'dashboard.admin' : ($userRole === 'medecin' ? 'medecin.dashboard' : 'dashboard.superadmin'));
+                    @endphp
+                    <a href="{{ route($dashboardRoute) }}" class="flex items-center space-x-2 group">
+                @else
+                    <a href="{{ route('login') }}" class="flex items-center space-x-2 group">
+                @endauth
                     <div class="my-1 sm:my-2">
                         <img src="{{ asset(config('clinique.logo_path')) }}" alt="Logo {{ config('clinique.name') }}"
                             class="h-12 w-12 p-1 sm:h-20 sm:w-20 sm:p-2">
@@ -97,6 +105,28 @@
                 <a href="{{ route('admin.rendezvous.index') }}"
                     class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
                     <i class="fas fa-calendar-alt mr-2"></i>Rendez-vous
+                    <div
+                        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
+                    </div>
+                </a>
+                @elseif(Auth::user()->role?->name === 'medecin')
+                <a href="{{ route('medecin.dashboard') }}"
+                    class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
+                    <i class="fas fa-home mr-2"></i>Dashboard
+                    <div
+                        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
+                    </div>
+                </a>
+                <a href="{{ route('medecin.consultations.index') }}"
+                    class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
+                    <i class="fas fa-notes-medical mr-2"></i>Rapports
+                    <div
+                        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
+                    </div>
+                </a>
+                <a href="{{ route('medecin.ordonnances.index') }}"
+                    class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 relative group">
+                    <i class="fas fa-prescription mr-2"></i>Ordonnances
                     <div
                         class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300">
                     </div>
@@ -257,6 +287,27 @@
                                 class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <i class="fas fa-calendar-alt mr-3 text-gray-400 w-5"></i>
                                 Rendez-vous
+                            </a>
+                            @elseif(Auth::user()->role?->name === 'medecin')
+                            <a href="{{ route('medecin.dashboard') }}"
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-home mr-3 text-gray-400 w-5"></i>
+                                Dashboard
+                            </a>
+                            <a href="{{ route('medecin.consultations.index') }}"
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-notes-medical mr-3 text-gray-400 w-5"></i>
+                                Rapports Médicaux
+                            </a>
+                            <a href="{{ route('medecin.ordonnances.index') }}"
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-prescription mr-3 text-gray-400 w-5"></i>
+                                Ordonnances
+                            </a>
+                            <a href="{{ route('medecin.patients.index') }}"
+                                class="flex items-center px-4 py-3 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <i class="fas fa-users mr-3 text-gray-400 w-5"></i>
+                                Patients
                             </a>
                             @endif
                             <a href="{{ route('profile.show') }}"

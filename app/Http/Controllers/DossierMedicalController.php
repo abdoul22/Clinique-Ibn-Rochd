@@ -23,17 +23,31 @@ class DossierMedicalController extends Controller
         $dateDebut = $request->input('date_debut');
         $dateFin = $request->input('date_fin');
 
+        // Vérifier si l'utilisateur est un médecin
+        $user = Auth::user();
+        $isMedecin = $user->role?->name === 'medecin';
+        $medecinId = $isMedecin ? $user->medecin?->id : null;
+
         $query = DossierMedical::with(['patient']);
+
+        // Filtrer par médecin si l'utilisateur est un médecin
+        if ($isMedecin && $medecinId) {
+            $query->whereHas('examens', function ($q) use ($medecinId) {
+                $q->where('medecin_id', $medecinId);
+            });
+        }
 
         // Filtre par recherche
         if ($search) {
-            $query->whereHas('patient', function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('national_id', 'like', "%{$search}%");
-            })
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('patient', function ($subQ) use ($search) {
+                    $subQ->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('national_id', 'like', "%{$search}%");
+                })
                 ->orWhere('numero_dossier', 'like', "%{$search}%");
+            });
         }
 
         // Filtre par statut
@@ -49,12 +63,24 @@ class DossierMedicalController extends Controller
             $query->where('derniere_visite', '<=', $dateFin);
         }
 
-        // Calculer les statistiques globales (Indépendantes de la pagination et des filtres)
-        // On utilise des requêtes légères (count/sum) directes en base
-        $totalDossiers = DossierMedical::count();
-        $dossiersActifs = DossierMedical::where('statut', 'actif')->count();
-        $visitesCeMois = DossierMedical::where('derniere_visite', '>=', now()->startOfMonth())->count();
-        $volumeGlobal = DossierMedical::sum('total_depense');
+        // Calculer les statistiques globales (filtrées pour médecin si nécessaire)
+        if ($isMedecin && $medecinId) {
+            $totalDossiers = DossierMedical::whereHas('examens', function ($q) use ($medecinId) {
+                $q->where('medecin_id', $medecinId);
+            })->count();
+            $dossiersActifs = DossierMedical::where('statut', 'actif')
+                ->whereHas('examens', function ($q) use ($medecinId) {
+                    $q->where('medecin_id', $medecinId);
+                })->count();
+            $visitesCeMois = DossierMedical::where('derniere_visite', '>=', now()->startOfMonth())
+                ->whereHas('examens', function ($q) use ($medecinId) {
+                    $q->where('medecin_id', $medecinId);
+                })->count();
+        } else {
+            $totalDossiers = DossierMedical::count();
+            $dossiersActifs = DossierMedical::where('statut', 'actif')->count();
+            $visitesCeMois = DossierMedical::where('derniere_visite', '>=', now()->startOfMonth())->count();
+        }
 
         $dossiers = $query->orderBy('derniere_visite', 'desc')
             ->orderBy('nombre_visites', 'desc')
@@ -64,8 +90,7 @@ class DossierMedicalController extends Controller
             'dossiers', 
             'totalDossiers', 
             'dossiersActifs', 
-            'visitesCeMois', 
-            'volumeGlobal'
+            'visitesCeMois'
         ));
     }
 
@@ -101,18 +126,53 @@ class DossierMedicalController extends Controller
             'rendezVous.medecin'
         ])->findOrFail($id);
 
-        // Calculer les statistiques
-        $statistiques = $dossier->calculerStatistiques();
+        // Vérifier si l'utilisateur est un médecin
+        $user = Auth::user();
+        $isMedecin = $user->role?->name === 'medecin';
+        $medecinId = $isMedecin ? $user->medecin?->id : null;
 
-        // Récupérer l'historique des examens avec pagination
-        $examens = $dossier->examens()
-            ->with(['medecin', 'examen', 'service', 'prescripteur'])
+        // Calculer les statistiques (filtrer pour médecin si nécessaire)
+        if ($isMedecin && $medecinId) {
+            $examensCount = $dossier->examens()->where('medecin_id', $medecinId)->count();
+            $rendezVousCount = $dossier->rendezVous()->where('medecin_id', $medecinId)->count();
+            $rendezVousConfirmes = $dossier->rendezVous()->where('medecin_id', $medecinId)->where('statut', 'confirme')->count();
+            $rendezVousTermines = $dossier->rendezVous()->where('medecin_id', $medecinId)->where('statut', 'termine')->count();
+            
+            $statistiques = [
+                'nombre_visites' => $examensCount,
+                'total_examens' => $examensCount,
+                'total_rendez_vous' => $rendezVousCount,
+                'rendez_vous_confirmes' => $rendezVousConfirmes,
+                'rendez_vous_termines' => $rendezVousTermines,
+                'medecins_consultes' => $examensCount > 0 ? 1 : 0, // 1 médecin (lui-même) si il a des examens
+                'total_depense' => $dossier->examens()->where('medecin_id', $medecinId)->sum('total'),
+                'derniere_visite' => $dossier->examens()->where('medecin_id', $medecinId)->max('date_examen'),
+            ];
+        } else {
+            $statistiques = $dossier->calculerStatistiques();
+        }
+
+        // Récupérer l'historique des examens avec pagination (filtrer pour médecin)
+        $examensQuery = $dossier->examens()
+            ->with(['medecin', 'examen', 'service', 'prescripteur']);
+        
+        if ($isMedecin && $medecinId) {
+            $examensQuery->where('medecin_id', $medecinId);
+        }
+        
+        $examens = $examensQuery
             ->orderBy('date_examen', 'desc')
             ->paginate(10, ['*'], 'examens_page');
 
-        // Récupérer l'historique des rendez-vous avec pagination
-        $rendezVous = $dossier->rendezVous()
-            ->with(['medecin'])
+        // Récupérer l'historique des rendez-vous avec pagination (filtrer pour médecin)
+        $rendezVousQuery = $dossier->rendezVous()
+            ->with(['medecin']);
+        
+        if ($isMedecin && $medecinId) {
+            $rendezVousQuery->where('medecin_id', $medecinId);
+        }
+        
+        $rendezVous = $rendezVousQuery
             ->orderBy('date_rdv', 'desc')
             ->orderBy('heure_rdv', 'desc')
             ->paginate(10, ['*'], 'rendezvous_page');
@@ -149,7 +209,12 @@ class DossierMedicalController extends Controller
         $dossier->update($request->only(['statut', 'notes_generales']));
 
         // Redirection en fonction du rôle de l'utilisateur
-        $route = Auth::user()->role?->name === 'admin' ? 'admin.dossiers.show' : 'dossiers.show';
+        $role = Auth::user()->role?->name;
+        $route = match($role) {
+            'superadmin' => 'superadmin.dossiers.show',
+            'admin' => 'admin.dossiers.show',
+            default => 'dossiers.show'
+        };
         return redirect()->route($route, $dossier->id)
             ->with('success', 'Dossier médical mis à jour avec succès.');
     }
@@ -163,7 +228,12 @@ class DossierMedicalController extends Controller
         $dossier->delete();
 
         // Redirection en fonction du rôle de l'utilisateur
-        $route = Auth::user()->role?->name === 'admin' ? 'admin.dossiers.index' : 'dossiers.index';
+        $role = Auth::user()->role?->name;
+        $route = match($role) {
+            'superadmin' => 'superadmin.dossiers.index',
+            'admin' => 'admin.dossiers.index',
+            default => 'dossiers.index'
+        };
         return redirect()->route($route)
             ->with('success', 'Dossier médical supprimé avec succès.');
     }
@@ -221,7 +291,12 @@ class DossierMedicalController extends Controller
         }
 
         // Redirection en fonction du rôle de l'utilisateur
-        $route = Auth::user()->role?->name === 'admin' ? 'admin.dossiers.index' : 'dossiers.index';
+        $role = Auth::user()->role?->name;
+        $route = match($role) {
+            'superadmin' => 'superadmin.dossiers.index',
+            'admin' => 'admin.dossiers.index',
+            default => 'dossiers.index'
+        };
         return redirect()->route($route)
             ->with('success', 'Synchronisation des dossiers terminée.');
     }

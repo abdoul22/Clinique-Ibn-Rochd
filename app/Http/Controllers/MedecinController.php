@@ -256,8 +256,9 @@ class MedecinController extends Controller
     public function edit($id)
     {
         $medecin = Medecin::findOrFail($id);
+        $page = request('page', 1); // Récupérer le paramètre page
         $viewPath = $this->resolveViewPath('edit');
-        return view($viewPath, compact('medecin'));
+        return view($viewPath, compact('medecin', 'page'));
     }
 
     public function update(Request $request, $id)
@@ -283,11 +284,16 @@ class MedecinController extends Controller
             'statut',
         ]));
 
-        return redirect()->route(Auth::user()->role->name . '.medecins.index')->with('success', 'Médecin mis à jour avec succès.');
+        // Conserver le paramètre de pagination
+        $page = $request->input('return_page', 1);
+        $role = Auth::user()->role->name;
+        $routeName = $role . '.medecins.index';
+        
+        return redirect()->route($routeName, ['page' => $page])->with('success', 'Médecin mis à jour avec succès.');
     }
     public function show($id)
     {
-        $medecin = Medecin::with(['caisses', 'caisses.examen'])->findOrFail($id);
+        $medecin = Medecin::with(['caisses', 'caisses.examen', 'user'])->findOrFail($id);
         return view('medecins.show', compact('medecin'));
     }
 

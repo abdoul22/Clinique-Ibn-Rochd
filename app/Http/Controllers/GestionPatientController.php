@@ -14,14 +14,8 @@ class GestionPatientController extends Controller
         $phoneFilter = $request->input('phone_filter');
         $genderFilter = $request->input('gender_filter');
         $nameFilter = $request->input('name_filter');
-        $birthDateFilter = $request->input('birth_date_filter');
-        $period = $request->input('period', 'day');
-        $date = $request->input('date');
-        $week = $request->input('week');
-        $month = $request->input('month');
-        $year = $request->input('year');
-        $dateStart = $request->input('date_start');
-        $dateEnd = $request->input('date_end');
+        $ageFilter = $request->input('age_filter');
+        $period = $request->input('period');
 
         $query = GestionPatient::query();
 
@@ -65,34 +59,40 @@ class GestionPatientController extends Controller
             });
         }
 
-        // Filtre par date de naissance
-        if ($birthDateFilter) {
-            $query->whereDate('date_of_birth', $birthDateFilter);
+        // Filtre par âge (intervalles)
+        if ($ageFilter) {
+            if ($ageFilter === '100+') {
+                $query->where('age', '>', 100);
+            } else {
+                $ages = explode('-', $ageFilter);
+                if (count($ages) === 2) {
+                    $minAge = (int)$ages[0];
+                    $maxAge = (int)$ages[1];
+                    $query->whereBetween('age', [$minAge, $maxAge]);
+                }
+            }
         }
 
-        // Filtrage par période sur created_at
-        if ($period === 'day' && $date) {
-            $query->whereDate('created_at', $date);
-        } elseif ($period === 'week' && $week) {
-            $parts = explode('-W', $week);
-            if (count($parts) === 2) {
-                $yearW = (int)$parts[0];
-                $weekW = (int)$parts[1];
-                $startOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->startOfWeek();
-                $endOfWeek = \Carbon\Carbon::now()->setISODate($yearW, $weekW)->endOfWeek();
+        // Filtrage par période d'inscription sur created_at
+        if ($period) {
+            $now = \Carbon\Carbon::now();
+            
+            if ($period === 'day') {
+                // Aujourd'hui
+                $query->whereDate('created_at', $now->toDateString());
+            } elseif ($period === 'week') {
+                // Cette semaine (du lundi au dimanche)
+                $startOfWeek = $now->copy()->startOfWeek();
+                $endOfWeek = $now->copy()->endOfWeek();
                 $query->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+            } elseif ($period === 'month') {
+                // Ce mois
+                $query->whereYear('created_at', $now->year)
+                      ->whereMonth('created_at', $now->month);
+            } elseif ($period === 'year') {
+                // Cette année
+                $query->whereYear('created_at', $now->year);
             }
-        } elseif ($period === 'month' && $month) {
-            $parts = explode('-', $month);
-            if (count($parts) === 2) {
-                $yearM = (int)$parts[0];
-                $monthM = (int)$parts[1];
-                $query->whereYear('created_at', $yearM)->whereMonth('created_at', $monthM);
-            }
-        } elseif ($period === 'year' && $year) {
-            $query->whereYear('created_at', $year);
-        } elseif ($period === 'range' && $dateStart && $dateEnd) {
-            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
         }
 
         $patients = $query->orderBy('created_at', 'desc')->paginate(6);
@@ -159,19 +159,23 @@ class GestionPatientController extends Controller
 
     public function edit($id)
     {
-        $patient = GestionPatient::find($id);
-        return view('patients.edit', compact('patient'));
+        $patient = GestionPatient::findOrFail($id);
+        $page = request('page', 1); // Récupérer le paramètre page
+        return view('patients.edit', compact('patient', 'page'));
     }
 
-    public function update(Request $request, GestionPatient $patient)
+    public function update(Request $request, $id)
     {
-        // Validation pour éviter les doublons
+        $patient = GestionPatient::findOrFail($id);
+        
+        // Validation pour éviter les doublons - exclure l'ID actuel
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'gender' => 'required|in:Homme,Femme',
             'age' => 'required|integer|min:0|max:150',
-            'phone' => 'required|string|max:20|unique:gestion_patients,phone,' . $patient->id,
+            'phone' => 'required|string|max:20|unique:gestion_patients,phone,' . $id,
+            'address' => 'nullable|string|max:255',
         ], [
             'phone.unique' => 'Le numéro de téléphone existe déjà.',
         ]);
@@ -181,20 +185,22 @@ class GestionPatientController extends Controller
         $patient->gender = $request->gender;
         $patient->age = $request->age;
         $patient->phone = $request->phone;
-        $patient->address = $request->address;
+        $patient->address = $request->address ?? null;
 
         if ($patient->save()) {
+            // Conserver le paramètre de pagination
+            $page = $request->input('return_page', 1);
             $role = Auth::user()->role->name;
 
             if ($role === 'superadmin') {
-                return redirect()->route('superadmin.patients.index')->with('success', 'Patient mis à jour !');
+                return redirect()->route('superadmin.patients.index', ['page' => $page])->with('success', 'Patient mis à jour !');
             } elseif ($role === 'admin') {
-                return redirect()->route('admin.patients.index')->with('success', 'Patient mis à jour !');
+                return redirect()->route('admin.patients.index', ['page' => $page])->with('success', 'Patient mis à jour !');
             } elseif ($role === 'medecin') {
                 return redirect()->route('medecin.patients.show', $patient->id)->with('success', 'Patient mis à jour !');
             }
 
-            return redirect()->route('patients.index')->with('success', 'Patient mis à jour !');
+            return redirect()->route('patients.index', ['page' => $page])->with('success', 'Patient mis à jour !');
         } else {
             return back()->with('error', 'Erreur lors de la mise à jour');
         }

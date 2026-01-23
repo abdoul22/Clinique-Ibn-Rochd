@@ -28,6 +28,7 @@ class Hospitalisation extends Model
         'discharge_at',
         'next_charge_due_at',
         'annulated_by', // utilisateur qui a annulé
+        'created_by', // utilisateur qui a créé
     ];
 
     public function patient()
@@ -50,6 +51,11 @@ class Hospitalisation extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function assurance()
+    {
+        return $this->belongsTo(Assurance::class);
+    }
+
     public function lit()
     {
         return $this->belongsTo(Lit::class, 'lit_id');
@@ -68,6 +74,11 @@ class Hospitalisation extends Model
     public function annulator()
     {
         return $this->belongsTo(\App\Models\User::class, 'annulated_by');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
     }
 
     public function charges()

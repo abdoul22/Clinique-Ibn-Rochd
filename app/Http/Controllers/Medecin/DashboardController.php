@@ -20,20 +20,20 @@ class DashboardController extends Controller
             return redirect()->route('login')->with('error', 'Aucun profil médecin associé à votre compte.');
         }
 
-        // Statistiques basées sur les caisses
+        // Statistiques basées sur les caisses et created_at
         $stats = [
             'consultations_aujourdhui' => \App\Models\Caisse::where('medecin_id', $medecin->id)
-                ->whereDate('date_examen', Carbon::today())
+                ->whereDate('created_at', Carbon::today())
                 ->count(),
             
             'consultations_mois' => \App\Models\Caisse::where('medecin_id', $medecin->id)
-                ->whereYear('date_examen', Carbon::now()->year)
-                ->whereMonth('date_examen', Carbon::now()->month)
+                ->whereYear('created_at', Carbon::now()->year)
+                ->whereMonth('created_at', Carbon::now()->month)
                 ->count(),
             
-            'ordonnances_mois' => Ordonnance::parMedecin($medecin->id)
-                ->whereYear('date_ordonnance', Carbon::now()->year)
-                ->whereMonth('date_ordonnance', Carbon::now()->month)
+            'ordonnances_mois' => Ordonnance::where('medecin_id', $medecin->id)
+                ->whereYear('created_at', Carbon::now()->year)
+                ->whereMonth('created_at', Carbon::now()->month)
                 ->count(),
             
             'patients_total' => GestionPatient::whereHas('caisses', function ($q) use ($medecin) {
@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
         // Dernières caisses (remplace les consultations)
         $dernieresConsultations = \App\Models\Caisse::where('medecin_id', $medecin->id)
-            ->with(['patient', 'examen'])
+            ->with(['patient', 'examen', 'etatCaisse'])
             ->latest('created_at')
             ->limit(5)
             ->get();

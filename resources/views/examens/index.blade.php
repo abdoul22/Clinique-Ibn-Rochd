@@ -165,7 +165,7 @@ $summary = 'Filtré du ' . \Carbon\Carbon::parse(request('date_start'))->transla
                         </a>
 
                         <!-- Modifier -->
-                        <a href="{{ route(auth()->user()->role->name . '.examens.edit', $examen->id) }}"
+                        <a href="{{ route(auth()->user()->role->name . '.examens.edit', [$examen->id, 'page' => request('page', 1)]) }}"
                             class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1">
                             <i class="fas fa-edit"></i>
                         </a>

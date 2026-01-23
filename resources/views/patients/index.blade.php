@@ -31,7 +31,7 @@
                 <i class="fas fa-filter mr-2 text-blue-500"></i>Filtres de recherche
             </h2>
 
-            <form method="GET" action="{{ route('patients.index') }}" class="space-y-4">
+            <form method="GET" action="{{ route(auth()->user()->role->name . '.patients.index') }}" class="space-y-4">
                 <!-- Première ligne de filtres -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Recherche générale -->
@@ -82,13 +82,26 @@
 
                 <!-- Deuxième ligne de filtres -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Filtre par date de naissance -->
+                    <!-- Filtre par âge -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <i class="fas fa-calendar mr-1"></i>Date de naissance
+                            <i class="fas fa-birthday-cake mr-1"></i>Âge
                         </label>
-                        <input type="date" name="birth_date_filter" value="{{ request('birth_date_filter') }}"
+                        <select name="age_filter" id="age_filter"
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                            <option value="">Tous les âges</option>
+                            <option value="0-10" {{ request('age_filter')=='0-10' ? 'selected' : '' }}>0 à 10 ans</option>
+                            <option value="10-20" {{ request('age_filter')=='10-20' ? 'selected' : '' }}>10 à 20 ans</option>
+                            <option value="20-30" {{ request('age_filter')=='20-30' ? 'selected' : '' }}>20 à 30 ans</option>
+                            <option value="30-40" {{ request('age_filter')=='30-40' ? 'selected' : '' }}>30 à 40 ans</option>
+                            <option value="40-50" {{ request('age_filter')=='40-50' ? 'selected' : '' }}>40 à 50 ans</option>
+                            <option value="50-60" {{ request('age_filter')=='50-60' ? 'selected' : '' }}>50 à 60 ans</option>
+                            <option value="60-70" {{ request('age_filter')=='60-70' ? 'selected' : '' }}>60 à 70 ans</option>
+                            <option value="70-80" {{ request('age_filter')=='70-80' ? 'selected' : '' }}>70 à 80 ans</option>
+                            <option value="80-90" {{ request('age_filter')=='80-90' ? 'selected' : '' }}>80 à 90 ans</option>
+                            <option value="90-100" {{ request('age_filter')=='90-100' ? 'selected' : '' }}>90 à 100 ans</option>
+                            <option value="100+" {{ request('age_filter')=='100+' ? 'selected' : '' }}>> 100 ans</option>
+                        </select>
                     </div>
 
                     <!-- Filtre par période -->
@@ -98,11 +111,9 @@
                         </label>
                         <select name="period" id="period"
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                            <option value="all" {{ request('period', 'all' )=='all' ? 'selected' : '' }}>Toutes les
-                                périodes</option>
+                            <option value="">Toutes les périodes</option>
                             <option value="day" {{ request('period')=='day' ? 'selected' : '' }}>Aujourd'hui</option>
-                            <option value="week" {{ request('period')=='week' ? 'selected' : '' }}>Cette semaine
-                            </option>
+                            <option value="week" {{ request('period')=='week' ? 'selected' : '' }}>Cette semaine</option>
                             <option value="month" {{ request('period')=='month' ? 'selected' : '' }}>Ce mois</option>
                             <option value="year" {{ request('period')=='year' ? 'selected' : '' }}>Cette année</option>
                         </select>
@@ -114,7 +125,7 @@
                             class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
                             <i class="fas fa-search mr-2"></i>Filtrer
                         </button>
-                        <a href="{{ route('patients.index') }}"
+                        <a href="{{ route(auth()->user()->role->name . '.patients.index') }}"
                             class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center">
                             <i class="fas fa-times mr-2"></i>Réinitialiser
                         </a>
@@ -124,7 +135,7 @@
 
             <!-- Affichage des filtres actifs -->
             @if(request('search') || request('name_filter') || request('phone_filter') || request('gender_filter') ||
-            request('birth_date_filter'))
+            request('age_filter') || request('period'))
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filtres actifs :</h3>
                 <div class="flex flex-wrap gap-2">
@@ -152,10 +163,16 @@
                         Sexe: {{ request('gender_filter') }}
                     </span>
                     @endif
-                    @if(request('birth_date_filter'))
+                    @if(request('age_filter'))
                     <span
                         class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
-                        Date de naissance: {{ request('birth_date_filter') }}
+                        Âge: {{ request('age_filter') == '100+' ? '> 100 ans' : request('age_filter') . ' ans' }}
+                    </span>
+                    @endif
+                    @if(request('period'))
+                    <span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200">
+                        Période: {{ request('period') == 'day' ? 'Aujourd\'hui' : (request('period') == 'week' ? 'Cette semaine' : (request('period') == 'month' ? 'Ce mois' : 'Cette année')) }}
                     </span>
                     @endif
                 </div>
@@ -253,7 +270,7 @@
                                     title="Voir les détails">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ route(auth()->user()->role->name . '.patients.edit', $patient->id) }}"
+                                <a href="{{ route(auth()->user()->role->name . '.patients.edit', [$patient->id, 'page' => request('page', 1)]) }}"
                                     class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1 transition-colors duration-200"
                                     title="Modifier">
                                     <i class="fas fa-edit"></i>
@@ -301,7 +318,7 @@
         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Aucun patient trouvé</h3>
         <p class="text-gray-500 dark:text-gray-400 mb-6">
             @if(request('search') || request('name_filter') || request('phone_filter') || request('gender_filter') ||
-            request('birth_date_filter'))
+            request('age_filter') || request('period'))
             Aucun patient ne correspond aux critères de recherche.
             @else
             Aucun patient n'a été ajouté pour le moment.
@@ -322,7 +339,7 @@
     // Gestion des filtres dynamiques
     document.addEventListener('DOMContentLoaded', function() {
         // Réinitialisation des filtres
-        const resetButton = document.querySelector('a[href="{{ route("patients.index") }}"]');
+        const resetButton = document.querySelector('a[href*="patients.index"]');
         if (resetButton) {
             resetButton.addEventListener('click', function(e) {
                 e.preventDefault();

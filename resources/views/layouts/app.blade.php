@@ -5,12 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Gestion des Patients')</title>
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     {{-- PWA Dynamique --}}
     @php
     $cliniqueConfig = config('clinique');
+    $cliniqueName = $cliniqueConfig['name'] ?? 'Clinique';
     $themeColor = $cliniqueConfig['primary_color'] ?? '#1e40af';
     // Utiliser les icônes PWA par défaut (pas le logo directement)
     $pwaIcon = $cliniqueConfig['pwa_icon_192'] ?? 'pwa-192x192.png';
@@ -18,7 +16,14 @@
     if (!file_exists(public_path($pwaIcon))) {
     $pwaIcon = 'pwa-192x192.png';
     }
+    // Générer le titre par défaut avec le nom de la clinique
+    $defaultTitle = $cliniqueName . ' - Gestion Médicale';
     @endphp
+    <title>@yield('title', $defaultTitle)</title>
+    <meta name="application-name" content="{{ $cliniqueName }}">
+    <meta name="apple-mobile-web-app-title" content="{{ $cliniqueName }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <meta name="theme-color" content="{{ $themeColor }}">
     <link rel="apple-touch-icon" href="{{ asset($pwaIcon) }}">
     <link rel="manifest" href="{{ url(route('manifest')) }}">

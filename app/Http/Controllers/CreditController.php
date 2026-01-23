@@ -53,7 +53,19 @@ class CreditController extends Controller
             ->with('source');
 
         // Query de base pour les crédits assurance
+        // Utiliser une sous-requête pour ne prendre que le crédit le plus récent par caisse et assurance
+        // Cela évite les doublons créés par erreur
         $queryAssurance = Credit::where('source_type', \App\Models\Assurance::class)
+            ->where(function($query) {
+                $query->whereIn('id', function($subQuery) {
+                    $subQuery->selectRaw('MAX(id)')
+                        ->from('credits')
+                        ->where('source_type', \App\Models\Assurance::class)
+                        ->whereNotNull('caisse_id')
+                        ->groupBy('caisse_id', 'source_id');
+                })
+                ->orWhereNull('caisse_id'); // Inclure aussi les crédits sans caisse_id
+            })
             ->with('source');
 
         // Appliquer le filtre de statut

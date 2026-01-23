@@ -269,7 +269,7 @@
                                     title="Voir">
                                     <i class="fas fa-eye text-xs"></i>
                                 </a>
-                                <a href="{{ route(auth()->user()->role->name . '.medecins.edit', $medecin->id) }}"
+                                <a href="{{ route(auth()->user()->role->name . '.medecins.edit', [$medecin->id, 'page' => request('page', 1)]) }}"
                                     class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-1 transition-colors duration-200"
                                     title="Modifier">
                                     <i class="fas fa-edit text-xs"></i>

@@ -43,7 +43,7 @@ class ManifestController extends Controller
         $icon512 = $baseUrl . ($basePath ? $basePath . '/' : '/') . ltrim($icon512Path, '/');
 
         $manifest = [
-            'name' => $config['name'] ?? 'Clinique Ibn Rochd',
+            'name' => $config['name'] ?? 'Clinique',
             'short_name' => $shortName,
             'description' => $config['services_description'] ?? 'Gestion de Clinique',
             'theme_color' => $config['primary_color'] ?? '#1e40af',

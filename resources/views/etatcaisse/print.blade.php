@@ -99,7 +99,14 @@
             margin-top: 20px;
         }
 
+        .no-print {
+            display: block;
+        }
+
         @media print {
+            .no-print {
+                display: none !important;
+            }
             body {
                 margin: 0;
             }
@@ -152,7 +159,6 @@
     <table>
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Désignation</th>
                 <th>Recette</th>
                 <th>Part Médecin</th>
@@ -167,7 +173,6 @@
         <tbody>
             @foreach($etatcaisses as $etat)
             <tr>
-                <td class="text-center">{{ $etat->id }}</td>
                 <td>{{ $etat->designation }}</td>
                 <td class="text-right">{{ number_format($etat->recette, 0, ',', ' ') }} MRU</td>
                 <td class="text-right">{{ number_format($etat->part_medecin, 0, ',', ' ') }} MRU</td>
@@ -188,7 +193,7 @@
                     @endif
                 </td>
                 <td>{{ $etat->assurance?->nom ?? '—' }}</td>
-                <td>{{ $etat->medecin?->nom ?? '—' }}</td>
+                <td>{{ $etat->medecin?->nom_complet_avec_prenom ?? '—' }}</td>
                 <td class="text-center">{{ $etat->created_at ? $etat->created_at->format('d/m/Y') : '—' }}</td>
             </tr>
             @endforeach
@@ -202,6 +207,18 @@
 
     <div class="print-date">
         Total des entrées: {{ $etatcaisses->count() }}
+    </div>
+
+    <!-- Boutons d'action (non imprimables) -->
+    <div class="no-print" style="margin-top: 30px; text-align: center; padding: 20px;">
+        <a href="{{ route('etatcaisse.index') }}" 
+           style="display: inline-block; background: #6b7280; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-size: 16px; margin-right: 10px; transition: background 0.3s;">
+            ← Retour
+        </a>
+        <button onclick="window.print()"
+            style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; transition: background 0.3s;">
+            🖨️ Imprimer
+        </button>
     </div>
 </body>
 

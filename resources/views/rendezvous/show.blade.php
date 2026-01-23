@@ -127,10 +127,21 @@
 
                     <div class="mt-6">
                         <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Pris par</h3>
-                        <div class="flex items-center">
-                            <i class="fas fa-user text-green-500 mr-3 w-5"></i>
-                            <span class="text-gray-900 dark:text-gray-200">Pris par : {{ $rendezVous->createdBy ?
-                                $rendezVous->createdBy->name : 'Utilisateur inconnu' }}</span>
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <i class="fas fa-user text-green-500 mr-3 w-5"></i>
+                                <span class="text-gray-900 dark:text-gray-200">
+                                    Pris par : {{ $rendezVous->createdBy ? $rendezVous->createdBy->name : 'Utilisateur inconnu' }}
+                                </span>
+                            </div>
+                            @if($rendezVous->created_at)
+                            <div class="flex items-center ml-8">
+                                <i class="fas fa-clock text-gray-400 mr-3 w-5"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">
+                                    Le {{ $rendezVous->created_at->format('d/m/Y') }} à {{ $rendezVous->created_at->format('H:i') }}
+                                </span>
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>

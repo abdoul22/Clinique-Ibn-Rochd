@@ -143,10 +143,12 @@ class PharmacieController extends Controller
             'statut' => 'required|in:actif,inactif,rupture',
         ]);
 
-        Pharmacie::create($request->all());
+        // Créer le médicament
+        // L'examen associé sera créé automatiquement via l'événement 'created' du modèle Pharmacie
+        $medicament = Pharmacie::create($request->all());
 
         return redirect()->route('pharmacie.index')
-            ->with('success', 'Médicament ajouté avec succès.');
+            ->with('success', 'Médicament et examen associé créés avec succès.');
     }
 
     /**

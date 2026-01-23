@@ -108,21 +108,6 @@
         </form>
     </div>
 
-    <!-- Boutons d'Export -->
-    <div class="flex justify-end gap-3 mb-4">
-        <!-- Export PDF -->
-        <a href="{{ route('medecin.patients.export.pdf', request()->query()) }}" 
-           class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow">
-            <i class="fas fa-file-pdf mr-2"></i>Exporter PDF
-        </a>
-        
-        <!-- Imprimer -->
-        <button onclick="window.print()" 
-                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow">
-            <i class="fas fa-print mr-2"></i>Imprimer
-        </button>
-    </div>
-
     <!-- Tableau des patients -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
         <div class="overflow-x-auto">

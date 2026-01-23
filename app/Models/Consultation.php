@@ -17,7 +17,6 @@ class Consultation extends Model
         'heure_consultation',
         'motif',
         'antecedents',
-        'ras',
         'histoire_maladie',
         'examen_clinique',
         'conduite_tenir',

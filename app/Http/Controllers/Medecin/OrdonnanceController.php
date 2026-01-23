@@ -68,7 +68,13 @@ class OrdonnanceController extends Controller
             $patient = GestionPatient::findOrFail($request->patient_id);
         }
 
-        $patients = GestionPatient::orderBy('first_name')->limit(100)->get();
+        // Recherche de patients - UNIQUEMENT ceux examinés par ce médecin (via caisses)
+        $patients = GestionPatient::query()
+            ->whereHas('caisses', function($q) use ($medecin) {
+                $q->where('medecin_id', $medecin->id);
+            })
+            ->orderBy('first_name')
+            ->get();
         $medicaments = Medicament::actifs()->orderBy('nom')->get();
 
         return view('medecin.ordonnances.create', compact('medecin', 'patient', 'consultation', 'patients', 'medicaments'));
@@ -165,7 +171,13 @@ class OrdonnanceController extends Controller
             abort(403, 'Accès non autorisé');
         }
 
-        $patients = GestionPatient::orderBy('first_name')->limit(100)->get();
+        // Recherche de patients - UNIQUEMENT ceux examinés par ce médecin (via caisses)
+        $patients = GestionPatient::query()
+            ->whereHas('caisses', function($q) use ($medecin) {
+                $q->where('medecin_id', $medecin->id);
+            })
+            ->orderBy('first_name')
+            ->get();
         $medicaments = Medicament::actifs()->orderBy('nom')->get();
 
         return view('medecin.ordonnances.edit', compact('ordonnance', 'medecin', 'patients', 'medicaments'));

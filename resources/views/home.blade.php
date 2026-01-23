@@ -255,10 +255,5 @@
     </div>
 </section>
 
-<!-- Footer Simple -->
-<footer class="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-12">
-    <div class="container mx-auto px-4 text-center">
-        <p class="text-gray-400 text-sm">© {{ date('Y') }} {{ config('clinique.name') }}. Tous droits réservés.</p>
-    </div>
-</footer>
+
 @endsection

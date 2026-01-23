@@ -85,8 +85,9 @@ class ServiceController extends Controller
             ->where('statut', 'actif')
             ->orderBy('nom_medicament')
             ->get();
+        $page = request('page', 1); // Récupérer le paramètre page
 
-        return view('services.edit', compact('service', 'medicaments'));
+        return view('services.edit', compact('service', 'medicaments', 'page'));
     }
 
     public function update(Request $request, $id)
@@ -108,7 +109,10 @@ class ServiceController extends Controller
         // Pas de synchronisation automatique depuis pharmacie ici
 
         $service->update($data);
-        return redirect('services')->with('success', 'Service mis à jour.');
+        
+        // Conserver le paramètre de pagination
+        $page = $request->input('return_page', 1);
+        return redirect()->route('services.index', ['page' => $page])->with('success', 'Service mis à jour.');
     }
 
     public function destroy($id)

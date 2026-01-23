@@ -106,10 +106,47 @@
                         </select>
                     </div>
 
-                    <!-- Date -->
+                    <!-- Date (Jour) -->
                     <div id="dateField" style="display: {{ request('period') === 'day' ? 'block' : 'none' }};">
                         <label class="block text-sm font-medium text-slate-700 dark:text-gray-100 mb-2">Date</label>
                         <input type="date" name="date" value="{{ request('date') }}"
+                            class="w-full px-4 py-2.5 border border-slate-300 dark:border-white/20 rounded-lg bg-white dark:bg-white/10 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-400 focus:border-transparent transition backdrop-blur-sm">
+                    </div>
+
+                    <!-- Semaine -->
+                    <div id="weekField" style="display: {{ request('period') === 'week' ? 'block' : 'none' }};">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-gray-100 mb-2">Semaine</label>
+                        <input type="week" name="week" value="{{ request('week') }}"
+                            class="w-full px-4 py-2.5 border border-slate-300 dark:border-white/20 rounded-lg bg-white dark:bg-white/10 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-400 focus:border-transparent transition backdrop-blur-sm">
+                    </div>
+
+                    <!-- Mois -->
+                    <div id="monthField" style="display: {{ request('period') === 'month' ? 'block' : 'none' }};">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-gray-100 mb-2">Mois</label>
+                        <input type="month" name="month" value="{{ request('month') }}"
+                            class="w-full px-4 py-2.5 border border-slate-300 dark:border-white/20 rounded-lg bg-white dark:bg-white/10 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-400 focus:border-transparent transition backdrop-blur-sm">
+                    </div>
+
+                    <!-- Année -->
+                    <div id="yearField" style="display: {{ request('period') === 'year' ? 'block' : 'none' }};">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-gray-100 mb-2">Année</label>
+                        <input type="number" name="year" value="{{ request('year', date('Y')) }}" min="2020" max="2100"
+                            class="w-full px-4 py-2.5 border border-slate-300 dark:border-white/20 rounded-lg bg-white dark:bg-white/10 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-400 focus:border-transparent transition backdrop-blur-sm">
+                    </div>
+
+                    <!-- Plage personnalisée - Date de début -->
+                    <div id="rangeStartField" style="display: {{ request('period') === 'range' ? 'block' : 'none' }};">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-gray-100 mb-2">Date de
+                            début</label>
+                        <input type="date" name="date_start" value="{{ request('date_start') }}"
+                            class="w-full px-4 py-2.5 border border-slate-300 dark:border-white/20 rounded-lg bg-white dark:bg-white/10 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-400 focus:border-transparent transition backdrop-blur-sm">
+                    </div>
+
+                    <!-- Plage personnalisée - Date de fin -->
+                    <div id="rangeEndField" style="display: {{ request('period') === 'range' ? 'block' : 'none' }};">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-gray-100 mb-2">Date de
+                            fin</label>
+                        <input type="date" name="date_end" value="{{ request('date_end') }}"
                             class="w-full px-4 py-2.5 border border-slate-300 dark:border-white/20 rounded-lg bg-white dark:bg-white/10 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-400 focus:border-transparent transition backdrop-blur-sm">
                     </div>
 
@@ -355,7 +392,7 @@
                                 @elseif($paiement->caisse_id)
                                 <a href="{{ auth()->user()->role?->name === 'admin' ? route('admin.caisses.show', $paiement->caisse_id) : route('caisses.show', $paiement->caisse_id) }}"
                                     class="text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-200 font-semibold transition">
-                                    Facture #{{ $paiement->caisse_id }}
+                                    Facture N° {{ $paiement->caisse->numero_facture ?? $paiement->caisse_id }}
                                 </a>
                                 @else
                                 <span class="text-slate-400 dark:text-gray-500">—</span>
@@ -406,11 +443,34 @@
 <script>
     function updatePeriodFields() {
     const period = document.querySelector('[name="period"]').value;
+
+    // Masquer tous les champs de date
     const dateField = document.getElementById('dateField');
+    const weekField = document.getElementById('weekField');
+    const monthField = document.getElementById('monthField');
+    const yearField = document.getElementById('yearField');
+    const rangeStartField = document.getElementById('rangeStartField');
+    const rangeEndField = document.getElementById('rangeEndField');
 
     if (dateField) dateField.style.display = 'none';
+    if (weekField) weekField.style.display = 'none';
+    if (monthField) monthField.style.display = 'none';
+    if (yearField) yearField.style.display = 'none';
+    if (rangeStartField) rangeStartField.style.display = 'none';
+    if (rangeEndField) rangeEndField.style.display = 'none';
+
+    // Afficher les champs appropriés selon la période sélectionnée
     if (period === 'day' && dateField) {
         dateField.style.display = 'block';
+    } else if (period === 'week' && weekField) {
+        weekField.style.display = 'block';
+    } else if (period === 'month' && monthField) {
+        monthField.style.display = 'block';
+    } else if (period === 'year' && yearField) {
+        yearField.style.display = 'block';
+    } else if (period === 'range' && rangeStartField && rangeEndField) {
+        rangeStartField.style.display = 'block';
+        rangeEndField.style.display = 'block';
     }
 }
 

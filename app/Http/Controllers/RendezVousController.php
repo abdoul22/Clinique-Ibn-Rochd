@@ -203,7 +203,7 @@ class RendezVousController extends Controller
      */
     public function show($id)
     {
-        $rendezVous = RendezVous::with(['patient', 'medecin'])->findOrFail($id);
+        $rendezVous = RendezVous::with(['patient', 'medecin', 'createdBy'])->findOrFail($id);
         return view('rendezvous.show', compact('rendezVous'));
     }
 

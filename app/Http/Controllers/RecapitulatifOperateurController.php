@@ -67,6 +67,9 @@ class RecapitulatifOperateurController extends Controller
 
         // Décomposer les examens multiples et grouper par médecin/examen
         $recapParOperateur = [];
+        
+        // Tracker les hospitalisations déjà traitées par date
+        $hospitalisationsParDate = [];
 
         foreach ($caisses as $caisse) {
             $jour = $caisse->date_examen->format('Y-m-d');
@@ -75,24 +78,77 @@ class RecapitulatifOperateurController extends Controller
             if ($caisse->examens_data) {
                 // Mode examens multiples
                 $examensData = is_string($caisse->examens_data) ? json_decode($caisse->examens_data, true) : $caisse->examens_data;
+                
+                // Vérifier s'il y a des hospitalisations dans les examens multiples
+                $hasHospitalisation = false;
                 foreach ($examensData as $examenData) {
                     $examen = \App\Models\Examen::find($examenData['id']);
-                    if ($examen) {
+                    if ($examen && strtolower($examen->nom) === 'hospitalisation') {
+                        $hasHospitalisation = true;
+                        break;
+                    }
+                }
+                
+                if ($hasHospitalisation) {
+                    // Traiter TOUTES les hospitalisations de cette date ensemble
+                    if (!isset($hospitalisationsParDate[$jour])) {
+                        // Récupérer TOUTES les hospitalisations de ce jour avec leurs charges
+                        $hospitalisationsDuJour = \App\Models\Hospitalisation::with(['charges' => function($query) {
+                                $query->where('is_billed', true); // Seulement les charges facturées
+                            }])
+                            ->whereDate('date_entree', $jour)
+                            ->get();
+                        
+                        if ($hospitalisationsDuJour->count() > 0) {
+                            $key = 'HOSPITALISATION_' . $jour;
+                            
+                            // Calculer les totaux pour TOUTES les hospitalisations du jour
+                            $totalRecettes = 0;
+                            $totalPartMedecin = 0;
+                            $totalPartClinique = 0;
+                            $nombreHospitalisations = $hospitalisationsDuJour->count();
+                            
+                            foreach ($hospitalisationsDuJour as $hosp) {
+                                // Calculer les recettes à partir des charges facturées
+                                $chargesFacturees = $hosp->charges;
+                                $totalRecettes += $chargesFacturees->sum('total_price');
+                                $totalPartMedecin += $chargesFacturees->sum('part_medecin');
+                                $totalPartClinique += $chargesFacturees->sum('part_cabinet');
+                            }
+                            
+                            $recapParOperateur[$key] = [
+                                'medecin_id' => null, // Pas de médecin spécifique pour les hospitalisations groupées
+                                'examen_id' => 'HOSPITALISATION',
+                                'jour' => $jour,
+                                'nombre' => $nombreHospitalisations,
+                                'recettes' => $totalRecettes,
+                                'tarif' => 0, // Pas de tarif fixe pour les hospitalisations (coûts variables)
+                                'part_medecin' => $totalPartMedecin,
+                                'part_clinique' => $totalPartClinique,
+                                'medecin' => null,
+                                'examen' => (object)['nom' => 'Hospitalisation']
+                            ];
+                            
+                            // Marquer cette date comme traitée
+                            $hospitalisationsParDate[$jour] = true;
+                        }
+                    }
+                }
+                
+                // Traiter les autres examens normalement
+                foreach ($examensData as $examenData) {
+                    $examen = \App\Models\Examen::find($examenData['id']);
+                    if ($examen && strtolower($examen->nom) !== 'hospitalisation') {
                         // Déterminer la clé basée sur le type d'examen
                         $service = \App\Models\Service::find($examen->idsvc);
                         $serviceKey = $this->determineServiceKey($examen, $service, $examen->idsvc);
 
-                        if ($serviceKey === 'HOSPITALISATION') {
-                            $key = $medecinId . '_HOSPITALISATION_' . $jour;
-                        } else {
-                            $key = $medecinId . '_' . $examen->id . '_' . $jour;
-                        }
+                        $key = $medecinId . '_' . $examen->id . '_' . $jour;
 
                         if (!isset($recapParOperateur[$key])) {
-                            $examenId = ($serviceKey === 'HOSPITALISATION') ? 'HOSPITALISATION' : $examen->id;
                             $recapParOperateur[$key] = [
                                 'medecin_id' => $medecinId,
-                                'examen_id' => $examenId,
+                                'examen_id' => $examen->id,
                                 'jour' => $jour,
                                 'nombre' => 0,
                                 'recettes' => 0,
@@ -100,7 +156,7 @@ class RecapitulatifOperateurController extends Controller
                                 'part_medecin' => 0,
                                 'part_clinique' => 0,
                                 'medecin' => $medecinsMap->get($medecinId),
-                                'examen' => $examenId === 'HOSPITALISATION' ? (object)['nom' => 'Hospitalisation'] : $examensMap->get($examenId)
+                                'examen' => $examensMap->get($examen->id)
                             ];
                         }
 
@@ -117,8 +173,49 @@ class RecapitulatifOperateurController extends Controller
                 if ($examen) {
                     // Vérifier si c'est une hospitalisation
                     if (strtolower($examen->nom) === 'hospitalisation') {
-                        // Décomposer l'hospitalisation en charges individuelles
-                        $this->decomposeHospitalisationOperateur($caisse, $recapParOperateur, $jour, $medecinId, $medecinsMap, $examensMap);
+                        // Traiter TOUTES les hospitalisations de cette date ensemble
+                        if (!isset($hospitalisationsParDate[$jour])) {
+                            // Récupérer TOUTES les hospitalisations de ce jour avec leurs charges
+                            $hospitalisationsDuJour = \App\Models\Hospitalisation::with(['charges' => function($query) {
+                                    $query->where('is_billed', true); // Seulement les charges facturées
+                                }])
+                                ->whereDate('date_entree', $jour)
+                                ->get();
+                            
+                            if ($hospitalisationsDuJour->count() > 0) {
+                                $key = 'HOSPITALISATION_' . $jour;
+                                
+                                // Calculer les totaux pour TOUTES les hospitalisations du jour
+                                $totalRecettes = 0;
+                                $totalPartMedecin = 0;
+                                $totalPartClinique = 0;
+                                $nombreHospitalisations = $hospitalisationsDuJour->count();
+                                
+                                foreach ($hospitalisationsDuJour as $hosp) {
+                                    // Calculer les recettes à partir des charges facturées
+                                    $chargesFacturees = $hosp->charges;
+                                    $totalRecettes += $chargesFacturees->sum('total_price');
+                                    $totalPartMedecin += $chargesFacturees->sum('part_medecin');
+                                    $totalPartClinique += $chargesFacturees->sum('part_cabinet');
+                                }
+                                
+                                $recapParOperateur[$key] = [
+                                    'medecin_id' => null,
+                                    'examen_id' => 'HOSPITALISATION',
+                                    'jour' => $jour,
+                                    'nombre' => $nombreHospitalisations,
+                                    'recettes' => $totalRecettes,
+                                    'tarif' => 0, // Pas de tarif fixe pour les hospitalisations (coûts variables)
+                                    'part_medecin' => $totalPartMedecin,
+                                    'part_clinique' => $totalPartClinique,
+                                    'medecin' => null,
+                                    'examen' => (object)['nom' => 'Hospitalisation']
+                                ];
+                                
+                                // Marquer cette date comme traitée
+                                $hospitalisationsParDate[$jour] = true;
+                            }
+                        }
                     } else {
                         $key = $medecinId . '_' . $examen->id . '_' . $jour;
 
