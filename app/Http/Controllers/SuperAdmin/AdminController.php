@@ -70,34 +70,68 @@ class AdminController extends Controller
     // Formulaire de modification
     public function edit($id)
     {
-        $admin = User::findOrFail($id);
-        return view('superadmin.admins.edit', compact('admin'));
+        $admin = User::with('role', 'medecin')->findOrFail($id);
+        
+        // Récupérer les médecins déjà associés à d'autres utilisateurs (sauf celui-ci)
+        $medecinsAssocies = User::whereNotNull('medecin_id')
+            ->where('id', '!=', $admin->id) // Exclure l'utilisateur actuel
+            ->pluck('medecin_id')
+            ->toArray();
+        
+        // Récupérer la liste des médecins disponibles (non déjà associés)
+        $medecinsList = \App\Models\Medecin::where('statut', 'actif')
+            ->whereNotIn('id', $medecinsAssocies)
+            ->orderByRaw("FIELD(fonction, 'Pr', 'Dr', 'Tss', 'SGF', 'IDE')")
+            ->orderBy('nom')
+            ->get();
+        
+        return view('superadmin.admins.edit', compact('admin', 'medecinsList'));
     }
 
     // Mise à jour
     public function update(Request $request, $id)
     {
-        $admin = User::findOrFail($id);
+        $admin = User::with('role')->findOrFail($id);
 
+        // Si c'est un superadmin, on ne modifie que le nom et l'email
+        if ($admin->role && $admin->role->name === 'superadmin') {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $admin->id,
+            ]);
+
+            // Mettre à jour uniquement le nom et l'email
+            $admin->name = $request->name;
+            $admin->email = $request->email;
+            // Les superadmins restent toujours approuvés
+            $admin->is_approved = true;
+            $admin->save();
+
+            return redirect()->route('superadmin.admins.index')->with('success', 'Super Administrateur mis à jour avec succès.');
+        }
+
+        // Pour les admins et médecins
         $fonction = $request->input('fonction');
         $medecinId = $request->input('medecin_id');
+        $userRole = $request->input('user_role'); // 'admin' ou 'medecin'
 
-        // Validation conditionnelle : si fonction='Médecin', medecin_id est requis
+        // Validation conditionnelle : si user_role='medecin', medecin_id est requis
         $validationRules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $admin->id,
+            'user_role' => 'required|in:admin,medecin',
         ];
 
-        if ($fonction === 'Médecin') {
+        if ($userRole === 'medecin') {
             // Vérifier que le rôle 'medecin' existe
             $medecinRole = \App\Models\Role::where('name', 'medecin')->first();
             if (!$medecinRole) {
                 return redirect()->back()
                     ->withInput()
-                    ->withErrors(['fonction' => 'Le rôle "medecin" n\'existe pas dans la base de données. Veuillez d\'abord créer ce rôle.']);
+                    ->withErrors(['user_role' => 'Le rôle "medecin" n\'existe pas dans la base de données. Veuillez d\'abord créer ce rôle.']);
             }
 
-            // Require medecin_id when fonction is 'Médecin'
+            // Require medecin_id when user_role is 'medecin'
             $validationRules['medecin_id'] = 'required|exists:medecins,id';
         } else {
             $validationRules['medecin_id'] = 'nullable|exists:medecins,id';
@@ -107,47 +141,43 @@ class AdminController extends Controller
 
         $isApproved = $request->has('is_approved');
 
-        // Gérer le changement de rôle en fonction de la fonction
-        if ($fonction === 'Médecin') {
-            // Si la fonction est "Médecin", assigner le rôle medecin
-            $medecinRoleId = \App\Models\Role::where('name', 'medecin')->first()?->id;
+        // Gérer le changement de rôle
+        if ($userRole === 'medecin') {
+            // Assigner le rôle medecin
+            $medecinRole = \App\Models\Role::where('name', 'medecin')->first();
 
-            // Cette vérification ne devrait jamais échouer car on l'a déjà vérifiée dans la validation
-            if (!$medecinRoleId) {
+            if (!$medecinRole) {
                 return redirect()->back()
                     ->withInput()
-                    ->withErrors(['fonction' => 'Le rôle "medecin" n\'existe pas dans la base de données.']);
+                    ->withErrors(['user_role' => 'Le rôle "medecin" n\'existe pas dans la base de données.']);
             }
 
-            $admin->role_id = $medecinRoleId;
-            // medecin_id est maintenant garanti d'être présent grâce à la validation
+            $admin->role_id = $medecinRole->id;
             $admin->medecin_id = $medecinId;
+            $admin->fonction = 'Médecin'; // Assigner la fonction "Médecin"
         } else {
-            // Si la fonction n'est PAS "Médecin" et que l'utilisateur avait le rôle medecin
-            // Le repasser en admin et retirer l'association medecin_id
-            if ($admin->role && $admin->role->name === 'medecin') {
-                $adminRole = \App\Models\Role::where('name', 'admin')->first();
-                
-                if (!$adminRole) {
-                    return redirect()->back()
-                        ->withInput()
-                        ->withErrors(['fonction' => 'Le rôle "admin" n\'existe pas dans la base de données. Veuillez d\'abord créer ce rôle.']);
-                }
-
-                $admin->role_id = $adminRole->id;
-                $admin->medecin_id = null; // Retirer l'association avec le profil médecin
+            // Assigner le rôle admin
+            $adminRole = \App\Models\Role::where('name', 'admin')->first();
+            
+            if (!$adminRole) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['user_role' => 'Le rôle "admin" n\'existe pas dans la base de données. Veuillez d\'abord créer ce rôle.']);
             }
+
+            $admin->role_id = $adminRole->id;
+            $admin->medecin_id = null; // Retirer l'association avec le profil médecin
+            $admin->fonction = $fonction; // Assigner la fonction pour les admins (Caissier, etc.)
         }
 
         // Mettre à jour les informations de base
         $admin->name = $request->name;
         $admin->email = $request->email;
-        $admin->fonction = $fonction;
         $admin->is_approved = $isApproved;
         $admin->save();
 
         // Synchroniser avec le personnel si ce n'est pas un médecin
-        if ($fonction && $fonction !== 'Médecin') {
+        if ($userRole !== 'medecin' && $fonction) {
             $this->syncWithPersonnel($admin, $fonction);
         }
 
@@ -172,7 +202,7 @@ class AdminController extends Controller
 
         $admin->delete();
 
-        return redirect()->route('superadmin.admins.index')->with('success', 'Admin et personnel associé supprimés.');
+        return redirect()->route('superadmin.admins.index')->with('success', 'Utilisateur et personnel associé supprimés.');
     }
 
     public function assignRole(Request $request, $id)
@@ -269,7 +299,7 @@ class AdminController extends Controller
 
     public function approve($id)
     {
-        $admin = User::findOrFail($id);
+        $admin = User::with('role')->findOrFail($id);
         
         // Vérifier que l'utilisateur a bien un rôle assigné
         if (!$admin->role_id) {

@@ -815,6 +815,10 @@ class HospitalisationController extends Controller
                 $ex = Examen::findOrFail($request->examen_id);
                 $qty = (int) $request->quantity;
 
+                // Obtenir le tarif correct selon l'assurance de l'hospitalisation
+                $assuranceId = $hospitalisation->assurance_id;
+                $tarifUtilise = $ex->getTarifPourAssurance($assuranceId);
+
                 // Utiliser l'examen original, mais modifier la description si un médecin différent est sélectionné
                 $examenId = $ex->id;
                 $description = $ex->nom;
@@ -824,16 +828,21 @@ class HospitalisationController extends Controller
                     $description = $ex->nom . ' (' . $medecin->nom_complet_avec_prenom . ')';
                 }
 
+                // Part médecin: toujours basée sur le tarif standard (fixe)
+                $partMedecinTotal = ($ex->part_medecin ?? 0) * $qty;
+                // Part cabinet: tarif utilisé - part médecin standard
+                $partCabinetTotal = ($tarifUtilise * $qty) - $partMedecinTotal;
+
                 HospitalisationCharge::create([
                     'hospitalisation_id' => $hospitalisation->id,
                     'type' => $request->charge_type,
                     'source_id' => $examenId,
                     'description_snapshot' => $description,
-                    'unit_price' => $ex->tarif,
+                    'unit_price' => $tarifUtilise, // UTILISER LE TARIF ASSURANCE
                     'quantity' => $qty,
-                    'total_price' => $ex->tarif * $qty,
-                    'part_medecin' => ($ex->part_medecin ?? 0) * $qty,
-                    'part_cabinet' => ($ex->part_cabinet ?? 0) * $qty,
+                    'total_price' => $tarifUtilise * $qty,
+                    'part_medecin' => $partMedecinTotal, // Part médecin fixe
+                    'part_cabinet' => $partCabinetTotal, // Tarif utilisé - part médecin
                     'is_pharmacy' => false,
                 ]);
             }

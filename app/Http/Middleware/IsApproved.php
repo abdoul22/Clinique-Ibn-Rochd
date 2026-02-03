@@ -14,8 +14,15 @@ class IsApproved
             return $next($request);
         }
 
+        $user = Auth::user();
+
+        // Les superadmins ont toujours accès, même s'ils ne sont pas approuvés
+        if ($user->role && $user->role->name === 'superadmin') {
+            return $next($request);
+        }
+
         // Si l'utilisateur est connecté mais non approuvé
-        if (!Auth::user()->is_approved) {
+        if (!$user->is_approved) {
             // Ne redirige pas vers login directement pour éviter la boucle
             return redirect()->route('approval.waiting');
         }

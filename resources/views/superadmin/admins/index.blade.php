@@ -111,28 +111,6 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    @if(!$superadmin->is_approved)
-                                    <div class="flex justify-end space-x-2">
-                                        <form action="{{ route('superadmin.admins.approve', $superadmin->id) }}"
-                                            method="POST" class="inline">
-                                            @csrf
-                                            <button
-                                                class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-1"
-                                                title="Approuver">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('superadmin.admins.reject', $superadmin->id) }}"
-                                            method="POST" class="inline">
-                                            @csrf
-                                            <button
-                                                class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1"
-                                                title="Rejeter">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                    @else
                                     <div class="flex justify-end space-x-2">
                                         <a href="{{ route('superadmin.admins.show', $superadmin->id) }}"
                                             class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1"
@@ -156,7 +134,6 @@
                                             </button>
                                         </form>
                                     </div>
-                                    @endif
                                 </td>
                             </tr>
                             @empty
@@ -250,10 +227,6 @@
                                                 class="text-sm border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white w-full">
                                                 <option value="">-- Choisir --</option>
                                                 <option value="Caissier" {{ $admin->fonction == 'Caissier' ? 'selected' : '' }}>Caissier</option>
-                                                <option value="RH" {{ $admin->fonction == 'RH' ? 'selected' : '' }}>RH</option>
-                                                <option value="Support" {{ $admin->fonction == 'Support' ? 'selected' : '' }}>Support</option>
-                                                <option value="Infirmier" {{ $admin->fonction == 'Infirmier' ? 'selected' : '' }}>Infirmier</option>
-                                                <option value="Réceptionniste" {{ $admin->fonction == 'Réceptionniste' ? 'selected' : '' }}>Réceptionniste</option>
                                             </select>
                                         </div>
 
@@ -279,10 +252,12 @@
                                             </select>
                                         </div>
 
-                                        <!-- Bouton Sauvegarder -->
+                                        <!-- Bouton Sauvegarder - Affiché seulement si rôle ou fonction non assigné -->
+                                        @if(!$admin->fonction || ($admin->role?->name === 'admin' && !$admin->fonction))
                                         <button type="submit" class="mt-2 w-full text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-2 rounded">
                                             <i class="fas fa-save mr-1"></i>Sauvegarder
                                         </button>
+                                        @endif
                                     </form>
 
                                     @if($admin->fonction || $admin->role?->name === 'medecin')

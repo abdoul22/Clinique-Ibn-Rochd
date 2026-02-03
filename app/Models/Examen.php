@@ -33,6 +33,30 @@ class Examen extends Model
         return $this->belongsTo(caisse::class, 'examen_id');
     }
 
+    /**
+     * Tarifs spécifiques par assurance
+     */
+    public function assuranceTarifs()
+    {
+        return $this->hasMany(\App\Models\ExamenAssuranceTarif::class, 'examen_id');
+    }
+
+    /**
+     * Obtenir le tarif pour une assurance spécifique ou le tarif par défaut
+     */
+    public function getTarifPourAssurance($assuranceId = null)
+    {
+        if (!$assuranceId) {
+            return $this->tarif;
+        }
+        
+        $tarifAssurance = $this->assuranceTarifs()
+            ->where('assurance_id', $assuranceId)
+            ->first();
+        
+        return $tarifAssurance ? $tarifAssurance->tarif_assurance : $this->tarif;
+    }
+
     public static function getTotaux()
     {
         return [

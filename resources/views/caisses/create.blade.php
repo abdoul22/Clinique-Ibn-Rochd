@@ -390,6 +390,9 @@
     </div>
 </div>
 <script>
+    // Variable globale pour stocker les tarifs assurance
+    let tarifsAssurance = {};
+
     document.addEventListener('DOMContentLoaded', function () {
         const assuranceToggle = document.getElementById('hasAssurance');
         const assuranceFields = document.getElementById('assuranceFields');
@@ -429,15 +432,57 @@
 
         // Gérer l'activation/désactivation du champ couverture selon la sélection d'assurance
         assuranceSelect.addEventListener('change', function () {
-            if (this.value && this.value !== '') {
-                // Une assurance est sélectionnée, activer le champ couverture
+            const assuranceId = this.value;
+            
+            if (assuranceId && assuranceId !== '') {
+                // Une assurance est sélectionnée, charger les tarifs spécifiques
+                fetch(`/api/examens/tarifs-assurance/${assuranceId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        tarifsAssurance = data;
+                        
+                        // Mettre à jour les examens déjà sélectionnés
+                        if (examensSelectionnes.length > 0) {
+                            examensSelectionnes.forEach(examen => {
+                                if (tarifsAssurance[examen.id]) {
+                                    examen.tarif = parseFloat(tarifsAssurance[examen.id]);
+                                    examen.total = examen.tarif * examen.quantite;
+                                }
+                            });
+                            afficherExamensSelectionnes();
+                        }
+                        
+                        console.log('Tarifs assurance chargés:', tarifsAssurance);
+                    })
+                    .catch(error => {
+                        console.error('Erreur chargement tarifs:', error);
+                        tarifsAssurance = {};
+                    });
+                
+                // Activer le champ couverture
                 couvertureInput.disabled = false;
                 couvertureInput.placeholder = 'Ex: 90';
                 couvertureInput.className = 'form-input border border-b-black px-2 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 w-full';
                 couvertureLockIcon.style.display = 'none';
                 couvertureHelp.textContent = '💡 Saisissez le pourcentage de couverture (0-100%)';
             } else {
-                // Aucune assurance sélectionnée, désactiver le champ couverture
+                // Aucune assurance : réinitialiser les tarifs normaux
+                tarifsAssurance = {};
+                
+                // Remettre les examens aux tarifs normaux
+                if (examensSelectionnes.length > 0) {
+                    // Recharger depuis les datalists pour avoir les tarifs originaux
+                    examensSelectionnes.forEach(examen => {
+                        const option = document.querySelector(`option[data-id="${examen.id}"]`);
+                        if (option) {
+                            examen.tarif = parseFloat(option.getAttribute('data-tarif'));
+                            examen.total = examen.tarif * examen.quantite;
+                        }
+                    });
+                    afficherExamensSelectionnes();
+                }
+                
+                // Désactiver le champ couverture
                 couvertureInput.disabled = true;
                 couvertureInput.value = '';
                 couvertureInput.placeholder = 'Sélectionnez d\'abord une assurance';
@@ -723,13 +768,22 @@
 
         const quantiteInput = document.getElementById('modal_quantite');
         const quantite = parseInt(quantiteInput.value) || 1;
+        
+        // Déterminer le tarif à utiliser (assurance ou normal)
+        const examenId = selectedOption.getAttribute('data-id');
+        let tarifUtilise = parseFloat(selectedOption.getAttribute('data-tarif'));
+        
+        // Vérifier s'il y a un tarif assurance pour cet examen
+        if (tarifsAssurance[examenId]) {
+            tarifUtilise = parseFloat(tarifsAssurance[examenId]);
+        }
 
         const examen = {
-            id: selectedOption.getAttribute('data-id'),
+            id: examenId,
             nom: selectedOption.value,
-            tarif: parseFloat(selectedOption.getAttribute('data-tarif')),
+            tarif: tarifUtilise,
             quantite: quantite,
-            total: parseFloat(selectedOption.getAttribute('data-tarif')) * quantite,
+            total: tarifUtilise * quantite,
             isPharmacie: isMedicament
         };
 

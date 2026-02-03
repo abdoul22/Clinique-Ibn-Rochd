@@ -84,7 +84,8 @@ class ExamenController extends Controller
         $services = Service::all();
         $medicaments = \App\Models\Pharmacie::where('statut', 'actif')->where('stock', '>', 0)->get();
         $totaux = \App\Models\Examen::getTotaux();
-        return view('examens.create', compact('services', 'medicaments', 'totaux'));
+        $assurances = \App\Models\Assurance::orderBy('nom')->get();
+        return view('examens.create', compact('services', 'medicaments', 'totaux', 'assurances'));
     }
 
     public function store(Request $request)
@@ -150,6 +151,19 @@ class ExamenController extends Controller
             'part_medecin' => $part_medecin,
         ]);
 
+        // Sauvegarder les tarifs assurances si fournis
+        if ($request->has('assurance_tarifs')) {
+            foreach ($request->assurance_tarifs as $assuranceId => $tarifAssurance) {
+                if (!empty($tarifAssurance) && is_numeric($tarifAssurance) && $tarifAssurance > 0) {
+                    \App\Models\ExamenAssuranceTarif::create([
+                        'examen_id' => $examen->id,
+                        'assurance_id' => $assuranceId,
+                        'tarif_assurance' => $tarifAssurance,
+                    ]);
+                }
+            }
+        }
+
         // Si c'est une requête AJAX, retourner du JSON
         if ($request->expectsJson()) {
             return response()->json([
@@ -173,10 +187,12 @@ class ExamenController extends Controller
 
     public function edit($id)
     {
-        $examen = Examen::findOrFail($id);
+        $examen = Examen::with('assuranceTarifs')->findOrFail($id);
         $services = Service::all();
+        $assurances = \App\Models\Assurance::orderBy('nom')->get();
+        $tarifsExistants = $examen->assuranceTarifs->pluck('tarif_assurance', 'assurance_id')->toArray();
         $page = request('page', 1); // Récupérer le paramètre page
-        return view('examens.edit', compact('examen', 'services', 'page'));
+        return view('examens.edit', compact('examen', 'services', 'assurances', 'tarifsExistants', 'page'));
     }
 
     public function update(Request $request, $id)
@@ -204,6 +220,23 @@ class ExamenController extends Controller
 
         $examen = Examen::findOrFail($id);
         $examen->update($request->all());
+        
+        // Mettre à jour les tarifs assurances
+        if ($request->has('assurance_tarifs')) {
+            // Supprimer les anciens tarifs
+            \App\Models\ExamenAssuranceTarif::where('examen_id', $examen->id)->delete();
+            
+            // Créer les nouveaux tarifs
+            foreach ($request->assurance_tarifs as $assuranceId => $tarifAssurance) {
+                if (!empty($tarifAssurance) && is_numeric($tarifAssurance) && $tarifAssurance > 0) {
+                    \App\Models\ExamenAssuranceTarif::create([
+                        'examen_id' => $examen->id,
+                        'assurance_id' => $assuranceId,
+                        'tarif_assurance' => $tarifAssurance,
+                    ]);
+                }
+            }
+        }
         
         // Conserver le paramètre de pagination et détecter le rôle
         $page = $request->input('return_page', 1);

@@ -39,6 +39,11 @@ Route::get('/', fn() => view('home'))->name('home');
 
 // Route d'attente d'approbation (accessible aux utilisateurs connectés mais non approuvés)
 Route::get('/waiting-approval', function () {
+    // Si l'utilisateur est un superadmin, le rediriger vers son dashboard
+    if (Auth::check() && Auth::user()->role && Auth::user()->role->name === 'superadmin') {
+        return redirect()->route('dashboard.superadmin');
+    }
+    
     return view('auth.waiting');
 })->middleware('auth')->name('approval.waiting');
 
@@ -373,6 +378,15 @@ Route::middleware(['auth', 'role:superadmin,admin', 'is.approved'])->group(funct
         }
 
         return response()->json(['is_medicament' => false]);
+    });
+
+    // Route API pour récupérer les tarifs assurance pour les examens
+    Route::get('/api/examens/tarifs-assurance/{assuranceId}', function($assuranceId) {
+        $tarifs = \App\Models\ExamenAssuranceTarif::where('assurance_id', $assuranceId)
+            ->get()
+            ->pluck('tarif_assurance', 'examen_id');
+        
+        return response()->json($tarifs);
     });
 
     //assurances

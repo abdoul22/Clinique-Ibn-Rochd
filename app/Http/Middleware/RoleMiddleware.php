@@ -22,9 +22,9 @@ class RoleMiddleware
             abort(403, 'Aucun rôle assigné à cet utilisateur.');
         }
 
-        // Vérifier l'approbation
-        if (!$user->is_approved) {
-            abort(403, 'Votre compte n\'a pas encore été approuvé par un Admin.');
+        // Vérifier l'approbation SAUF pour les superadmins qui ont toujours accès
+        if (!$user->is_approved && $user->role->name !== 'superadmin') {
+            return redirect()->route('approval.waiting');
         }
 
         // Vérifier le rôle - gérer plusieurs rôles séparés par des virgules

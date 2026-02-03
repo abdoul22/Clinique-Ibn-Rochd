@@ -66,10 +66,11 @@
                     @foreach($examensData as $examenData)
                     @php
                     $examen = \App\Models\Examen::find($examenData['id']);
+                    $tarifEffectif = $examen ? $examen->getTarifPourAssurance($caisse->assurance_id) : 0;
                     @endphp
                     @if($examen)
                     <p class="ml-4 text-gray-800 dark:text-gray-200">- {{ $examen->nom }} ({{ $examenData['quantite']
-                        }}x) : {{ number_format($examen->tarif * $examenData['quantite'], 2) }} MRU</p>
+                        }}x) : {{ number_format($tarifEffectif * $examenData['quantite'], 2) }} MRU</p>
                     @endif
                     @endforeach
                     @endif

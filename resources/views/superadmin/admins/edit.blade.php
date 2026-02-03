@@ -88,60 +88,152 @@
                 class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="bg-green-600 dark:bg-green-700 px-6 py-4">
                     <h2 class="text-xl font-bold text-white flex items-center">
-                        <i class="fas fa-briefcase mr-3"></i>Fonction et Statut
+                        <i class="fas fa-briefcase mr-3"></i>
+                        @if($admin->role?->name === 'superadmin')
+                            Rôle et Statut
+                        @else
+                            Rôle, Fonction et Statut
+                        @endif
                     </h2>
                 </div>
                 <div class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <i class="fas fa-briefcase mr-1"></i>Fonction
-                            </label>
-                            <select name="fonction"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                                <option value="">Sélectionner une fonction</option>
-                                <option value="Caissier" {{ old('fonction', $admin->fonction) == 'Caissier' ? 'selected'
-                                    : '' }}>Caissier</option>
-                                <option value="RH" {{ old('fonction', $admin->fonction) == 'RH' ? 'selected' : '' }}>RH
-                                </option>
-                                <option value="Support" {{ old('fonction', $admin->fonction) == 'Support' ? 'selected' :
-                                    '' }}>Support</option>
-                                <option value="Infirmier" {{ old('fonction', $admin->fonction) == 'Infirmier' ?
-                                    'selected' : '' }}>Infirmier</option>
-                                <option value="Médecin" {{ old('fonction', $admin->fonction) == 'Médecin' ? 'selected' :
-                                    '' }}>Médecin</option>
-                                <option value="Réceptionniste" {{ old('fonction', $admin->fonction) == 'Réceptionniste'
-                                    ? 'selected' : '' }}>Réceptionniste</option>
-                                <option value="Gestionnaire" {{ old('fonction', $admin->fonction) == 'Gestionnaire' ?
-                                    'selected' : '' }}>Gestionnaire</option>
-                            </select>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                La fonction sera synchronisée avec le module personnel
-                            </p>
+                    @if($admin->role?->name === 'superadmin')
+                        <!-- Interface pour SUPERADMIN -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Rôle (non modifiable pour superadmin) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <i class="fas fa-crown mr-1"></i>Rôle
+                                </label>
+                                <div class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
+                                        <i class="fas fa-crown mr-2"></i>Super Administrateur
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <i class="fas fa-info-circle mr-1"></i>Le rôle Super Administrateur ne peut pas être modifié
+                                </p>
+                            </div>
+
+                            <!-- Statut d'approbation (toujours approuvé pour superadmin) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <i class="fas fa-shield-alt mr-1"></i>Statut d'approbation
+                                </label>
+                                <div class="flex items-center">
+                                    <label class="relative inline-flex items-center cursor-not-allowed opacity-75">
+                                        <input type="checkbox" checked disabled class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
+                                        </div>
+                                        <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                                            Approuvé
+                                        </span>
+                                    </label>
+                                </div>
+                                <!-- Champ caché pour maintenir l'approbation -->
+                                <input type="hidden" name="is_approved" value="1">
+                            </div>
+                        </div>
+                    @else
+                        <!-- Interface pour ADMIN et MEDECIN -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Sélection du Rôle -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <i class="fas fa-user-shield mr-1"></i>Rôle *
+                                </label>
+                                <select name="user_role" id="user-role-select"
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                                    onchange="toggleRoleFields(this.value)">
+                                    <option value="admin" {{ old('user_role', $admin->role?->name) === 'admin' ? 'selected' : '' }}>Admin</option>
+                                    <option value="medecin" {{ old('user_role', $admin->role?->name) === 'medecin' ? 'selected' : '' }}>Médecin</option>
+                                </select>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Définit les permissions de l'utilisateur
+                                </p>
+                            </div>
+
+                            <!-- Sélection de la Fonction (pour admins) -->
+                            <div id="fonction-select" style="{{ old('user_role', $admin->role?->name) === 'medecin' ? 'display:none' : '' }}">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <i class="fas fa-briefcase mr-1"></i>Fonction
+                                </label>
+                                <select name="fonction"
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                                    <option value="">-- Choisir --</option>
+                                    <option value="Caissier" {{ old('fonction', $admin->fonction) == 'Caissier' ? 'selected' : '' }}>Caissier</option>
+                                </select>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    La fonction sera synchronisée avec le module personnel
+                                </p>
+                            </div>
+
+                            <!-- Sélection du Médecin Associé (pour médecins seulement) -->
+                            <div id="medecin-select" style="{{ old('user_role', $admin->role?->name) === 'medecin' ? '' : 'display:none' }}">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <i class="fas fa-user-md mr-1"></i>Médecin Associé
+                                </label>
+                                <select name="medecin_id"
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                                    <option value="">-- Choisir un médecin --</option>
+                                    
+                                    @if($admin->medecin && !$medecinsList->contains('id', $admin->medecin_id))
+                                        {{-- Afficher le médecin actuellement associé même s'il n'est plus disponible --}}
+                                        <option value="{{ $admin->medecin->id }}" selected>
+                                            {{ $admin->medecin->nom_complet_avec_prenom }} - {{ $admin->medecin->specialite ?? 'Médecin' }} (Actuel)
+                                        </option>
+                                    @endif
+                                    
+                                    @foreach($medecinsList as $medecinItem)
+                                        <option value="{{ $medecinItem->id }}" {{ old('medecin_id', $admin->medecin_id) == $medecinItem->id ? 'selected' : '' }}>
+                                            {{ $medecinItem->nom_complet_avec_prenom }} - {{ $medecinItem->specialite ?? 'Médecin' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Lier ce compte à un profil médecin existant
+                                </p>
+                            </div>
+
+                            <!-- Statut d'approbation -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <i class="fas fa-shield-alt mr-1"></i>Statut d'approbation
+                                </label>
+                                <div class="flex items-center">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="is_approved" value="1" {{ old('is_approved',
+                                            $admin->is_approved) ? 'checked' : '' }}
+                                        class="sr-only peer">
+                                        <div
+                                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
+                                        </div>
+                                        <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                                            {{ $admin->is_approved ? 'Approuvé' : 'En attente' }}
+                                        </span>
+                                    </label>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Détermine si l'utilisateur peut accéder à l'application
+                                </p>
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <i class="fas fa-shield-alt mr-1"></i>Statut d'approbation
-                            </label>
-                            <div class="flex items-center">
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="is_approved" value="1" {{ old('is_approved',
-                                        $admin->is_approved) ? 'checked' : '' }}
-                                    class="sr-only peer">
-                                    <div
-                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
-                                    </div>
-                                    <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                                        {{ $admin->is_approved ? 'Approuvé' : 'En attente' }}
-                                    </span>
-                                </label>
-                            </div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Détermine si l'utilisateur peut accéder à l'application
-                            </p>
-                        </div>
-                    </div>
+                        <script>
+                            function toggleRoleFields(role) {
+                                const fonctionDiv = document.getElementById('fonction-select');
+                                const medecinDiv = document.getElementById('medecin-select');
+                                
+                                if (role === 'medecin') {
+                                    fonctionDiv.style.display = 'none';
+                                    medecinDiv.style.display = 'block';
+                                } else {
+                                    fonctionDiv.style.display = 'block';
+                                    medecinDiv.style.display = 'none';
+                                }
+                            }
+                        </script>
+                    @endif
                 </div>
             </div>
 

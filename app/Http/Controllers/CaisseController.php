@@ -237,13 +237,17 @@ class CaisseController extends Controller
 
         $request->validate($rules);
 
-        // Validation stricte du total soumis
+        // Validation stricte du total soumis (avec prise en compte des tarifs assurance)
+        $assuranceIdValidation = $request->filled('assurance_id') ? $request->assurance_id : null;
+        
         if ($request->examens_multiple === 'true' && $request->filled('examens_data')) {
             $examensData = json_decode($request->examens_data, true);
             $totalCalcule = 0;
             foreach ($examensData as $examenData) {
                 $examen = Examen::find($examenData['id']);
-                $totalCalcule += ($examen->tarif * $examenData['quantite']);
+                // Utiliser le tarif assurance si applicable
+                $tarifUtilise = $examen->getTarifPourAssurance($assuranceIdValidation);
+                $totalCalcule += ($tarifUtilise * $examenData['quantite']);
             }
 
             $tolerance = 0.01; // Tolérance de 1 centime pour les arrondis
@@ -256,7 +260,9 @@ class CaisseController extends Controller
             // Validation pour examen unique
             $examen = Examen::findOrFail($request->examen_id);
             $quantite = $request->quantite_medicament ?? 1;
-            $totalCalcule = $examen->tarif * $quantite;
+            // Utiliser le tarif assurance si applicable
+            $tarifUtilise = $examen->getTarifPourAssurance($assuranceIdValidation);
+            $totalCalcule = $tarifUtilise * $quantite;
 
             $tolerance = 0.01; // Tolérance de 1 centime pour les arrondis
             if (abs($request->total - $totalCalcule) > $tolerance) {
@@ -334,14 +340,25 @@ class CaisseController extends Controller
         if ($request->examens_multiple === 'true' && $request->filled('examens_data')) {
             $examensData = json_decode($request->examens_data, true);
             $totalReel = 0;
+            $assuranceId = $caisse->assurance_id;
+            
             foreach ($examensData as $examenData) {
                 $examen = Examen::find($examenData['id']);
-                $totalReel += ($examen->tarif * $examenData['quantite']);
+                
+                // Obtenir le tarif correct (assurance ou normal)
+                $tarifUtilise = $examen->getTarifPourAssurance($assuranceId);
+                
+                $totalReel += ($tarifUtilise * $examenData['quantite']);
             }
         } else {
             $examen = Examen::findOrFail($request->examen_id);
             $quantite = $request->quantite_medicament ?? 1;
-            $totalReel = $examen->tarif * $quantite;
+            $assuranceId = $caisse->assurance_id;
+            
+            // Obtenir le tarif correct (assurance ou normal)
+            $tarifUtilise = $examen->getTarifPourAssurance($assuranceId);
+            
+            $totalReel = $tarifUtilise * $quantite;
         }
 
         // Mettre à jour la caisse avec le total recalculé
@@ -388,19 +405,33 @@ class CaisseController extends Controller
         // Calculer les parts cabinet et médecin
         $part_cabinet = 0;
         $part_medecin = 0;
+        $assuranceId = $caisse->assurance_id;
 
         if ($request->examens_multiple === 'true' && $request->filled('examens_data')) {
             $examensData = json_decode($request->examens_data, true);
             foreach ($examensData as $examenData) {
                 $examen = Examen::find($examenData['id']);
-                $part_cabinet += ($examen->part_cabinet ?? 0) * $examenData['quantite'];
-                $part_medecin += ($examen->part_medecin ?? 0) * $examenData['quantite'];
+                $quantite = $examenData['quantite'];
+                
+                // Part médecin: toujours basée sur le tarif standard (fixe)
+                $partMedecinExamen = ($examen->part_medecin ?? 0) * $quantite;
+                $part_medecin += $partMedecinExamen;
+                
+                // Part cabinet: tarif utilisé - part médecin standard
+                $tarifUtilise = $examen->getTarifPourAssurance($assuranceId);
+                $part_cabinet += (($tarifUtilise * $quantite) - $partMedecinExamen);
             }
         } else {
             $examen = Examen::findOrFail($request->examen_id);
             $quantite = $request->quantite_medicament ?? 1;
-            $part_cabinet = ($examen->part_cabinet ?? 0) * $quantite;
-            $part_medecin = ($examen->part_medecin ?? 0) * $quantite;
+            
+            // Part médecin: toujours basée sur le tarif standard (fixe)
+            $partMedecinExamen = ($examen->part_medecin ?? 0) * $quantite;
+            $part_medecin = $partMedecinExamen;
+            
+            // Part cabinet: tarif utilisé - part médecin standard
+            $tarifUtilise = $examen->getTarifPourAssurance($assuranceId);
+            $part_cabinet = ($tarifUtilise * $quantite) - $partMedecinExamen;
         }
 
         // Normaliser le type de paiement
@@ -487,6 +518,28 @@ class CaisseController extends Controller
         $assurances = \App\Models\Assurance::all();
         $page = request('page', 1); // Récupérer le paramètre page
 
+        // Convertir une facture en mode simple vers le format examens multiples pour l'édition
+        if (!$caisse->examens_data && $caisse->examen_id) {
+            // Facture avec un seul examen (mode ancien)
+            $examen = $caisse->examen;
+            if ($examen) {
+                // Déterminer le tarif utilisé (assurance ou standard)
+                $tarifUtilise = $examen->getTarifPourAssurance($caisse->assurance_id);
+                
+                // Créer le tableau examens_data
+                $caisse->examens_data = [
+                    [
+                        'id' => $examen->id,
+                        'nom' => $examen->nom,
+                        'tarif' => $tarifUtilise,
+                        'quantite' => 1,
+                        'total' => $tarifUtilise,
+                        'isPharmacie' => $examen->service && $examen->service->type_service === 'PHARMACIE'
+                    ]
+                ];
+            }
+        }
+
         return view('caisses.edit', compact(
             'caisse',
             'patients',
@@ -529,9 +582,51 @@ class CaisseController extends Controller
         // Si ce n'est pas un mode multiple, examen_id est requis
         if (!$isMultipleExamens) {
             $validationRules['examen_id'] = 'required|exists:examens,id';
+        } else {
+            // En mode examens multiples, vérifier qu'il y a au moins un examen
+            if (!$request->filled('examens_data') || empty(json_decode($request->examens_data, true))) {
+                return back()->withErrors([
+                    'examens_data' => 'Vous devez sélectionner au moins un examen.'
+                ])->withInput();
+            }
         }
 
         $request->validate($validationRules);
+
+        // Validation stricte du total soumis (avec prise en compte des tarifs assurance)
+        $assuranceIdValidation = $request->filled('assurance_id') ? $request->assurance_id : null;
+        
+        if ($isMultipleExamens && $request->filled('examens_data')) {
+            $examensData = json_decode($request->examens_data, true);
+            $totalCalcule = 0;
+            foreach ($examensData as $examenData) {
+                $examen = Examen::find($examenData['id']);
+                // Utiliser le tarif assurance si applicable
+                $tarifUtilise = $examen->getTarifPourAssurance($assuranceIdValidation);
+                $totalCalcule += ($tarifUtilise * $examenData['quantite']);
+            }
+
+            $tolerance = 0.01; // Tolérance de 1 centime pour les arrondis
+            if (abs($request->total - $totalCalcule) > $tolerance) {
+                return back()->withErrors([
+                    'total' => "Erreur de calcul détectée. Total soumis : {$request->total} MRU, Total calculé : {$totalCalcule} MRU. Veuillez réessayer."
+                ])->withInput();
+            }
+        } elseif (!$isMultipleExamens && $request->filled('examen_id')) {
+            // Validation pour examen unique
+            $examen = Examen::findOrFail($request->examen_id);
+            $quantite = $request->quantite_medicament ?? 1;
+            // Utiliser le tarif assurance si applicable
+            $tarifUtilise = $examen->getTarifPourAssurance($assuranceIdValidation);
+            $totalCalcule = $tarifUtilise * $quantite;
+
+            $tolerance = 0.01; // Tolérance de 1 centime pour les arrondis
+            if (abs($request->total - $totalCalcule) > $tolerance) {
+                return back()->withErrors([
+                    'total' => "Erreur de calcul détectée. Total soumis : {$request->total} MRU, Total calculé : {$totalCalcule} MRU. Veuillez réessayer."
+                ])->withInput();
+            }
+        }
 
         // Filtrer les données à sauvegarder
         $data = $request->only([
@@ -626,6 +721,34 @@ class CaisseController extends Controller
         \Log::info('examens_data is_array: ' . (is_array($caisse->examens_data) ? 'oui' : 'non'));
         \Log::info('examens_data contenu: ' . json_encode($caisse->examens_data));
 
+        // Recalculer le total pour validation avec les tarifs assurance si applicable
+        $totalRecalcule = 0;
+        $assuranceId = $caisse->assurance_id;
+        
+        if ($isMultipleExamens && $caisse->examens_data) {
+            $examensData = is_array($caisse->examens_data) ? $caisse->examens_data : json_decode($caisse->examens_data, true);
+            foreach ($examensData as $examenData) {
+                $examen = Examen::find($examenData['id']);
+                if ($examen) {
+                    $tarifUtilise = $examen->getTarifPourAssurance($assuranceId);
+                    $totalRecalcule += ($tarifUtilise * $examenData['quantite']);
+                }
+            }
+        } else if ($caisse->examen_id) {
+            $examen = Examen::find($caisse->examen_id);
+            if ($examen) {
+                $tarifUtilise = $examen->getTarifPourAssurance($assuranceId);
+                $totalRecalcule = $tarifUtilise;
+            }
+        }
+        
+        // Mettre à jour le total si recalculé différent (sécurité)
+        if ($totalRecalcule > 0 && abs($caisse->total - $totalRecalcule) > 0.01) {
+            \Log::warning("Total recalculé différent: {$caisse->total} vs {$totalRecalcule}");
+            $caisse->total = $totalRecalcule;
+            $caisse->save();
+        }
+
         // Recalculer les parts médecin et clinique selon le/les examen(s)
         $totalPartMedecin = 0;
         $totalPartCabinet = 0;
@@ -636,15 +759,26 @@ class CaisseController extends Controller
                 $examen = Examen::find($examenData['id']);
                 if ($examen) {
                     $quantite = $examenData['quantite'] ?? 1;
-                    $totalPartMedecin += ($examen->part_medecin ?? 0) * $quantite;
-                    $totalPartCabinet += ($examen->part_cabinet ?? 0) * $quantite;
+                    
+                    // Part médecin: toujours basée sur le tarif standard (fixe)
+                    $partMedecinExamen = ($examen->part_medecin ?? 0) * $quantite;
+                    $totalPartMedecin += $partMedecinExamen;
+                    
+                    // Part cabinet: tarif utilisé - part médecin standard
+                    $tarifUtilise = $examen->getTarifPourAssurance($assuranceId);
+                    $totalPartCabinet += (($tarifUtilise * $quantite) - $partMedecinExamen);
                 }
             }
         } else {
             $examen = Examen::find($data['examen_id']);
             if ($examen) {
-                $totalPartMedecin = $examen->part_medecin ?? 0;
-                $totalPartCabinet = $examen->part_cabinet ?? 0;
+                // Part médecin: toujours basée sur le tarif standard (fixe)
+                $partMedecinExamen = $examen->part_medecin ?? 0;
+                $totalPartMedecin = $partMedecinExamen;
+                
+                // Part cabinet: tarif utilisé - part médecin standard
+                $tarifUtilise = $examen->getTarifPourAssurance($assuranceId);
+                $totalPartCabinet = $tarifUtilise - $partMedecinExamen;
             }
         }
 

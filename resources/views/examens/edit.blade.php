@@ -62,6 +62,40 @@
             <p class="text-sm text-red-500 dark:text-red-300 mt-1">{{ $message }}</p>
             @enderror
         </div>
+
+        <!-- Tarifs assurances -->
+        <div class="mb-4">
+            <label class="flex items-center">
+                <input type="checkbox" id="toggle_assurances" class="mr-2" {{ count($tarifsExistants) > 0 ? 'checked' : '' }}>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Définir des tarifs spécifiques pour les assurances
+                </span>
+            </label>
+        </div>
+
+        <div id="assurances_section" class="{{ count($tarifsExistants) > 0 ? '' : 'hidden' }} mb-4 border border-gray-300 dark:border-gray-600 rounded p-4">
+            <h3 class="font-medium mb-3 text-gray-900 dark:text-white">Tarifs par assurance</h3>
+            <div class="space-y-3">
+                @foreach($assurances as $assurance)
+                <div class="flex items-center space-x-3">
+                    <label class="w-48 text-sm text-gray-700 dark:text-gray-200">
+                        {{ $assurance->nom }}
+                    </label>
+                    <input type="number" 
+                        name="assurance_tarifs[{{ $assurance->id }}]" 
+                        value="{{ $tarifsExistants[$assurance->id] ?? '' }}"
+                        placeholder="Laisser vide pour tarif normal"
+                        step="0.01"
+                        class="flex-1 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">MRU</span>
+                </div>
+                @endforeach
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                💡 Laissez vide pour utiliser le tarif normal. Définissez un montant pour appliquer un tarif spécial.
+            </p>
+        </div>
+
         <div class="flex justify-end space-x-2">
             <a href="{{ route('examens.index', ['page' => $page ?? 1]) }}"
                 class="bg-gray-600 dark:bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-700 dark:hover:bg-gray-800">Annuler</a>
@@ -72,6 +106,18 @@
     </form>
 </div>
 @push('scripts')
+<script>
+    // Toggle assurances section
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggleAssurances = document.getElementById('toggle_assurances');
+        if (toggleAssurances) {
+            toggleAssurances.addEventListener('change', function() {
+                const section = document.getElementById('assurances_section');
+                section.classList.toggle('hidden', !this.checked);
+            });
+        }
+    });
+</script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const tarifInput = document.getElementById('tarif');

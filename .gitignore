@@ -21,6 +21,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/.cursor
 
 # Deployment scripts
 deploy.sh

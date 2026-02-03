@@ -29,6 +29,14 @@ class Assurance extends Model
     }
 
     /**
+     * Tarifs spécifiques pour les examens
+     */
+    public function examenTarifs()
+    {
+        return $this->hasMany(\App\Models\ExamenAssuranceTarif::class, 'assurance_id');
+    }
+
+    /**
      * Mettre à jour le crédit total de l'assurance
      */
     public function updateCredit()

@@ -99,6 +99,11 @@
             @endphp
             @if($examensData && is_array($examensData) && count($examensData) > 0)
             @foreach($examensData as $examenData)
+            @php
+                $examen = \App\Models\Examen::find($examenData['id']);
+                $tarifEffectif = $examen ? $examen->getTarifPourAssurance($caisse->assurance_id) : 0;
+                $totalEffectif = $tarifEffectif * ($examenData['quantite'] ?? 1);
+            @endphp
             <tr>
                 <td class="py-1">
                     {{ $examenData['nom'] ?? 'N/A' }}
@@ -106,7 +111,7 @@
                         <span class="text-gray-600">(Qté: {{ $examenData['quantite'] }})</span>
                     @endif
                 </td>
-                <td class="py-1 text-right font-medium">{{ number_format($examenData['total'] ?? 0, 0) }}</td>
+                <td class="py-1 text-right font-medium">{{ number_format($totalEffectif, 0) }}</td>
             </tr>
             @endforeach
             @else

@@ -139,12 +139,15 @@ class EtatCaisse extends Model
                 $couverture = $caisse->couverture ?? 0;
                 $recette = $etatCaisse->recette ?? 0;
                 
-                if ($couverture > 0 && $couverture < 100) {
+                if ($couverture == 100) {
+                    // Si couverture = 100%, l'assurance paie 100% du montant total
+                    $montantAssurance = $caisse->total ?? 0;
+                } elseif ($couverture > 0 && $couverture < 100) {
                     // Calculer le total brut à partir de la recette et de la couverture
                     $totalBrut = $recette / (1 - ($couverture / 100));
                     $montantAssurance = $totalBrut * ($couverture / 100);
                 } else {
-                    // Si couverture = 0 ou 100, pas de crédit d'assurance
+                    // Si couverture = 0, pas de crédit d'assurance
                     $montantAssurance = 0;
                 }
 

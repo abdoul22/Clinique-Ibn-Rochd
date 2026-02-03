@@ -5,17 +5,17 @@
     @php
     $role = Auth::user()->role->name;
     $updateRouteName = match($role) {
-        'superadmin' => 'superadmin.caisses.update',
-        'admin' => 'admin.caisses.update',
-        default => 'caisses.update'
+    'superadmin' => 'superadmin.caisses.update',
+    'admin' => 'admin.caisses.update',
+    default => 'caisses.update'
     };
     $indexRouteName = match($role) {
-        'superadmin' => 'superadmin.caisses.index',
-        'admin' => 'admin.caisses.index',
-        default => 'caisses.index'
+    'superadmin' => 'superadmin.caisses.index',
+    'admin' => 'admin.caisses.index',
+    default => 'caisses.index'
     };
     @endphp
-    
+
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-xl font-bold text-gray-900 dark:text-white">Modifier l'examen #{{ $caisse->numero_entre }}</h1>
         <a href="{{ route($indexRouteName, ['page' => $page ?? 1]) }}"
@@ -32,7 +32,7 @@
         @csrf
         @method('PUT')
         <input type="hidden" name="return_page" value="{{ $page ?? 1 }}">
-        
+
         @if ($errors->any())
         <div
             class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-2 rounded mb-4">
@@ -51,8 +51,8 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         Numéro d'entrée
                     </label>
-                    <input type="text" id="numero_entree_display" name="numero_entre" value="{{ $caisse->numero_entre }}"
-                        readonly
+                    <input type="text" id="numero_entree_display" name="numero_entre"
+                        value="{{ $caisse->numero_entre }}" readonly
                         class="w-full font-bold bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-900 dark:text-gray-100">
                 </div>
                 <div>
@@ -65,10 +65,9 @@
                         placeholder="Tapez le numéro de téléphone du patient...">
                     <datalist id="telephones-list">
                         @foreach($patients as $patient)
-                        <option value="{{ $patient->phone }}" 
-                            data-id="{{ $patient->id }}" 
+                        <option value="{{ $patient->phone }}" data-id="{{ $patient->id }}"
                             data-nom="{{ $patient->first_name }} {{ $patient->last_name }}">
-                        @endforeach
+                            @endforeach
                     </datalist>
                 </div>
                 <div>
@@ -79,14 +78,13 @@
                         value="{{ $caisse->patient->first_name }} {{ $caisse->patient->last_name }}"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                         placeholder="Tapez le nom du patient...">
-                    <input type="hidden" name="gestion_patient_id" id="gestion_patient_id" 
+                    <input type="hidden" name="gestion_patient_id" id="gestion_patient_id"
                         value="{{ $caisse->gestion_patient_id }}" required>
                     <datalist id="patients-list">
                         @foreach($patients as $patient)
-                        <option value="{{ $patient->first_name }} {{ $patient->last_name }}" 
-                            data-id="{{ $patient->id }}" 
-                            data-telephone="{{ $patient->phone }}">
-                        @endforeach
+                        <option value="{{ $patient->first_name }} {{ $patient->last_name }}"
+                            data-id="{{ $patient->id }}" data-telephone="{{ $patient->phone }}">
+                            @endforeach
                     </datalist>
                 </div>
 
@@ -98,8 +96,7 @@
                         value="{{ $caisse->medecin->nom_complet_avec_specialite ?? '' }}"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                         placeholder="Tapez le nom du médecin...">
-                    <input type="hidden" name="medecin_id" id="medecin_id" 
-                        value="{{ $caisse->medecin_id }}" required>
+                    <input type="hidden" name="medecin_id" id="medecin_id" value="{{ $caisse->medecin_id }}" required>
                     <datalist id="medecins-list">
                         @php
                         $medecinsParFonction = $medecins->groupBy('fonction');
@@ -107,38 +104,40 @@
                         @endphp
                         @foreach($ordrefonctions as $fonction)
                         @if(isset($medecinsParFonction[$fonction]) && $medecinsParFonction[$fonction]->count() > 0)
-                            @foreach($medecinsParFonction[$fonction] as $medecin)
-                            <option value="{{ $medecin->nom_complet_avec_specialite }}" 
-                                data-id="{{ $medecin->id }}">
+                        @foreach($medecinsParFonction[$fonction] as $medecin)
+                        <option value="{{ $medecin->nom_complet_avec_specialite }}" data-id="{{ $medecin->id }}">
                             @endforeach
-                        @endif
-                        @endforeach
+                            @endif
+                            @endforeach
                     </datalist>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Prescripteur</label>
                     @php
-                        $prescripteurValue = 'Externe';
-                        $prescripteurIdValue = 'extern';
-                        if ($caisse->prescripteur_id) {
-                            $prescripteurActuel = $prescripteurs->find($caisse->prescripteur_id);
-                            if ($prescripteurActuel) {
-                                $prescripteurValue = $prescripteurActuel->nom . ($prescripteurActuel->specialite ? ' - ' . $prescripteurActuel->specialite : '');
-                                $prescripteurIdValue = $prescripteurActuel->id;
-                            }
-                        }
+                    $prescripteurValue = 'Externe';
+                    $prescripteurIdValue = null; // null pour "Externe" pour passer la validation
+                    if ($caisse->prescripteur_id) {
+                    $prescripteurActuel = $prescripteurs->find($caisse->prescripteur_id);
+                    if ($prescripteurActuel) {
+                    $prescripteurValue = $prescripteurActuel->nom . ($prescripteurActuel->specialite ? ' - ' .
+                    $prescripteurActuel->specialite : '');
+                    $prescripteurIdValue = $prescripteurActuel->id;
+                    }
+                    }
                     @endphp
-                    <input type="text" id="prescripteur_search" list="prescripteurs-list" value="{{ $prescripteurValue }}"
+                    <input type="text" id="prescripteur_search" list="prescripteurs-list"
+                        value="{{ $prescripteurValue }}"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                         placeholder="Tapez le nom du prescripteur...">
                     <input type="hidden" name="prescripteur_id" id="prescripteur_id" value="{{ $prescripteurIdValue }}">
                     <datalist id="prescripteurs-list">
-                        <option value="Externe" data-id="extern">
-                        @foreach($prescripteurs as $prescripteur)
-                        <option value="{{ $prescripteur->nom }}{{ $prescripteur->specialite ? ' - ' . $prescripteur->specialite : '' }}" 
+                        <option value="Externe" data-id="">
+                            @foreach($prescripteurs as $prescripteur)
+                        <option
+                            value="{{ $prescripteur->nom }}{{ $prescripteur->specialite ? ' - ' . $prescripteur->specialite : '' }}"
                             data-id="{{ $prescripteur->id }}">
-                        @endforeach
+                            @endforeach
                     </datalist>
                 </div>
             </div>
@@ -205,12 +204,13 @@
                             <div class="font-semibold mb-1">📦 Informations de stock :</div>
                             <div id="stock_details_content"></div>
                         </div>
-                </div>
+                    </div>
                 </div>
                 {{-- Checkbox : le patient a-t-il une assurance ? --}}
                 <div>
                     <label class="text-gray-700 dark:text-gray-200">
-                        <input type="checkbox" id="hasAssurance" {{ $caisse->assurance_id ? 'checked' : '' }}> Le patient a une assurance ?
+                        <input type="checkbox" id="hasAssurance" {{ $caisse->assurance_id ? 'checked' : '' }}> Le
+                        patient a une assurance ?
                     </label>
                 </div>
 
@@ -219,20 +219,27 @@
                     <label for="assurance_id" class="text-gray-700 dark:text-gray-200">Nom de l'assurance <span
                             class="text-red-500">*</span>:</label>
                     <select name="assurance_id" id="assurance_id" {{ $caisse->assurance_id ? '' : 'disabled' }}
-                        class="form-select bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600">
+                        class="form-select bg-white dark:bg-gray-900 text-gray-900 dark:text-white border
+                        border-gray-300 dark:border-gray-600">
                         <option value="">-- Sélectionner une assurance --</option>
                         @foreach ($assurances as $assurance)
-                        <option value="{{ $assurance->id }}" {{ $assurance->id == $caisse->assurance_id ? 'selected' : '' }}>{{ $assurance->nom }}</option>
+                        <option value="{{ $assurance->id }}" {{ $assurance->id == $caisse->assurance_id ? 'selected' :
+                            '' }}>{{ $assurance->nom }}</option>
                         @endforeach
                     </select>
 
                     <label for="couverture" class="text-gray-700 dark:text-gray-200">Couverture (%) :</label>
                     <div class="relative">
-                        <input type="text" name="couverture" id="couverture" {{ $caisse->assurance_id ? '' : 'disabled' }}
-                            class="form-input border border-b-black px-2 py-2 {{ $caisse->assurance_id ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400' }} border-gray-300 dark:border-gray-600 w-full"
-                            min="0" max="100" pattern="[0-9]+" placeholder="{{ $caisse->assurance_id ? 'Ex: 90' : 'Sélectionnez d\'abord une assurance' }}" value="{{ $caisse->couverture ?? '' }}">
+                        <input type="text" name="couverture" id="couverture" {{ $caisse->assurance_id ? '' : 'disabled'
+                        }}
+                        class="form-input border border-b-black px-2 py-2 {{ $caisse->assurance_id ? 'bg-white
+                        dark:bg-gray-900 text-gray-900 dark:text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500
+                        dark:text-gray-400' }} border-gray-300 dark:border-gray-600 w-full"
+                        min="0" max="100" pattern="[0-9]+" placeholder="{{ $caisse->assurance_id ? 'Ex: 90' :
+                        'Sélectionnez d\'abord une assurance' }}" value="{{ $caisse->couverture ?? '' }}">
                         <div id="couverture-lock-icon"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none" style="display: {{ $caisse->assurance_id ? 'none' : 'flex' }};">
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
+                            style="display: {{ $caisse->assurance_id ? 'none' : 'flex' }};">
                             <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
@@ -241,28 +248,31 @@
                         </div>
                     </div>
                     <small id="couverture-help" class="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                        {{ $caisse->assurance_id ? '💡 Saisissez le pourcentage de couverture (0-100%)' : '🔒 Ce champ sera activé après sélection d\'une assurance' }}
+                        {{ $caisse->assurance_id ? '💡 Saisissez le pourcentage de couverture (0-100%)' : '🔒 Ce champ
+                        sera activé après sélection d\'une assurance' }}
                     </small>
                 </div>
 
                 {{-- Mode de paiement : visible sauf si assurance 100% --}}
                 <div id="modePaiement" style="display: {{ $caisse->couverture == 100 ? 'none' : 'block' }};">
-                    <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Mode de paiement :</label>
+                    <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Mode de
+                        paiement :</label>
                     <select name="type" id="type"
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                         @php
-                            // Récupérer le paiement principal (relation hasOne)
-                            $paiement = $caisse->paiements;
-                            // Si pas trouvé, chercher dans mode_paiements (hasMany)
-                            if (!$paiement && $caisse->mode_paiements->isNotEmpty()) {
-                                $paiement = $caisse->mode_paiements->where('source', 'caisse')->first();
-                            }
-                            $currentType = $paiement ? $paiement->type : 'especes';
+                        // Récupérer le paiement principal (relation hasOne)
+                        $paiement = $caisse->paiements;
+                        // Si pas trouvé, chercher dans mode_paiements (hasMany)
+                        if (!$paiement && $caisse->mode_paiements->isNotEmpty()) {
+                        $paiement = $caisse->mode_paiements->where('source', 'caisse')->first();
+                        }
+                        $currentType = $paiement ? $paiement->type : 'especes';
                         @endphp
-                        <option value="especes" {{ $currentType == 'espèces' || $currentType == 'especes' ? 'selected' : '' }}>Espèces</option>
-                        <option value="bankily" {{ $currentType == 'bankily' ? 'selected' : '' }}>Bankily</option>
-                        <option value="masrivi" {{ $currentType == 'masrivi' ? 'selected' : '' }}>Masrivi</option>
-                        <option value="sedad" {{ $currentType == 'sedad' ? 'selected' : '' }}>Sedad</option>
+                        <option value="especes" {{ $currentType=='espèces' || $currentType=='especes' ? 'selected' : ''
+                            }}>Espèces</option>
+                        <option value="bankily" {{ $currentType=='bankily' ? 'selected' : '' }}>Bankily</option>
+                        <option value="masrivi" {{ $currentType=='masrivi' ? 'selected' : '' }}>Masrivi</option>
+                        <option value="sedad" {{ $currentType=='sedad' ? 'selected' : '' }}>Sedad</option>
                     </select>
                 </div>
                 <div>
@@ -282,7 +292,8 @@
                 </div>
                 @if($caisse->modifier)
                 <div class="w-full md:w-1/2 bg-blue-100 dark:bg-blue-900 py-2 mt-2 pl-2 rounded">
-                    <small class="text-gray-700 dark:text-gray-300">Modifié par: <strong>{{ $caisse->modifier->name }}</strong></small>
+                    <small class="text-gray-700 dark:text-gray-300">Modifié par: <strong>{{ $caisse->modifier->name
+                            }}</strong></small>
                 </div>
                 @endif
             </div>
@@ -302,7 +313,7 @@
         <!-- Champs cachés pour les examens multiples -->
         <input type="hidden" name="examens_data" id="examens_data" value="">
         <input type="hidden" name="examens_multiple" id="examens_multiple" value="false">
-        
+
         <!-- Stocker les données existantes dans un script tag (Laravel décode auto le JSON) -->
         <script id="examens_data_loader" type="application/json">
             @json($caisse->examens_data ?: [])
@@ -338,9 +349,7 @@
                     <datalist id="medicaments-list">
                         @foreach($exam_types ?? [] as $examen)
                         @if($examen->service && $examen->service->type_service === 'PHARMACIE')
-                        <option value="{{ $examen->nom }}" 
-                            data-id="{{ $examen->id }}"
-                            data-tarif="{{ $examen->tarif }}"
+                        <option value="{{ $examen->nom }}" data-id="{{ $examen->id }}" data-tarif="{{ $examen->tarif }}"
                             data-part-cabinet="{{ $examen->part_cabinet }}"
                             data-part-medecin="{{ $examen->part_medecin }}"
                             data-stock="{{ $examen->service->pharmacie ? $examen->service->pharmacie->stock : '' }}">
@@ -365,9 +374,7 @@
                     <datalist id="examens-list">
                         @foreach($exam_types ?? [] as $examen)
                         @if(!$examen->service || $examen->service->type_service !== 'PHARMACIE')
-                        <option value="{{ $examen->nom }}" 
-                            data-id="{{ $examen->id }}"
-                            data-tarif="{{ $examen->tarif }}"
+                        <option value="{{ $examen->nom }}" data-id="{{ $examen->id }}" data-tarif="{{ $examen->tarif }}"
                             data-part-cabinet="{{ $examen->part_cabinet }}"
                             data-part-medecin="{{ $examen->part_medecin }}">
                             {{ number_format($examen->tarif, 2) }} MRU
@@ -405,25 +412,22 @@
 <script>
     // Variables globales pour les examens multiples - INITIALISER AVEC LES DONNÉES EXISTANTES
     let examensSelectionnes = [];
-    
+    let tarifsAssurance = {}; // Stocker les tarifs de l'assurance sélectionnée
+
     // Charger les données existantes depuis le script tag JSON
-    console.log('=== CHARGEMENT INITIAL DES DONNÉES ===');
-    
     const loaderElement = document.getElementById('examens_data_loader');
     if (loaderElement) {
         const jsonContent = loaderElement.textContent || loaderElement.innerText;
-        console.log('JSON brut depuis script tag:', jsonContent);
-        console.log('Type:', typeof jsonContent);
-        
+
         if (jsonContent && jsonContent.trim().length > 2) { // Plus que juste []
             try {
-                const dataExistante = JSON.parse(jsonContent.trim());
-                
-                console.log('✅ Données parsées:', dataExistante);
-                console.log('Type:', typeof dataExistante);
-                console.log('Est array?', Array.isArray(dataExistante));
-                console.log('Longueur:', Array.isArray(dataExistante) ? dataExistante.length : 0);
-                
+                let dataExistante = JSON.parse(jsonContent.trim());
+
+                // Si c'est une string, parser une seconde fois (double encodage)
+                if (typeof dataExistante === 'string') {
+                    dataExistante = JSON.parse(dataExistante);
+                }
+
                 if (Array.isArray(dataExistante) && dataExistante.length > 0) {
                     examensSelectionnes = dataExistante.map(ex => ({
                         id: String(ex.id),
@@ -433,22 +437,12 @@
                         total: parseFloat(ex.total),
                         isPharmacie: ex.isPharmacie || false
                     }));
-                    console.log('✅ Examens chargés:', examensSelectionnes);
-                } else {
-                    console.log('ℹ️ Aucun examen existant');
                 }
             } catch(e) {
-                console.error('❌ Erreur lors du parsing JSON:', e);
-                console.error('Data brute:', jsonContent);
+                console.error('Erreur lors du parsing JSON:', e);
             }
-        } else {
-            console.log('ℹ️ Pas de données existantes');
         }
-    } else {
-        console.error('❌ Élément examens_data_loader introuvable');
     }
-    
-    console.log('=== FIN CHARGEMENT - examensSelectionnes:', examensSelectionnes);
 
     document.addEventListener('DOMContentLoaded', function () {
         const assuranceToggle = document.getElementById('hasAssurance');
@@ -462,28 +456,29 @@
 
         // Afficher les examens existants si disponibles (avec délai pour s'assurer que toutes les fonctions sont chargées)
         setTimeout(function() {
-            console.log('Initialisation examens - Nombre:', examensSelectionnes.length);
-            console.log('examensSelectionnes contenu:', examensSelectionnes);
-            
             if (examensSelectionnes && examensSelectionnes.length > 0) {
-                console.log('Affichage des examens existants...');
                 document.getElementById('examens_selectionnes_div').style.display = 'block';
                 document.getElementById('examens_multiple').value = 'true';
                 document.getElementById('examens_data').value = JSON.stringify(examensSelectionnes);
-                
-                console.log('Champs cachés mis à jour:');
-                console.log('- examens_multiple:', document.getElementById('examens_multiple').value);
-                console.log('- examens_data:', document.getElementById('examens_data').value);
-                
+
                 if (typeof afficherExamensSelectionnes === 'function') {
                     afficherExamensSelectionnes();
-                } else {
-                    console.error('La fonction afficherExamensSelectionnes n\'est pas définie');
                 }
-            } else {
-                console.log('Aucun examen à afficher - examensSelectionnes est vide');
             }
         }, 200);
+
+        // Charger les tarifs assurance si une assurance est déjà sélectionnée
+        const assuranceIdInitial = assuranceSelect.value;
+        if (assuranceIdInitial && assuranceIdInitial !== '') {
+            fetch(`/api/examens/tarifs-assurance/${assuranceIdInitial}`)
+                .then(response => response.json())
+                .then(data => {
+                    tarifsAssurance = data;
+                })
+                .catch(error => {
+                    console.error('Erreur chargement tarifs au démarrage:', error);
+                });
+        }
 
         // Affiche/masque les champs assurance
         assuranceToggle.addEventListener('change', function () {
@@ -514,15 +509,55 @@
 
         // Gérer l'activation/désactivation du champ couverture selon la sélection d'assurance
         assuranceSelect.addEventListener('change', function () {
-            if (this.value && this.value !== '') {
-                // Une assurance est sélectionnée, activer le champ couverture
+            const assuranceId = this.value;
+
+            if (assuranceId && assuranceId !== '') {
+                // Une assurance est sélectionnée, charger les tarifs spécifiques
+                fetch(`/api/examens/tarifs-assurance/${assuranceId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        tarifsAssurance = data;
+
+                        // Mettre à jour les examens déjà sélectionnés
+                        if (examensSelectionnes.length > 0) {
+                            examensSelectionnes.forEach(examen => {
+                                if (tarifsAssurance[examen.id]) {
+                                    examen.tarif = parseFloat(tarifsAssurance[examen.id]);
+                                    examen.total = examen.tarif * examen.quantite;
+                                }
+                            });
+                            afficherExamensSelectionnes();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur chargement tarifs:', error);
+                        tarifsAssurance = {};
+                    });
+
+                // Activer le champ couverture
                 couvertureInput.disabled = false;
                 couvertureInput.placeholder = 'Ex: 90';
                 couvertureInput.className = 'form-input border border-b-black px-2 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 w-full';
                 couvertureLockIcon.style.display = 'none';
                 couvertureHelp.textContent = '💡 Saisissez le pourcentage de couverture (0-100%)';
             } else {
-                // Aucune assurance sélectionnée, désactiver le champ couverture
+                // Aucune assurance : réinitialiser les tarifs normaux
+                tarifsAssurance = {};
+
+                // Remettre les examens aux tarifs normaux
+                if (examensSelectionnes.length > 0) {
+                    // Recharger depuis les datalists pour avoir les tarifs originaux
+                    examensSelectionnes.forEach(examen => {
+                        const option = document.querySelector(`option[data-id="${examen.id}"]`);
+                        if (option) {
+                            examen.tarif = parseFloat(option.getAttribute('data-tarif'));
+                            examen.total = examen.tarif * examen.quantite;
+                        }
+                    });
+                    afficherExamensSelectionnes();
+                }
+
+                // Désactiver le champ couverture
                 couvertureInput.disabled = true;
                 couvertureInput.value = '';
                 couvertureInput.placeholder = 'Sélectionnez d\'abord une assurance';
@@ -544,13 +579,6 @@
 
         // Validation du formulaire avant soumission
         document.getElementById('formFacture').addEventListener('submit', function(e) {
-            // Debug: afficher les données avant soumission
-            console.log('=== SOUMISSION DU FORMULAIRE ===');
-            console.log('examens_multiple:', document.getElementById('examens_multiple').value);
-            console.log('examens_data:', document.getElementById('examens_data').value);
-            console.log('examensSelectionnes:', examensSelectionnes);
-            console.log('total:', document.getElementById('total').value);
-            
             const hasAssurance = document.getElementById('hasAssurance').checked;
             const assuranceId = document.getElementById('assurance_id').value;
             const couverture = document.getElementById('couverture').value;
@@ -618,31 +646,31 @@
             patientSearch.addEventListener('change', function() {
                 const nomPatient = this.value.trim();
                 const patientOption = findPatientByName(nomPatient);
-                
+
                 if (patientOption) {
                     const patientId = patientOption.getAttribute('data-id');
                     const telephone = patientOption.getAttribute('data-telephone');
-                    
+
                     gestionPatientId.value = patientId;
-                    
+
                     if (telephone) {
                         phoneInput.value = telephone;
                         addSyncEffect(phoneInput);
                     }
-                    
+
                     addSyncEffect(patientSearch);
                 }
             });
 
             patientSearch.addEventListener('input', function() {
                 const nomPatient = this.value.trim();
-                
+
                 if (nomPatient === '') {
                     phoneInput.value = '';
                     gestionPatientId.value = '';
                     return;
                 }
-                
+
                 const patientOption = findPatientByName(nomPatient);
                 if (!patientOption) {
                     gestionPatientId.value = '';
@@ -655,31 +683,31 @@
             phoneInput.addEventListener('change', function() {
                 const phone = this.value.trim();
                 const phoneOption = findPatientByPhone(phone);
-                
+
                 if (phoneOption) {
                     const patientId = phoneOption.getAttribute('data-id');
                     const nomPatient = phoneOption.getAttribute('data-nom');
-                    
+
                     gestionPatientId.value = patientId;
-                    
+
                     if (nomPatient) {
                         patientSearch.value = nomPatient;
                         addSyncEffect(patientSearch);
                     }
-                    
+
                     addSyncEffect(phoneInput);
                 }
             });
 
             phoneInput.addEventListener('input', function() {
                 const phone = this.value.trim();
-                
+
                 if (phone === '') {
                     patientSearch.value = '';
                     gestionPatientId.value = '';
                     return;
                 }
-                
+
                 const phoneOption = findPatientByPhone(phone);
                 if (!phoneOption) {
                     gestionPatientId.value = '';
@@ -692,7 +720,7 @@
             medecinSearch.addEventListener('change', function() {
                 const nomMedecin = this.value.trim();
                 const medecinOption = findMedecinByName(nomMedecin);
-                
+
                 if (medecinOption) {
                     const medId = medecinOption.getAttribute('data-id');
                     medecinId.value = medId;
@@ -706,12 +734,12 @@
 
             medecinSearch.addEventListener('input', function() {
                 const nomMedecin = this.value.trim();
-                
+
                 if (nomMedecin === '') {
                     medecinId.value = '';
                     return;
                 }
-                
+
                 const medecinOption = findMedecinByName(nomMedecin);
                 if (!medecinOption) {
                     medecinId.value = '';
@@ -734,7 +762,7 @@
             prescripteurSearch.addEventListener('change', function() {
                 const nomPrescripteur = this.value.trim();
                 const prescripteurOption = findPrescripteurByName(nomPrescripteur);
-                
+
                 if (prescripteurOption) {
                     const prescId = prescripteurOption.getAttribute('data-id');
                     prescripteurId.value = prescId;
@@ -747,12 +775,12 @@
 
             prescripteurSearch.addEventListener('input', function() {
                 const nomPrescripteur = this.value.trim();
-                
-                if (nomPrescripteur === '') {
-                    prescripteurId.value = 'extern';
+
+                if (nomPrescripteur === '' || nomPrescripteur === 'Externe') {
+                    prescripteurId.value = '';
                     return;
                 }
-                
+
                 const prescripteurOption = findPrescripteurByName(nomPrescripteur);
                 if (!prescripteurOption) {
                     prescripteurId.value = '';
@@ -778,11 +806,8 @@
     }
 
     function ajouterExamenDeModal() {
-        console.log('Fonction ajouterExamenDeModal appelée');
         const medicamentSearch = document.getElementById('modal_medicament_search').value.trim();
         const examenSearch = document.getElementById('modal_examen_search').value.trim();
-        console.log('Médicament recherché:', medicamentSearch);
-        console.log('Examen recherché:', examenSearch);
 
         let selectedOption = null;
         let isMedicament = false;
@@ -790,12 +815,10 @@
         // Chercher dans les médicaments
         if (medicamentSearch) {
             const medicamentsList = document.querySelectorAll('#medicaments-list option');
-            console.log('Nombre de médicaments disponibles:', medicamentsList.length);
             medicamentsList.forEach(opt => {
                 if (opt.value === medicamentSearch) {
                     selectedOption = opt;
                     isMedicament = true;
-                    console.log('Médicament trouvé:', opt);
                 }
             });
         }
@@ -803,12 +826,10 @@
         // Chercher dans les examens
         if (!selectedOption && examenSearch) {
             const examensList = document.querySelectorAll('#examens-list option');
-            console.log('Nombre d\'examens disponibles:', examensList.length);
             examensList.forEach(opt => {
                 if (opt.value === examenSearch) {
                     selectedOption = opt;
                     isMedicament = false;
-                    console.log('Examen trouvé:', opt);
                 }
             });
         }
@@ -822,29 +843,32 @@
         const quantiteInput = document.getElementById('modal_quantite');
         const quantite = parseInt(quantiteInput.value) || 1;
 
+        // Déterminer le tarif à utiliser (assurance ou normal)
+        const examenId = String(selectedOption.getAttribute('data-id'));
+        let tarifUtilise = parseFloat(selectedOption.getAttribute('data-tarif'));
+
+        // Vérifier s'il y a un tarif assurance pour cet examen
+        if (tarifsAssurance[examenId]) {
+            tarifUtilise = parseFloat(tarifsAssurance[examenId]);
+        }
+
         const examen = {
-            id: String(selectedOption.getAttribute('data-id')),
+            id: examenId,
             nom: selectedOption.value,
-            tarif: parseFloat(selectedOption.getAttribute('data-tarif')),
+            tarif: tarifUtilise,
             quantite: quantite,
-            total: parseFloat(selectedOption.getAttribute('data-tarif')) * quantite,
+            total: tarifUtilise * quantite,
             isPharmacie: isMedicament
         };
-
-        console.log('Examen à ajouter:', examen);
 
         // Vérifier si l'examen existe déjà dans la liste
         const existant = examensSelectionnes.find(e => String(e.id) === String(examen.id));
         if (existant) {
-            console.log('Examen déjà existant, mise à jour de la quantité');
             existant.quantite += quantite;
             existant.total = existant.tarif * existant.quantite;
         } else {
-            console.log('Nouvel examen, ajout à la liste');
             examensSelectionnes.push(examen);
         }
-
-        console.log('Liste des examens après ajout:', examensSelectionnes);
 
         // Mettre à jour l'affichage
         afficherExamensSelectionnes();
@@ -874,7 +898,7 @@
                 if (value) {
                     // Effacer le champ examen
                     examenSearch.value = '';
-                    
+
                     // Trouver le médicament sélectionné
                     const medicamentsList = document.querySelectorAll('#medicaments-list option');
                     let selectedOption = null;
@@ -1003,12 +1027,6 @@
         // Mettre à jour le total
         document.getElementById('display_total').value = totalGeneral.toFixed(2);
         document.getElementById('total').value = totalGeneral.toFixed(2);
-        
-        console.log('afficherExamensSelectionnes() - Champs mis à jour:', {
-            examens_multiple: document.getElementById('examens_multiple').value,
-            examens_data: document.getElementById('examens_data').value,
-            total: document.getElementById('total').value
-        });
     }
 
     function supprimerExamen(index) {
@@ -1124,7 +1142,7 @@
 </script>
 
 <script>
-// Fonction pour mettre à jour les numéros d'entrée quand la date ou le médecin change
+    // Fonction pour mettre à jour les numéros d'entrée quand la date ou le médecin change
 function updateNumerosByDate() {
     const dateExamen = document.querySelector('input[name="date_examen"]').value;
     const medecinSelect = document.querySelector('select[name="medecin_id"]');
