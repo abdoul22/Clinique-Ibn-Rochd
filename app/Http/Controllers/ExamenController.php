@@ -20,15 +20,22 @@ class ExamenController extends Controller
         $year = $request->input('year');
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
+        $serviceId = $request->input('service_id');
 
         $query = Examen::with(['service.pharmacie'])
             ->where('nom', 'NOT LIKE', '%Hospitalisation%');
 
+        // Filtrage par nom
         if ($search) {
             $query->where('nom', 'like', "%{$search}%")
                 ->orWhereHas('service', function ($q) use ($search) {
                     $q->where('nom', 'like', "%{$search}%");
                 });
+        }
+
+        // Filtrage par service
+        if ($serviceId) {
+            $query->where('idsvc', $serviceId);
         }
 
         // Filtrage par période sur created_at
@@ -76,7 +83,10 @@ class ExamenController extends Controller
             return $examen;
         });
 
-        return view('examens.index', compact('examens'));
+        // Charger tous les services pour le filtre
+        $services = Service::orderBy('nom')->get();
+
+        return view('examens.index', compact('examens', 'services'));
     }
 
     public function create()

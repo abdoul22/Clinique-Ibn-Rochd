@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Prescripteur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PrescripteurController extends Controller
 {
@@ -22,7 +23,28 @@ class PrescripteurController extends Controller
             $query->where('specialite', $request->specialite);
         }
 
-        $prescripteurs = $query->orderBy('created_at', 'desc')->paginate(10);
+        // Sous-requête pour les stats (Patients Apportés, Revenu Total, Total Examens)
+        $statsSubquery = DB::table('caisses')
+            ->select('prescripteur_id')
+            ->selectRaw('COUNT(DISTINCT gestion_patient_id) as total_patients')
+            ->selectRaw('COALESCE(SUM(total), 0) as total_revenu')
+            ->selectRaw("COALESCE(SUM(
+                CASE
+                    WHEN examens_data IS NULL OR examens_data = '[]' OR examens_data = '' THEN 1
+                    ELSE GREATEST(1, JSON_LENGTH(examens_data))
+                END
+            ), 0) as total_examens")
+            ->whereNotNull('prescripteur_id')
+            ->groupBy('prescripteur_id');
+
+        // Tri : 1) Patients Apportés (desc), 2) Revenu Total (desc), 3) Total Examens (desc)
+        $prescripteurs = $query
+            ->select('prescripteurs.*')
+            ->leftJoinSub($statsSubquery, 'stats', 'prescripteurs.id', '=', 'stats.prescripteur_id')
+            ->orderByRaw('COALESCE(stats.total_patients, 0) DESC')
+            ->orderByRaw('COALESCE(stats.total_revenu, 0) DESC')
+            ->orderByRaw('COALESCE(stats.total_examens, 0) DESC')
+            ->paginate(10);
         
         // Récupérer toutes les spécialités uniques existantes (non nulles et non vides)
         $specialites = Prescripteur::whereNotNull('specialite')

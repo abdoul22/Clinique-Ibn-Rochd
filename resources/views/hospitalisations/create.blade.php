@@ -1,6 +1,33 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    /* Masquer la flèche native du datalist pour tous les champs avec liste */
+    [list]::-webkit-calendar-picker-indicator,
+    [list]::-webkit-list-button {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+    }
+    .datalist-input-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    .datalist-input-wrapper .datalist-clear-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 0.5rem;
+        left: auto;
+    }
+    .datalist-input-wrapper:has(input:disabled) .datalist-clear-btn {
+        display: none !important;
+    }
+</style>
 <div
     class="min-h-screen bg-gradient-to-br from-gray-200 via-slate-100 to-blue-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 py-8">
     <div class="container mx-auto px-4">
@@ -73,9 +100,12 @@
                                 </div>
                                 Patient *
                             </label>
-                            <input type="text" name="patient_search" id="patient-search" list="patients-list"
-                                placeholder="Tapez le nom du patient..."
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg shadow-sm">
+                            <div class="datalist-input-wrapper relative">
+                                <input type="text" name="patient_search" id="patient-search" list="patients-list"
+                                    placeholder="Tapez le nom du patient..."
+                                    class="w-full px-5 py-4 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 text-lg shadow-sm">
+                                <button type="button" class="datalist-clear-btn w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer z-10 hidden" aria-label="Effacer" data-target="patient-search" data-clear-ids="gestion_patient_id" data-clear-values="" data-clear-extra="telephone-input"><i class="fas fa-times text-xs"></i></button>
+                            </div>
                             <input type="hidden" name="gestion_patient_id" id="gestion_patient_id" required>
                             <datalist id="patients-list">
                                 @foreach($patients as $patient)
@@ -101,9 +131,12 @@
                                 </div>
                                 Téléphone
                             </label>
-                            <input type="text" id="telephone-input" list="telephones-list"
-                                placeholder="Tapez le numéro de téléphone..."
-                                class="w-full px-4 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg shadow-sm">
+                            <div class="datalist-input-wrapper relative">
+                                <input type="text" id="telephone-input" list="telephones-list"
+                                    placeholder="Tapez le numéro de téléphone..."
+                                    class="w-full px-5 py-4 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200 text-lg shadow-sm">
+                                <button type="button" class="datalist-clear-btn w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer z-10 hidden" aria-label="Effacer" data-target="telephone-input" data-clear-ids="gestion_patient_id" data-clear-values="" data-clear-extra="patient-search"><i class="fas fa-times text-xs"></i></button>
+                            </div>
                             <datalist id="telephones-list">
                                 @foreach($patients as $patient)
                                 @if($patient->phone)
@@ -360,6 +393,45 @@
 <script>
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialisation des boutons X pour les champs Patient et Téléphone
+        function initDatalistClearButtons() {
+            document.querySelectorAll('.datalist-clear-btn').forEach(btn => {
+                if (btn._datalistInit) return;
+                btn._datalistInit = true;
+                const targetId = btn.dataset.target;
+                const clearIds = (btn.dataset.clearIds || '').split(',').filter(Boolean);
+                const clearValues = (btn.dataset.clearValues || '').split(',');
+                const clearExtra = btn.dataset.clearExtra;
+                const targetInput = document.getElementById(targetId);
+                if (!targetInput) return;
+
+                function updateVisibility() {
+                    btn.classList.toggle('hidden', !targetInput.value.trim() || targetInput.disabled);
+                }
+
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (targetInput.disabled) return;
+                    targetInput.value = '';
+                    targetInput.focus();
+                    clearIds.forEach((id, i) => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = clearValues[i] || '';
+                    });
+                    if (clearExtra) {
+                        const extra = document.getElementById(clearExtra);
+                        if (extra && !extra.disabled) extra.value = '';
+                    }
+                    updateVisibility();
+                });
+
+                targetInput.addEventListener('input', updateVisibility);
+                targetInput.addEventListener('change', updateVisibility);
+                updateVisibility();
+            });
+        }
+        initDatalistClearButtons();
+
         // Données des chambres et lits
         const litsParChambre = @json($litsParChambre);
         const chambresData = @json($chambresData);

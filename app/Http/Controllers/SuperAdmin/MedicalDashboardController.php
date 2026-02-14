@@ -74,6 +74,20 @@ class MedicalDashboardController extends Controller
             $revenusTotal = EtatCaisse::where('medecin_id', $medecin->id)
                 ->sum('part_medecin');
 
+            // Total examens (en tenant compte de examens_data pour les caisses multi-examens)
+            $caissesMedecin = Caisse::where('medecin_id', $medecin->id)->get();
+            $totalExamens = $caissesMedecin->sum(function($caisse) {
+                if (!empty($caisse->examens_data)) {
+                    $examensArray = is_string($caisse->examens_data)
+                        ? json_decode($caisse->examens_data, true)
+                        : $caisse->examens_data;
+                    if (is_array($examensArray) && count($examensArray) > 0) {
+                        return count($examensArray);
+                    }
+                }
+                return 1;
+            });
+
             // Dernière activité
             $derniereActivite = Caisse::where('medecin_id', $medecin->id)
                 ->latest('created_at')
@@ -91,6 +105,7 @@ class MedicalDashboardController extends Controller
                     'ordonnances' => $ordonnancesTotal,
                     'patients' => $patientsTotal,
                     'revenus' => $revenusTotal,
+                    'examens' => $totalExamens,
                 ],
                 'derniere_activite' => $derniereActivite ? $derniereActivite->created_at : null,
             ];
@@ -100,13 +115,26 @@ class MedicalDashboardController extends Controller
             $totalRevenusMois += $revenusMois;
         }
 
-        // Trier par nombre de consultations du mois (desc)
+        // Trier : 1) Patients Apportés (desc), 2) Revenu Total (desc), 3) Total Examens (desc)
         usort($medecinStats, function($a, $b) {
-            return $b['mois']['consultations'] <=> $a['mois']['consultations'];
+            if ($a['total']['patients'] !== $b['total']['patients']) {
+                return $b['total']['patients'] <=> $a['total']['patients'];
+            }
+            if ($a['total']['revenus'] !== $b['total']['revenus']) {
+                return $b['total']['revenus'] <=> $a['total']['revenus'];
+            }
+            return ($b['total']['examens'] ?? 0) <=> ($a['total']['examens'] ?? 0);
         });
 
-        // Top 5 médecins pour les graphiques
-        $top5Medecins = array_slice($medecinStats, 0, 5);
+        // Top 5 médecins du mois : triés par activité du mois (consultations desc, ordonnances desc)
+        $top5MedecinsForChart = $medecinStats;
+        usort($top5MedecinsForChart, function($a, $b) {
+            if ($a['mois']['consultations'] !== $b['mois']['consultations']) {
+                return $b['mois']['consultations'] <=> $a['mois']['consultations'];
+            }
+            return $b['mois']['ordonnances'] <=> $a['mois']['ordonnances'];
+        });
+        $top5Medecins = array_slice($top5MedecinsForChart, 0, 5);
 
         // Données pour le graphique d'évolution mensuelle (6 derniers mois)
         $evolutionMensuelle = [];

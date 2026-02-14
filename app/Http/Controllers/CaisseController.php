@@ -591,6 +591,11 @@ class CaisseController extends Controller
             }
         }
 
+        // Normaliser prescripteur_id (Externe = null) avant validation
+        if (in_array($request->prescripteur_id, ['', 'extern', null], true)) {
+            $request->merge(['prescripteur_id' => null]);
+        }
+
         $request->validate($validationRules);
 
         // Validation stricte du total soumis (avec prise en compte des tarifs assurance)

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Assurance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class AssuranceController extends Controller
@@ -17,7 +18,19 @@ class AssuranceController extends Controller
             $query->where('nom', 'like', "%{$search}%");
         }
 
-        $assurances = $query->orderBy('created_at', 'desc')->paginate(10);
+        // Sous-requête pour le crédit (montant - montant_paye) par assurance
+        $creditSubquery = DB::table('credits')
+            ->select('source_id')
+            ->selectRaw('COALESCE(SUM(montant), 0) - COALESCE(SUM(montant_paye), 0) as credit_total')
+            ->where('source_type', Assurance::class)
+            ->groupBy('source_id');
+
+        // Tri par crédit décroissant (du plus élevé au plus faible)
+        $assurances = $query
+            ->select('assurances.*')
+            ->leftJoinSub($creditSubquery, 'credit_stats', 'assurances.id', '=', 'credit_stats.source_id')
+            ->orderByRaw('COALESCE(credit_stats.credit_total, 0) DESC')
+            ->paginate(10);
 
         return view('assurances.index', compact('assurances'));
     }

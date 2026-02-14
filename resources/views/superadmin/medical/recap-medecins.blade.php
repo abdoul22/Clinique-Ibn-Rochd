@@ -177,6 +177,9 @@
                                 <div class="text-sm text-gray-700 dark:text-gray-300">
                                     <i class="fas fa-user-injured mr-1 text-yellow-500"></i>{{ $stat['total']['patients'] }} patients
                                 </div>
+                                <div class="text-sm text-gray-700 dark:text-gray-300">
+                                    <i class="fas fa-vial mr-1 text-purple-500"></i>{{ $stat['total']['examens'] ?? 0 }} examens
+                                </div>
                                 <div class="text-sm font-bold text-gray-900 dark:text-white">
                                     {{ number_format($stat['total']['revenus'], 0) }} MRU
                                 </div>
@@ -220,7 +223,7 @@
         data: {
             labels: [
                 @foreach($top5Medecins as $stat)
-                    "{{ $stat['medecin']->fonction }} {{ $stat['medecin']->nom }}",
+                    {!! json_encode(trim($stat['medecin']->fonction . ' ' . $stat['medecin']->nom . ' ' . ($stat['medecin']->prenom ?? ''))) !!},
                 @endforeach
             ],
             datasets: [{

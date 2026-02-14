@@ -1,6 +1,33 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    /* Masquer la flèche native du datalist pour tous les champs avec liste */
+    [list]::-webkit-calendar-picker-indicator,
+    [list]::-webkit-list-button {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+    }
+    .datalist-input-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    .datalist-input-wrapper .datalist-clear-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 0.5rem;
+        left: auto;
+    }
+    .datalist-input-wrapper:has(input:disabled) .datalist-clear-btn {
+        display: none !important;
+    }
+</style>
 <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded shadow dark:shadow-lg">
     @php
     $role = Auth::user()->role->name;
@@ -59,10 +86,14 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         Numéro de téléphone *
                     </label>
-                    <input type="text" id="patient_phone" name="patient_phone" list="telephones-list"
-                        value="{{ $caisse->patient->phone ?? '' }}"
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        placeholder="Tapez le numéro de téléphone du patient...">
+                    <div class="datalist-input-wrapper relative">
+                        <input type="text" id="patient_phone" name="patient_phone" list="telephones-list"
+                            value="{{ $caisse->patient->phone ?? '' }}"
+                            class="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            placeholder="Tapez le numéro de téléphone du patient...">
+                        <i class="fas fa-phone absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        <button type="button" class="datalist-clear-btn w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer z-10 hidden" aria-label="Effacer" data-target="patient_phone" data-clear-ids="gestion_patient_id" data-clear-values="" data-clear-extra="patient_search"><i class="fas fa-times text-xs"></i></button>
+                    </div>
                     <datalist id="telephones-list">
                         @foreach($patients as $patient)
                         <option value="{{ $patient->phone }}" data-id="{{ $patient->id }}"
@@ -74,10 +105,14 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         Patient *
                     </label>
-                    <input type="text" id="patient_search" list="patients-list"
-                        value="{{ $caisse->patient->first_name }} {{ $caisse->patient->last_name }}"
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        placeholder="Tapez le nom du patient...">
+                    <div class="datalist-input-wrapper relative">
+                        <input type="text" id="patient_search" list="patients-list"
+                            value="{{ $caisse->patient->first_name }} {{ $caisse->patient->last_name }}"
+                            class="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            placeholder="Tapez le nom du patient...">
+                        <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        <button type="button" class="datalist-clear-btn w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer z-10 hidden" aria-label="Effacer" data-target="patient_search" data-clear-ids="gestion_patient_id" data-clear-values="" data-clear-extra="patient_phone"><i class="fas fa-times text-xs"></i></button>
+                    </div>
                     <input type="hidden" name="gestion_patient_id" id="gestion_patient_id"
                         value="{{ $caisse->gestion_patient_id }}" required>
                     <datalist id="patients-list">
@@ -92,10 +127,14 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         Médecin *
                     </label>
-                    <input type="text" id="medecin_search" list="medecins-list"
-                        value="{{ $caisse->medecin->nom_complet_avec_specialite ?? '' }}"
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        placeholder="Tapez le nom du médecin...">
+                    <div class="datalist-input-wrapper relative">
+                        <input type="text" id="medecin_search" list="medecins-list"
+                            value="{{ $caisse->medecin->nom_complet_avec_specialite ?? '' }}"
+                            class="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            placeholder="Tapez le nom du médecin...">
+                        <i class="fas fa-user-md absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        <button type="button" class="datalist-clear-btn w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer z-10 hidden" aria-label="Effacer" data-target="medecin_search" data-clear-ids="medecin_id" data-clear-values=""><i class="fas fa-times text-xs"></i></button>
+                    </div>
                     <input type="hidden" name="medecin_id" id="medecin_id" value="{{ $caisse->medecin_id }}" required>
                     <datalist id="medecins-list">
                         @php
@@ -126,10 +165,18 @@
                     }
                     }
                     @endphp
-                    <input type="text" id="prescripteur_search" list="prescripteurs-list"
-                        value="{{ $prescripteurValue }}"
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        placeholder="Tapez le nom du prescripteur...">
+                    <div class="datalist-input-wrapper relative">
+                        <input type="text" id="prescripteur_search" list="prescripteurs-list"
+                            value="{{ $prescripteurValue }}"
+                            class="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            placeholder="Tapez le nom du prescripteur...">
+                        <i class="fas fa-user-md absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        <button type="button" id="prescripteur-clear-btn" aria-label="Effacer le prescripteur"
+                            class="datalist-clear-btn w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer z-10 hidden"
+                            data-target="prescripteur_search" data-clear-ids="prescripteur_id" data-clear-values="">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
                     <input type="hidden" name="prescripteur_id" id="prescripteur_id" value="{{ $prescripteurIdValue }}">
                     <datalist id="prescripteurs-list">
                         <option value="Externe" data-id="">
@@ -343,9 +390,13 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         <i class="fas fa-pills mr-1"></i> Médicaments
                     </label>
-                    <input type="text" id="modal_medicament_search" list="medicaments-list"
-                        placeholder="Rechercher un médicament..."
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                    <div class="datalist-input-wrapper relative">
+                        <input type="text" id="modal_medicament_search" list="medicaments-list"
+                            placeholder="Rechercher un médicament..."
+                            class="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                        <i class="fas fa-pills absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        <button type="button" class="datalist-clear-btn w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer z-10 hidden" aria-label="Effacer" data-target="modal_medicament_search"><i class="fas fa-times text-xs"></i></button>
+                    </div>
                     <datalist id="medicaments-list">
                         @foreach($exam_types ?? [] as $examen)
                         @if($examen->service && $examen->service->type_service === 'PHARMACIE')
@@ -368,9 +419,13 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         <i class="fas fa-stethoscope mr-1"></i> Examens disponibles
                     </label>
-                    <input type="text" id="modal_examen_search" list="examens-list"
-                        placeholder="Rechercher un examen..."
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                    <div class="datalist-input-wrapper relative">
+                        <input type="text" id="modal_examen_search" list="examens-list"
+                            placeholder="Rechercher un examen..."
+                            class="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                        <i class="fas fa-stethoscope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        <button type="button" class="datalist-clear-btn w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer z-10 hidden" aria-label="Effacer" data-target="modal_examen_search"><i class="fas fa-times text-xs"></i></button>
+                    </div>
                     <datalist id="examens-list">
                         @foreach($exam_types ?? [] as $examen)
                         @if(!$examen->service || $examen->service->type_service !== 'PHARMACIE')
@@ -445,6 +500,45 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Initialisation des boutons X pour tous les champs avec datalist
+        function initDatalistClearButtons() {
+            document.querySelectorAll('.datalist-clear-btn').forEach(btn => {
+                if (btn._datalistInit) return;
+                btn._datalistInit = true;
+                const targetId = btn.dataset.target;
+                const clearIds = (btn.dataset.clearIds || '').split(',').filter(Boolean);
+                const clearValues = (btn.dataset.clearValues || '').split(',');
+                const clearExtra = btn.dataset.clearExtra;
+                const targetInput = document.getElementById(targetId);
+                if (!targetInput) return;
+
+                function updateVisibility() {
+                    btn.classList.toggle('hidden', !targetInput.value.trim() || targetInput.disabled);
+                }
+
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (targetInput.disabled) return;
+                    targetInput.value = '';
+                    targetInput.focus();
+                    clearIds.forEach((id, i) => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = clearValues[i] || '';
+                    });
+                    if (clearExtra) {
+                        const extra = document.getElementById(clearExtra);
+                        if (extra && !extra.disabled) extra.value = '';
+                    }
+                    updateVisibility();
+                });
+
+                targetInput.addEventListener('input', updateVisibility);
+                targetInput.addEventListener('change', updateVisibility);
+                updateVisibility();
+            });
+        }
+        initDatalistClearButtons();
+
         const assuranceToggle = document.getElementById('hasAssurance');
         const assuranceFields = document.getElementById('assuranceFields');
         const assuranceSelect = document.getElementById('assurance_id');
@@ -765,10 +859,9 @@
 
                 if (prescripteurOption) {
                     const prescId = prescripteurOption.getAttribute('data-id');
-                    prescripteurId.value = prescId;
+                    prescripteurId.value = prescId || '';
                     addSyncEffect(prescripteurSearch);
                 } else {
-                    // Si aucune correspondance, vider l'ID
                     prescripteurId.value = '';
                 }
             });

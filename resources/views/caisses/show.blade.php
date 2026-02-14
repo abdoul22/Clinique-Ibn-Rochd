@@ -1,6 +1,44 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- Actions - juste sous la navbar -->
+<div class="max-w-4xl mx-auto flex flex-wrap justify-center gap-4 mb-6 print:hidden">
+    <a href="{{ route(auth()->user()->role->name . '.caisses.edit', $caisse) }}"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+        Modifier
+    </a>
+    @php
+        $hospitalisation = \App\Models\HospitalisationCharge::where('caisse_id', $caisse->id)
+            ->with('hospitalisation')
+            ->first()?->hospitalisation;
+        $printRoute = $hospitalisation 
+            ? route(auth()->user()->role->name === 'admin' ? 'admin.hospitalisations.print' : 'hospitalisations.print', $hospitalisation->id)
+            : route(auth()->user()->role->name . '.caisses.printSingle', $caisse->id);
+    @endphp
+    <a href="{{ $printRoute }}"
+        class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        Imprimer
+    </a>
+    <a href="{{ route(auth()->user()->role->name . '.caisses.index') }}"
+        class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+        Liste des examens
+    </a>
+</div>
+
 <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-6">
     <!-- En-tête bilingue -->
     <div class="p-6 bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-blue-950 text-white">
@@ -220,44 +258,5 @@
         <p>{{ config('clinique.name') }} - Téléphone: {{ config('clinique.phone') }} - Email: {{ config('clinique.email') }}</p>
         <p class="mt-1">Adresse: {{ config('clinique.address') }}</p>
     </div>
-</div>
-<!-- Actions -->
-<div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-center gap-4 mb-8 print:hidden">
-
-    <a href="{{ route(auth()->user()->role->name . '.caisses.edit', $caisse) }}"
-        class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-        Modifier
-    </a>
-    @php
-        // Vérifier si cette caisse est liée à une hospitalisation
-        $hospitalisation = \App\Models\HospitalisationCharge::where('caisse_id', $caisse->id)
-            ->with('hospitalisation')
-            ->first()?->hospitalisation;
-        $printRoute = $hospitalisation 
-            ? route(auth()->user()->role->name === 'admin' ? 'admin.hospitalisations.print' : 'hospitalisations.print', $hospitalisation->id)
-            : route(auth()->user()->role->name . '.caisses.printSingle', $caisse->id);
-    @endphp
-    <a href="{{ $printRoute }}"
-        class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-        </svg>
-        Imprimer
-    </a>
-    <a href="{{ route(auth()->user()->role->name . '.caisses.index') }}"
-        class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-        </svg>
-        Liste des examens
-    </a>
 </div>
 @endsection
